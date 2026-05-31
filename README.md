@@ -2,6 +2,12 @@
 
 Classic checkers with a collectible spell-card layer. You and the AI each start with **100 gems**. Spend **10 gems** to draw a random card, play effects on your turn, then make a normal checkers move.
 
+## Play online
+
+**[Play Card Checkers on GitHub Pages](https://kwonseokhyun1-jpg.github.io/checkers/)**
+
+The site deploys automatically when changes are pushed to `main`.
+
 ## Play locally
 
 Open `index.html` in a browser, or serve the folder:
