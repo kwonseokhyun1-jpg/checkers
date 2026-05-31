@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Card Checkers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>Card Checkers</h1>
+      <p class="tagline">Classic checkers — reshaped by arcane cards</p>
+    </header>
+
+    <main class="game-layout">
+      <aside class="panel panel-opponent">
+        <div class="player-badge opponent">
+          <span class="piece-icon black"></span>
+          <span>Shadow Court</span>
+        </div>
+        <div class="stat gems-opponent">
+          <span class="stat-label">Gems</span>
+          <span id="gems-black" class="stat-value">100</span>
+        </div>
+        <div class="hand-label">Opponent hand</div>
+        <div id="hand-black" class="hand hand-hidden" aria-hidden="true"></div>
+      </aside>
+
+      <section class="board-section">
+        <div id="turn-banner" class="turn-banner">Your turn — play cards or move</div>
+        <div id="board" class="board" role="grid" aria-label="Checkers board"></div>
+        <div id="message" class="message" role="status"></div>
+      </section>
+
+      <aside class="panel panel-player">
+        <div class="player-badge you">
+          <span class="piece-icon red"></span>
+          <span>Ruby Legion</span>
+        </div>
+        <div class="stat gems-you">
+          <span class="stat-label">Gems</span>
+          <span id="gems-red" class="stat-value">100</span>
+          <button id="btn-draw" class="btn-draw" type="button">
+            Draw card <span class="cost">−10</span>
+          </button>
+        </div>
+        <div class="hand-label">Your hand <span id="hand-count" class="hand-count">0/6</span></div>
+        <div id="hand-red" class="hand"></div>
+        <button id="btn-end-cards" class="btn-secondary" type="button">Done playing cards</button>
+        <div class="rules-hint">
+          <strong>How to play</strong>
+          <ul>
+            <li>Spend 10 gems to draw a random spell card.</li>
+            <li>Play cards on your turn, then move a piece.</li>
+            <li>Jump to capture; reach the far row to crown.</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <div id="card-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-backdrop"></div>
+      <div class="modal-content">
+        <h2 id="modal-title">Play card</h2>
+        <p id="modal-desc" class="modal-desc"></p>
+        <p id="modal-hint" class="modal-hint">Click valid squares on the board.</p>
+        <button id="btn-cancel-card" class="btn-secondary" type="button">Cancel</button>
+      </div>
+    </div>
+
+    <div id="game-over" class="overlay hidden">
+      <div class="overlay-card">
+        <h2 id="game-over-title">Victory</h2>
+        <p id="game-over-text"></p>
+        <button id="btn-restart" class="btn-primary" type="button">Play again</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
