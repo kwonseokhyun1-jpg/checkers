@@ -8,6 +8,8 @@ Classic checkers with a collectible spell-card layer. You and the AI each start 
 
 The site deploys automatically when changes are pushed to `main`.
 
+**First-time setup:** In the repo go to **Settings → Pages**, set **Source** to **Deploy from a branch**, choose branch **`gh-pages`** and folder **`/ (root)`**, then save. After the first deploy workflow finishes (Actions tab), the link above will work within a minute or two.
+
 ## Play locally
 
 Open `index.html` in a browser, or serve the folder:
