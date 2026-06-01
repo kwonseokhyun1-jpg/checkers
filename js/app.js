@@ -282,8 +282,9 @@ function renderInventoryGrid(container, opts = {}) {
 
   for (const def of getFilteredCollection()) {
     const owned = collectionCount(profile, def.id);
+    const atMaxCopies = owned >= MAX_COPIES_PER_CARD;
     const cost = getBuyCost(def.rarity);
-    const canAfford = profile.gems >= cost;
+    const canAfford = profile.gems >= cost && !atMaxCopies;
     const wrap = document.createElement("div");
     wrap.className = "collection-card-wrap";
 
@@ -294,10 +295,10 @@ function renderInventoryGrid(container, opts = {}) {
       const addCheck = deckEdit ? canAddCardToDeck(workingDeck, def.id, profile) : { ok: false };
       showCardPreview(def, {
         meta: deckEdit
-          ? `Owned ${owned} · In deck ${inDeck}/${MAX_COPIES_PER_CARD} · ${cost} gems per copy`
-          : `Owned ${owned} · ${cost} gems per copy`,
-        buyLabel: `Buy copy (${cost} gems)`,
-        buyDisabled: !canAfford,
+          ? `Owned ${owned}/${MAX_COPIES_PER_CARD} · In deck ${inDeck}/${MAX_COPIES_PER_CARD} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
+          : `Owned ${owned}/${MAX_COPIES_PER_CARD}${atMaxCopies ? " · max copies" : ` · ${cost} gems per copy`}`,
+        buyLabel: atMaxCopies ? "Max copies owned" : `Buy copy (${cost} gems)`,
+        buyDisabled: !canAfford || atMaxCopies,
         onBuy: () => {
           buyOne();
           closeCardPreview();
@@ -316,15 +317,19 @@ function renderInventoryGrid(container, opts = {}) {
 
     const card = renderSpellCardEl(def, {
       button: true,
+      disabled: atMaxCopies,
       onClick: (e) => {
         if (e.shiftKey) {
           openInspect();
           return;
         }
+        if (atMaxCopies) return;
         buyOne();
       },
     });
-    card.title = `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
+    card.title = atMaxCopies
+      ? `${def.name} — max ${MAX_COPIES_PER_CARD} copies owned. Shift+click to inspect.`
+      : `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
     wrap.appendChild(card);
 
     const ownedBadge = document.createElement("span");
@@ -335,7 +340,8 @@ function renderInventoryGrid(container, opts = {}) {
     const costBadge = document.createElement("span");
     costBadge.className = "collection-buy-cost";
     costBadge.textContent = `${cost} ◆`;
-    if (!canAfford) costBadge.classList.add("collection-buy-cost--cant");
+    if (!canAfford || atMaxCopies) costBadge.classList.add("collection-buy-cost--cant");
+    if (atMaxCopies) costBadge.textContent = "MAX";
     wrap.appendChild(costBadge);
 
     if (deckEdit) {

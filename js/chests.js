@@ -1,5 +1,5 @@
-import { getPlayableCards } from "./cardCatalog.js";
-import { saveProfile } from "./storage.js";
+import { getPlayableCards, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
+import { addToCollection, collectionCount, saveProfile } from "./storage.js";
 
 export const CHESTS = [
   { id: "bronze", name: "Bronze Reliquary", cost: 25, cards: 3, weights: { common: 70, uncommon: 25, rare: 5, epic: 0 } },
@@ -23,6 +23,18 @@ function drawCardOfRarity(rarity) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+function drawChestCard(profile, chest) {
+  const room = (card) => (profile.collection[card.id] || 0) < MAX_COPIES_PER_CARD;
+  for (let attempt = 0; attempt < 48; attempt++) {
+    const rarity = pickRarity(chest.weights);
+    const card = drawCardOfRarity(rarity);
+    if (room(card)) return card;
+  }
+  const pool = getPlayableCards().filter(room);
+  if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
+  return drawCardOfRarity(pickRarity(chest.weights));
+}
+
 export function openChest(profile, chestId) {
   const chest = CHESTS.find((c) => c.id === chestId);
   if (!chest) return { success: false, message: "Unknown chest." };
@@ -31,10 +43,9 @@ export function openChest(profile, chestId) {
   profile.gems -= chest.cost;
   const pulls = [];
   for (let i = 0; i < chest.cards; i++) {
-    const rarity = pickRarity(chest.weights);
-    const card = drawCardOfRarity(rarity);
+    const card = drawChestCard(profile, chest);
     pulls.push(card);
-    profile.collection[card.id] = (profile.collection[card.id] || 0) + 1;
+    addToCollection(profile, card.id, 1);
   }
   saveProfile(profile);
   return { success: true, pulls, chest };
