@@ -2434,12 +2434,17 @@ body.chest-open-active {
 }
 
 .board-frame--ai-spell {
-  animation: board-frame-spell-glow 1.4s ease-in-out infinite;
+  animation: board-frame-spell-glow 1.4s ease-in-out 2;
   border-radius: 8px;
 }
 
-.board-frame--ai-spell .board {
-  animation: board-spell-shake 0.5s ease-in-out infinite;
+/* Heavy impact only — toggled from JS when spec.shake is true */
+.board--spell-shake {
+  animation: board-spell-shake 0.42s ease-in-out 3;
+}
+
+.board-frame--spell-impact {
+  animation: board-frame-spell-impact 0.55s ease-in-out 2;
 }
 
 @keyframes ai-spell-banner-in {
@@ -2469,8 +2474,14 @@ body.chest-open-active {
 
 @keyframes board-spell-shake {
   0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-2px, 1px); }
-  75% { transform: translate(2px, -1px); }
+  25% { transform: translate(-3px, 2px); }
+  50% { transform: translate(2px, -2px); }
+  75% { transform: translate(3px, 1px); }
+}
+
+@keyframes board-frame-spell-impact {
+  0%, 100% { box-shadow: 0 0 0 rgba(200, 60, 60, 0); }
+  50% { box-shadow: 0 0 36px rgba(200, 60, 60, 0.4); }
 }
 
 /* Cull — weakest enemy execution */
@@ -2586,23 +2597,23 @@ body.chest-open-active {
 
 .square.spell-anim-kill,
 .square.spell-anim-type-kill {
-  animation: spell-square-kill 0.55s ease-in-out infinite;
+  animation: spell-square-kill 0.55s ease-in-out 3;
   box-shadow: inset 0 0 0 3px rgba(232, 93, 93, 0.9), 0 0 16px rgba(232, 60, 60, 0.5);
 }
 .square.spell-anim-debuff,
 .square.spell-anim-type-debuff {
-  animation: spell-square-debuff 0.7s ease-in-out infinite;
+  animation: spell-square-debuff 0.7s ease-in-out 2;
   box-shadow: inset 0 0 0 3px rgba(159, 122, 234, 0.85);
 }
 .square.spell-anim-buff,
 .square.spell-anim-type-buff {
-  animation: spell-square-buff 0.7s ease-in-out infinite;
+  animation: spell-square-buff 0.7s ease-in-out 2;
   box-shadow: inset 0 0 0 3px rgba(92, 225, 230, 0.85);
 }
 .square.spell-anim-terrain,
 .square.spell-anim-type-terrain {
   box-shadow: inset 0 0 0 3px rgba(232, 197, 71, 0.85);
-  animation: spell-square-terrain 0.8s ease-in-out infinite;
+  animation: spell-square-terrain 0.8s ease-in-out 2;
 }
 .square.spell-anim-move,
 .square.spell-anim-from {
@@ -2610,14 +2621,14 @@ body.chest-open-active {
 }
 .square.spell-anim-to {
   box-shadow: inset 0 0 0 3px rgba(92, 225, 230, 0.85);
-  animation: spell-square-buff 0.6s ease-in-out infinite;
+  animation: spell-square-buff 0.6s ease-in-out 2;
 }
 .square.spell-anim-line {
   box-shadow: inset 0 0 0 2px rgba(255, 200, 100, 0.7);
   background-image: linear-gradient(135deg, rgba(255, 200, 80, 0.25), transparent);
 }
 .square.spell-anim-swap {
-  animation: spell-square-swap 0.5s ease-in-out infinite;
+  animation: spell-square-swap 0.5s ease-in-out 2;
 }
 .square.spell-anim-hit,
 .square.spell-anim-type-generic {
