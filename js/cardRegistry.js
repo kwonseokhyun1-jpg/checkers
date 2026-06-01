@@ -123,7 +123,7 @@ export const CARD_REGISTRY = [
   { id: "mirror_move", name: "Mirror Move", desc: "After opponent moves, copy their move pattern with your piece if legal.", rarity: "rare", weight: 3, mode: "instant", effect: "mirror_move" },
   { id: "time_slip", name: "Time Slip", desc: "Undo your last checkers move (once per game).", rarity: "epic", weight: 1, mode: "instant", effect: "time_slip" },
   { id: "parallel", name: "Parallel", desc: "Play one additional card this turn.", rarity: "rare", weight: 3, mode: "instant", effect: "parallel" },
-  { id: "counterspell", name: "Counterspell", desc: "Cancel the next enemy card played.", rarity: "uncommon", weight: 5, mode: "instant", effect: "counterspell" },
+  { id: "counterspell", name: "Counterspell", desc: "Set a hidden trap: the next enemy spell is auto-cancelled when they cast it.", rarity: "uncommon", weight: 5, mode: "instant", effect: "counterspell" },
   { id: "echo", name: "Echo", desc: "Repeat the last card you played.", rarity: "rare", weight: 3, mode: "instant", effect: "echo" },
   { id: "roulette", name: "Roulette", desc: "Random card effect hits a random valid target.", rarity: "epic", weight: 2, mode: "instant", effect: "roulette" },
   { id: "blizzard", name: "Blizzard", desc: "Freeze up to 3 enemy men along a diagonal line you choose.", rarity: "rare", weight: 3, mode: "friendly", effect: "blizzard" },

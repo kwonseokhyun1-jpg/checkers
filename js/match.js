@@ -11,7 +11,7 @@ import {
   countPieces,
   tickEffects,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -571,6 +571,36 @@ ${starLine}`;
     if (banner) banner.classList.remove(`spell-anim-${spec.type}`);
   }
 
+  async runHiddenCounterspellCast() {
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = "Counterspell armed — hidden.";
+      banner.className = "turn-banner spell-anim-instant";
+    }
+    this.render();
+    await delay(450);
+    if (banner) banner.className = "turn-banner";
+  }
+
+  async runCounterspellReveal() {
+    const frame = this.$("board")?.closest(".board-frame");
+    frame?.classList.add("board-frame--counterspell");
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = "Counterspell!";
+      banner.className = "turn-banner turn-banner--counterspell";
+    }
+    this.root.querySelector(".match-wrap")?.classList.add("match-wrap--counterspell");
+    this.render();
+    await delay(1200);
+    frame?.classList.remove("board-frame--counterspell");
+    this.root.querySelector(".match-wrap")?.classList.remove("match-wrap--counterspell");
+    if (banner) {
+      banner.classList.remove("turn-banner--counterspell");
+      banner.className = "turn-banner";
+    }
+  }
+
   async playCullAnimation(row, col, victim = null) {
     const piece = this.state.board[row]?.[col];
     const snap = victim || (piece ? cullVictimSnapshot(piece) : null);
@@ -590,6 +620,12 @@ ${starLine}`;
   }
 
   async applySpellWithAnimation(card, picks) {
+    const countered = tryConsumeCounterspell(this.state, COLORS.RED);
+    if (countered) {
+      await this.runCounterspellReveal();
+      return { success: false, message: "Enemy Counterspell! Your spell fizzles." };
+    }
+
     if (card.effect === "cull") {
       const target = findCullTarget(this.state, COLORS.RED);
       if (!target) return { success: false, message: "No enemy to cull." };
@@ -597,6 +633,13 @@ ${starLine}`;
       await this.playCullAnimation(target.row, target.col, victim);
       return applyCard(this.state, COLORS.RED, card, picks);
     }
+
+    if (card.effect === "counterspell") {
+      const res = applyCard(this.state, COLORS.RED, card, picks);
+      if (res.success) await this.runHiddenCounterspellCast();
+      return res;
+    }
+
     const spec = buildAnimSpec(card, picks, COLORS.RED);
     await this.runSpellAnimation(spec);
     return applyCard(this.state, COLORS.RED, card, picks);
@@ -615,7 +658,11 @@ ${starLine}`;
       }
       this.removeCardFromHand(card);
       this.state.spellPlayed.red = true;
-      this.setMessage(res.message || "Spell cast.");
+      if (card.effect === "counterspell") {
+        this.setMessage("Counterspell armed. They won't know until they cast.");
+      } else {
+        this.setMessage(res.message || "Spell cast.");
+      }
       if (this.checkWin()) return;
       this.render();
     } finally {
@@ -676,6 +723,25 @@ ${starLine}`;
         this.$("board")?.classList.add("board--ai-spell");
         this.render();
         await delay(AI_PACE.spellWindUp);
+
+        if (entry.countered) {
+          if (aiLog) {
+            const active = aiLog.querySelector(".ai-log-entry--active");
+            if (active) {
+              active.classList.remove("ai-log-entry--active");
+              active.innerHTML = `✦ <strong>${cardName}</strong> — countered`;
+            }
+          }
+          this.setMessage(`${this.opponentName} casts ${cardName}…`);
+          this.render();
+          await delay(400);
+          await this.runCounterspellReveal();
+          this.setMessage("Your Counterspell cancels their magic!");
+          this.$("board")?.classList.remove("board--ai-spell");
+          this.hideAiSpellBanner();
+          await delay(AI_PACE.spellSettle);
+          continue;
+        }
 
         if (aiLog) {
           const active = aiLog.querySelector(".ai-log-entry--active");
