@@ -3229,3 +3229,37 @@ body.chest-open-active {
   opacity: 0.75;
   margin: -0.35rem 0 0.75rem;
 }
+
+
+.adventure-world-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0.35rem;
+}
+.adventure-world-tab {
+  font-family: var(--font-ui, "DM Sans", sans-serif);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(20, 28, 44, 0.8);
+  color: rgba(232, 236, 244, 0.75);
+  cursor: pointer;
+}
+.adventure-world-tab.active {
+  color: var(--accent-gem, #5ce1e6);
+  border-color: rgba(92, 225, 230, 0.45);
+  background: rgba(92, 225, 230, 0.12);
+}
+.adventure-world-tab--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.adventure-world-hint {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin: 0 0 0.75rem;
+  min-height: 1.2em;
+}

@@ -10,7 +10,8 @@ export const STARTING_GEMS = 400;
 export const TESTING_GEMS = 4000;
 export const WIN_GEMS = 10;
 
-/** 10 unique commons × 3 copies = 30-card starter deck */
+/** Starter deck: commons only, up to 4 copies per card (30 cards). */
+export const STARTER_COPIES_PER_CARD = 4;
 export const STARTER_COMMON_IDS = [
   "nudge",
   "retreat",
@@ -24,11 +25,19 @@ export const STARTER_COMMON_IDS = [
   "recall",
 ];
 
+export function buildStarterDeckCardIds() {
+  const ids = [];
+  for (const id of STARTER_COMMON_IDS.slice(0, 7)) {
+    for (let i = 0; i < STARTER_COPIES_PER_CARD; i++) ids.push(id);
+  }
+  ids.push(STARTER_COMMON_IDS[7], STARTER_COMMON_IDS[7]);
+  return ids;
+}
+
 function defaultProfile() {
   const collection = {};
-  const starterIds = STARTER_COMMON_IDS;
-  for (const id of starterIds) collection[id] = 3;
-  const cardIds = starterIds.flatMap((id) => [id, id, id]);
+  for (const id of STARTER_COMMON_IDS) collection[id] = STARTER_COPIES_PER_CARD;
+  const cardIds = buildStarterDeckCardIds();
   const starterDeck = {
     id: "deck-starter",
     name: "Starter Deck",

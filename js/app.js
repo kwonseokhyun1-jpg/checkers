@@ -12,6 +12,13 @@ import {
 } from "./storage.js";
 import {
   getAdventureLevels,
+  getLevelsForWorld,
+  WORLDS,
+  getWorldsForMap,
+  areBonusWorldsUnlocked,
+  defaultAdventureProgress,
+  BONUS_WORLDS_UNLOCK_AT_LEVEL,
+  isWorldUnlocked,
   getLevel,
   getOrCreateLevelEnemyDeck,
   getEnemyDeckPreview,
@@ -61,6 +68,7 @@ function sortCollectionCards(cards) {
 let matchSession = null;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
+let selectedAdventureWorldId = 1;
 /** @type {string[]|null} */
 let pendingEnemyDeck = null;
 
@@ -572,12 +580,49 @@ function showAdventureMap() {
 
 function renderAdventureMap() {
   updateGemHeader();
+  const progress = profile.adventure || defaultAdventureProgress();
+  if (!progress.selectedWorld) progress.selectedWorld = 1;
+  selectedAdventureWorldId = progress.selectedWorld;
+
+  const tabs = $("adventure-world-tabs");
+  if (tabs) {
+    tabs.innerHTML = "";
+    const worlds = getWorldsForMap(progress);
+    for (const w of WORLDS) {
+      const unlocked = isWorldUnlocked(progress, w.id);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "adventure-world-tab";
+      btn.dataset.world = String(w.id);
+      if (w.id === selectedAdventureWorldId) btn.classList.add("active");
+      if (!unlocked) btn.classList.add("adventure-world-tab--locked");
+      btn.disabled = !unlocked;
+      btn.textContent = w.name;
+      btn.title = unlocked ? w.tagline : `Clear stage ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
+      btn.addEventListener("click", () => {
+        if (!isWorldUnlocked(progress, w.id)) return;
+        selectedAdventureWorldId = w.id;
+        progress.selectedWorld = w.id;
+        saveProfile(profile);
+        renderAdventureMap();
+      });
+      tabs.appendChild(btn);
+    }
+    if (!isWorldUnlocked(progress, selectedAdventureWorldId)) {
+      selectedAdventureWorldId = worlds[0]?.id || 1;
+      progress.selectedWorld = selectedAdventureWorldId;
+    }
+  }
+
+  const hint = $("adventure-world-hint");
+  const worldMeta = WORLDS.find((w) => w.id === selectedAdventureWorldId);
+  if (hint && worldMeta) hint.textContent = worldMeta.tagline;
+
   const map = $("adventure-map");
   if (!map) return;
   map.innerHTML = "";
-  const progress = profile.adventure;
 
-  for (const level of getAdventureLevels()) {
+  for (const level of getLevelsForWorld(selectedAdventureWorldId)) {
     const unlocked = isLevelUnlocked(progress, level.id);
     const cleared = isLevelCleared(progress, level.id);
     const node = document.createElement("button");
@@ -590,7 +635,7 @@ function renderAdventureMap() {
     const stars = getLevelStars(progress, level.id);
     const starBadge = stars > 0 ? `<span class="adventure-node__stars" aria-label="${stars} stars">${formatStars(stars)}</span>` : "";
     node.innerHTML = `
-      <span class="adventure-node__num">${level.id}</span>
+      <span class="adventure-node__num">${level.stageInWorld}</span>
       <span class="adventure-node__name">${level.opponent}</span>
       <span class="adventure-node__flavor">${level.flavor}</span>
       ${starBadge}

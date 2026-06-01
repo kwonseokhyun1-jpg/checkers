@@ -91,7 +91,7 @@ export function getCardDef(id) {
 }
 
 export const DECK_SIZE = 30;
-export const MAX_COPIES_PER_CARD = 3;
+export const MAX_COPIES_PER_CARD = 4;
 export const START_HAND = 3;
 /** @deprecated No hand cap in match — kept for legacy references */
 export const MAX_HAND = Infinity;
