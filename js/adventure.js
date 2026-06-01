@@ -76,11 +76,22 @@ const LEVEL_FLAVOR = [
 
 function rarityWeight(levelNum, rarity) {
   const tier = Math.floor((levelNum - 1) / 10);
-  const w = { common: 40, uncommon: 30, rare: 20, epic: 8, legendary: 2 };
+  if (levelNum <= 5) {
+    if (rarity === "common") return 90;
+    if (rarity === "uncommon") return 9;
+    if (rarity === "rare") return 1;
+    return 0;
+  }
+  if (levelNum <= 10) {
+    if (rarity === "common") return 78;
+    if (rarity === "uncommon") return 18;
+    if (rarity === "rare") return 4;
+    return 0;
+  }
   if (tier === 0) {
-    if (rarity === "common") return 55;
-    if (rarity === "uncommon") return 30;
-    if (rarity === "rare") return 12;
+    if (rarity === "common") return 62;
+    if (rarity === "uncommon") return 28;
+    if (rarity === "rare") return 9;
     return 1;
   }
   if (tier === 1) {
