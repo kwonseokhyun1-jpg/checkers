@@ -82,7 +82,7 @@ export const CARD_REGISTRY = [
   { id: "panic", name: "Panic", desc: "Force an enemy man to step backward on its owner's next turn if possible.", rarity: "uncommon", weight: 4, mode: "enemy", effect: "panic" },
   { id: "bishops_sigil", name: "Bishop's Sigil", desc: "Piece slides diagonally any distance over empties for its next 2 moves.", rarity: "rare", weight: 3, mode: "friendly", effect: "bishop_3" },
   { id: "rooks_sigil", name: "Rook's Sigil", desc: "Piece slides along rank/file over empties for its next 2 moves.", rarity: "rare", weight: 3, mode: "friendly", effect: "rook_3" },
-  { id: "demote", name: "Demote", desc: "Turn an enemy king back into a man.", rarity: "epic", weight: 2, mode: "enemy", effect: "demote" },
+  { id: "demote", name: "Demote", desc: "Turn an enemy king back into a man.", rarity: "common", weight: 6, mode: "enemy", effect: "demote" },
   { id: "promote_zone", name: "Promote Zone", desc: "Treat your piece as on the promotion row for movement this turn.", rarity: "common", weight: 6, mode: "friendly", effect: "promote_zone" },
   { id: "twin_soul", name: "Twin Soul", desc: "Split a man into two tokens on adjacent squares; linked fate.", rarity: "epic", weight: 2, mode: "friendly", effect: "twin_soul" },
   { id: "fusion", name: "Fusion", desc: "Merge two adjacent friendly men into one super-man (2-step non-capture).", rarity: "rare", weight: 3, mode: "f_f_adj", effect: "fusion" },
