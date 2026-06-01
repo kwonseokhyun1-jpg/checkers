@@ -3,6 +3,7 @@ const TAGS = {
   nudge: ["Move your piece 1 adjacent square"],
   shield_2: ["Shield 2 turns — cannot be captured"],
   forward_bolt: ["Destroy first enemy on forward diagonal"],
+  chain_lightning: ["Strike adjacent enemies only", "Up to 2 kills if enemies touch each other"],
   fireblast: ["Your piece, then first enemy ahead — burns through shields"],
   freeze_1: ["Enemy cannot move on their next turn"],
   freeze_2: ["Enemy cannot move on their next turn"],

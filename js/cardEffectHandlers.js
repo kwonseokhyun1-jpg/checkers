@@ -53,6 +53,39 @@ function kill(state, r, c, by, nonCap = true) {
   if (p.ghostGuard) getSq(state, r, c).ghostBlock = 2;
   return true;
 }
+
+function adjacentSquares(r, c) {
+  const out = [];
+  for (let dr = -1; dr <= 1; dr++)
+    for (let dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue;
+      const nr = r + dr, nc = c + dc;
+      if (inBounds(nr, nc) && isDarkSquare(nr, nc)) out.push([nr, nc]);
+    }
+  return out;
+}
+function enemySquaresAdjacentTo(state, r, c, color) {
+  return adjacentSquares(r, c).filter(([ar, ac]) => {
+    const t = at(state, ar, ac);
+    return t && t.color !== color;
+  });
+}
+export function chainLightningCanTarget(state, pr, pc, color) {
+  return enemySquaresAdjacentTo(state, pr, pc, color).length > 0;
+}
+function bestChainLightningHits(state, pr, pc, color) {
+  const first = enemySquaresAdjacentTo(state, pr, pc, color);
+  if (!first.length) return [];
+  let best = [first[0]];
+  for (const [r1, c1] of first) {
+    const second = enemySquaresAdjacentTo(state, r1, c1).filter(
+      ([r2, c2]) => !(r2 === pr && c2 === pc) && !(r2 === r1 && c2 === c1)
+    );
+    if (second.length) return [[r1, c1], second[0]];
+  }
+  return best;
+}
+
 function fri(state, color) { return piecesOfColor(state.board, color); }
 function en(state, color) { return enemyPieces(state.board, color); }
 function markMove(state, color) { state.meta.movementCardPlayed[color] = true; }
@@ -200,39 +233,15 @@ const EFFECTS = {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
     if (!p || p.color !== color) return fail();
-    const dir = p.color === COLORS.RED ? -1 : 1;
-    const countEnemies = (dc) => {
-      let n = 0;
-      let rr = p.row + dir, cc = p.col + dc;
-      while (inBounds(rr, cc) && isDarkSquare(rr, cc)) {
-        const t = at(state, rr, cc);
-        if (t) {
-          if (t.color !== color) n++;
-          else break;
-        }
-        rr += dir;
-        cc += dc;
-      }
-      return n;
-    };
-    const left = countEnemies(-1);
-    const right = countEnemies(1);
-    let dc = right > left ? 1 : -1;
-    if (left === 0 && right === 0) return fail("No enemies on a forward diagonal");
-    const MAX_CHAIN = 2;
+    const chain = bestChainLightningHits(state, r, c, color);
+    if (!chain.length) return fail("No adjacent enemies to chain");
     let hits = 0;
-    let rr = p.row + dir, cc = p.col + dc;
-    while (inBounds(rr, cc) && isDarkSquare(rr, cc) && hits < MAX_CHAIN) {
-      const t = at(state, rr, cc);
-      if (t) {
-        if (t.color !== color) {
-          if (kill(state, rr, cc, color)) hits++;
-        } else break;
-      }
-      rr += dir;
-      cc += dc;
+    for (const [tr, tc] of chain) {
+      if (kill(state, tr, tc, color)) hits++;
     }
-    return hits ? ok(`Chain Lightning — ${hits} struck along the denser diagonal.`) : fail("No valid targets");
+    return hits
+      ? ok(`Chain Lightning — ${hits} struck adjacent enemies.`)
+      : fail("No valid targets");
   },
   vacuum(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const all=fri(state,color).concat(en(state,color)); for(const p of all){ const dr=Math.sign(r-p.row),dc=Math.sign(c-p.col); const nr=p.row+dr,nc=p.col+dc; if((nr!==r||nc!==c)&&emptyDark(state,nr,nc)) movePiece(state.board,p.row,p.col,nr,nc);} return ok(); },
   scatter(state, color, picks) { const [r,c]=p0(picks); const all=[]; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ if(!dr&&!dc) continue; const pr=r+dr,pc=c+dc; const p=at(state,pr,pc); if(p) all.push(p);} for(const p of all){ const dr=Math.sign(p.row-r)||1, dc=Math.sign(p.col-c)||1; const nr=p.row+dr,nc=p.col+dc; if(emptyDark(state,nr,nc)) movePiece(state.board,p.row,p.col,nr,nc);} return ok(); },
