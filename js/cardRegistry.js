@@ -105,7 +105,7 @@ export const CARD_REGISTRY = [
   { id: "identity_theft", name: "Identity Theft", desc: "Your piece copies an enemy's movement tags for 3 turns.", rarity: "rare", weight: 3, mode: "f_e", effect: "identity_theft" },
   { id: "bait_switch", name: "Bait and Switch", desc: "Swap an enemy with an empty square up to 2 steps away.", rarity: "rare", weight: 3, mode: "e_empty", effect: "bait_switch" },
   { id: "mirror_move", name: "Mirror Move", desc: "After opponent moves, copy their move pattern with your piece if legal.", rarity: "common", weight: 6, mode: "instant", effect: "mirror_move" },
-  { id: "time_slip", name: "Time Slip", desc: "Undo your last checkers move (once per game).", rarity: "uncommon", weight: 4, mode: "instant", effect: "time_slip" },
+  { id: "offering", name: "Offering", desc: "Sacrifice one of your pieces to draw 2 cards from your deck.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "offering" },
   { id: "counterspell", name: "Counterspell", desc: "Set a hidden trap: the next enemy spell is auto-cancelled when they cast it.", rarity: "epic", weight: 2, mode: "instant", effect: "counterspell" },
   { id: "roulette", name: "Roulette", desc: "Random card effect hits a random valid target.", rarity: "uncommon", weight: 4, mode: "instant", effect: "roulette" },
   { id: "blizzard", name: "Blizzard", desc: "Freeze up to 3 enemy men along a diagonal line you choose.", rarity: "rare", weight: 3, mode: "friendly", effect: "blizzard" },

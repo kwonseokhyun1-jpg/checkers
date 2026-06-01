@@ -1,5 +1,5 @@
 import { createCardInstance } from "./cards.js";
-import { getCardDef, MAX_HAND } from "./cardCatalog.js";
+import { getCardDef } from "./cardCatalog.js";
 
 import { createMatchPile } from "./deckRules.js";
 
@@ -14,8 +14,7 @@ export function initDeckPiles(state, redIds, blackIds) {
 export function drawToHand(state, color, n = 1) {
   let drawn = 0;
   for (let i = 0; i < n; i++) {
-    if (state.hands[color].length >= MAX_HAND) break;
-    const id = state.drawPile[color].pop();
+const id = state.drawPile[color].pop();
     if (!id) break;
     const def = getCardDef(id);
     if (!def) continue;

@@ -11,7 +11,7 @@ export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS };
 const META_EFFECTS = new Set([
   "quick_march", "overrun", "ricochet", "blind", "confusion", "counterspell", "dominion",
   "conduct", "mirror_move", "roulette", "rules_lawyer", "mirror_board", "highlight_path",
-  "pocket", "possession", "time_slip", "chameleon", "identity_theft", "succession",
+  "pocket", "possession", "chameleon", "identity_theft", "succession",
   "twin_soul", "last_king", "constitution", "sanctuary_pulse", "parallel", "echo",
 ]);
 

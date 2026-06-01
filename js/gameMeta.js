@@ -77,7 +77,7 @@ export function getSq(state, r, c) {
 }
 
 export function handLimit(state, color) {
-  return state.meta.handMax[color] || 6;
+  return Number.MAX_SAFE_INTEGER;
 }
 
 export function drawCostFor(state, color, baseCost) {

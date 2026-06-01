@@ -8,6 +8,7 @@ import {
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
+import { drawToHand } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
 
 const opp = (c) => (c === COLORS.RED ? COLORS.BLACK : COLORS.RED);
@@ -169,13 +170,13 @@ const EFFECTS = {
   earthquake(state, color, picks) { const cr=3.5,cc=3.5; const all=fri(state,color).concat(en(state,color)); for(const p of all){ const dr=p.row<cr?1:p.row>cr?-1:0, dc=p.col<cc?1:p.col>cc?-1:0; const nr=p.row+dr,nc=p.col+dc; if(emptyDark(state,nr,nc)) movePiece(state.board,p.row,p.col,nr,nc);} return ok(); },
   prospect(state, color, picks) { state.gems[color]+=10; state.meta.prospectPending[color]=10; return ok(); },
   tax(state, color, picks) { const o=opp(color); state.gems[o]=Math.max(0,state.gems[o]-10); state.gems[color]+=5; return ok(); },
-  gamble(state, color, picks) { if(state.gems[color]<15) return fail('Need 15 gems'); state.gems[color]-=15; for(let i=0;i<2;i++){ if(state.hands[color].length<handLimit(state,color)) state.hands[color].push(createCardInstance(drawRandomCard())); } return ok(); },
+  gamble(state, color, picks) { if(state.gems[color]<15) return fail('Need 15 gems'); state.gems[color]-=15; for(let i=0;i<2;i++) state.hands[color].push(createCardInstance(drawRandomCard())); return ok(); },
   haggle(state, color, picks) { state.meta.drawDiscount[color]=5; return ok(); },
   recycle(state, color, picks) { if(picks.length<1) return fail('Discard a card'); return fail('Use discard UI'); },
-  scout(state, color, picks) { for(let i=0;i<3;i++) if(state.hands[color].length<handLimit(state,color)) state.hands[color].push(createCardInstance(drawRandomCard())); return ok(); },
+  scout(state, color, picks) { for(let i=0;i<3;i++) state.hands[color].push(createCardInstance(drawRandomCard())); return ok(); },
   forge(state, color, picks) { const h=state.hands[color]; if(h.length<2) return fail('Need 2 cards'); h.splice(0,2); const rare=CARD_REGISTRY.filter(c=>c.rarity==='rare'||c.rarity==='epic'); h.push(createCardInstance(rare[Math.floor(Math.random()*rare.length)])); return ok(); },
   heist(state, color, picks) { const oh=state.hands[opp(color)]; if(!oh.length) return fail('No cards'); const c=oh.splice(Math.floor(Math.random()*oh.length),1)[0]; state.hands[color].push(c); return ok(); },
-  donate(state, color, picks) { state.gems[color]=Math.max(0,state.gems[color]-20); state.gems[opp(color)]+=20; for(let i=0;i<2;i++) if(state.hands[color].length<handLimit(state,color)) state.hands[color].push(createCardInstance(drawRandomCard())); return ok(); },
+  donate(state, color, picks) { state.gems[color]=Math.max(0,state.gems[color]-20); state.gems[opp(color)]+=20; for(let i=0;i<2;i++) state.hands[color].push(createCardInstance(drawRandomCard())); return ok(); },
   interest(state, color, picks) { state.gems[color]+=Math.min(25,Math.floor(state.gems[color]/2)); return ok(); },
   bankrupt(state, color, picks) { state.gems[color]=Math.floor(state.gems[color]/2); state.gems[opp(color)]=Math.floor(state.gems[opp(color)]/2); return ok(); },
   coupon(state, color, picks) { state.meta.freeDraw[color]=true; return ok(); },
@@ -186,7 +187,7 @@ const EFFECTS = {
   identity_theft(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=3; return ok(); },
   bait_switch(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const e=at(state,r1,c1); if(!e||e.color===color||!emptyDark(state,r2,c2)) return fail(); if(Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>2) return fail(); swapAt(state,r1,c1,r2,c2); return ok(); },
   mirror_move(state, color, picks) { state.meta.mirrorMovePending=color; return ok(); },
-  time_slip(state, color, picks) { if(state.meta.timeSlipUsed[color]) return fail('Already used'); const lm=state.meta.lastMove[color]; if(!lm) return fail('No move'); state.meta.timeSlipUsed[color]=true; return fail('Undo not fully wired'); },
+  offering(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); const drawn=drawToHand(state,color,2); if(!drawn) return fail('Deck empty'); return ok(`Offering — drew ${drawn} card${drawn>1?'s':''}.`); },
   parallel(state, color, picks) { state.meta.parallelExtra={...(state.meta.parallelExtra||{}), [color]:true}; state.meta.cardsLeft[color]=2; return ok(); },
   counterspell(state, color, picks) { state.meta.counterspell[color]=true; return ok(); },
   echo(state, color, picks) { const last=state.meta.lastCard[color]; if(!last) return fail('No previous card'); return applyEffect(state,color,last.effect,[]); },
@@ -249,7 +250,7 @@ const EFFECTS = {
   pocket(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); state.meta.pocket={piece:p,r,c}; state.meta.pocketReturnTurn=state.meta.turnNumber+2; return ok(); },
   uno_reverse(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); state.meta.forcedCapturePieceId=p.id; return ok(); },
   gems_5(state, color, picks) { state.gems[color] += 5; return ok(); },
-  draw_1(state, color, picks) { const h=state.hands[color]; if(h.length>=handLimit(state,color)) return fail('Hand full'); h.push(createCardInstance(drawRandomCard())); return ok(); },
+  draw_1(state, color, picks) { state.hands[color].push(createCardInstance(drawRandomCard())); return ok(); },
   conduct(state, color, picks) { state.meta.pendingConduct[color]=true; return ok(); },
   cryo_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const t=at(state,r2,c2); if(t&&t.frozenTurns>0) t.shieldTurns=0; if(!kill(state,r2,c2,color)) return fail(); return ok(); },
   knights_charge(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||!(p.knightTurns > 0 || p.isKnight)) return fail(); p.knightCapture=true; return ok(); },
