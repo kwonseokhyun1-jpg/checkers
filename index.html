@@ -3,115 +3,147 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Card Checkers</title>
+  <title>Arcane Checkers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <div class="app">
-    <header class="header">
-      <h1>Card Checkers</h1>
-      <p class="tagline">Build your deck · Open chests · Battle the Shadow Court</p>
-      <p class="header-gems">Gems: <span id="header-gems">0</span></p>
+  <div class="ambient-bg" aria-hidden="true"></div>
+  <div class="app game-shell">
+    <header class="game-header">
+      <div class="game-header__brand">
+        <div class="logo-mark" aria-hidden="true">
+          <span class="logo-mark__piece logo-mark__piece--red"></span>
+          <span class="logo-mark__piece logo-mark__piece--black"></span>
+          <span class="logo-mark__spark">✦</span>
+        </div>
+        <div class="game-header__titles">
+          <p class="game-header__eyebrow">Arcane Checkers</p>
+          <h1 class="game-header__title">Shadow Court</h1>
+        </div>
+      </div>
+      <div class="hud-gems" title="Arcane gems">
+        <span class="hud-gems__icon" aria-hidden="true">◆</span>
+        <span class="hud-gems__value" id="header-gems">0</span>
+        <span class="hud-gems__label">gems</span>
+      </div>
     </header>
 
-    <nav class="tabs" role="tablist">
-      <button type="button" class="tab-btn active" data-tab="deck" role="tab">Decks</button>
-      <button type="button" class="tab-btn" data-tab="chests" role="tab">Chests</button>
-      <button type="button" class="tab-btn" data-tab="play" role="tab">Play</button>
+    <nav class="game-nav tabs" role="tablist" aria-label="Game menu">
+      <button type="button" class="tab-btn game-nav__btn active" data-tab="deck" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">▣</span>
+        <span>Decks</span>
+      </button>
+      <button type="button" class="tab-btn game-nav__btn" data-tab="chests" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">◇</span>
+        <span>Vault</span>
+      </button>
+      <button type="button" class="tab-btn game-nav__btn" data-tab="play" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">⚔</span>
+        <span>Battle</span>
+      </button>
     </nav>
 
-    <div id="view-chests" class="view">
-      <section class="panel meta-panel">
-        <h2>Open chests</h2>
-        <p class="meta-desc">Spend gems to expand your collection. Economy spells are disabled and never drop from chests.</p>
-        <div id="chest-list" class="chest-list"></div>
-        <div id="chest-pulls" class="chest-pulls"></div>
-        <p id="chest-log" class="chest-log" role="status"></p>
-      </section>
-    </div>
+    <main class="game-main">
+      <div id="view-chests" class="view view-panel">
+        <section class="panel game-panel vault-panel">
+          <header class="panel-head">
+            <h2 class="panel-head__title">Arcane Vault</h2>
+            <p class="panel-head__desc">Spend gems to unseal reliquaries. Each cache grants spell cards for your collection.</p>
+          </header>
+          <div id="chest-list" class="chest-list"></div>
+          <div id="chest-pulls" class="chest-pulls chest-pulls--hidden" aria-live="polite"></div>
+          <p id="chest-log" class="chest-log" role="status"></p>
+        </section>
+      </div>
 
-    <div id="view-deck" class="view hidden">
-      <!-- Default: deck list -->
-      <section id="deck-subview-list" class="deck-subview panel meta-panel">
-        <div class="deck-list-header">
-          <div>
-            <h2>Your decks</h2>
-            <p class="meta-desc">Tap a deck to view its cards. Build 30-card decks (max 3 copies each) before playing.</p>
+      <div id="view-deck" class="view view-panel hidden">
+        <section id="deck-subview-list" class="deck-subview panel game-panel">
+          <div class="deck-list-header">
+            <header class="panel-head panel-head--inline">
+              <h2 class="panel-head__title">War grimoires</h2>
+              <p class="panel-head__desc">Tap a deck to inspect its spells. Build 30-card lists (max 3 copies) before battle.</p>
+            </header>
+            <button type="button" id="btn-new-deck" class="btn-primary">+ New deck</button>
           </div>
-          <button type="button" id="btn-new-deck" class="btn-primary">+ New deck</button>
-        </div>
-        <div id="deck-list" class="deck-list"></div>
-      </section>
+          <div id="deck-list" class="deck-list"></div>
+        </section>
 
-      <!-- View deck (read-only) -->
-      <section id="deck-subview-view" class="deck-subview panel hidden">
-        <button type="button" id="btn-back-from-view" class="btn-text">← Back to decks</button>
-        <div class="deck-view-header">
-          <div>
-            <h2 id="view-deck-title">Deck</h2>
-            <p id="view-deck-status" class="deck-status"></p>
-          </div>
-          <div class="deck-view-actions">
-            <button type="button" id="btn-edit-from-view" class="btn-secondary">Edit deck</button>
-            <button type="button" id="btn-delete-from-view" class="btn-danger">Delete</button>
-          </div>
-        </div>
-        <div id="view-deck-cards" class="spell-card-grid spell-card-grid--deck readonly"></div>
-      </section>
-
-      <!-- Edit / create deck -->
-      <section id="deck-subview-edit" class="deck-subview hidden">
-        <button type="button" id="btn-back-from-edit" class="btn-text">← Back to decks</button>
-        <div class="deck-builder">
-          <div class="deck-controls panel">
-            <h2 id="edit-deck-heading">Edit deck</h2>
-            <p class="meta-desc">30 cards · max 3 copies · tap collection cards to add</p>
-            <input type="text" id="deck-name-input" class="input-text" placeholder="Deck name" value="My Deck" />
-            <p id="deck-status" class="deck-status warn">0/30 cards</p>
-            <div id="deck-slots" class="deck-slots-grid"></div>
-            <div class="deck-actions">
-              <button type="button" id="btn-save-deck" class="btn-primary">Save deck</button>
-              <button type="button" id="btn-clear-deck" class="btn-secondary">Clear all</button>
+        <section id="deck-subview-view" class="deck-subview panel game-panel hidden">
+          <button type="button" id="btn-back-from-view" class="btn-text">← Back to decks</button>
+          <div class="deck-view-header">
+            <div>
+              <h2 id="view-deck-title" class="panel-head__title">Deck</h2>
+              <p id="view-deck-status" class="deck-status"></p>
+            </div>
+            <div class="deck-view-actions">
+              <button type="button" id="btn-edit-from-view" class="btn-secondary">Edit deck</button>
+              <button type="button" id="btn-delete-from-view" class="btn-danger">Delete</button>
             </div>
           </div>
-          <div class="collection-panel panel">
-            <h2>Collection</h2>
-            <div class="filter-row">
-              <input type="search" id="collection-search" class="input-text" placeholder="Search cards…" />
-              <select id="collection-rarity" class="select-input">
-                <option value="all">All rarities</option>
-                <option value="common">Common</option>
-                <option value="uncommon">Uncommon</option>
-                <option value="rare">Rare</option>
-                <option value="epic">Epic</option>
-              </select>
+          <div id="view-deck-cards" class="spell-card-grid spell-card-grid--deck readonly"></div>
+        </section>
+
+        <section id="deck-subview-edit" class="deck-subview hidden">
+          <button type="button" id="btn-back-from-edit" class="btn-text">← Back to decks</button>
+          <div class="deck-builder">
+            <div class="deck-controls panel game-panel">
+              <h2 id="edit-deck-heading" class="panel-head__title">Edit deck</h2>
+              <p class="panel-head__desc">30 cards · max 3 copies · tap collection cards to add</p>
+              <input type="text" id="deck-name-input" class="input-text" placeholder="Deck name" value="My Deck" />
+              <p id="deck-status" class="deck-status warn">0/30 cards</p>
+              <div id="deck-slots" class="deck-slots-grid"></div>
+              <div class="deck-actions">
+                <button type="button" id="btn-save-deck" class="btn-primary">Save deck</button>
+                <button type="button" id="btn-clear-deck" class="btn-secondary">Clear all</button>
+              </div>
             </div>
-            <div id="collection-grid" class="collection-grid"></div>
+            <div class="collection-panel panel game-panel">
+              <h2 class="panel-head__title">Spell collection</h2>
+              <div class="filter-row">
+                <input type="search" id="collection-search" class="input-text" placeholder="Search cards…" />
+                <select id="collection-rarity" class="select-input">
+                  <option value="all">All rarities</option>
+                  <option value="common">Common</option>
+                  <option value="uncommon">Uncommon</option>
+                  <option value="rare">Rare</option>
+                  <option value="epic">Epic</option>
+                </select>
+              </div>
+              <div id="collection-grid" class="collection-grid"></div>
+            </div>
           </div>
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
 
-    <div id="view-play" class="view hidden">
-      <section class="panel meta-panel play-lobby">
-        <h2>Play vs AI</h2>
-        <p class="meta-desc">Choose a complete 30-card deck. PvP coming soon.</p>
-        <label class="label-sm">Active deck</label>
-        <select id="play-deck-select" class="select-input"></select>
-        <button type="button" id="btn-start-match" class="btn-primary btn-lg">Start match</button>
-        <ul class="rules-hint match-rules">
-          <li>Start with <strong>3 cards</strong> in hand (max <strong>5</strong>)</li>
-          <li><strong>1 spell</strong> per turn, then move a piece</li>
-          <li>Draw <strong>1 card every 2 turns</strong> from your deck</li>
-          <li>Win a match to earn <strong>10 gems</strong></li>
-        </ul>
-      </section>
-    </div>
+      <div id="view-play" class="view view-panel hidden">
+        <section class="panel game-panel play-lobby battle-gate">
+          <header class="panel-head">
+            <h2 class="panel-head__title">Challenge the Shadow Court</h2>
+            <p class="panel-head__desc">Select a complete 30-card grimoire and enter the arcane board.</p>
+          </header>
+          <label class="label-sm">Active deck</label>
+          <select id="play-deck-select" class="select-input"></select>
+          <button type="button" id="btn-start-match" class="btn-primary btn-lg btn-battle">Enter the board</button>
+          <ul class="rules-hint match-rules">
+            <li>Start with <strong>3 cards</strong> in hand (max <strong>5</strong>)</li>
+            <li><strong>1 spell</strong> per turn, then move a piece</li>
+            <li>Draw <strong>1 card every 2 turns</strong> from your deck</li>
+            <li>Victory awards <strong>10 gems</strong></li>
+          </ul>
+        </section>
+      </div>
 
-    <div id="view-match" class="view hidden"></div>
+      <div id="view-match" class="view hidden"></div>
+    </main>
+
+    <footer class="game-footer">
+      <span>Arcane Checkers</span>
+      <span class="game-footer__dot">·</span>
+      <span>Spells &amp; strategy on the checker board</span>
+    </footer>
   </div>
 
   <script type="module" src="js/app.js"></script>

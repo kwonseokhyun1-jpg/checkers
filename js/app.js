@@ -1,5 +1,5 @@
 /**
- * Card Checkers — meta game (chests, decks, play) + match
+ * Arcane Checkers — meta game (chests, decks, play) + match
  */
 import { getPlayableCards, getCardDef, DECK_SIZE, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
 import {
@@ -13,6 +13,7 @@ import {
 } from "./storage.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
+import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
 import { renderSpellCardEl } from "./cardArt.js";
 
@@ -51,6 +52,7 @@ function showTab(tab) {
 function updateGemHeader() {
   const el = $("header-gems");
   if (el) el.textContent = String(profile.gems);
+  document.querySelector(".hud-gems")?.classList.toggle("hud-gems--low", profile.gems < 50);
 }
 
 function showDeckSubview(sub) {
@@ -68,36 +70,80 @@ function renderChests() {
   updateGemHeader();
   const list = $("chest-list");
   const pullsEl = $("chest-pulls");
-  if (pullsEl) pullsEl.innerHTML = "";
+  if (pullsEl) {
+    pullsEl.innerHTML = "";
+    pullsEl.classList.add("chest-pulls--hidden");
+    pullsEl.classList.remove("chest-pulls--reveal");
+  }
   if (!list) return;
   list.innerHTML = "";
+
   for (const chest of CHESTS) {
-    const card = document.createElement("div");
-    card.className = "chest-card";
+    const tier = CHEST_TIERS[chest.id] || CHEST_TIERS.bronze;
+    const canAfford = profile.gems >= chest.cost;
+    const card = document.createElement("article");
+    card.className = `chest-card chest-card--${chest.id}${canAfford ? "" : " chest-card--locked"}`;
+
+    const rarityHint =
+      chest.id === "gold"
+        ? "Epic & rare focus"
+        : chest.id === "silver"
+          ? "Balanced arcane haul"
+          : "Starter spell tide";
+
     card.innerHTML = `
-      <h3>${chest.name}</h3>
-      <p class="chest-cost">${chest.cost} gems</p>
-      <p class="chest-desc">${chest.cards} cards · non-economy spells only</p>
-      <button type="button" class="btn-primary chest-open" data-id="${chest.id}">Open</button>
+      <div class="chest-card__aura" aria-hidden="true"></div>
+      <div class="chest-card__visual">${chestSvgMarkup(chest.id)}</div>
+      <div class="chest-card__body">
+        <span class="chest-card__tier">${tier.label}</span>
+        <h3 class="chest-card__name">${chest.name}</h3>
+        <p class="chest-card__tagline">${tier.tagline}</p>
+        <ul class="chest-card__stats">
+          <li><strong>${chest.cards}</strong> spells</li>
+          <li>${rarityHint}</li>
+        </ul>
+        <p class="chest-card__cost">
+          <span class="chest-card__gem" aria-hidden="true">◆</span>
+          <span>${chest.cost}</span>
+        </p>
+      </div>
+      <button type="button" class="btn-primary chest-open chest-card__btn" data-id="${chest.id}">
+        ${canAfford ? "Unseal" : "Need more gems"}
+      </button>
     `;
+
     const btn = card.querySelector(".chest-open");
-    btn.disabled = profile.gems < chest.cost;
+    btn.disabled = !canAfford;
     btn.addEventListener("click", () => {
       const res = openChest(profile, chest.id);
       const log = $("chest-log");
       if (!res.success) {
-        if (log) log.textContent = res.message;
+        if (log) {
+          log.textContent = res.message;
+          log.classList.add("chest-log--error");
+        }
         return;
       }
-      if (log) log.textContent = `Opened ${res.chest.name}!`;
-      if (pullsEl) {
-        pullsEl.innerHTML = "";
-        for (const def of res.pulls) {
-          pullsEl.appendChild(
-            renderSpellCardEl(def, { static: true, meta: "Added to collection" })
-          );
-        }
+
+      card.classList.add("chest-card--opening");
+      setTimeout(() => card.classList.remove("chest-card--opening"), 700);
+
+      if (log) {
+        log.textContent = `The ${tier.label} yields ${res.pulls.length} new spells!`;
+        log.classList.remove("chest-log--error");
       }
+
+      if (pullsEl) {
+        pullsEl.classList.remove("chest-pulls--hidden");
+        pullsEl.classList.add("chest-pulls--reveal");
+        pullsEl.innerHTML = `<p class="chest-pulls__label">Reliquary opened</p><div class="chest-pulls__grid"></div>`;
+        const grid = pullsEl.querySelector(".chest-pulls__grid");
+        for (const def of res.pulls) {
+          grid.appendChild(renderSpellCardEl(def, { static: true, meta: "Added to collection" }));
+        }
+        pullsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
       saveProfile(profile);
       renderChests();
     });
@@ -331,7 +377,7 @@ function startMatch() {
 
 function getMatchHtml() {
   return `
-    <div class="match-wrap">
+    <div class="match-wrap match-scene">
       <button type="button" id="btn-leave-match" class="btn-text">← Leave match</button>
       <div class="game-layout">
         <aside class="panel panel-opponent">
@@ -340,7 +386,7 @@ function getMatchHtml() {
           <div id="hand-black" class="hand hand-hidden"></div>
         </aside>
         <section class="board-section">
-          <div id="turn-banner" class="turn-banner">Your turn</div>
+          <div id="turn-banner" class="turn-banner match-banner">Your turn</div>
           <div id="spell-cast-bar" class="spell-cast-bar hidden">
             <div id="spell-cast-preview" class="spell-cast-preview"></div>
             <div class="spell-cast-copy">
