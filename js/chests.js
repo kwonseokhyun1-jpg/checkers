@@ -1,4 +1,4 @@
-import { getPlayableCards, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
+import { getPlayableCards, maxCopiesForCard } from "./cardCatalog.js";
 import { addToCollection, collectionCount, saveProfile } from "./storage.js";
 
 export const CHESTS = [
@@ -24,7 +24,7 @@ function drawCardOfRarity(rarity) {
 }
 
 function drawChestCard(profile, chest) {
-  const room = (card) => (profile.collection[card.id] || 0) < MAX_COPIES_PER_CARD;
+  const room = (card) => (profile.collection[card.id] || 0) < maxCopiesForCard(card);
   for (let attempt = 0; attempt < 48; attempt++) {
     const rarity = pickRarity(chest.weights);
     const card = drawCardOfRarity(rarity);

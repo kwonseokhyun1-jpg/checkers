@@ -1,4 +1,4 @@
-import { isKnightCard, isRemovedCard, getCardDef, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
+import { isKnightCard, isRemovedCard, getCardDef, maxCopiesForCard } from "./cardCatalog.js";
 import { defaultAdventureProgress, migrateAdventureDecks } from "./adventure.js";
 import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
 
@@ -70,7 +70,8 @@ function stripRemovedCards(profile) {
 function capCollection(profile) {
   for (const id of Object.keys(profile.collection || {})) {
     const n = profile.collection[id];
-    if (n > MAX_COPIES_PER_CARD) profile.collection[id] = MAX_COPIES_PER_CARD;
+    const cap = maxCopiesForCard(id);
+    if (n > cap) profile.collection[id] = cap;
     if (n <= 0) delete profile.collection[id];
   }
   return profile;
@@ -84,7 +85,7 @@ function trimDecksToCollection(profile) {
     for (const id of deck.cardIds) {
       const owned = profile.collection[id] || 0;
       const n = used[id] || 0;
-      if (n < owned && n < MAX_COPIES_PER_CARD) {
+      if (n < owned && n < maxCopiesForCard(id)) {
         trimmed.push(id);
         used[id] = n + 1;
       }
@@ -133,10 +134,10 @@ export function saveProfile(profile) {
 }
 
 export function collectionRoom(profile, cardId) {
-  return Math.max(0, MAX_COPIES_PER_CARD - collectionCount(profile, cardId));
+  return Math.max(0, maxCopiesForCard(cardId) - collectionCount(profile, cardId));
 }
 
-/** @returns {number} copies actually added (capped at MAX_COPIES_PER_CARD) */
+/** @returns {number} copies actually added (capped by rarity) */
 export function addToCollection(profile, cardId, count = 1) {
   const room = collectionRoom(profile, cardId);
   const added = Math.min(count, room);

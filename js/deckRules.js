@@ -1,6 +1,6 @@
 import {
   DECK_SIZE,
-  MAX_COPIES_PER_CARD,
+  maxCopiesForCard,
   getPlayableCards,
   isEconomyCard,
   isKnightCard,
@@ -25,7 +25,8 @@ export function validateDeck(cardIds, profile) {
   for (const [id, n] of Object.entries(counts)) {
     if (isKnightCard(id)) errors.push(`Removed spell: ${getCardDef(id)?.name || id}`);
     if (isEconomyCard(id)) errors.push(`Economy spell disabled: ${getCardDef(id)?.name || id}`);
-    if (n > MAX_COPIES_PER_CARD) errors.push(`Max ${MAX_COPIES_PER_CARD} copies of ${getCardDef(id)?.name || id}.`);
+    const cap = maxCopiesForCard(id);
+    if (n > cap) errors.push(`Max ${cap} copies of ${getCardDef(id)?.name || id}.`);
     if (profile && collectionCount(profile, id) < n) {
       errors.push(`Not enough copies of ${getCardDef(id)?.name || id} in collection.`);
     }
@@ -39,7 +40,8 @@ export function canAddCardToDeck(deckIds, cardId, profile) {
   if (deckIds.length >= DECK_SIZE) return { ok: false, reason: "Deck is full (30 cards)." };
   const counts = countById(deckIds);
   const inDeck = counts[cardId] || 0;
-  if (inDeck >= MAX_COPIES_PER_CARD) return { ok: false, reason: `Max ${MAX_COPIES_PER_CARD} copies per card.` };
+  const cap = maxCopiesForCard(cardId);
+  if (inDeck >= cap) return { ok: false, reason: `Max ${cap} copies of this card.` };
   const owned = collectionCount(profile, cardId);
   if (owned <= inDeck) return { ok: false, reason: "No more copies in collection." };
   return { ok: true };
@@ -51,7 +53,7 @@ export function buildAiDeck() {
   while (ids.length < DECK_SIZE) {
     const c = pool[Math.floor(Math.random() * pool.length)];
     const counts = countById(ids);
-    if ((counts[c.id] || 0) < MAX_COPIES_PER_CARD) ids.push(c.id);
+    if ((counts[c.id] || 0) < maxCopiesForCard(c)) ids.push(c.id);
   }
   return ids;
 }

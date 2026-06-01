@@ -1,7 +1,7 @@
 /**
  * Adventure — 5 worlds × 10 stages (50 total). Worlds 4–5 unlock after clearing stage 30.
  */
-import { getPlayableCards, getCardDef, DECK_SIZE, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
+import { getPlayableCards, getCardDef, DECK_SIZE, maxCopiesForCard, maxCopiesForRarity } from "./cardCatalog.js";
 import { countById, shuffle } from "./deckRules.js";
 
 export const ADVENTURE_LEVEL_COUNT = 50;
@@ -179,7 +179,7 @@ function isValidEarlyEnemyDeck(cardIds) {
   for (const [id, n] of Object.entries(counts)) {
     const def = getCardDef(id);
     if (!def || (def.rarity !== "common" && def.rarity !== "uncommon")) return false;
-    if (n > EARLY_COPIES_PER_CARD) return false;
+    if (n > maxCopiesForRarity(def.rarity)) return false;
   }
   return true;
 }
@@ -237,7 +237,7 @@ function buildWeightedDeck(levelNum) {
       Math.floor(Math.random() * (candidates.length ? candidates.length : pool.length))
     ];
     const counts = countById(ids);
-    if ((counts[card.id] || 0) < MAX_COPIES_PER_CARD) ids.push(card.id);
+    if ((counts[card.id] || 0) < maxCopiesForCard(card)) ids.push(card.id);
   }
   return shuffle(ids);
 }
