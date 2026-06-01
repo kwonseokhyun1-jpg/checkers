@@ -1,11 +1,6 @@
-import {
-  COSMETIC_BOXES,
-  COSMETIC_BY_ID,
-  COSMETIC_TYPES,
-  equipCosmetic,
-  getEquippedCosmetics,
-  openCosmeticBox,
-} from "./cosmetics.js";
+import { COSMETIC_BOXES, COSMETIC_BY_ID, COSMETIC_TYPES, equipCosmetic, getEquippedCosmetics, openCosmeticBox } from "./cosmetics.js";
+import { COSMETIC_BOX_TIERS, cosmeticBoxSvgMarkup } from "./cosmeticArt.js";
+import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { renderAvatarPreview, bannerStyleFor } from "./cosmeticArt.js";
 import { saveProfile } from "./storage.js";
 
@@ -21,15 +16,24 @@ const RARITY_CLASS = {
 export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened } = {}) {
   if (!listEl) return;
   listEl.innerHTML = "";
+
   for (const box of COSMETIC_BOXES) {
+    const tier = COSMETIC_BOX_TIERS[box.id] || COSMETIC_BOX_TIERS.style_crate;
     const canAfford = profile.gems >= box.cost;
     const el = document.createElement("article");
-    el.className = `chest-card cosmetic-box-card${canAfford ? "" : " chest-card--locked"}`;
+    el.className = `chest-card chest-card--${tier.visual} cosmetic-box-card cosmetic-box-card--${box.id}${canAfford ? "" : " chest-card--locked"}`;
+
     el.innerHTML = `
+      <div class="chest-card__aura" aria-hidden="true"></div>
+      <div class="chest-card__visual">${cosmeticBoxSvgMarkup(box.id)}</div>
       <div class="chest-card__body">
-        <span class="chest-card__tier">Cosmetic</span>
+        <span class="chest-card__tier">${tier.label}</span>
         <h3 class="chest-card__name">${box.name}</h3>
-        <p class="chest-card__tagline">${box.pulls} unlocks · mixed rarities</p>
+        <p class="chest-card__tagline">${tier.tagline}</p>
+        <ul class="chest-card__stats">
+          <li><strong>${box.pulls}</strong> cosmetics</li>
+          <li>Avatars · banners · skins</li>
+        </ul>
         <p class="chest-card__cost">
           <span class="chest-card__gem" aria-hidden="true">◆</span>
           <span>${box.cost}</span>
@@ -38,20 +42,30 @@ export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOp
       <button type="button" class="btn-primary btn-open-cosmetic chest-card__btn" data-box="${box.id}">
         ${canAfford ? "Unseal" : "Need more gems"}
       </button>`;
+
     const btn = el.querySelector(".btn-open-cosmetic");
     btn.disabled = !canAfford;
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       if (btn.disabled) return;
-      const res = openCosmeticBox(profile, btn.dataset.box);
+      const res = openCosmeticBox(profile, box.id);
       if (!res.success) {
         if (logEl) logEl.textContent = res.message;
         return;
       }
+
       saveProfile(profile);
       onGemsChange?.();
+      btn.disabled = true;
+
+      await playCosmeticOpenAnimation({
+        boxId: box.id,
+        boxLabel: tier.label,
+        pulls: res.pulls,
+      });
+
       const names = res.pulls.map((x) => `${x.name}${x.duplicate ? " (duplicate)" : ""}`).join(", ");
       if (logEl) {
-        logEl.textContent = `Opened ${res.box.name}: ${names}${res.bonusGems ? ` · +${res.bonusGems} gems from duplicates` : ""}`;
+        logEl.textContent = `Opened ${box.name}: ${names}${res.bonusGems ? ` · +${res.bonusGems} gems from duplicates` : ""}`;
       }
       onOpened?.(res);
       renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened });

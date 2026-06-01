@@ -3015,9 +3015,145 @@ body.chest-open-active {
 }
 .cosmetic-box-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
   margin-bottom: 0.75rem;
+}
+
+.cosmetic-box-card .vanity-box-svg {
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 16px rgba(199, 125, 255, 0.2));
+}
+
+.chest-card--gold.cosmetic-box-card--legend_relic .vanity-box-svg,
+.cosmetic-box-card--legend_relic .vanity-box-svg {
+  animation: chest-float 3s ease-in-out infinite;
+}
+
+/* Cosmetic open cinematic — reveal tiles */
+.cosmetic-open-overlay .chest-open-glow--on {
+  background: radial-gradient(ellipse at center, var(--cosmetic-glow, rgba(199, 125, 255, 0.4)) 0%, transparent 70%);
+}
+
+.cosmetic-open-overlay--style_crate { --cosmetic-glow: rgba(216, 180, 254, 0.45); }
+.cosmetic-open-overlay--arcane_vanity { --cosmetic-glow: rgba(125, 211, 252, 0.45); }
+.cosmetic-open-overlay--legend_relic { --cosmetic-glow: rgba(255, 216, 122, 0.5); }
+
+.cosmetic-open-reveals__grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  max-width: 52rem;
+}
+
+.cosmetic-reveal-card {
+  width: 9.5rem;
+  opacity: 0;
+  transform: translateY(24px) scale(0.92);
+  animation: cosmetic-reveal-deal 0.55s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+.cosmetic-reveal-card--deal {
+  animation-name: cosmetic-reveal-deal;
+}
+
+@keyframes cosmetic-reveal-deal {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cosmetic-reveal-card__frame {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.65rem 0.5rem 0.75rem;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(165deg, rgba(35, 45, 70, 0.98), rgba(12, 16, 28, 0.99));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+}
+
+.cosmetic-reveal-card.rarity-uncommon .cosmetic-reveal-card__frame { border-color: rgba(143, 212, 168, 0.55); }
+.cosmetic-reveal-card.rarity-rare .cosmetic-reveal-card__frame { border-color: rgba(126, 200, 255, 0.6); }
+.cosmetic-reveal-card.rarity-epic .cosmetic-reveal-card__frame { border-color: rgba(196, 168, 255, 0.65); }
+.cosmetic-reveal-card.rarity-legendary .cosmetic-reveal-card__frame {
+  border-color: rgba(255, 216, 122, 0.85);
+  box-shadow: 0 0 24px rgba(255, 216, 122, 0.25);
+}
+
+.cosmetic-reveal-card__rarity {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+  margin-bottom: 0.35rem;
+}
+
+.cosmetic-reveal-card__preview {
+  width: 4.5rem;
+  height: 4.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.4rem;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.cosmetic-reveal-card__preview .cosmetic-avatar-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.cosmetic-reveal-banner {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+}
+
+.cosmetic-reveal-skin-preview {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.cosmetic-reveal-skin-preview .piece {
+  width: 1.35rem;
+  height: 1.35rem;
+  position: relative;
+}
+
+.cosmetic-reveal-card__name {
+  font-size: 0.78rem;
+  text-align: center;
+  line-height: 1.2;
+  margin-bottom: 0.15rem;
+}
+
+.cosmetic-reveal-card__type {
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.cosmetic-reveal-card__new {
+  font-size: 0.62rem;
+  color: var(--accent-gem, #5ce1e6);
+  margin-top: 0.25rem;
+}
+
+.cosmetic-reveal-card__dup {
+  font-size: 0.6rem;
+  color: #e8a85c;
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
+.cosmetic-reveal-card--duplicate .cosmetic-reveal-card__frame {
+  opacity: 0.85;
 }
 .profile-cosmetic-filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
 .profile-filter-btn.active { color: var(--accent-gem, #5ce1e6); text-decoration: underline; }
