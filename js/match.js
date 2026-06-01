@@ -212,7 +212,7 @@ export class MatchSession {
     const hint = this.$("spell-cast-hint");
     if (preview) {
       preview.innerHTML = "";
-      preview.appendChild(renderSpellCardEl(card, { static: true, compact: true }));
+      preview.appendChild(renderSpellCardEl(card, { static: true, compact: true, fullDesc: true }));
     }
     const need = picksRequired(card);
     const step = picks.length + 1;
@@ -925,6 +925,7 @@ ${starLine}`;
       const el = renderSpellCardEl(card, {
         button: true,
         compact: true,
+        fullDesc: true,
         selected: castingId === card.instanceId,
         disabled: !canPlay,
       });
