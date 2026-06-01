@@ -693,7 +693,19 @@ body {
   width: 100%;
   max-width: 168px;
 }
-.spell-card.disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+.spell-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.9) brightness(0.72);
+}
+.spell-card.disabled .spell-card__frame {
+  border-color: #4a5568;
+  box-shadow: none;
+}
+.hand.spell-hand.spell-hand--locked .spell-card.disabled {
+  opacity: 0.38;
+}
 .spell-card.selected .spell-card__frame { box-shadow: 0 0 0 2px var(--accent-gold); }
 .spell-card__frame {
   border-radius: 10px;
@@ -1020,6 +1032,9 @@ body {
 }
 .hand.spell-hand .spell-card:not(.disabled) {
   pointer-events: auto;
+}
+.hand.spell-hand.spell-hand--locked {
+  opacity: 0.95;
 }
 
 /* ═══════════════════════════════════════════════════════════════
