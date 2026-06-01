@@ -655,7 +655,33 @@ body {
 }
 .collection-card.disabled { opacity: 0.45; cursor: not-allowed; }
 .collection-card .card-meta { display: block; font-size: 0.68rem; color: var(--text-muted); margin-top: 0.2rem; }
-.filter-row { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.filter-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.filter-check input {
+  accent-color: var(--accent-gem);
+  cursor: pointer;
+}
+.collection-card-wrap--unowned {
+  opacity: 0.5;
+}
+.collection-card-wrap--unowned .collection-buy-cost {
+  visibility: hidden;
+}
 .input-text, .select-input {
   font-family: inherit;
   padding: 0.5rem 0.65rem;

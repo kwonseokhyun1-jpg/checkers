@@ -44,6 +44,7 @@ let workingDeck = [];
 let collectionFilter = "";
 let collectionRarity = "all";
 let collectionSort = "rarity-desc";
+let collectionOwnedOnly = true;
 
 const RARITY_RANK = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
 
@@ -252,7 +253,8 @@ function getFilteredCollection() {
       const q = collectionFilter.toLowerCase();
       if (!c.name.toLowerCase().includes(q) && !c.desc.toLowerCase().includes(q)) return false;
     }
-    return collectionCount(profile, c.id) > 0;
+    if (collectionOwnedOnly && collectionCount(profile, c.id) <= 0) return false;
+    return true;
   });
   return sortCollectionCards(filtered);
 }
@@ -286,7 +288,7 @@ function renderInventoryGrid(container, opts = {}) {
     const cost = getBuyCost(def.rarity);
     const canAfford = profile.gems >= cost && !atMaxCopies;
     const wrap = document.createElement("div");
-    wrap.className = "collection-card-wrap";
+    wrap.className = "collection-card-wrap" + (owned < 1 ? " collection-card-wrap--unowned" : "");
 
     const buyOne = () => buyCardFromInventory(def.id, statusEl);
 
@@ -317,13 +319,13 @@ function renderInventoryGrid(container, opts = {}) {
 
     const card = renderSpellCardEl(def, {
       button: true,
-      disabled: atMaxCopies,
+      disabled: owned < 1 || atMaxCopies,
       onClick: (e) => {
         if (e.shiftKey) {
           openInspect();
           return;
         }
-        if (atMaxCopies) return;
+        if (owned < 1 || atMaxCopies) return;
         buyOne();
       },
     });
@@ -334,7 +336,7 @@ function renderInventoryGrid(container, opts = {}) {
 
     const ownedBadge = document.createElement("span");
     ownedBadge.className = "collection-owned-count";
-    ownedBadge.textContent = `×${owned}`;
+    ownedBadge.textContent = owned > 0 ? `×${owned}` : "—";
     wrap.appendChild(ownedBadge);
 
     const costBadge = document.createElement("span");
@@ -777,6 +779,16 @@ function init() {
     if (deckSubview === "edit") renderDeckEditor();
     if (deckSubview === "list") renderDeckList();
   };
+  document.querySelectorAll(".collection-owned-only-toggle").forEach((el) => {
+    el.checked = collectionOwnedOnly;
+    el.addEventListener("change", (e) => {
+      collectionOwnedOnly = e.target.checked;
+      document.querySelectorAll(".collection-owned-only-toggle").forEach((x) => {
+        x.checked = collectionOwnedOnly;
+      });
+      syncCollectionFilter();
+    });
+  });
   $("collection-search")?.addEventListener("input", (e) => {
     collectionFilter = e.target.value;
     const inv = $("inventory-search");
