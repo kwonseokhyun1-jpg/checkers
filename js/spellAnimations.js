@@ -21,7 +21,7 @@ const BOARD_SHAKE_EFFECTS = new Set([
   "shatter",
   "execution",
   "detonate",
-  "chain_lightning",
+  "chain_lightning", "purify",
   "earthquake",
   "fireline",
   "fireblast",
@@ -44,7 +44,7 @@ const KILL_EFFECTS = new Set([
 
 /** Multi-target damage / lines — not movement */
 const MULTI_KILL_EFFECTS = new Set([
-  "cross_bolt", "detonate", "fireline", "chain_lightning", "duel",
+  "cross_bolt", "detonate", "fireline", "chain_lightning", "purify", "duel",
   "shield_bash", "spear_thrust", "bulwark", "gravity_well",
   "earthquake", "blizzard", "sanctuary", "tangle", "scatter", "vacuum",
 ]);

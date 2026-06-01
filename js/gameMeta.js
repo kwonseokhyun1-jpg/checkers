@@ -36,7 +36,7 @@ export function createMatchMeta() {
     pocket: null,
     pocketReturnTurn: 0,
     turnNumber: 0,
-    collapsed: new Set(),
+    collapsedSquare: null,
   };
 }
 
@@ -142,4 +142,14 @@ export function tryConsumeCounterspell(state, casterColor) {
 
 export function hasCounterspellArmed(state, color) {
   return !!state.meta.counterspell?.[color];
+}
+
+
+export function isSquareCollapsed(meta, r, c) {
+  if (!meta?.collapsedSquare) return false;
+  return meta.collapsedSquare === `${r},${c}`;
+}
+
+export function setCollapsedSquare(meta, r, c) {
+  meta.collapsedSquare = `${r},${c}`;
 }

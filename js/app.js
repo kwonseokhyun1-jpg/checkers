@@ -727,6 +727,7 @@ function getMatchHtml(opponentName = "Opponent") {
             <h3 class="ai-action-panel__title">${safe}</h3>
             <div id="ai-action-log" class="ai-action-log"></div>
           </div>
+          <div id="piece-info" class="piece-info hidden" role="status" aria-live="polite"></div>
           <div id="message" class="message"></div>
         </section>
         <aside class="panel panel-player">

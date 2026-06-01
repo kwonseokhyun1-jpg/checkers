@@ -2829,3 +2829,42 @@ body.chest-open-active {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }
 }
+
+
+.piece-info {
+  margin: 0.5rem auto 0;
+  max-width: 36rem;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #e8ecf4;
+  background: rgba(12, 18, 32, 0.88);
+  border: 1px solid rgba(120, 160, 220, 0.35);
+  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.piece-info.hidden {
+  display: none;
+}
+
+.piece-info__pos {
+  opacity: 0.75;
+  font-size: 0.78rem;
+}
+
+.piece-info__buffs {
+  color: #8fd4a8;
+}
+
+.piece-info__curses {
+  color: #f0a0a8;
+}
+
+.piece.paralyzed-mark {
+  box-shadow: 0 0 0 2px rgba(180, 120, 255, 0.9), 0 0 14px rgba(140, 80, 220, 0.5);
+}

@@ -10,6 +10,8 @@ import { sk, getSq, handLimit, placeMine } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
+import { cleanseAllPieces } from "./pieceStatus.js";
+import { isSquareCollapsed, setCollapsedSquare } from "./gameMeta.js";
 
 const opp = (c) => (c === COLORS.RED ? COLORS.BLACK : COLORS.RED);
 const ok = (m = "Spell cast.", extra = {}) => ({ success: true, message: m, ...extra });
@@ -21,7 +23,7 @@ function at(state, r, c) { return state.board[r]?.[c] ?? null; }
 function blocked(state, r, c) {
   if (!inBounds(r, c)) return true;
   const k = sk(r, c);
-  if (state.meta.collapsed?.has(k)) return true;
+  if (isSquareCollapsed(state.meta, r, c)) return true;
   if (state.squares[k]?.obstacle) return true;
   return false;
 }
@@ -196,7 +198,7 @@ const EFFECTS = {
   quicksand(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); getSq(state,r,c).quicksand=true; return ok(); },
   sanctified(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); getSq(state,r,c).sanctified=color; return ok(); },
   warp_gate(state, color, picks) { if(picks.length<2) return fail(); const k1=sk(...p0(picks)),k2=sk(...p1(picks)); state.squares[k1]={...state.squares[k1],warp:k2}; state.squares[k2]={...state.squares[k2],warp:k1}; return ok(); },
-  collapse(state, color, picks) { const [r,c]=p0(picks); if(!isDarkSquare(r,c)) return fail(); state.meta.collapsed.add(sk(r,c)); const p=at(state,r,c); if(p){ removePiece(state.board,r,c); for(let r2=0;r2<SIZE;r2++) for(let c2=0;c2<SIZE;c2++) if(emptyDark(state,r2,c2)){ state.board[r2][c2]=p; p.row=r2; p.col=c2; break;}} return ok(); },
+  collapse(state, color, picks) { const [r,c]=p0(picks); if(!isDarkSquare(r,c)) return fail(); setCollapsedSquare(state.meta, r, c); const p=at(state,r,c); if(p){ removePiece(state.board,r,c); for(let r2=0;r2<SIZE;r2++) for(let c2=0;c2<SIZE;c2++) if(emptyDark(state,r2,c2)){ state.board[r2][c2]=p; p.row=r2; p.col=c2; break;}} return ok(); },
   mirror_board(state, color, picks) { state.meta.mirrorBoardTurns[opp(color)]=2; return ok(); },
   darkness(state, color, picks) { const [r,c]=p0(picks); getSq(state,r,c).darkness=2; return ok(); },
   highlight_path(state, color, picks) { state.meta.highlightTurns[opp(color)]=2; return ok(); },
@@ -239,16 +241,21 @@ const EFFECTS = {
     for (const [tr, tc] of chain) {
       if (kill(state, tr, tc, color)) hits++;
     }
-    return hits
-      ? ok(`Chain Lightning — ${hits} struck adjacent enemies.`)
-      : fail("No valid targets");
+    if (hits) {
+      p.paralyzedTurns = 2;
+      return ok(`Chain Lightning — ${hits} struck. Your piece is paralyzed for 2 turns.`);
+    }
+    return fail("No valid targets");
+  },
+  purify(state, color, picks) {
+    cleanseAllPieces(state.board);
+    return ok("Purify — all shields and curses removed from every piece.");
   },
   vacuum(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const all=fri(state,color).concat(en(state,color)); for(const p of all){ const dr=Math.sign(r-p.row),dc=Math.sign(c-p.col); const nr=p.row+dr,nc=p.col+dc; if((nr!==r||nc!==c)&&emptyDark(state,nr,nc)) movePiece(state.board,p.row,p.col,nr,nc);} return ok(); },
   scatter(state, color, picks) { const [r,c]=p0(picks); const all=[]; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ if(!dr&&!dc) continue; const pr=r+dr,pc=c+dc; const p=at(state,pr,pc); if(p) all.push(p);} for(const p of all){ const dr=Math.sign(p.row-r)||1, dc=Math.sign(p.col-c)||1; const nr=p.row+dr,nc=p.col+dc; if(emptyDark(state,nr,nc)) movePiece(state.board,p.row,p.col,nr,nc);} return ok(); },
   dominion(state, color, picks) { state.meta.dominionTurn[color]=true; return ok(); },
   rally(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const q=at(state,r+dr,c+dc); if(q&&q.color===color) q.retreatTurns=Math.max(q.retreatTurns,1);} return ok(); },
   coronation_day(state, color, picks) { const pr=promoRow(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&r===pr&&!p.king) p.king=true;} return ok(); },
-  exile_king(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||!p.king) return fail(); const rows=backRow(p.color); const spots=[]; for(const r of rows) for(let c=0;c<SIZE;c++) if(emptyDark(state,r,c)) spots.push([r,c]); if(!spots.length) return fail(); const [tr,tc]=spots[Math.floor(Math.random()*spots.length)]; movePiece(state.board,p.row,p.col,tr,tc); return ok(); },
   regicide(state, color, picks) { state.meta.pendingRegicide[color]=true; return ok(); },
   constitution(state, color, picks) { state.meta.constitutionTurns[color]=5; return ok(); },
   last_king(state, color, picks) { const ps=fri(state,color); if(ps.length!==1) return fail('Need exactly 1 piece'); const p=ps[0]; p.king=true; p.shieldTurns=2; return ok(); },
