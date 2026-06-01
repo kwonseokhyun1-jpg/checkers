@@ -3,6 +3,7 @@ const TAGS = {
   nudge: ["Move your piece 1 adjacent square"],
   shield_2: ["Shield 2 turns — cannot be captured"],
   forward_bolt: ["Destroy first enemy on forward diagonal"],
+  trickster: ["Swap 4 random pieces on the board"],
   purify: ["Removes all shields and curses board-wide"],
   chain_lightning: ["Strike adjacent enemies only", "Up to 2 kills if enemies touch each other", "Your piece is paralyzed 2 turns"],
   fireblast: ["Your piece, then first enemy ahead — burns through shields"],

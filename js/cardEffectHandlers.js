@@ -72,6 +72,47 @@ function enemySquaresAdjacentTo(state, r, c, color) {
     return t && t.color !== color;
   });
 }
+
+function shufflePick(arr, n) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a.slice(0, n);
+}
+export function planTrickster(state) {
+  const all = [];
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++) {
+      const p = at(state, r, c);
+      if (p) all.push({ r, c, p });
+    }
+  if (all.length < 4) return null;
+  const picked = shufflePick(all, 4);
+  const from = picked.map((x) => [x.r, x.c]);
+  const to = [from[1], from[2], from[3], from[0]];
+  return { picked, from, to, squares: [...from, ...to] };
+}
+export function getChainLightningAnimSquares(state, pr, pc, color) {
+  const chain = bestChainLightningHits(state, pr, pc, color);
+  return [[pr, pc], ...chain];
+}
+
+export function executeTrickster(state, plan) {
+  const entries = plan.picked.map((x, i) => ({
+    piece: x.p,
+    from: plan.from[i],
+    to: plan.to[i],
+  }));
+  for (const e of entries) state.board[e.from[0]][e.from[1]] = null;
+  for (const e of entries) {
+    state.board[e.to[0]][e.to[1]] = e.piece;
+    e.piece.row = e.to[0];
+    e.piece.col = e.to[1];
+  }
+}
+
 export function chainLightningCanTarget(state, pr, pc, color) {
   return enemySquaresAdjacentTo(state, pr, pc, color).length > 0;
 }
@@ -246,6 +287,14 @@ const EFFECTS = {
       return ok(`Chain Lightning — ${hits} struck. Your piece is paralyzed for 2 turns.`);
     }
     return fail("No valid targets");
+  },
+  trickster(state, color, picks) {
+    let plan = state.meta.pendingTrickster;
+    if (!plan) plan = planTrickster(state);
+    if (!plan) return fail("Need at least 4 pieces on the board");
+    executeTrickster(state, plan);
+    state.meta.pendingTrickster = null;
+    return ok("Trickster scrambles four random pieces!");
   },
   purify(state, color, picks) {
     cleanseAllPieces(state.board);

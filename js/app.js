@@ -26,6 +26,8 @@ import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
+import { renderProfileTab } from "./profileUI.js";
+import { getEquippedCosmetics } from "./cosmetics.js";
 import { boardFrameHtml } from "./board.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardPreview.js";
@@ -124,7 +126,13 @@ function showTab(tab) {
     viewingDeckId = null;
     showDeckSubview("list");
   }
+  if (tab === "profile") renderProfile();
   if (tab === "play") showAdventureMap();
+}
+
+function renderProfile() {
+  const root = $("view-profile");
+  renderProfileTab(profile, root, { onGemsChange: updateGemHeader });
 }
 
 function updateGemHeader() {
@@ -685,7 +693,7 @@ function startAdventureMatch() {
       updateGemHeader();
       return `+${gems} gems! · Best: ${formatStars(bestStars)}`;
     },
-    { aiDeckIds: [...pendingEnemyDeck], opponentName }
+    { aiDeckIds: [...pendingEnemyDeck], opponentName, cosmetics: getEquippedCosmetics(profile) }
   );
 
   matchSession.setMessage("Drag a spell onto the board or tap a card, then pick highlighted squares.");

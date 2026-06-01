@@ -9,7 +9,7 @@ export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS };
 
 /** Meta / hand / turn-rule spells — shimmer only, no board shake */
 const META_EFFECTS = new Set([
-  "quick_march", "overrun", "ricochet", "blind", "confusion", "counterspell", "dominion",
+  "quick_march", "overrun", "trickster", "ricochet", "blind", "confusion", "counterspell", "dominion",
   "conduct", "mirror_move", "roulette", "rules_lawyer", "mirror_board", "highlight_path",
   "pocket", "possession", "chameleon", "identity_theft", "succession",
   "twin_soul", "last_king", "constitution", "sanctuary_pulse", "parallel", "echo",
@@ -56,6 +56,7 @@ const MOVE_EFFECTS = new Set([
 ]);
 
 const SWAP_EFFECTS = new Set([
+  "trickster",
   "swap_friendly", "hostile_swap", "tangle", "mirror_board", "bait_switch",
 ]);
 
@@ -137,11 +138,52 @@ function uniqueSquares(list) {
  * @param {{ effect: string, mode?: string, name?: string }} card
  * @param {number[][]} picks
  */
-export function buildAnimSpec(card, picks = [], _color) {
+export function buildAnimSpec(card, picks = [], _color, extra = {}) {
   const effect = card.effect;
   const mode = card.mode || "instant";
   const p = picks.map((x) => [...x]);
   const label = card.name || "Spell";
+
+
+  if (effect === "trickster" && extra.tricksterSquares?.length) {
+    return withSpec({
+      type: "swap",
+      visual: "trickster",
+      duration: Math.max(MIN_SPELL_ANIM_MS, 1400),
+      label,
+      squares: extra.tricksterSquares.slice(0, 8),
+      from: extra.tricksterSquares[0],
+      to: extra.tricksterSquares[4],
+    }, effect);
+  }
+
+  if (effect === "fireblast" && p.length >= 2) {
+    const lineSquares = squaresBetween(p[0], p[1]);
+    return withSpec({
+      type: "kill",
+      visual: "fire",
+      duration: Math.max(MIN_SPELL_ANIM_MS, 1300),
+      label,
+      squares: [p[1]],
+      from: p[0],
+      to: p[1],
+      lineSquares,
+    }, effect);
+  }
+
+  if (effect === "chain_lightning" && extra.chainSquares?.length) {
+    const sq = extra.chainSquares;
+    return withSpec({
+      type: "multi",
+      visual: "lightning",
+      duration: Math.max(MIN_SPELL_ANIM_MS, 1400),
+      label,
+      squares: sq,
+      from: sq[0],
+      to: sq[sq.length - 1],
+      lineSquares: sq,
+    }, effect);
+  }
 
   if (effect === "cull") {
     return withSpec({ type: "cull", duration: CULL_ANIMATION_MS, label, squares: [] }, effect);
