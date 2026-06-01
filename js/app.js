@@ -61,8 +61,6 @@ let selectedAdventureLevel = null;
 /** @type {string[]|null} */
 let pendingEnemyDeck = null;
 
-const RARITY_RANK = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
-
 function rarityRank(def) {
   return RARITY_RANK[def?.rarity] ?? 0;
 }
