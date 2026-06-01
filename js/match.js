@@ -38,12 +38,15 @@ export const PHASE = { CARDS: "cards", MOVE: "move" };
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
+/** Extra time the top spell banner stays visible */
+const SPELL_BANNER_EXTRA_MS = 1000;
+
 /** Enemy turn replay pacing (ms) */
 const AI_PACE = {
   beforeTurn: 1000,
-  spellWindUp: 700,
+  spellWindUp: 1700,
   spellShow: 3200,
-  spellSettle: 600,
+  spellSettle: 1600,
   move: 2000,
   message: 900,
   explosion: 1000,
@@ -565,7 +568,7 @@ ${starLine}`;
       banner.className = `turn-banner spell-anim-${spec.type}`;
     }
     this.render();
-    await delay(spec.duration ?? MIN_SPELL_ANIM_MS);
+    await delay((spec.duration ?? MIN_SPELL_ANIM_MS) + SPELL_BANNER_EXTRA_MS);
     this.spellAnimation = null;
     frame?.classList.remove(`board-frame--spell-${spec.type}`);
     if (banner) banner.classList.remove(`spell-anim-${spec.type}`);
@@ -578,7 +581,7 @@ ${starLine}`;
       banner.className = "turn-banner spell-anim-instant";
     }
     this.render();
-    await delay(450);
+    await delay(450 + SPELL_BANNER_EXTRA_MS);
     if (banner) banner.className = "turn-banner";
   }
 
@@ -592,7 +595,7 @@ ${starLine}`;
     }
     this.root.querySelector(".match-wrap")?.classList.add("match-wrap--counterspell");
     this.render();
-    await delay(1200);
+    await delay(1200 + SPELL_BANNER_EXTRA_MS);
     frame?.classList.remove("board-frame--counterspell");
     this.root.querySelector(".match-wrap")?.classList.remove("match-wrap--counterspell");
     if (banner) {
@@ -613,7 +616,7 @@ ${starLine}`;
       banner.className = "turn-banner cull-casting";
     }
     this.render();
-    await delay(2000);
+    await delay(2000 + SPELL_BANNER_EXTRA_MS);
     this.cullAnimation = null;
     frame?.classList.remove("board-frame--cull");
     if (banner) banner.classList.remove("cull-casting");
