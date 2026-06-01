@@ -1,7 +1,7 @@
 /**
  * Arcane Checkers — meta game (chests, decks, play) + match
  */
-import { getPlayableCards, getCardDef, DECK_SIZE, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
+import { getPlayableCards, getCardDef, DECK_SIZE, maxCopiesForCard } from "./cardCatalog.js";
 import {
   loadProfile,
   saveProfile,
@@ -12,6 +12,13 @@ import {
 } from "./storage.js";
 import {
   getAdventureLevels,
+  getLevelsForWorld,
+  WORLDS,
+  getWorldsForMap,
+  areBonusWorldsUnlocked,
+  defaultAdventureProgress,
+  BONUS_WORLDS_UNLOCK_AT_LEVEL,
+  isWorldUnlocked,
   getLevel,
   getOrCreateLevelEnemyDeck,
   getEnemyDeckPreview,
@@ -61,6 +68,7 @@ function sortCollectionCards(cards) {
 let matchSession = null;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
+let selectedAdventureWorldId = 1;
 /** @type {string[]|null} */
 let pendingEnemyDeck = null;
 
@@ -100,7 +108,7 @@ function autoFinishDeck() {
 
   workingDeck = [];
   for (const { def, owned } of candidates) {
-    const copies = Math.min(owned, MAX_COPIES_PER_CARD);
+    const copies = Math.min(owned, maxCopiesForCard(def));
     for (let i = 0; i < copies && workingDeck.length < DECK_SIZE; i++) {
       workingDeck.push(def.id);
     }
@@ -300,7 +308,8 @@ function renderInventoryGrid(container, opts = {}) {
 
   for (const def of getFilteredCollection()) {
     const owned = collectionCount(profile, def.id);
-    const atMaxCopies = owned >= MAX_COPIES_PER_CARD;
+    const cap = maxCopiesForCard(def);
+    const atMaxCopies = owned >= cap;
     const cost = getBuyCost(def.rarity);
     const canAfford = profile.gems >= cost && !atMaxCopies;
     const wrap = document.createElement("div");
@@ -313,8 +322,8 @@ function renderInventoryGrid(container, opts = {}) {
       const addCheck = deckEdit ? canAddCardToDeck(workingDeck, def.id, profile) : { ok: false };
       showCardPreview(def, {
         meta: deckEdit
-          ? `Owned ${owned}/${MAX_COPIES_PER_CARD} · In deck ${inDeck}/${MAX_COPIES_PER_CARD} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
-          : `Owned ${owned}/${MAX_COPIES_PER_CARD}${atMaxCopies ? " · max copies" : ` · ${cost} gems per copy`}`,
+          ? `Owned ${owned}/${cap} · In deck ${inDeck}/${cap} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
+          : `Owned ${owned}/${cap}${atMaxCopies ? " · max copies" : ` · ${cost} gems per copy`}`,
         buyLabel: atMaxCopies ? "Max copies owned" : `Buy copy (${cost} gems)`,
         buyDisabled: !canAfford || atMaxCopies,
         onBuy: () => {
@@ -346,7 +355,7 @@ function renderInventoryGrid(container, opts = {}) {
       },
     });
     card.title = atMaxCopies
-      ? `${def.name} — max ${MAX_COPIES_PER_CARD} copies owned. Shift+click to inspect.`
+      ? `${def.name} — max ${cap} copies owned. Shift+click to inspect.`
       : `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
     wrap.appendChild(card);
 
@@ -572,12 +581,49 @@ function showAdventureMap() {
 
 function renderAdventureMap() {
   updateGemHeader();
+  const progress = profile.adventure || defaultAdventureProgress();
+  if (!progress.selectedWorld) progress.selectedWorld = 1;
+  selectedAdventureWorldId = progress.selectedWorld;
+
+  const tabs = $("adventure-world-tabs");
+  if (tabs) {
+    tabs.innerHTML = "";
+    const worlds = getWorldsForMap(progress);
+    for (const w of WORLDS) {
+      const unlocked = isWorldUnlocked(progress, w.id);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "adventure-world-tab";
+      btn.dataset.world = String(w.id);
+      if (w.id === selectedAdventureWorldId) btn.classList.add("active");
+      if (!unlocked) btn.classList.add("adventure-world-tab--locked");
+      btn.disabled = !unlocked;
+      btn.textContent = w.name;
+      btn.title = unlocked ? w.tagline : `Clear stage ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
+      btn.addEventListener("click", () => {
+        if (!isWorldUnlocked(progress, w.id)) return;
+        selectedAdventureWorldId = w.id;
+        progress.selectedWorld = w.id;
+        saveProfile(profile);
+        renderAdventureMap();
+      });
+      tabs.appendChild(btn);
+    }
+    if (!isWorldUnlocked(progress, selectedAdventureWorldId)) {
+      selectedAdventureWorldId = worlds[0]?.id || 1;
+      progress.selectedWorld = selectedAdventureWorldId;
+    }
+  }
+
+  const hint = $("adventure-world-hint");
+  const worldMeta = WORLDS.find((w) => w.id === selectedAdventureWorldId);
+  if (hint && worldMeta) hint.textContent = worldMeta.tagline;
+
   const map = $("adventure-map");
   if (!map) return;
   map.innerHTML = "";
-  const progress = profile.adventure;
 
-  for (const level of getAdventureLevels()) {
+  for (const level of getLevelsForWorld(selectedAdventureWorldId)) {
     const unlocked = isLevelUnlocked(progress, level.id);
     const cleared = isLevelCleared(progress, level.id);
     const node = document.createElement("button");
@@ -590,7 +636,7 @@ function renderAdventureMap() {
     const stars = getLevelStars(progress, level.id);
     const starBadge = stars > 0 ? `<span class="adventure-node__stars" aria-label="${stars} stars">${formatStars(stars)}</span>` : "";
     node.innerHTML = `
-      <span class="adventure-node__num">${level.id}</span>
+      <span class="adventure-node__num">${level.stageInWorld}</span>
       <span class="adventure-node__name">${level.opponent}</span>
       <span class="adventure-node__flavor">${level.flavor}</span>
       ${starBadge}

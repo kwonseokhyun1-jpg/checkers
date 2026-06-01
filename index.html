@@ -80,7 +80,7 @@
           <div class="deck-list-header">
             <header class="panel-head panel-head--inline">
               <h2 class="panel-head__title">Your decks</h2>
-              <p class="panel-head__desc">Tap a deck to inspect spells. Build 30-card lists (max 3 copies) for adventure battles.</p>
+              <p class="panel-head__desc">Tap a deck to inspect spells. Build 30-card lists (commons/uncommons max 4 · rare+ max 3) for adventure battles.</p>
             </header>
             <button type="button" id="btn-new-deck" class="btn-primary">+ New deck</button>
           </div>
@@ -131,7 +131,7 @@
           <div class="deck-builder">
             <div class="deck-controls panel game-panel">
               <h2 id="edit-deck-heading" class="panel-head__title">Edit deck</h2>
-              <p class="panel-head__desc">30 cards · max 3 copies · tap collection cards to buy copies · + adds to deck</p>
+              <p class="panel-head__desc">30 cards · commons/uncommons max 4 · rare+ max 3 · tap collection cards to buy copies · + adds to deck</p>
               <input type="text" id="deck-name-input" class="input-text" placeholder="Deck name" value="My Deck" />
               <div class="deck-progress-wrap" aria-hidden="true">
                 <div id="deck-progress-bar" class="deck-progress-bar"><div id="deck-progress-fill" class="deck-progress-fill"></div></div>
@@ -140,7 +140,7 @@
               <div id="deck-slots" class="deck-slots-grid"></div>
               <div class="deck-actions">
                 <button type="button" id="btn-save-deck" class="btn-primary">Save deck</button>
-                <button type="button" id="btn-auto-finish-deck" class="btn-secondary" title="Fill with your rarest owned cards (max 3 each)">Auto finish</button>
+                <button type="button" id="btn-auto-finish-deck" class="btn-secondary" title="Fill with your rarest owned cards (rarity copy limits)">Auto finish</button>
                 <button type="button" id="btn-clear-deck" class="btn-secondary">Clear all</button>
               </div>
             </div>
@@ -172,8 +172,10 @@
         <section id="adventure-map-view" class="panel game-panel adventure-panel">
           <header class="panel-head">
             <h2 class="panel-head__title">Adventure map</h2>
-            <p class="panel-head__desc">Clear 30 stages. First win: <strong>50 gems</strong> · repeat: <strong>20 gems</strong>. Scout each foe’s deck before you fight.</p>
+            <p class="panel-head__desc">Five worlds · 10 stages each. Clear <strong>stage 30</strong> to unlock two hidden realms. First win: <strong>50 gems</strong> · repeat: <strong>20 gems</strong>.</p>
           </header>
+          <nav id="adventure-world-tabs" class="adventure-world-tabs" role="tablist" aria-label="Adventure worlds"></nav>
+          <p id="adventure-world-hint" class="adventure-world-hint"></p>
           <div id="adventure-map" class="adventure-map" role="list"></div>
         </section>
 

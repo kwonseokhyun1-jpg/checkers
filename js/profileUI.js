@@ -1,7 +1,14 @@
 import { COSMETIC_BOXES, COSMETIC_BY_ID, COSMETIC_TYPES, equipCosmetic, getEquippedCosmetics, openCosmeticBox } from "./cosmetics.js";
-import { COSMETIC_BOX_TIERS, cosmeticBoxSvgMarkup } from "./cosmeticArt.js";
+import {
+  COSMETIC_BOX_TIERS,
+  cosmeticBoxSvgMarkup,
+  renderAvatarPreview,
+  bannerStyleFor,
+  renderCosmeticPreviewHtml,
+  cosmeticTypeLabel,
+  frameClassFor,
+} from "./cosmeticArt.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
-import { renderAvatarPreview, bannerStyleFor } from "./cosmeticArt.js";
 import { saveProfile } from "./storage.js";
 
 const RARITY_CLASS = {
@@ -11,6 +18,40 @@ const RARITY_CLASS = {
   epic: "rarity-epic",
   legendary: "rarity-legendary",
 };
+
+function filterTabLabel(type) {
+  if (type === "pieceSkin") return "Piece skins";
+  if (type === "frame") return "Frames";
+  const label = cosmeticTypeLabel(type);
+  return label.endsWith("s") ? label : `${label}s`;
+}
+
+function loadoutHtml(cos) {
+  const avatar = COSMETIC_BY_ID[cos.equipped.avatar];
+  const banner = COSMETIC_BY_ID[cos.equipped.banner];
+  const frame = COSMETIC_BY_ID[cos.equipped.frame];
+  const skin = COSMETIC_BY_ID[cos.equipped.pieceSkin];
+  return `
+    <p class="profile-showcase__title">Equipped loadout</p>
+    <ul class="profile-loadout">
+      <li class="profile-loadout__item">
+        <span class="profile-loadout__label">Avatar</span>
+        <span class="profile-loadout__value">${avatar?.name || "—"}</span>
+      </li>
+      <li class="profile-loadout__item">
+        <span class="profile-loadout__label">Frame</span>
+        <span class="profile-loadout__value">${frame?.name || "—"}</span>
+      </li>
+      <li class="profile-loadout__item">
+        <span class="profile-loadout__label">Banner</span>
+        <span class="profile-loadout__value">${banner?.name || "—"}</span>
+      </li>
+      <li class="profile-loadout__item">
+        <span class="profile-loadout__label">Pieces</span>
+        <span class="profile-loadout__value">${skin?.name || "—"}</span>
+      </li>
+    </ul>`;
+}
 
 /** Cosmetic boxes — rendered in Vault → Cards tab */
 export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened } = {}) {
@@ -32,7 +73,7 @@ export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOp
         <p class="chest-card__tagline">${tier.tagline}</p>
         <ul class="chest-card__stats">
           <li><strong>${box.pulls}</strong> cosmetics</li>
-          <li>Avatars · banners · skins</li>
+          <li>Avatars · frames · banners · skins</li>
         </ul>
         <p class="chest-card__cost">
           <span class="chest-card__gem" aria-hidden="true">◆</span>
@@ -77,29 +118,26 @@ export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOp
 export function renderProfileTab(profile, root, { onGemsChange } = {}) {
   if (!root) return;
   const cos = getEquippedCosmetics(profile);
-  const avatar = COSMETIC_BY_ID[cos.equipped.avatar];
-  const banner = COSMETIC_BY_ID[cos.equipped.banner];
-  const skin = COSMETIC_BY_ID[cos.equipped.pieceSkin];
 
   root.innerHTML = `
     <section class="panel game-panel profile-panel">
       <header class="panel-head">
         <h2 class="panel-head__title">Arcane Profile</h2>
-        <p class="panel-head__desc">Preview and equip avatars, banners, and piece skins unlocked from the Vault.</p>
+        <p class="panel-head__desc">Equip avatars, portrait frames, banners, and piece skins from your Vault unlocks.</p>
       </header>
       <div class="profile-showcase">
-        <div class="profile-banner" id="profile-banner-preview" style="background:${bannerStyleFor(cos.equipped.banner)}"></div>
-        <div class="profile-avatar-wrap" id="profile-avatar-preview">${renderAvatarPreview(cos.equipped.avatar)}</div>
-        <div class="profile-showcase__meta">
-          <p class="profile-equipped-line"><strong>Avatar:</strong> ${avatar?.name || "—"}</p>
-          <p class="profile-equipped-line"><strong>Banner:</strong> ${banner?.name || "—"}</p>
-          <p class="profile-equipped-line"><strong>Piece skin:</strong> ${skin?.name || "—"}</p>
+        <div class="profile-showcase__banner" id="profile-banner-preview" style="background:${bannerStyleFor(cos.equipped.banner)}"></div>
+        <div class="profile-showcase__hero">
+          <div class="profile-avatar-stack ${frameClassFor(cos.equipped.frame)}" id="profile-avatar-stack">
+            <div class="profile-avatar-inner" id="profile-avatar-preview" aria-hidden="true">${renderAvatarPreview(cos.equipped.avatar)}</div>
+          </div>
+          <div class="profile-showcase__meta" id="profile-loadout-meta">${loadoutHtml(cos)}</div>
         </div>
       </div>
       <h3 class="profile-section-title">Your collection</h3>
-      <div class="profile-cosmetic-filters">
+      <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
         ${COSMETIC_TYPES.map(
-          (t) => `<button type="button" class="btn-text profile-filter-btn" data-cos-filter="${t}">${t === "pieceSkin" ? "Piece skins" : t.charAt(0).toUpperCase() + t.slice(1)}</button>`
+          (t) => `<button type="button" class="profile-filter-btn" role="tab" data-cos-filter="${t}">${filterTabLabel(t)}</button>`
         ).join("")}
       </div>
       <div id="profile-cosmetic-grid" class="profile-cosmetic-grid"></div>
@@ -113,16 +151,10 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
     const c = getEquippedCosmetics(profile);
     root.querySelector("#profile-banner-preview").style.background = bannerStyleFor(c.equipped.banner);
     root.querySelector("#profile-avatar-preview").innerHTML = renderAvatarPreview(c.equipped.avatar);
-    const av = COSMETIC_BY_ID[c.equipped.avatar];
-    const bn = COSMETIC_BY_ID[c.equipped.banner];
-    const sk = COSMETIC_BY_ID[c.equipped.pieceSkin];
-    const meta = root.querySelector(".profile-showcase__meta");
-    if (meta) {
-      meta.innerHTML = `
-        <p class="profile-equipped-line"><strong>Avatar:</strong> ${av?.name || "—"}</p>
-        <p class="profile-equipped-line"><strong>Banner:</strong> ${bn?.name || "—"}</p>
-        <p class="profile-equipped-line"><strong>Piece skin:</strong> ${sk?.name || "—"}</p>`;
-    }
+    const stack = root.querySelector("#profile-avatar-stack");
+    if (stack) stack.className = `profile-avatar-stack ${frameClassFor(c.equipped.frame)}`;
+    const meta = root.querySelector("#profile-loadout-meta");
+    if (meta) meta.innerHTML = loadoutHtml(c);
   };
 
   const renderGrid = () => {
@@ -135,10 +167,11 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
       const card = document.createElement("button");
       card.type = "button";
       card.className = `profile-cosmetic-card ${RARITY_CLASS[item.rarity] || ""} ${equipped ? "profile-cosmetic-card--equipped" : ""}`;
+      const preview = renderCosmeticPreviewHtml(id, item.type);
       card.innerHTML = `
         <span class="profile-cosmetic-card__rarity">${item.rarity}</span>
+        <div class="profile-cosmetic-card__art">${preview}</div>
         <strong class="profile-cosmetic-card__name">${item.name}</strong>
-        <span class="profile-cosmetic-card__type">${item.type}</span>
         <span class="profile-cosmetic-card__action">${equipped ? "Equipped" : "Equip"}</span>`;
       card.addEventListener("click", () => {
         const res = equipCosmetic(profile, filter, id);
@@ -150,7 +183,9 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
       });
       grid.appendChild(card);
     }
-    if (!owned.length) grid.innerHTML = '<p class="muted">Open cosmetic boxes in the Vault (Cards tab) to unlock items.</p>';
+    if (!owned.length) {
+      grid.innerHTML = '<p class="muted">Open cosmetic boxes in the Vault (Cards tab) to unlock items.</p>';
+    }
   };
 
   for (const btn of root.querySelectorAll(".profile-filter-btn")) {
