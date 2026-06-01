@@ -159,9 +159,22 @@ export class MatchSession {
     }
   }
 
+  canMovePieces() {
+    const s = this.state;
+    return s.turn === COLORS.RED && !s.gameOver && !this.actionBusy && !this.cardPlay;
+  }
+
   canPlaySpells() {
     const s = this.state;
-    return s.turn === COLORS.RED && s.phase === PHASE.CARDS && !s.gameOver && !s.spellPlayed.red && !s.meta.shatterSilenced?.red && !this.actionBusy;
+    return (
+      s.turn === COLORS.RED &&
+      s.phase === PHASE.CARDS &&
+      !s.gameOver &&
+      !s.spellPlayed.red &&
+      !s.meta.shatterSilenced?.red &&
+      !this.actionBusy &&
+      !this.cardPlay
+    );
   }
 
 
@@ -209,7 +222,7 @@ export class MatchSession {
     }
     startTurnMeta(s, COLORS.RED);
     if (s.meta.shatterSilenced?.red) {
-      this.setMessage("Shatter backlash — no spells this turn. Press Enter or Done to move.");
+      this.setMessage("Shatter backlash — no spells this turn. Select a piece to move.");
     }
   }
 
@@ -429,7 +442,7 @@ export class MatchSession {
     if (!canCast) {
       el.title =
         s.phase === PHASE.MOVE
-          ? "Move phase — spells locked"
+          ? "Spells skipped — select a piece to move"
           : s.meta.shatterSilenced?.red
             ? "Shatter backlash — no spells this turn"
             : s.spellPlayed.red
@@ -470,22 +483,16 @@ export class MatchSession {
       return;
     }
 
-    const piece = s.board[row][col];
-    if (piece) {
-      this.showPieceInfo(piece, row, col);
-      if (s.phase !== PHASE.MOVE) {
-        this.render();
-        return;
-      }
-    }
-
-    if (s.phase !== PHASE.MOVE) return;
+    if (!this.canMovePieces()) return;
 
     const clicked = this.validMoves.find((m) => m.to[0] === row && m.to[1] === col);
     if (clicked) {
       this.executeHumanMove(clicked);
       return;
     }
+
+    const piece = s.board[row][col];
+    if (piece) this.showPieceInfo(piece, row, col);
 
     if (piece && piece.color === COLORS.RED) {
       this.selectedSquare = [row, col];
@@ -531,6 +538,8 @@ export class MatchSession {
 
   executeHumanMove(move) {
     const s = this.state;
+    this.cancelCardPlay();
+    s.phase = PHASE.MOVE;
     s.meta.lastMove.red = move;
     applyMove(s.board, move, s);
 
@@ -939,7 +948,7 @@ ${starLine}`;
     s.turn = COLORS.RED;
     s.phase = PHASE.CARDS;
     this.beginPlayerTurn();
-    this.setMessage("Your turn — drag a spell to the board or tap a card, then target.");
+    this.setMessage("Your turn — cast a spell or select a piece to move.");
     this.render();
   }
 
@@ -954,7 +963,7 @@ ${starLine}`;
       this.endHumanTurn();
       return;
     }
-    this.setMessage("Select a piece to move.");
+    this.setMessage("Spell skipped — select a piece to move.");
     this.render();
   }
 
@@ -1108,7 +1117,7 @@ ${starLine}`;
         } else {
           banner.textContent =
             s.phase === PHASE.CARDS
-              ? `${spellNote}drag a spell to the board or tap Done to move`
+              ? `${spellNote}cast a spell or select a piece to move`
               : "Select a piece to move";
           banner.className = "turn-banner";
         }
