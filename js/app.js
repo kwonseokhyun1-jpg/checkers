@@ -17,7 +17,7 @@ import { MatchSession } from "./match.js";
 import { renderSpellCardEl } from "./cardArt.js";
 
 let profile = loadProfile();
-let activeTab = "chests";
+let activeTab = "deck";
 /** @type {'list'|'edit'|'view'} */
 let deckSubview = "list";
 /** @type {string|null} null | 'new' | deck id */
@@ -94,7 +94,7 @@ function renderChests() {
         pullsEl.innerHTML = "";
         for (const def of res.pulls) {
           pullsEl.appendChild(
-            renderSpellCardEl(def, { compact: true, meta: "Added to collection" })
+            renderSpellCardEl(def, { static: true, meta: "Added to collection" })
           );
         }
       }
@@ -117,6 +117,11 @@ function getFilteredCollection() {
   });
 }
 
+function openDeckView(deckId) {
+  viewingDeckId = deckId;
+  showDeckSubview("view");
+}
+
 function renderDeckList() {
   updateGemHeader();
   const list = $("deck-list");
@@ -124,58 +129,25 @@ function renderDeckList() {
   list.innerHTML = "";
 
   if (!profile.decks.length) {
-    list.innerHTML = `<p class="empty-msg">No decks yet. Create one to start playing!</p>`;
+    list.innerHTML = `<p class="empty-msg">No decks yet. Tap <strong>+ New deck</strong> to create one.</p>`;
     return;
   }
 
   for (const deck of profile.decks) {
     const val = validateDeck(deck.cardIds, profile);
-    const row = document.createElement("div");
-    row.className = "deck-row";
     const statusClass = val.valid ? "ok" : "warn";
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "deck-row deck-row--open";
     row.innerHTML = `
       <div class="deck-row-info">
         <h3 class="deck-row-name">${deck.name}</h3>
-        <p class="deck-status ${statusClass}">${deck.cardIds.length}/${DECK_SIZE} cards${val.valid ? " · Ready" : ""}</p>
+        <p class="deck-status ${statusClass}">${deck.cardIds.length}/${DECK_SIZE} cards${val.valid ? " · Ready to play" : " · Incomplete"}</p>
+        <p class="deck-row-hint">Tap to view cards</p>
       </div>
-      <div class="deck-row-actions"></div>
+      <span class="deck-row-chevron" aria-hidden="true">›</span>
     `;
-    const actions = row.querySelector(".deck-row-actions");
-
-    const btnView = document.createElement("button");
-    btnView.type = "button";
-    btnView.className = "btn-secondary";
-    btnView.textContent = "View";
-    btnView.addEventListener("click", () => {
-      viewingDeckId = deck.id;
-      showDeckSubview("view");
-    });
-
-    const btnEdit = document.createElement("button");
-    btnEdit.type = "button";
-    btnEdit.className = "btn-secondary";
-    btnEdit.textContent = "Edit";
-    btnEdit.addEventListener("click", () => {
-      editingDeckId = deck.id;
-      workingDeck = [...deck.cardIds];
-      const nameInput = $("deck-name-input");
-      if (nameInput) nameInput.value = deck.name;
-      showDeckSubview("edit");
-    });
-
-    const btnDelete = document.createElement("button");
-    btnDelete.type = "button";
-    btnDelete.className = "btn-secondary btn-danger";
-    btnDelete.textContent = "Delete";
-    btnDelete.addEventListener("click", () => {
-      if (confirm(`Delete deck "${deck.name}"?`)) {
-        deleteDeck(profile, deck.id);
-        renderDeckList();
-        renderPlayLobby();
-      }
-    });
-
-    actions.append(btnView, btnEdit, btnDelete);
+    row.addEventListener("click", () => openDeckView(deck.id));
     list.appendChild(row);
   }
 }
@@ -193,18 +165,14 @@ function renderDeckView() {
   if (status) {
     status.textContent = val.valid
       ? `${DECK_SIZE} cards — ready to play`
-      : val.errors[0] || `${deck.cardIds.length}/${DECK_SIZE}`;
+      : val.errors[0] || `${deck.cardIds.length}/${DECK_SIZE} cards`;
     status.className = val.valid ? "deck-status ok" : "deck-status warn";
   }
 
   grid.innerHTML = "";
-  const counts = countById(deck.cardIds);
-  const unique = [...new Set(deck.cardIds)];
-  for (const id of unique.sort((a, b) => (getCardDef(a)?.name || "").localeCompare(getCardDef(b)?.name || ""))) {
+  for (const id of deck.cardIds) {
     const def = getCardDef(id);
-    if (!def) continue;
-    const n = counts[id] || 0;
-    grid.appendChild(renderSpellCardEl(def, { compact: true, meta: `×${n}` }));
+    if (def) grid.appendChild(renderSpellCardEl(def, { static: true }));
   }
 }
 
@@ -235,7 +203,6 @@ function renderDeckEditor() {
     const addCheck = canAddCardToDeck(workingDeck, def.id, profile);
     const card = renderSpellCardEl(def, {
       button: true,
-      compact: true,
       disabled: !addCheck.ok,
       meta: `Owned ${owned} · In deck ${inDeck}/${MAX_COPIES_PER_CARD}`,
       onClick: () => {
@@ -256,7 +223,7 @@ function renderDeckEditor() {
     if (!def) return;
     const card = renderSpellCardEl(def, {
       button: true,
-      tiny: true,
+      small: true,
       onClick: () => {
         workingDeck.splice(i, 1);
         renderDeckEditor();
@@ -414,6 +381,22 @@ function init() {
   $("btn-new-deck")?.addEventListener("click", startNewDeck);
   $("btn-back-from-edit")?.addEventListener("click", () => showDeckSubview("list"));
   $("btn-back-from-view")?.addEventListener("click", () => showDeckSubview("list"));
+  $("btn-edit-from-view")?.addEventListener("click", () => {
+    const deck = profile.decks.find((d) => d.id === viewingDeckId);
+    if (!deck) return;
+    editingDeckId = deck.id;
+    workingDeck = [...deck.cardIds];
+    const nameInput = $("deck-name-input");
+    if (nameInput) nameInput.value = deck.name;
+    showDeckSubview("edit");
+  });
+  $("btn-delete-from-view")?.addEventListener("click", () => {
+    const deck = profile.decks.find((d) => d.id === viewingDeckId);
+    if (!deck || !confirm(`Delete deck "${deck.name}"?`)) return;
+    deleteDeck(profile, deck.id);
+    showDeckSubview("list");
+    renderPlayLobby();
+  });
 
   $("collection-search")?.addEventListener("input", (e) => {
     collectionFilter = e.target.value;
@@ -434,7 +417,7 @@ function init() {
     saveProfile(profile);
   });
 
-  showTab("chests");
+  showTab("deck");
 }
 
 init();

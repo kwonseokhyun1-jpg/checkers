@@ -709,23 +709,68 @@ body {
 .spell-card.rare .spell-card__frame { border-color: #9f7aea; }
 .spell-card.epic .spell-card__frame { border-color: #e8a838; }
 
+.spell-card--full,
+.spell-card:not(.spell-card--compact):not(.spell-card--small):not(.spell-card--tiny) {
+  max-width: 180px;
+}
+.spell-card--full .spell-card__art,
+.spell-card:not(.spell-card--compact):not(.spell-card--small):not(.spell-card--tiny) .spell-card__art {
+  height: 110px;
+}
+.spell-card--full .spell-card__svg,
+.spell-card:not(.spell-card--compact):not(.spell-card--small):not(.spell-card--tiny) .spell-card__svg {
+  width: 80px;
+  height: 80px;
+}
+.spell-card--full .spell-card__desc,
+.spell-card:not(.spell-card--compact):not(.spell-card--small):not(.spell-card--tiny) .spell-card__desc {
+  -webkit-line-clamp: 4;
+}
+
+.spell-card--compact,
 .spell-card.compact { max-width: 140px; }
+.spell-card--compact .spell-card__art,
 .spell-card.compact .spell-card__art { height: 72px; }
+.spell-card--compact .spell-card__name,
 .spell-card.compact .spell-card__name { font-size: 0.75rem; }
+.spell-card--compact .spell-card__desc,
 .spell-card.compact .spell-card__desc { -webkit-line-clamp: 2; }
 
+.spell-card--small { max-width: 100px; }
+.spell-card--small .spell-card__art { height: 56px; }
+.spell-card--small .spell-card__svg { width: 48px; height: 48px; }
+.spell-card--small .spell-card__name { font-size: 0.68rem; }
+.spell-card--small .spell-card__desc { font-size: 0.6rem; -webkit-line-clamp: 2; }
+
+.spell-card--tiny,
 .spell-card.tiny { max-width: 72px; }
+.spell-card--tiny .spell-card__art,
 .spell-card.tiny .spell-card__art { height: 48px; }
+.spell-card--tiny .spell-card__body,
 .spell-card.tiny .spell-card__body { padding: 0.25rem; }
+.spell-card--tiny .spell-card__name,
 .spell-card.tiny .spell-card__name { font-size: 0.58rem; margin: 0; }
+.spell-card--tiny .spell-card__rarity,
+.spell-card--tiny .spell-card__desc,
+.spell-card--tiny .spell-card__meta,
 .spell-card.tiny .spell-card__rarity,
 .spell-card.tiny .spell-card__desc,
 .spell-card.tiny .spell-card__meta { display: none; }
+.spell-card--tiny .spell-card__sigil,
 .spell-card.tiny .spell-card__sigil { font-size: 0.85rem; }
+
+.spell-card.static {
+  cursor: default;
+  pointer-events: none;
+}
+.spell-card.static:hover .spell-card__frame {
+  transform: none;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.45);
+}
 
 .collection-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
   gap: 0.65rem;
   max-height: 560px;
   overflow-y: auto;
@@ -751,10 +796,15 @@ body {
 }
 .spell-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
   gap: 0.65rem;
   margin-top: 1rem;
 }
+.spell-card-grid--deck {
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 0.85rem;
+}
+
 .chest-pulls {
   display: flex;
   flex-wrap: wrap;
@@ -777,12 +827,46 @@ body {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 1rem;
+  width: 100%;
+  padding: 1rem 1.1rem;
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: var(--radius);
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  transition: border-color 0.15s, background 0.15s;
 }
+.deck-row--open {
+  cursor: pointer;
+}
+.deck-row--open:hover {
+  border-color: var(--accent-gold);
+  background: hsl(220 18% 14%);
+}
+.deck-row-info { flex: 1; min-width: 0; }
 .deck-row-name { margin: 0 0 0.25rem; font-family: var(--font-display); font-size: 1.1rem; }
+.deck-row-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.deck-row-chevron {
+  font-size: 1.5rem;
+  color: var(--accent-gold);
+  line-height: 1;
+  flex-shrink: 0;
+}
+.deck-view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0 0;
+}
+.deck-view-header h2 { margin: 0 0 0.25rem; }
+.deck-view-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .deck-row-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .btn-danger { border-color: #c92a2a55; color: #ff8787; }
 .empty-msg { color: var(--text-muted); text-align: center; padding: 2rem; }

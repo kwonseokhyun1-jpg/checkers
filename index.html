@@ -18,8 +18,8 @@
     </header>
 
     <nav class="tabs" role="tablist">
-      <button type="button" class="tab-btn active" data-tab="chests" role="tab">Chests</button>
-      <button type="button" class="tab-btn" data-tab="deck" role="tab">Decks</button>
+      <button type="button" class="tab-btn active" data-tab="deck" role="tab">Decks</button>
+      <button type="button" class="tab-btn" data-tab="chests" role="tab">Chests</button>
       <button type="button" class="tab-btn" data-tab="play" role="tab">Play</button>
     </nav>
 
@@ -39,7 +39,7 @@
         <div class="deck-list-header">
           <div>
             <h2>Your decks</h2>
-            <p class="meta-desc">Build a 30-card deck (max 3 copies each) before playing.</p>
+            <p class="meta-desc">Tap a deck to view its cards. Build 30-card decks (max 3 copies each) before playing.</p>
           </div>
           <button type="button" id="btn-new-deck" class="btn-primary">+ New deck</button>
         </div>
@@ -49,9 +49,17 @@
       <!-- View deck (read-only) -->
       <section id="deck-subview-view" class="deck-subview panel hidden">
         <button type="button" id="btn-back-from-view" class="btn-text">← Back to decks</button>
-        <h2 id="view-deck-title">Deck</h2>
-        <p id="view-deck-status" class="deck-status"></p>
-        <div id="view-deck-cards" class="spell-card-grid readonly"></div>
+        <div class="deck-view-header">
+          <div>
+            <h2 id="view-deck-title">Deck</h2>
+            <p id="view-deck-status" class="deck-status"></p>
+          </div>
+          <div class="deck-view-actions">
+            <button type="button" id="btn-edit-from-view" class="btn-secondary">Edit deck</button>
+            <button type="button" id="btn-delete-from-view" class="btn-danger">Delete</button>
+          </div>
+        </div>
+        <div id="view-deck-cards" class="spell-card-grid spell-card-grid--deck readonly"></div>
       </section>
 
       <!-- Edit / create deck -->
