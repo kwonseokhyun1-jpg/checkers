@@ -112,7 +112,7 @@ export const CARD_REGISTRY = [
   { id: "fireline", name: "Fireline", desc: "Forward Bolt hits every enemy along one forward diagonal.", rarity: "rare", weight: 3, mode: "friendly", effect: "fireline" },
   { id: "sanctuary_pulse", name: "Sanctuary Pulse", desc: "Shield all your pieces in your back row for 1 turn.", rarity: "uncommon", weight: 4, mode: "instant", effect: "sanctuary_pulse" },
   { id: "mass_nudge", name: "Mass Nudge", desc: "Move up to 2 friendly pieces 1 square each (adjacent empty).", rarity: "uncommon", weight: 4, mode: "instant", effect: "mass_nudge" },
-  { id: "chain_lightning", name: "Chain Lightning", desc: "Destroy first enemy in a line; chains up to 3 times.", rarity: "epic", weight: 2, mode: "friendly", effect: "chain_lightning" },
+  { id: "chain_lightning", name: "Chain Lightning", desc: "From your piece, strike the forward diagonal with more enemies — destroy up to 2 in a row along that line.", rarity: "legendary", weight: 1, mode: "friendly", effect: "chain_lightning" },
   { id: "vacuum", name: "Vacuum", desc: "Pull all pieces 1 step toward a chosen empty dark square.", rarity: "rare", weight: 3, mode: "empty", effect: "vacuum" },
   { id: "scatter", name: "Scatter", desc: "Push every piece adjacent to a square 1 step away radially.", rarity: "uncommon", weight: 4, mode: "empty", effect: "scatter" },
   { id: "dominion", name: "Dominion", desc: "All your men may move backward this turn.", rarity: "uncommon", weight: 4, mode: "instant", effect: "dominion" },
