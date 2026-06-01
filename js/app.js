@@ -1,5 +1,5 @@
 /**
- * Card Checkers — meta game (chests, deck builder, play lobby) + match
+ * Card Checkers — meta game (chests, decks, play) + match
  */
 import { getPlayableCards, getCardDef, DECK_SIZE, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
 import {
@@ -14,9 +14,15 @@ import {
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
 import { MatchSession } from "./match.js";
+import { renderSpellCardEl } from "./cardArt.js";
 
 let profile = loadProfile();
 let activeTab = "chests";
+/** @type {'list'|'edit'|'view'} */
+let deckSubview = "list";
+/** @type {string|null} null | 'new' | deck id */
+let editingDeckId = null;
+let viewingDeckId = null;
 let workingDeck = [];
 let collectionFilter = "";
 let collectionRarity = "all";
@@ -33,7 +39,12 @@ function showTab(tab) {
     v.classList.toggle("hidden", v.id !== `view-${tab}`);
   });
   if (tab === "chests") renderChests();
-  if (tab === "deck") renderDeckBuilder();
+  if (tab === "deck") {
+    deckSubview = "list";
+    editingDeckId = null;
+    viewingDeckId = null;
+    showDeckSubview("list");
+  }
   if (tab === "play") renderPlayLobby();
 }
 
@@ -42,9 +53,22 @@ function updateGemHeader() {
   if (el) el.textContent = String(profile.gems);
 }
 
+function showDeckSubview(sub) {
+  deckSubview = sub;
+  $("deck-subview-list")?.classList.toggle("hidden", sub !== "list");
+  $("deck-subview-edit")?.classList.toggle("hidden", sub !== "edit");
+  $("deck-subview-view")?.classList.toggle("hidden", sub !== "view");
+
+  if (sub === "list") renderDeckList();
+  if (sub === "edit") renderDeckEditor();
+  if (sub === "view") renderDeckView();
+}
+
 function renderChests() {
   updateGemHeader();
   const list = $("chest-list");
+  const pullsEl = $("chest-pulls");
+  if (pullsEl) pullsEl.innerHTML = "";
   if (!list) return;
   list.innerHTML = "";
   for (const chest of CHESTS) {
@@ -65,8 +89,15 @@ function renderChests() {
         if (log) log.textContent = res.message;
         return;
       }
-      const names = res.pulls.map((c) => c.name).join(", ");
-      if (log) log.textContent = `Opened ${res.chest.name}: ${names}`;
+      if (log) log.textContent = `Opened ${res.chest.name}!`;
+      if (pullsEl) {
+        pullsEl.innerHTML = "";
+        for (const def of res.pulls) {
+          pullsEl.appendChild(
+            renderSpellCardEl(def, { compact: true, meta: "Added to collection" })
+          );
+        }
+      }
       saveProfile(profile);
       renderChests();
     });
@@ -86,12 +117,108 @@ function getFilteredCollection() {
   });
 }
 
-function renderDeckBuilder() {
+function renderDeckList() {
+  updateGemHeader();
+  const list = $("deck-list");
+  if (!list) return;
+  list.innerHTML = "";
+
+  if (!profile.decks.length) {
+    list.innerHTML = `<p class="empty-msg">No decks yet. Create one to start playing!</p>`;
+    return;
+  }
+
+  for (const deck of profile.decks) {
+    const val = validateDeck(deck.cardIds, profile);
+    const row = document.createElement("div");
+    row.className = "deck-row";
+    const statusClass = val.valid ? "ok" : "warn";
+    row.innerHTML = `
+      <div class="deck-row-info">
+        <h3 class="deck-row-name">${deck.name}</h3>
+        <p class="deck-status ${statusClass}">${deck.cardIds.length}/${DECK_SIZE} cards${val.valid ? " · Ready" : ""}</p>
+      </div>
+      <div class="deck-row-actions"></div>
+    `;
+    const actions = row.querySelector(".deck-row-actions");
+
+    const btnView = document.createElement("button");
+    btnView.type = "button";
+    btnView.className = "btn-secondary";
+    btnView.textContent = "View";
+    btnView.addEventListener("click", () => {
+      viewingDeckId = deck.id;
+      showDeckSubview("view");
+    });
+
+    const btnEdit = document.createElement("button");
+    btnEdit.type = "button";
+    btnEdit.className = "btn-secondary";
+    btnEdit.textContent = "Edit";
+    btnEdit.addEventListener("click", () => {
+      editingDeckId = deck.id;
+      workingDeck = [...deck.cardIds];
+      const nameInput = $("deck-name-input");
+      if (nameInput) nameInput.value = deck.name;
+      showDeckSubview("edit");
+    });
+
+    const btnDelete = document.createElement("button");
+    btnDelete.type = "button";
+    btnDelete.className = "btn-secondary btn-danger";
+    btnDelete.textContent = "Delete";
+    btnDelete.addEventListener("click", () => {
+      if (confirm(`Delete deck "${deck.name}"?`)) {
+        deleteDeck(profile, deck.id);
+        renderDeckList();
+        renderPlayLobby();
+      }
+    });
+
+    actions.append(btnView, btnEdit, btnDelete);
+    list.appendChild(row);
+  }
+}
+
+function renderDeckView() {
+  updateGemHeader();
+  const deck = profile.decks.find((d) => d.id === viewingDeckId);
+  const title = $("view-deck-title");
+  const status = $("view-deck-status");
+  const grid = $("view-deck-cards");
+  if (!deck || !grid) return;
+
+  if (title) title.textContent = deck.name;
+  const val = validateDeck(deck.cardIds, profile);
+  if (status) {
+    status.textContent = val.valid
+      ? `${DECK_SIZE} cards — ready to play`
+      : val.errors[0] || `${deck.cardIds.length}/${DECK_SIZE}`;
+    status.className = val.valid ? "deck-status ok" : "deck-status warn";
+  }
+
+  grid.innerHTML = "";
+  const counts = countById(deck.cardIds);
+  const unique = [...new Set(deck.cardIds)];
+  for (const id of unique.sort((a, b) => (getCardDef(a)?.name || "").localeCompare(getCardDef(b)?.name || ""))) {
+    const def = getCardDef(id);
+    if (!def) continue;
+    const n = counts[id] || 0;
+    grid.appendChild(renderSpellCardEl(def, { compact: true, meta: `×${n}` }));
+  }
+}
+
+function renderDeckEditor() {
   updateGemHeader();
   const collEl = $("collection-grid");
   const deckEl = $("deck-slots");
   const status = $("deck-status");
+  const heading = $("edit-deck-heading");
   if (!collEl || !deckEl) return;
+
+  if (heading) {
+    heading.textContent = editingDeckId === "new" ? "New deck" : "Edit deck";
+  }
 
   const val = validateDeck(workingDeck, profile);
   if (status) {
@@ -105,58 +232,81 @@ function renderDeckBuilder() {
   for (const def of getFilteredCollection()) {
     const owned = collectionCount(profile, def.id);
     const inDeck = countById(workingDeck)[def.id] || 0;
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = `collection-card ${def.rarity}`;
-    row.innerHTML = `
-      <span class="card-name">${def.name}</span>
-      <span class="card-meta">Owned ${owned} · In deck ${inDeck}/${MAX_COPIES_PER_CARD}</span>
-    `;
     const addCheck = canAddCardToDeck(workingDeck, def.id, profile);
-    if (!addCheck.ok) row.classList.add("disabled");
-    row.addEventListener("click", () => {
-      if (!addCheck.ok) {
-        if (status) status.textContent = addCheck.reason;
-        return;
-      }
-      workingDeck.push(def.id);
-      renderDeckBuilder();
+    const card = renderSpellCardEl(def, {
+      button: true,
+      compact: true,
+      disabled: !addCheck.ok,
+      meta: `Owned ${owned} · In deck ${inDeck}/${MAX_COPIES_PER_CARD}`,
+      onClick: () => {
+        if (!addCheck.ok) {
+          if (status) status.textContent = addCheck.reason;
+          return;
+        }
+        workingDeck.push(def.id);
+        renderDeckEditor();
+      },
     });
-    collEl.appendChild(row);
+    collEl.appendChild(card);
   }
 
   deckEl.innerHTML = "";
   workingDeck.forEach((id, i) => {
     const def = getCardDef(id);
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "deck-chip";
-    chip.textContent = def?.name || id;
-    chip.title = "Click to remove";
-    chip.addEventListener("click", () => {
-      workingDeck.splice(i, 1);
-      renderDeckBuilder();
+    if (!def) return;
+    const card = renderSpellCardEl(def, {
+      button: true,
+      tiny: true,
+      onClick: () => {
+        workingDeck.splice(i, 1);
+        renderDeckEditor();
+      },
     });
-    deckEl.appendChild(chip);
+    card.title = "Click to remove";
+    deckEl.appendChild(card);
   });
   for (let i = workingDeck.length; i < DECK_SIZE; i++) {
     const empty = document.createElement("div");
-    empty.className = "deck-chip empty";
-    empty.textContent = "—";
+    empty.className = "deck-slot-empty";
+    empty.textContent = "+";
     deckEl.appendChild(empty);
   }
+}
 
-  const saved = $("saved-decks");
-  if (saved) {
-    saved.innerHTML = "";
-    for (const d of profile.decks) {
-      const opt = document.createElement("option");
-      opt.value = d.id;
-      opt.textContent = `${d.name} (${d.cardIds.length}/${DECK_SIZE})`;
-      if (d.id === profile.selectedDeckId) opt.selected = true;
-      saved.appendChild(opt);
-    }
+function saveWorkingDeck() {
+  const name = $("deck-name-input")?.value?.trim() || "My Deck";
+  const val = validateDeck(workingDeck, profile);
+  if (!val.valid) {
+    $("deck-status").textContent = val.errors.join(" ");
+    return;
   }
+  let deck;
+  if (editingDeckId && editingDeckId !== "new") {
+    deck = profile.decks.find((d) => d.id === editingDeckId);
+    if (deck) {
+      deck.name = name;
+      deck.cardIds = [...workingDeck];
+      deck.updatedAt = Date.now();
+    } else {
+      deck = createDeck(name, workingDeck);
+    }
+  } else {
+    deck = createDeck(name, workingDeck);
+  }
+  upsertDeck(profile, deck);
+  profile.selectedDeckId = deck.id;
+  saveProfile(profile);
+  editingDeckId = null;
+  workingDeck = [];
+  showDeckSubview("list");
+}
+
+function startNewDeck() {
+  editingDeckId = "new";
+  workingDeck = [];
+  const nameInput = $("deck-name-input");
+  if (nameInput) nameInput.value = "New Deck";
+  showDeckSubview("edit");
 }
 
 function renderPlayLobby() {
@@ -167,7 +317,7 @@ function renderPlayLobby() {
   const validDecks = profile.decks.filter((d) => d.cardIds.length === DECK_SIZE);
   if (!validDecks.length) {
     const opt = document.createElement("option");
-    opt.textContent = "No complete decks — build one first";
+    opt.textContent = "No complete decks — build one in Decks tab";
     sel.appendChild(opt);
     $("btn-start-match").disabled = true;
     return;
@@ -180,36 +330,6 @@ function renderPlayLobby() {
     sel.appendChild(opt);
   }
   $("btn-start-match").disabled = false;
-}
-
-function loadWorkingDeckFromSelected() {
-  const id = $("saved-decks")?.value || profile.selectedDeckId;
-  const deck = profile.decks.find((d) => d.id === id);
-  workingDeck = deck ? [...deck.cardIds] : [];
-}
-
-function saveWorkingDeck() {
-  const name = $("deck-name-input")?.value?.trim() || "My Deck";
-  const val = validateDeck(workingDeck, profile);
-  if (!val.valid) {
-    $("deck-status").textContent = val.errors.join(" ");
-    return;
-  }
-  const existingId = $("saved-decks")?.value;
-  let deck;
-  if (existingId && profile.decks.some((d) => d.id === existingId)) {
-    deck = profile.decks.find((d) => d.id === existingId);
-    deck.name = name;
-    deck.cardIds = [...workingDeck];
-    deck.updatedAt = Date.now();
-  } else {
-    deck = createDeck(name, workingDeck);
-  }
-  upsertDeck(profile, deck);
-  profile.selectedDeckId = deck.id;
-  saveProfile(profile);
-  $("deck-status").textContent = `Saved "${deck.name}".`;
-  renderDeckBuilder();
 }
 
 function startMatch() {
@@ -261,13 +381,14 @@ function getMatchHtml() {
           <div class="player-badge you"><span class="piece-icon red"></span> You</div>
           <div class="pile-info">Deck: <span id="pile-count">0</span> left · Draw every 2 turns</div>
           <div class="hand-label">Hand <span id="hand-count">0/5</span></div>
-          <div id="hand-red" class="hand"></div>
+          <div id="hand-red" class="hand spell-hand"></div>
           <button id="btn-end-cards" type="button" class="btn-secondary">Done with spells → move</button>
         </aside>
       </div>
       <div id="card-modal" class="modal hidden">
         <div class="modal-backdrop"></div>
-        <div class="modal-content">
+        <div class="modal-content modal-content--card">
+          <div id="modal-card-preview"></div>
           <h2 id="modal-title">Play card</h2>
           <p id="modal-desc" class="modal-desc"></p>
           <p id="modal-hint" class="modal-hint"></p>
@@ -290,44 +411,28 @@ function init() {
     btn.addEventListener("click", () => showTab(btn.dataset.tab));
   });
 
+  $("btn-new-deck")?.addEventListener("click", startNewDeck);
+  $("btn-back-from-edit")?.addEventListener("click", () => showDeckSubview("list"));
+  $("btn-back-from-view")?.addEventListener("click", () => showDeckSubview("list"));
+
   $("collection-search")?.addEventListener("input", (e) => {
     collectionFilter = e.target.value;
-    renderDeckBuilder();
+    if (deckSubview === "edit") renderDeckEditor();
   });
   $("collection-rarity")?.addEventListener("change", (e) => {
     collectionRarity = e.target.value;
-    renderDeckBuilder();
+    if (deckSubview === "edit") renderDeckEditor();
   });
   $("btn-clear-deck")?.addEventListener("click", () => {
     workingDeck = [];
-    renderDeckBuilder();
+    renderDeckEditor();
   });
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
-  $("saved-decks")?.addEventListener("change", () => {
-    loadWorkingDeckFromSelected();
-    const d = profile.decks.find((x) => x.id === $("saved-decks").value);
-    if ($("deck-name-input") && d) $("deck-name-input").value = d.name;
-    renderDeckBuilder();
-  });
-  $("btn-delete-deck")?.addEventListener("click", () => {
-    const id = $("saved-decks")?.value;
-    if (!id) return;
-    deleteDeck(profile, id);
-    workingDeck = [];
-    renderDeckBuilder();
-    renderPlayLobby();
-  });
   $("btn-start-match")?.addEventListener("click", startMatch);
   $("play-deck-select")?.addEventListener("change", (e) => {
     profile.selectedDeckId = e.target.value;
     saveProfile(profile);
   });
-
-  if (profile.decks.length) {
-    loadWorkingDeckFromSelected();
-    const d = profile.decks.find((x) => x.id === profile.selectedDeckId);
-    if ($("deck-name-input") && d) $("deck-name-input").value = d.name;
-  }
 
   showTab("chests");
 }
