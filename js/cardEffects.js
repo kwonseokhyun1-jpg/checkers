@@ -7,6 +7,7 @@ import { applyCard, applyEffect } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
 export { applyCard, applyEffect };
+export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS } from "./cullAnimation.js";
 
 export function initCardState(state) {
   state.squares = state.squares || {};

@@ -64,7 +64,9 @@ export function runAiTurn(state, opponentName = "Opponent") {
           cardName: card.name,
           cardId: card.id,
           cardDesc: card.desc,
+          cardEffect: card.effect,
           text: res.message || `Cast ${card.name}`,
+          ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
         });
         if (state.meta.counterspell?.[COLORS.RED]) {
           state.meta.counterspell[COLORS.RED] = false;
