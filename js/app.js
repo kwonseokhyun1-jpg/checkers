@@ -48,6 +48,7 @@ try {
   profile = loadProfile();
 } catch (err) {
   console.error("Failed to load profile, resetting save:", err);
+  localStorage.removeItem("cardCheckersProfile_v6");
   localStorage.removeItem("cardCheckersProfile_v5");
   profile = loadProfile();
 }
@@ -186,21 +187,14 @@ function showDeckSubview(sub) {
   $("deck-subview-view")?.classList.toggle("hidden", sub !== "view");
 
   if (sub === "edit") {
-    if (repairProfile(profile)) saveProfile(profile);
+    repairProfile(profile);
+    saveProfile(profile);
     collectionRarity = "all";
     collectionFilter = "";
     collectionOwnedOnly = false;
     syncCollectionFilterControls();
-  document.querySelectorAll(".btn-reset-collection-filters").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      collectionRarity = "all";
-      collectionFilter = "";
-      collectionOwnedOnly = false;
-      syncCollectionFilterControls();
-      syncCollectionFilter();
-    });
-  });
   }
+
   if (sub === "list") renderDeckList();
   if (sub === "edit") renderDeckEditor();
   if (sub === "view") renderDeckView();
@@ -498,6 +492,7 @@ function openDeckView(deckId) {
 }
 
 function renderDeckList() {
+  if (repairProfile(profile)) saveProfile(profile);
   updateGemHeader();
   const list = $("deck-list");
   const invGrid = $("inventory-grid");
@@ -507,6 +502,11 @@ function renderDeckList() {
   list.innerHTML = "";
 
   if (!profile.decks.length) {
+    if (repairProfile(profile)) saveProfile(profile);
+    if (profile.decks.length) {
+      renderDeckList();
+      return;
+    }
     list.innerHTML = `<p class="empty-msg">No decks yet. Tap <strong>+ New deck</strong> to create one.</p>`;
     return;
   }
@@ -936,10 +936,15 @@ function init() {
     if (deckSubview === "edit") renderDeckEditor();
     if (deckSubview === "list") renderDeckList();
   };
+
   document.querySelectorAll(".collection-owned-only-toggle").forEach((el) => {
     el.addEventListener("change", (e) => {
       collectionOwnedOnly = e.target.checked;
       syncCollectionFilterControls();
+      syncCollectionFilter();
+    });
+  });
+
   document.querySelectorAll(".btn-reset-collection-filters").forEach((btn) => {
     btn.addEventListener("click", () => {
       collectionRarity = "all";
@@ -949,19 +954,9 @@ function init() {
       syncCollectionFilter();
     });
   });
-      syncCollectionFilter();
-    });
-  });
+
   syncCollectionFilterControls();
-  document.querySelectorAll(".btn-reset-collection-filters").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      collectionRarity = "all";
-      collectionFilter = "";
-      collectionOwnedOnly = false;
-      syncCollectionFilterControls();
-      syncCollectionFilter();
-    });
-  });
+
   $("collection-search")?.addEventListener("input", (e) => {
     collectionFilter = e.target.value;
     const inv = $("inventory-search");
@@ -998,6 +993,7 @@ function init() {
     if (coll) coll.value = collectionSort;
     syncCollectionFilter();
   });
+
   $("btn-clear-deck")?.addEventListener("click", () => {
     workingDeck = [];
     renderDeckEditor();
@@ -1011,6 +1007,9 @@ function init() {
     saveProfile(profile);
   });
 
+  repairProfile(profile);
+  collectionOwnedOnly = false;
+  syncCollectionFilterControls();
   showTab("deck");
 }
 
