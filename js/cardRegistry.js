@@ -70,8 +70,8 @@ export const CARD_REGISTRY = [
   { id: "revive", name: "Revive", desc: "Return a captured man to any empty square in your back 3 rows.", rarity: "epic", weight: 2, mode: "empty", effect: "revive" },
   { id: "ghost_guard", name: "Ghost Guard", desc: "When a friendly piece is captured, its square blocks enemies for 2 turns.", rarity: "rare", weight: 3, mode: "friendly", effect: "ghost_guard" },
   { id: "fortify", name: "Fortify", desc: "Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.", rarity: "rare", weight: 3, mode: "friendly", effect: "fortify" },
-  { id: "deep_freeze", name: "Deep Freeze", desc: "Enemy cannot move for 2 of its owner's turns.", rarity: "uncommon", weight: 4, mode: "enemy", effect: "freeze_2" },
-  { id: "root", name: "Root", desc: "Enemy cannot jump or capture for 2 turns (can still step).", rarity: "uncommon", weight: 4, mode: "enemy", effect: "root_2" },
+  { id: "deep_freeze", name: "Deep Freeze", desc: "Enemy cannot move on its next turn.", rarity: "uncommon", weight: 4, mode: "enemy", effect: "freeze_2" },
+  { id: "root", name: "Root", desc: "Enemy cannot jump or capture on its next turn (can still step).", rarity: "uncommon", weight: 4, mode: "enemy", effect: "root_2" },
   { id: "slow", name: "Slow", desc: "Enemy kings move like men for 2 turns.", rarity: "uncommon", weight: 4, mode: "enemy", effect: "slow_2" },
   { id: "blind", name: "Blind", desc: "Opponent cannot play cards on their next turn.", rarity: "rare", weight: 3, mode: "instant", effect: "blind" },
   { id: "confusion", name: "Confusion", desc: "On opponent's next turn, their move is chosen randomly.", rarity: "rare", weight: 3, mode: "instant", effect: "confusion" },
@@ -151,6 +151,7 @@ export const CARD_REGISTRY = [
   { id: "conduct", name: "Conduct", desc: "If you played a movement card this turn, your checker step may be 2 squares.", rarity: "uncommon", weight: 4, mode: "instant", effect: "conduct" },
   { id: "cryo_bolt", name: "Cryo Bolt", desc: "Forward Bolt on a frozen target breaks shield and destroys it.", rarity: "rare", weight: 3, mode: "diagonal", effect: "cryo_bolt" },
   { id: "shield_bash", name: "Shield Bash", desc: "A shielded piece moves 1 square and destroys adjacent unshielded enemy.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "shield_bash" },
+  { id: "bomb", name: "Bomb", desc: "Arm a friendly piece. The next time it moves, it explodes and destroys every piece on adjacent squares (including itself).", rarity: "legendary", weight: 1, mode: "friendly", effect: "bomb" }
 ];
 
 export const CARD_IDS = Object.fromEntries(CARD_REGISTRY.map((c) => [c.id.toUpperCase().replace(/[^A-Z0-9]/g, '_'), c.id]));

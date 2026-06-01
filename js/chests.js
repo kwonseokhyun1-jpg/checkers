@@ -4,13 +4,13 @@ import { saveProfile } from "./storage.js";
 export const CHESTS = [
   { id: "bronze", name: "Bronze Reliquary", cost: 50, cards: 3, weights: { common: 70, uncommon: 25, rare: 5, epic: 0 } },
   { id: "silver", name: "Silver Reliquary", cost: 100, cards: 5, weights: { common: 50, uncommon: 35, rare: 12, epic: 3 } },
-  { id: "gold", name: "Gold Reliquary", cost: 200, cards: 8, weights: { common: 35, uncommon: 40, rare: 20, epic: 5 } },
+  { id: "gold", name: "Gold Reliquary", cost: 200, cards: 8, weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 } },
 ];
 
 function pickRarity(weights) {
   const roll = Math.random() * 100;
   let acc = 0;
-  for (const r of ["common", "uncommon", "rare", "epic"]) {
+  for (const r of ["common", "uncommon", "rare", "epic", "legendary"]) {
     acc += weights[r] || 0;
     if (roll <= acc) return r;
   }

@@ -67,6 +67,7 @@ export function createPiece(color, row, col, king = false) {
     silenced: 0,
     hexed: 0,
     rusted: false,
+    bombArmed: false,
     anchored: 0,
     fortifyTurns: 0,
     venom: 0,
@@ -271,6 +272,28 @@ export function getAllMovesForColor(board, color, state = null) {
   return steps;
 }
 
+
+function explodeBombAt(board, state, row, col) {
+  const victims = [];
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      const r = row + dr, c = col + dc;
+      if (!inBounds(r, c)) continue;
+      const p = board[r][c];
+      if (!p) continue;
+      victims.push([r, c, p]);
+    }
+  }
+  for (const [r, c, p] of victims) {
+    if (state) {
+      if (!state.captured[p.color]) state.captured[p.color] = [];
+      state.captured[p.color].push({ king: p.king });
+    }
+    removePiece(board, r, c);
+  }
+  return victims.length;
+}
+
 export function applyMove(board, move, state = null) {
   const [fr, fc] = move.from;
   const [tr, tc] = move.to;
@@ -297,6 +320,12 @@ export function applyMove(board, move, state = null) {
   if (sq?.mine && sq.mine !== piece.color) {
     removePiece(board, tr, tc);
     sq.mine = null;
+  }
+  if (piece.bombArmed) {
+    piece.bombArmed = false;
+    explodeBombAt(board, state, tr, tc);
+    if (state) state.lastExplosion = [tr, tc];
+    return null;
   }
   return piece;
 }

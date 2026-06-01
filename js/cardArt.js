@@ -1,21 +1,22 @@
 /**
  * Spell card UI — art on top, name + description on bottom
  */
+import { getCardEffectTags, formatEffectTooltip } from "./cardEffectTags.js";
 
 const THEME_STYLES = {
-  movement: { symbol: "↗", label: "Motion" },
-  combat: { symbol: "⚔", label: "Strike" },
-  defense: { symbol: "🛡", label: "Ward" },
-  debuff: { symbol: "❄", label: "Curse" },
-  transform: { symbol: "✦", label: "Morph" },
-  board: { symbol: "◇", label: "Terrain" },
-  crown: { symbol: "♔", label: "Royal" },
-  arcane: { symbol: "✧", label: "Arcane" },
+  movement: { symbol: "↗", label: "Motion", anim: "motion" },
+  combat: { symbol: "⚔", label: "Strike", anim: "combat" },
+  defense: { symbol: "🛡", label: "Ward", anim: "defense" },
+  debuff: { symbol: "❄", label: "Curse", anim: "debuff" },
+  transform: { symbol: "✦", label: "Morph", anim: "transform" },
+  board: { symbol: "◇", label: "Terrain", anim: "board" },
+  crown: { symbol: "♔", label: "Royal", anim: "crown" },
+  arcane: { symbol: "✧", label: "Arcane", anim: "arcane" },
 };
 
 const THEME_KEYS = [
   ["crown", ["crown", "coronation", "exile_king", "succession", "last_king", "constitution", "demote", "royal", "regicide"]],
-  ["combat", ["bolt", "shatter", "destroy", "snipe", "detonate", "duel", "execution", "cull", "venom", "fireline", "backstab", "sacrifice", "lightning", "cryo", "cross", "spear", "hunters", "ricochet", "bash", "mine", "overrun"]],
+  ["combat", ["bolt", "shatter", "destroy", "snipe", "detonate", "duel", "execution", "cull", "venom", "fireline", "backstab", "sacrifice", "lightning", "cryo", "cross", "spear", "hunters", "ricochet", "bash", "mine", "overrun", "bomb"]],
   ["defense", ["shield", "aegis", "bulwark", "fortify", "sanctuary", "last_stand", "decoy", "ghost", "mirror_shield", "phalanx", "anchor", "iron_will", "pulse"]],
   ["debuff", ["freeze", "frost", "root", "slow", "blind", "confusion", "silence", "rust", "hex", "tangle", "fog", "panic", "bind", "deep_freeze", "blizzard"]],
   ["transform", ["knight", "bishop", "rook", "queen", "fusion", "chameleon", "wraith", "stone", "twin", "identity", "promote", "charge", "sigil", "demote"]],
@@ -60,9 +61,15 @@ function resolveSize(opts) {
   return "full";
 }
 
+function buildEffectListHtml(def) {
+  const tags = getCardEffectTags(def);
+  if (!tags.length) return "";
+  return `<ul class="spell-card__effects">${tags.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>`;
+}
+
 /**
  * @param {object} def — { id, name, desc, rarity }
- * @param {object} [opts] — size: full (default) | compact | small | tiny
+ * @param {object} [opts]
  */
 export function renderSpellCardEl(def, opts = {}) {
   const theme = inferTheme(def);
@@ -74,24 +81,39 @@ export function renderSpellCardEl(def, opts = {}) {
   const el = document.createElement(tag);
   if (opts.button) el.type = "button";
 
+  const rarityClass = def.rarity === "legendary" ? "legendary" : def.rarity;
+
   el.className = [
     "spell-card",
     `spell-card--${size}`,
-    def.rarity,
+    `spell-card--anim-${style.anim}`,
+    rarityClass,
+    def.rarity === "epic" ? "spell-card--epic-fx" : "",
+    def.rarity === "legendary" ? "spell-card--legendary-fx" : "",
     `theme-${theme}`,
     opts.disabled ? "disabled" : "",
     opts.selected ? "selected" : "",
     opts.static ? "static" : "",
+    opts.deal ? "spell-card--deal" : "",
   ]
     .filter(Boolean)
     .join(" ");
 
   el.style.setProperty("--card-hue", String(hue));
   el.dataset.cardId = def.id;
+  el.title = formatEffectTooltip(def);
+
+  const fxLayer =
+    def.rarity === "legendary"
+      ? '<div class="spell-card__fx spell-card__fx--legendary" aria-hidden="true"></div>'
+      : def.rarity === "epic"
+        ? '<div class="spell-card__fx spell-card__fx--epic" aria-hidden="true"></div>'
+        : "";
 
   el.innerHTML = `
+    ${fxLayer}
     <div class="spell-card__frame">
-      <div class="spell-card__art" aria-hidden="true">
+      <div class="spell-card__art spell-card__art--animated" aria-hidden="true">
         ${artSvg(theme, hue, def.id)}
         <span class="spell-card__sigil">${style.symbol}</span>
       </div>
@@ -101,6 +123,10 @@ export function renderSpellCardEl(def, opts = {}) {
         ${opts.meta ? `<p class="spell-card__meta">${escapeHtml(opts.meta)}</p>` : ""}
         ${showDesc ? `<p class="spell-card__desc">${escapeHtml(def.desc)}</p>` : ""}
       </div>
+    </div>
+    <div class="spell-card__tooltip" role="tooltip">
+      <strong>${escapeHtml(def.name)}</strong>
+      ${buildEffectListHtml(def)}
     </div>
   `;
 

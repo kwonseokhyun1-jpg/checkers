@@ -29,6 +29,10 @@ import { buildAiDeck } from "./deckRules.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
+const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
+
+
 const TWO_PICK_MODES = new Set([
   "f_empty",
   "f_f",
@@ -80,6 +84,7 @@ export class MatchSession {
     this.validMoves = [];
     this.drag = null;
     this._suppressClick = false;
+    this.aiHighlight = null;
     this.bindEls();
     this.beginPlayerTurn();
     this.render();
@@ -221,7 +226,6 @@ export class MatchSession {
     this.updateSpellCastUI();
     this.setMessage(`${card.name} — drag to the board or tap highlighted squares.`);
     this.render();
-    return true;
   }
 
   onCardTargetClick(row, col) {
@@ -414,26 +418,42 @@ export class MatchSession {
     const s = this.state;
     s.meta.lastMove.red = move;
     applyMove(s.board, move, s);
-    const [landR, landC] = move.to;
-    if (move.captures?.length && this.continueMultiJump(landR, landC)) return;
 
-    this.selectedSquare = null;
-    this.validMoves = [];
-
-    if (s.meta.pendingDouble.red && move.type === "step") {
-      s.meta.pendingDouble.red = false;
-      const extras = getAllMovesForColor(s.board, COLORS.RED, s).filter(
-        (m) => m.from[0] === landR && m.from[1] === landC && m.type === "step"
-      );
-      if (extras.length) {
-        this.validMoves = extras;
-        this.selectedSquare = [landR, landC];
-        this.setMessage("Quick March — move again!");
-        this.render();
-        return;
+    const finish = () => {
+      const [landR, landC] = move.to;
+      if (move.captures?.length && this.continueMultiJump(landR, landC)) return;
+      this.selectedSquare = null;
+      this.validMoves = [];
+      if (s.meta.pendingDouble.red && move.type === "step") {
+        s.meta.pendingDouble.red = false;
+        const extras = getAllMovesForColor(s.board, COLORS.RED, s).filter(
+          (m) => m.from[0] === landR && m.from[1] === landC && m.type === "step"
+        );
+        if (extras.length) {
+          this.validMoves = extras;
+          this.selectedSquare = [landR, landC];
+          this.setMessage("Quick March — move again!");
+          this.render();
+          return;
+        }
       }
+      this.endHumanTurn();
+    };
+
+    if (s.lastExplosion) {
+      this.explosionFlash = [...s.lastExplosion];
+      s.lastExplosion = null;
+      this.setMessage("Bomb detonates — adjacent pieces destroyed!");
+      this.render();
+      setTimeout(() => {
+        this.explosionFlash = null;
+        if (this.checkWin()) return;
+        finish();
+      }, 750);
+      return;
     }
-    this.endHumanTurn();
+
+    finish();
   }
 
   endHumanTurn() {
@@ -479,10 +499,59 @@ export class MatchSession {
     this.render();
   }
 
-  runOpponentTurn() {
+  async replayAiLog(log) {
+    const aiLog = this.$("ai-action-log");
+    if (aiLog) aiLog.innerHTML = "";
+
+    for (const entry of log) {
+      if (entry.type === "spell") {
+        if (aiLog) {
+          aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell">✦ Cast <strong>${entry.cardName}</strong></div>`;
+        }
+        this.setMessage(`Shadow Court cast ${entry.cardName}.`);
+        this.$("board")?.classList.add("board--ai-spell");
+        this.render();
+        await delay(950);
+        this.$("board")?.classList.remove("board--ai-spell");
+      } else if (entry.type === "move") {
+        this.aiHighlight = {
+          from: entry.from,
+          to: entry.to,
+          captures: entry.captures || [],
+        };
+        if (aiLog) {
+          aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--move">♟ ${entry.text}</div>`;
+        }
+        this.setMessage(entry.text);
+        this.render();
+        await delay(1200);
+        this.aiHighlight = null;
+      } else if (entry.type === "message") {
+        if (aiLog) aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
+        this.setMessage(entry.text);
+        await delay(450);
+      }
+    }
+    if (aiLog) aiLog.scrollTop = aiLog.scrollHeight;
+  }
+
+  async runOpponentTurn() {
     const s = this.state;
     if (s.gameOver) return;
-    runAiTurn(s, (m) => this.setMessage(m));
+    this.setMessage("Shadow Court is acting…");
+    this.render();
+
+    const log = runAiTurn(s);
+    await this.replayAiLog(log);
+
+    if (s.lastExplosion) {
+      this.explosionFlash = s.lastExplosion;
+      s.lastExplosion = null;
+      this.render();
+      await delay(700);
+      this.explosionFlash = null;
+    }
+
     tickEffects(s.board, COLORS.BLACK, s);
     tickMeta(s, COLORS.BLACK);
 
@@ -571,6 +640,18 @@ export class MatchSession {
         if (terrain?.quicksand) cls += " has-quicksand";
         sq.className = cls;
 
+        if (this.aiHighlight?.from?.[0] === row && this.aiHighlight?.from?.[1] === col) {
+          sq.classList.add("ai-from");
+        }
+        if (this.aiHighlight?.to?.[0] === row && this.aiHighlight?.to?.[1] === col) {
+          sq.classList.add("ai-to");
+        }
+        if (this.aiHighlight?.captures?.some(([r, c]) => r === row && c === col)) {
+          sq.classList.add("ai-capture");
+        }
+        if (this.explosionFlash?.[0] === row && this.explosionFlash?.[1] === col) {
+          sq.classList.add("explosion-flash");
+        }
         if (this.selectedSquare?.[0] === row && this.selectedSquare?.[1] === col) sq.classList.add("selected");
         if (this.validTargets.some(([r, c]) => r === row && c === col)) {
           sq.classList.add("playable", "target", "spell-target");
@@ -589,6 +670,7 @@ export class MatchSession {
           if (piece.frozenTurns > 0) el.classList.add("frozen");
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
+          if (piece.bombArmed) el.classList.add("bomb-armed");
           sq.appendChild(el);
         }
         sq.addEventListener("click", () => this.onSquareClick(row, col));

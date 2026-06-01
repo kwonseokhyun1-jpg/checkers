@@ -17,6 +17,7 @@ import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal } from "./cardPreview.js";
+import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
 
 let profile = loadProfile();
 let activeTab = "deck";
@@ -139,14 +140,18 @@ function renderChests() {
         pullsEl.classList.add("chest-pulls--reveal");
         pullsEl.innerHTML = `<p class="chest-pulls__label">Reliquary opened</p><div class="chest-pulls__grid"></div>`;
         const grid = pullsEl.querySelector(".chest-pulls__grid");
-        for (const def of res.pulls) {
+        res.pulls.forEach((def, i) => {
           const pulled = renderSpellCardEl(def, {
             button: true,
+            deal: true,
             meta: "Added to collection",
             onClick: () => showCardPreview(def, { meta: "Added to collection" }),
           });
+          pulled.style.animationDelay = `${i * 0.12}s`;
           grid.appendChild(pulled);
-        }
+          onCardRevealed(pulled, def.rarity);
+        });
+        staggerCardReveal(grid);
         pullsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
 
@@ -413,6 +418,10 @@ function getMatchHtml() {
             </div>
           </div>
           <div id="board" class="board"></div>
+          <div id="ai-action-panel" class="ai-action-panel">
+            <h3 class="ai-action-panel__title">Shadow Court</h3>
+            <div id="ai-action-log" class="ai-action-log"></div>
+          </div>
           <div id="message" class="message"></div>
         </section>
         <aside class="panel panel-player">
