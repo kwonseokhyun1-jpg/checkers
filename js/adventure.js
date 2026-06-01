@@ -7,7 +7,7 @@ import { countById, shuffle } from "./deckRules.js";
 export const ADVENTURE_LEVEL_COUNT = 30;
 export const ADVENTURE_FIRST_CLEAR_GEMS = 50;
 export const ADVENTURE_REPEAT_CLEAR_GEMS = 20;
-export const ENEMY_DECK_GENERATION = 3;
+export const ENEMY_DECK_GENERATION = 4;
 export const EARLY_STAGE_MAX_LEVEL = 10;
 const EARLY_COPIES_PER_CARD = 4;
 
@@ -112,6 +112,18 @@ function rarityWeight(levelNum, rarity) {
 }
 
 
+
+function isValidEarlyEnemyDeck(cardIds) {
+  if (!Array.isArray(cardIds) || cardIds.length !== DECK_SIZE) return false;
+  const counts = countById(cardIds);
+  for (const [id, n] of Object.entries(counts)) {
+    const def = getCardDef(id);
+    if (!def || (def.rarity !== "common" && def.rarity !== "uncommon")) return false;
+    if (n > EARLY_COPIES_PER_CARD) return false;
+  }
+  return true;
+}
+
 /** Early stages: only commons/uncommons, 4 copies per card until deck is full (no rarity rolls). */
 function buildEarlyCommonUncommonDeck(levelNum) {
   const pool = getPlayableCards().filter(
@@ -191,8 +203,14 @@ export function getOrCreateLevelEnemyDeck(profile, levelId) {
   migrateAdventureDecks(profile);
   if (!profile.adventure.levelDecks) profile.adventure.levelDecks = {};
   const key = String(levelId);
-  if (!Array.isArray(profile.adventure.levelDecks[key]) || profile.adventure.levelDecks[key].length !== DECK_SIZE) {
-    profile.adventure.levelDecks[key] = buildLevelEnemyDeck(Number(levelId));
+  const levelNum = Number(levelId);
+  const cached = profile.adventure.levelDecks[key];
+  const needsRebuild =
+    !Array.isArray(cached) ||
+    cached.length !== DECK_SIZE ||
+    (levelNum <= EARLY_STAGE_MAX_LEVEL && !isValidEarlyEnemyDeck(cached));
+  if (needsRebuild) {
+    profile.adventure.levelDecks[key] = buildLevelEnemyDeck(levelNum);
   }
   return profile.adventure.levelDecks[key];
 }
