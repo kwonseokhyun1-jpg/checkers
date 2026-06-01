@@ -325,7 +325,7 @@ function startMatch() {
     }
   );
 
-  matchSession.setMessage("3 cards in hand · 1 spell per turn · draw every 2 turns.");
+  matchSession.setMessage("Drag a spell onto the board or tap a card, then pick highlighted squares.");
   matchSession.render();
 }
 
@@ -341,6 +341,13 @@ function getMatchHtml() {
         </aside>
         <section class="board-section">
           <div id="turn-banner" class="turn-banner">Your turn</div>
+          <div id="spell-cast-bar" class="spell-cast-bar hidden">
+            <div id="spell-cast-preview" class="spell-cast-preview"></div>
+            <div class="spell-cast-copy">
+              <p id="spell-cast-hint" class="spell-cast-hint">Select targets on the board</p>
+              <button type="button" id="btn-cancel-card" class="btn-text">Cancel spell</button>
+            </div>
+          </div>
           <div id="board" class="board"></div>
           <div id="message" class="message"></div>
         </section>
@@ -351,16 +358,6 @@ function getMatchHtml() {
           <div id="hand-red" class="hand spell-hand"></div>
           <button id="btn-end-cards" type="button" class="btn-secondary">Done with spells → move</button>
         </aside>
-      </div>
-      <div id="card-modal" class="modal hidden">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content modal-content--card">
-          <div id="modal-card-preview"></div>
-          <h2 id="modal-title">Play card</h2>
-          <p id="modal-desc" class="modal-desc"></p>
-          <p id="modal-hint" class="modal-hint"></p>
-          <button id="btn-cancel-card" type="button" class="btn-secondary">Cancel</button>
-        </div>
       </div>
       <div id="game-over" class="overlay hidden">
         <div class="overlay-card">

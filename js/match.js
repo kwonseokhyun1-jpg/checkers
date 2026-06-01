@@ -1,7 +1,6 @@
 /**
  * In-match controller: 30-card deck, 3 start hand, max 5, 1 spell/turn, draw every 2 turns
  */
-import { createCardInstance } from "./cards.js";
 import {
   SIZE,
   COLORS,
@@ -29,6 +28,19 @@ import { buildAiDeck } from "./deckRules.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
+const TWO_PICK_MODES = new Set([
+  "f_empty",
+  "f_f",
+  "f_e",
+  "f_e_adj",
+  "e_empty",
+  "e_e_adj",
+  "f_f_adj",
+  "diagonal",
+  "any_piece",
+  "empty_empty",
+]);
+
 export function createMatchState(playerDeckIds, aiDeckIds = null) {
   const state = {
     board: createInitialBoard(),
@@ -41,12 +53,17 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
     gameOver: null,
     turnNumber: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     spellPlayed: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
   };
   initCardState(state);
   initDeckPiles(state, playerDeckIds, aiDeckIds || buildAiDeck());
   drawToHand(state, COLORS.RED, START_HAND);
   drawToHand(state, COLORS.BLACK, START_HAND);
   return state;
+}
+
+function picksRequired(card) {
+  return TWO_PICK_MODES.has(card.mode) ? 2 : 1;
 }
 
 export class MatchSession {
@@ -60,6 +77,8 @@ export class MatchSession {
     this.selectedSquare = null;
     this.validTargets = [];
     this.validMoves = [];
+    this.drag = null;
+    this._suppressClick = false;
     this.bindEls();
     this.beginPlayerTurn();
     this.render();
@@ -74,6 +93,13 @@ export class MatchSession {
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
     this.root.querySelector("#btn-leave-match")?.addEventListener("click", () => this.onExit?.());
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
+    this._onDocPointerMove = (e) => this.onDragMove(e);
+    this._onDocPointerUp = (e) => this.onDragEnd(e);
+  }
+
+  canPlaySpells() {
+    const s = this.state;
+    return s.turn === COLORS.RED && s.phase === PHASE.CARDS && !s.gameOver && !s.spellPlayed.red;
   }
 
   setMessage(text) {
@@ -109,13 +135,40 @@ export class MatchSession {
     if (i >= 0) hand.splice(i, 1);
   }
 
+  updateSpellCastUI() {
+    const bar = this.$("spell-cast-bar");
+    if (!bar) return;
+    const active = !!this.cardPlay;
+    bar.classList.toggle("hidden", !active);
+    this.root.querySelector(".match-wrap")?.classList.toggle("casting-spell", active);
+
+    if (!active) return;
+    const { card, picks } = this.cardPlay;
+    const preview = this.$("spell-cast-preview");
+    const hint = this.$("spell-cast-hint");
+    if (preview) {
+      preview.innerHTML = "";
+      preview.appendChild(renderSpellCardEl(card, { static: true, compact: true }));
+    }
+    const need = picksRequired(card);
+    const step = picks.length + 1;
+    const base = getCardHint(card);
+    if (hint) {
+      hint.textContent =
+        picks.length >= need
+          ? base
+          : `${base} (${step}/${need} — click a highlighted square or drop the card on it)`;
+    }
+  }
+
   finishCardPlay(msg) {
     if (this.cardPlay?.card) this.removeCardFromHand(this.cardPlay.card);
     this.state.spellPlayed.red = true;
     this.cardPlay = null;
     this.validTargets = [];
     this.selectedSquare = null;
-    this.root.querySelector("#card-modal")?.classList.add("hidden");
+    this.endDrag();
+    this.updateSpellCastUI();
     this.setMessage(msg || "Spell played (1 per turn).");
     this.render();
   }
@@ -124,45 +177,50 @@ export class MatchSession {
     this.cardPlay = null;
     this.validTargets = [];
     this.selectedSquare = null;
-    this.root.querySelector("#card-modal")?.classList.add("hidden");
+    this.endDrag();
+    this.updateSpellCastUI();
+    this.setMessage("Spell cancelled.");
     this.render();
   }
 
   startCardPlay(card) {
     if (this.state.spellPlayed.red) {
       this.setMessage("You already played a spell this turn.");
-      return;
+      return false;
     }
-    if (this.state.phase !== PHASE.CARDS || this.state.turn !== COLORS.RED) return;
+    if (!this.canPlaySpells()) return false;
 
     if (isInstant(card)) {
       const res = playInstant(this.state, COLORS.RED, card);
       if (!res.success) {
         this.setMessage(res.message);
-        return;
+        return false;
       }
       this.removeCardFromHand(card);
       this.state.spellPlayed.red = true;
       this.setMessage(res.message);
       this.render();
-      return;
+      return true;
+    }
+
+    const targets = getValidTargets(this.state, COLORS.RED, card, []);
+    if (!targets.length) {
+      this.setMessage("No valid targets for this spell right now.");
+      return false;
+    }
+
+    if (this.cardPlay?.card?.instanceId === card.instanceId) {
+      this.validTargets = getValidTargets(this.state, COLORS.RED, card, this.cardPlay.picks);
+      this.updateSpellCastUI();
+      return true;
     }
 
     this.cardPlay = { card, picks: [] };
-    this.validTargets = getValidTargets(this.state, COLORS.RED, card, []);
-    const modal = this.root.querySelector("#card-modal");
-    if (modal) {
-      const preview = this.root.querySelector("#modal-card-preview");
-      if (preview) {
-        preview.innerHTML = "";
-        preview.appendChild(renderSpellCardEl(card, { compact: true }));
-      }
-      this.root.querySelector("#modal-title").textContent = card.name;
-      this.root.querySelector("#modal-desc").textContent = card.desc;
-      this.root.querySelector("#modal-hint").textContent = getCardHint(card);
-      modal.classList.remove("hidden");
-    }
+    this.validTargets = targets;
+    this.updateSpellCastUI();
+    this.setMessage(`${card.name} — drag to the board or tap highlighted squares.`);
     this.render();
+    return true;
   }
 
   onCardTargetClick(row, col) {
@@ -170,17 +228,15 @@ export class MatchSession {
     const { card, picks } = this.cardPlay;
     const allowed = getValidTargets(this.state, COLORS.RED, card, picks);
     if (!allowed.some(([r, c]) => r === row && c === col)) {
-      this.setMessage("Invalid target.");
+      this.setMessage("Invalid target — pick a highlighted square.");
       return;
     }
     picks.push([row, col]);
-    const need =
-      { f_empty: 2, f_f: 2, f_e: 2, f_e_adj: 2, e_empty: 2, e_e_adj: 2, f_f_adj: 2, diagonal: 2, any_piece: 2, empty_empty: 2 }[
-        card.mode
-      ] || 1;
+    const need = picksRequired(card);
     if (picks.length < need) {
       this.validTargets = getValidTargets(this.state, COLORS.RED, card, picks);
       this.selectedSquare = picks[picks.length - 1];
+      this.updateSpellCastUI();
       this.render();
       return;
     }
@@ -189,10 +245,118 @@ export class MatchSession {
       picks.pop();
       this.setMessage(res.message);
       this.validTargets = getValidTargets(this.state, COLORS.RED, card, picks);
+      this.updateSpellCastUI();
       this.render();
       return;
     }
     this.finishCardPlay(res.message);
+  }
+
+  squareAtPoint(clientX, clientY) {
+    const el = document.elementFromPoint(clientX, clientY);
+    const sq = el?.closest?.(".square");
+    const board = this.$("board");
+    if (!sq || !board?.contains(sq)) return null;
+    const row = Number(sq.dataset.row);
+    const col = Number(sq.dataset.col);
+    if (Number.isNaN(row) || Number.isNaN(col)) return null;
+    return [row, col];
+  }
+
+  beginDrag(card, sourceEl, clientX, clientY) {
+    if (isInstant(card)) return;
+    if (!this.startCardPlay(card)) return;
+
+    this.endDrag();
+    const ghost = renderSpellCardEl(card, { static: true, compact: true });
+    ghost.classList.add("spell-drag-ghost");
+    ghost.style.left = `${clientX}px`;
+    ghost.style.top = `${clientY}px`;
+    document.body.appendChild(ghost);
+
+    this.drag = {
+      card,
+      ghost,
+      sourceEl,
+      moved: false,
+      hover: null,
+    };
+    sourceEl?.classList.add("spell-card--dragging");
+    document.addEventListener("pointermove", this._onDocPointerMove);
+    document.addEventListener("pointerup", this._onDocPointerUp);
+    document.addEventListener("pointercancel", this._onDocPointerUp);
+  }
+
+  onDragMove(e) {
+    if (!this.drag?.ghost) return;
+    const { ghost } = this.drag;
+    ghost.style.left = `${e.clientX}px`;
+    ghost.style.top = `${e.clientY}px`;
+
+    const sq = this.squareAtPoint(e.clientX, e.clientY);
+    if (this.drag.hover) {
+      this.drag.hover.classList.remove("spell-drop-hover");
+      this.drag.hover = null;
+    }
+    if (sq) {
+      const [row, col] = sq;
+      const board = this.$("board");
+      const el = board?.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+      if (el) {
+        this.drag.hover = el;
+        el.classList.add("spell-drop-hover");
+      }
+    }
+    if (Math.abs(e.movementX) + Math.abs(e.movementY) > 2) this.drag.moved = true;
+  }
+
+  onDragEnd(e) {
+    if (!this.drag) return;
+    const { moved, card } = this.drag;
+    const sq = this.squareAtPoint(e.clientX, e.clientY);
+    this.endDrag();
+
+    if (moved && sq && this.cardPlay?.card?.instanceId === card.instanceId) {
+      this._suppressClick = true;
+      this.onCardTargetClick(sq[0], sq[1]);
+      setTimeout(() => {
+        this._suppressClick = false;
+      }, 0);
+    }
+  }
+
+  endDrag() {
+    document.removeEventListener("pointermove", this._onDocPointerMove);
+    document.removeEventListener("pointerup", this._onDocPointerUp);
+    document.removeEventListener("pointercancel", this._onDocPointerUp);
+    if (this.drag?.ghost) this.drag.ghost.remove();
+    if (this.drag?.hover) this.drag.hover.classList.remove("spell-drop-hover");
+    if (this.drag?.sourceEl) this.drag.sourceEl.classList.remove("spell-card--dragging");
+    this.drag = null;
+  }
+
+  attachCardInput(el, card, canPlay) {
+    if (!canPlay) return;
+    el.title = isInstant(card)
+      ? "Tap to play instantly"
+      : "Drag onto highlighted squares or tap the card then tap the board";
+
+    if (isInstant(card)) {
+      el.addEventListener("click", () => {
+        if (this._suppressClick || !this.canPlaySpells()) return;
+        this.startCardPlay(card);
+      });
+      return;
+    }
+
+    el.classList.add("spell-card--draggable");
+
+    el.addEventListener("pointerdown", (e) => {
+      if (!this.canPlaySpells() || e.button !== 0) return;
+      e.preventDefault();
+      el.setPointerCapture(e.pointerId);
+      this.beginDrag(card, el, e.clientX, e.clientY);
+    });
   }
 
   onSquareClick(row, col) {
@@ -309,6 +473,7 @@ export class MatchSession {
       this.root.querySelector("#game-over-text").textContent = displayText;
       overlay.classList.remove("hidden");
     }
+    this.cancelCardPlay();
     this.render();
   }
 
@@ -331,7 +496,7 @@ export class MatchSession {
     s.turn = COLORS.RED;
     s.phase = PHASE.CARDS;
     this.beginPlayerTurn();
-    this.setMessage("Your turn — 1 spell max, then move.");
+    this.setMessage("Your turn — drag a spell to the board or tap a card, then target.");
     this.render();
   }
 
@@ -360,18 +525,17 @@ export class MatchSession {
     const pileEl = this.$("pile-count");
     if (pileEl) pileEl.textContent = String(pileRemaining(s, COLORS.RED));
 
-    const canPlay =
-      s.turn === COLORS.RED && s.phase === PHASE.CARDS && !s.gameOver && !s.spellPlayed.red;
+    const canPlay = this.canPlaySpells();
+    const castingId = this.cardPlay?.card?.instanceId;
 
     for (const card of s.hands.red) {
       const el = renderSpellCardEl(card, {
         button: true,
         compact: true,
         disabled: !canPlay,
-        onClick: () => {
-          if (canPlay) this.startCardPlay(card);
-        },
+        selected: castingId === card.instanceId,
       });
+      if (canPlay) this.attachCardInput(el, card, true);
       handEl.appendChild(el);
     }
 
@@ -397,6 +561,8 @@ export class MatchSession {
       for (let col = 0; col < SIZE; col++) {
         const sq = document.createElement("button");
         sq.type = "button";
+        sq.dataset.row = String(row);
+        sq.dataset.col = String(col);
         const key = `${row},${col}`;
         const terrain = s.squares[key];
         let cls = `square ${isDarkSquare(row, col) ? "dark" : "light"}`;
@@ -405,7 +571,9 @@ export class MatchSession {
         sq.className = cls;
 
         if (this.selectedSquare?.[0] === row && this.selectedSquare?.[1] === col) sq.classList.add("selected");
-        if (this.validTargets.some(([r, c]) => r === row && c === col)) sq.classList.add("playable", "target");
+        if (this.validTargets.some(([r, c]) => r === row && c === col)) {
+          sq.classList.add("playable", "target", "spell-target");
+        }
         const moveHere = this.validMoves.find((m) => m.to[0] === row && m.to[1] === col);
         if (moveHere) {
           sq.classList.add("playable");
@@ -435,9 +603,16 @@ export class MatchSession {
       if (s.gameOver) banner.textContent = "Game over";
       else if (s.turn === COLORS.RED) {
         const spellNote = s.spellPlayed.red ? "Spell used · " : "1 spell available · ";
-        banner.textContent =
-          s.phase === PHASE.CARDS ? `${spellNote}play a card or continue` : "Select a piece to move";
-        banner.className = "turn-banner";
+        if (this.cardPlay) {
+          banner.textContent = `Casting ${this.cardPlay.card.name} — drop on board or tap highlights`;
+          banner.className = "turn-banner casting";
+        } else {
+          banner.textContent =
+            s.phase === PHASE.CARDS
+              ? `${spellNote}drag a spell to the board or tap Done to move`
+              : "Select a piece to move";
+          banner.className = "turn-banner";
+        }
       } else {
         banner.textContent = "Shadow Court is thinking…";
         banner.className = "turn-banner opponent-turn";
@@ -445,6 +620,7 @@ export class MatchSession {
     }
     const endBtn = this.root.querySelector("#btn-end-cards");
     if (endBtn) endBtn.disabled = s.turn !== COLORS.RED || s.phase !== PHASE.CARDS || !!s.gameOver;
+    this.updateSpellCastUI();
     this.renderHand();
     this.renderBoard();
   }
