@@ -160,7 +160,7 @@ export class MatchSession {
 
   canPlaySpells() {
     const s = this.state;
-    return s.turn === COLORS.RED && s.phase === PHASE.CARDS && !s.gameOver && !s.spellPlayed.red && !this.actionBusy;
+    return s.turn === COLORS.RED && s.phase === PHASE.CARDS && !s.gameOver && !s.spellPlayed.red && !s.meta.shatterSilenced?.red && !this.actionBusy;
   }
 
   setMessage(text) {
@@ -178,6 +178,9 @@ export class MatchSession {
       if (n) this.setMessage("Drew a card from your deck.");
     }
     startTurnMeta(s, COLORS.RED);
+    if (s.meta.shatterSilenced?.red) {
+      this.setMessage("Shatter backlash — no spells this turn. Press Enter or Done to move.");
+    }
   }
 
   beginAiTurn() {
@@ -1023,7 +1026,11 @@ ${starLine}`;
     if (banner) {
       if (s.gameOver) banner.textContent = "Game over";
       else if (s.turn === COLORS.RED) {
-        const spellNote = s.spellPlayed.red ? "Spell used · " : "1 spell available · ";
+        const spellNote = s.meta.shatterSilenced?.red
+          ? "No spells (Shatter backlash) · "
+          : s.spellPlayed.red
+            ? "Spell used · "
+            : "1 spell available · ";
         if (this.cardPlay) {
           banner.textContent = `Casting ${this.cardPlay.card.name} — drop on board or tap highlights`;
           banner.className = "turn-banner casting";

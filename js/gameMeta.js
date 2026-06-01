@@ -18,6 +18,8 @@ export function createMatchMeta() {
     counterspell: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     confuseNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    shatterSilenceNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    shatterSilenced: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     mirrorBoardTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     highlightTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     dominionTurn: { [COLORS.RED]: false, [COLORS.BLACK]: false },
@@ -109,6 +111,13 @@ export function startTurnMeta(state, color) {
   if (state.meta.fogTurns[color] > 0) {
     state.meta.fogTurns[color]--;
     if (state.meta.fogTurns[color] <= 0) state.meta.fogPieceId[color] = null;
+  }
+  state.meta.shatterSilenced = state.meta.shatterSilenced || { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  if (state.meta.shatterSilenceNext?.[color]) {
+    state.meta.shatterSilenceNext[color] = false;
+    state.meta.shatterSilenced[color] = true;
+  } else {
+    state.meta.shatterSilenced[color] = false;
   }
   if (state.meta.constitutionTurns[color] > 0) state.meta.constitutionTurns[color]--;
 }
