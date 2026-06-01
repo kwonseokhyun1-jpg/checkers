@@ -1,8 +1,8 @@
 /**
- * Profile cosmetics: avatars, banners, piece skins — catalog, boxes, equip helpers.
+ * Profile cosmetics: avatars, frames, banners, piece skins — catalog, boxes, equip helpers.
  */
 
-export const COSMETIC_TYPES = ["avatar", "banner", "pieceSkin"];
+export const COSMETIC_TYPES = ["avatar", "frame", "banner", "pieceSkin"];
 
 export const COSMETIC_RARITIES = ["common", "uncommon", "rare", "epic", "legendary"];
 
@@ -15,6 +15,13 @@ export const COSMETIC_ITEMS = [
   { id: "avatar_shadow", type: "avatar", name: "Shadow Duelist", rarity: "rare", desc: "Cloaked checker champion." },
   { id: "avatar_sun", type: "avatar", name: "Solar Crown", rarity: "epic", desc: "Radiant gold sigil." },
   { id: "avatar_void", type: "avatar", name: "Void Walker", rarity: "legendary", desc: "Starfield anomaly portrait." },
+
+
+  { id: "frame_default", type: "frame", name: "Iron Ring", rarity: "common", desc: "Simple steel portrait ring." },
+  { id: "frame_bronze", type: "frame", name: "Bronze Filigree", rarity: "uncommon", desc: "Wrought bronze knotwork." },
+  { id: "frame_silver", type: "frame", name: "Silver Sigil", rarity: "rare", desc: "Arcane silver halo." },
+  { id: "frame_gold", type: "frame", name: "Gilded Crown", rarity: "epic", desc: "Radiant gold coronet frame." },
+  { id: "frame_legend", type: "frame", name: "Astral Halo", rarity: "legendary", desc: "Prismatic starlit border." },
 
   { id: "banner_default", type: "banner", name: "Classic Board", rarity: "common", desc: "Standard arcane banner." },
   { id: "banner_nebula", type: "banner", name: "Nebula Veil", rarity: "uncommon", desc: "Cosmic purple drift." },
@@ -58,11 +65,13 @@ export const COSMETIC_BOXES = [
 export const DEFAULT_COSMETICS = {
   owned: {
     avatar: ["avatar_default"],
+    frame: ["frame_default"],
     banner: ["banner_default"],
     pieceSkin: ["skin_classic"],
   },
   equipped: {
     avatar: "avatar_default",
+    frame: "frame_default",
     banner: "banner_default",
     pieceSkin: "skin_classic",
   },
