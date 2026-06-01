@@ -13,74 +13,78 @@
   <div class="app">
     <header class="header">
       <h1>Card Checkers</h1>
-      <p class="tagline">Classic checkers — reshaped by arcane cards</p>
+      <p class="tagline">Build your deck · Open chests · Battle the Shadow Court</p>
+      <p class="header-gems">Gems: <span id="header-gems">0</span></p>
     </header>
 
-    <main class="game-layout">
-      <aside class="panel panel-opponent">
-        <div class="player-badge opponent">
-          <span class="piece-icon black"></span>
-          <span>Shadow Court</span>
-        </div>
-        <div class="stat gems-opponent">
-          <span class="stat-label">Gems</span>
-          <span id="gems-black" class="stat-value">100</span>
-        </div>
-        <div class="hand-label">Opponent hand</div>
-        <div id="hand-black" class="hand hand-hidden" aria-hidden="true"></div>
-      </aside>
+    <nav class="tabs" role="tablist">
+      <button type="button" class="tab-btn active" data-tab="chests" role="tab">Chests</button>
+      <button type="button" class="tab-btn" data-tab="deck" role="tab">Deck Builder</button>
+      <button type="button" class="tab-btn" data-tab="play" role="tab">Play</button>
+    </nav>
 
-      <section class="board-section">
-        <div id="turn-banner" class="turn-banner">Your turn — play cards or move</div>
-        <div id="board" class="board" role="grid" aria-label="Checkers board"></div>
-        <div id="message" class="message" role="status"></div>
+    <div id="view-chests" class="view">
+      <section class="panel meta-panel">
+        <h2>Open chests</h2>
+        <p class="meta-desc">Spend gems to expand your collection. Economy spells are disabled and never drop from chests.</p>
+        <div id="chest-list" class="chest-list"></div>
+        <p id="chest-log" class="chest-log" role="status"></p>
       </section>
-
-      <aside class="panel panel-player">
-        <div class="player-badge you">
-          <span class="piece-icon red"></span>
-          <span>Ruby Legion</span>
-        </div>
-        <div class="stat gems-you">
-          <span class="stat-label">Gems</span>
-          <span id="gems-red" class="stat-value">100</span>
-          <button id="btn-draw" class="btn-draw" type="button">
-            Draw card <span class="cost">−10</span>
-          </button>
-        </div>
-        <div class="hand-label">Your hand <span id="hand-count" class="hand-count">0/6</span></div>
-        <div id="hand-red" class="hand"></div>
-        <button id="btn-end-cards" class="btn-secondary" type="button">Done playing cards</button>
-        <div class="rules-hint">
-          <strong>How to play</strong>
-          <ul>
-            <li>135 unique spells — spend 10 gems to draw one at random.</li>
-            <li>Play cards on your turn, then move a piece.</li>
-            <li>Jump to capture; reach the far row to crown.</li>
-          </ul>
-        </div>
-      </aside>
-    </main>
-
-    <div id="card-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div class="modal-backdrop"></div>
-      <div class="modal-content">
-        <h2 id="modal-title">Play card</h2>
-        <p id="modal-desc" class="modal-desc"></p>
-        <p id="modal-hint" class="modal-hint">Click valid squares on the board.</p>
-        <button id="btn-cancel-card" class="btn-secondary" type="button">Cancel</button>
-      </div>
     </div>
 
-    <div id="game-over" class="overlay hidden">
-      <div class="overlay-card">
-        <h2 id="game-over-title">Victory</h2>
-        <p id="game-over-text"></p>
-        <button id="btn-restart" class="btn-primary" type="button">Play again</button>
-      </div>
+    <div id="view-deck" class="view hidden">
+      <section class="deck-builder">
+        <div class="deck-controls panel">
+          <h2>Your deck</h2>
+          <p class="meta-desc">30 cards · max 3 copies each · economy spells cannot be added</p>
+          <input type="text" id="deck-name-input" class="input-text" placeholder="Deck name" value="My Deck" />
+          <p id="deck-status" class="deck-status warn">0/30 cards</p>
+          <div id="deck-slots" class="deck-slots"></div>
+          <div class="deck-actions">
+            <button type="button" id="btn-save-deck" class="btn-primary">Save deck</button>
+            <button type="button" id="btn-clear-deck" class="btn-secondary">Clear</button>
+          </div>
+          <label class="label-sm">Load deck</label>
+          <div class="row">
+            <select id="saved-decks" class="select-input"></select>
+            <button type="button" id="btn-delete-deck" class="btn-secondary">Delete</button>
+          </div>
+        </div>
+        <div class="collection-panel panel">
+          <h2>Collection</h2>
+          <div class="filter-row">
+            <input type="search" id="collection-search" class="input-text" placeholder="Search cards…" />
+            <select id="collection-rarity" class="select-input">
+              <option value="all">All rarities</option>
+              <option value="common">Common</option>
+              <option value="uncommon">Uncommon</option>
+              <option value="rare">Rare</option>
+              <option value="epic">Epic</option>
+            </select>
+          </div>
+          <div id="collection-grid" class="collection-grid"></div>
+        </div>
+      </section>
     </div>
+
+    <div id="view-play" class="view hidden">
+      <section class="panel meta-panel play-lobby">
+        <h2>Play vs AI</h2>
+        <p class="meta-desc">Choose a complete 30-card deck. PvP coming soon.</p>
+        <label class="label-sm">Active deck</label>
+        <select id="play-deck-select" class="select-input"></select>
+        <button type="button" id="btn-start-match" class="btn-primary btn-lg">Start match</button>
+        <ul class="rules-hint match-rules">
+          <li>Start with <strong>3 cards</strong> in hand (max <strong>5</strong>)</li>
+          <li><strong>1 spell</strong> per turn, then move a piece</li>
+          <li>Draw <strong>1 card every 2 turns</strong> from your deck</li>
+        </ul>
+      </section>
+    </div>
+
+    <div id="view-match" class="view hidden"></div>
   </div>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>

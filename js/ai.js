@@ -1,13 +1,7 @@
-import { DRAW_COST, drawRandomCard, createCardInstance } from "./cards.js";
-import {
-  COLORS,
-  getAllMovesForColor,
-  applyMove,
-  countPieces,
-
-} from "./board.js";
-import { handLimit, drawCostFor, consumeFreeDraw } from "./gameMeta.js";
-import { tryAutoPlay, canAiPlay, isInstant } from "./cardEffects.js";
+import { COLORS, getAllMovesForColor, applyMove, countPieces } from "./board.js";
+import { tryAutoPlay, canAiPlay } from "./cardEffects.js";
+import { drawToHand } from "./deckPile.js";
+import { DRAW_EVERY_TURNS } from "./cardCatalog.js";
 
 function scoreBoard(board, aiColor) {
   const human = aiColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
@@ -49,43 +43,26 @@ export function pickBestMove(board, color, state) {
 export function runAiTurn(state, onMessage) {
   const color = COLORS.BLACK;
   const hand = state.hands.black;
-  const max = handLimit(state, color);
-  const cost = drawCostFor(state, color, DRAW_COST);
 
   if (state.meta.blindNext?.[color]) {
     state.meta.blindNext[color] = false;
-    onMessage?.("Shadow Court is blinded — skips cards.");
-  } else if (hand.length < max && (state.gems.black >= cost || state.meta.freeDraw[color]) && Math.random() < 0.5) {
-    if (!consumeFreeDraw(state, color)) state.gems.black -= cost;
-    hand.push(createCardInstance(drawRandomCard()));
-    onMessage?.("Shadow Court draws a card.");
-  }
-
-  if (state.meta.counterspell?.[COLORS.RED]) {
-    state.meta.counterspell[COLORS.RED] = false;
-  }
-
-  let plays = state.meta.cardsLeft[color] || 1;
-  while (plays > 0 && hand.length) {
+    onMessage?.("Shadow Court is blinded — skips spells.");
+  } else if (!state.spellPlayed.black && hand.length) {
     const playable = hand.filter((c) => canAiPlay(state, color, c));
-    if (!playable.length) break;
-    const card = playable[Math.floor(Math.random() * playable.length)];
-    const idx = hand.indexOf(card);
-    if (Math.random() < 0.6) {
+    if (playable.length && Math.random() < 0.7) {
+      const card = playable[Math.floor(Math.random() * playable.length)];
+      const idx = hand.indexOf(card);
       const res = tryAutoPlay(state, color, card);
       if (res.success) {
         hand.splice(idx, 1);
+        state.spellPlayed.black = true;
         onMessage?.(`Shadow Court plays ${card.name}.`);
-        plays--;
-        if (state.meta.counterspell?.[color]) {
-          state.meta.counterspell[color] = false;
-          onMessage?.("Your Counterspell fizzles their magic!");
-          break;
+        if (state.meta.counterspell?.[COLORS.RED]) {
+          state.meta.counterspell[COLORS.RED] = false;
+          onMessage?.("Your Counterspell cancels their magic!");
         }
-        continue;
       }
     }
-    break;
   }
 
   let move;
