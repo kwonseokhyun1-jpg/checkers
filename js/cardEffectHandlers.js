@@ -8,9 +8,10 @@ import {
 } from "./board.js";
 import { sk, getSq, handLimit } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
+import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
 
 const opp = (c) => (c === COLORS.RED ? COLORS.BLACK : COLORS.RED);
-const ok = (m = "Spell cast.") => ({ success: true, message: m });
+const ok = (m = "Spell cast.", extra = {}) => ({ success: true, message: m, ...extra });
 const fail = (m) => ({ success: false, message: m });
 const p0 = (p) => p[0];
 const p1 = (p) => p[1];
@@ -94,7 +95,14 @@ const EFFECTS = {
   ricochet(state, color, picks) { state.meta.pendingRicochet[color]=true; return ok(); },
   duel(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); if(Math.max(Math.abs(r1-r2),Math.abs(c1-c2))!==1) return fail(); kill(state,r1,c1,color); kill(state,r2,c2,color); return ok(); },
   execution(state, color, picks) { const [r,c]=p0(picks); const t=at(state,r,c); if(!t||t.color===color) return fail(); const ms=getAllMovesForColor(state.board,t.color).filter(m=>m.from[0]===r&&m.from[1]===c); if(ms.length) return fail('Has moves'); kill(state,r,c,color); return ok(); },
-  cull(state, color, picks) { const es=en(state,color).filter(p=>!p.king); const t=(es.length?es:en(state,color)).sort((a,b)=>getAllMovesForColor(state.board,a.color).length-getAllMovesForColor(state.board,b.color).length)[0]; if(!t) return fail('No target'); kill(state,t.row,t.col,color); return ok(); },
+  cull(state, color, picks) {
+    const t = findCullTarget(state, color);
+    if (!t) return fail("No target");
+    const cullTarget = [t.row, t.col];
+    const cullVictim = cullVictimSnapshot(t);
+    kill(state, t.row, t.col, color);
+    return ok("The weakest enemy is culled.", { cullTarget, cullVictim });
+  },
   hunters_mark(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.hunterMark=true; return ok(); },
   venom(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.venom=(p.venom||0)+1; if(p.venom>=2) kill(state,r,c,color); return ok(); },
   gravity_well(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); for(const t of en(state,color)){ const dr=Math.sign(r-t.row),dc=Math.sign(c-t.col); const nr=t.row+dr,nc=t.col+dc; if((nr!==r||nc!==c)&&emptyDark(state,nr,nc)) movePiece(state.board,t.row,t.col,nr,nc);} return ok(); },

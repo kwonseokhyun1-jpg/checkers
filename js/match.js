@@ -27,6 +27,7 @@ import { showCardPreview } from "./cardPreview.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
 import { buildAiDeck } from "./deckRules.js";
 import { starsForRemainingPieces, formatStars } from "./adventure.js";
+import { findCullTarget, CULL_ANIMATION_MS } from "./cullAnimation.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -103,6 +104,8 @@ export class MatchSession {
     this.drag = null;
     this._suppressClick = false;
     this.aiHighlight = null;
+    this.cullAnimation = null;
+    this.actionBusy = false;
     this.bindEls();
     this.beginPlayerTurn();
     this.render();
@@ -123,7 +126,7 @@ export class MatchSession {
 
   canPlaySpells() {
     const s = this.state;
-    return s.turn === COLORS.RED && s.phase === PHASE.CARDS && !s.gameOver && !s.spellPlayed.red;
+    return s.turn === COLORS.RED && s.phase === PHASE.CARDS && !s.gameOver && !s.spellPlayed.red && !this.actionBusy;
   }
 
   setMessage(text) {
@@ -215,6 +218,10 @@ export class MatchSession {
     if (!this.canPlaySpells()) return false;
 
     if (isInstant(card)) {
+      if (card.effect === "cull") {
+        void this.castInstantCull(card);
+        return true;
+      }
       const res = playInstant(this.state, COLORS.RED, card);
       if (!res.success) {
         this.setMessage(res.message);
@@ -586,7 +593,13 @@ ${starLine}`;
         }
         this.setMessage(`${this.opponentName} cast ${cardName}!`);
         this.render();
-        await delay(AI_PACE.spellShow);
+
+        if (entry.cardEffect === "cull" && entry.cullTarget) {
+          const [cr, cc] = entry.cullTarget;
+          await this.playCullAnimation(cr, cc, entry.cullVictim || null);
+        } else {
+          await delay(AI_PACE.spellShow);
+        }
 
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
@@ -606,6 +619,8 @@ ${starLine}`;
         this.render();
         await delay(AI_PACE.move);
         this.aiHighlight = null;
+    this.cullAnimation = null;
+    this.actionBusy = false;
         this.render();
       } else if (entry.type === "message") {
         if (aiLog) {
@@ -746,6 +761,14 @@ ${starLine}`;
           sq.classList.add(moveHere.captures?.length ? "capture-target" : "target");
         }
 
+        if (
+          this.cullAnimation &&
+          this.cullAnimation.row === row &&
+          this.cullAnimation.col === col
+        ) {
+          sq.classList.add("cull-execution");
+        }
+
         const piece = s.board[row][col];
         if (piece) {
           const el = document.createElement("span");
@@ -755,6 +778,23 @@ ${starLine}`;
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
+          if (
+            this.cullAnimation &&
+            this.cullAnimation.row === row &&
+            this.cullAnimation.col === col
+          ) {
+            el.classList.add("piece--cull-victim");
+          }
+          sq.appendChild(el);
+        } else if (
+          this.cullAnimation &&
+          this.cullAnimation.row === row &&
+          this.cullAnimation.col === col &&
+          this.cullAnimation.victim
+        ) {
+          const v = this.cullAnimation.victim;
+          const el = document.createElement("span");
+          el.className = `piece ${v.color}${v.king ? " king" : ""} piece--cull-victim piece--cull-ghost`;
           sq.appendChild(el);
         }
         sq.addEventListener("click", () => this.onSquareClick(row, col));
