@@ -49,10 +49,12 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
 }
 
 export class MatchSession {
-  constructor(deckCardIds, rootEl, onExit) {
+  constructor(deckCardIds, rootEl, onExit, onWin) {
     this.state = createMatchState(deckCardIds);
     this.root = rootEl;
     this.onExit = onExit;
+    this.onWin = onWin;
+    this.winRewarded = false;
     this.cardPlay = null;
     this.selectedSquare = null;
     this.validTargets = [];
@@ -288,10 +290,17 @@ export class MatchSession {
 
   showGameOver(title, text) {
     this.state.gameOver = title;
+    const won = title.startsWith("Victory");
+    let displayText = text;
+    if (won && !this.winRewarded) {
+      this.winRewarded = true;
+      this.onWin?.();
+      displayText = `${text} +10 gems!`;
+    }
     const overlay = this.root.querySelector("#game-over");
     if (overlay) {
       this.root.querySelector("#game-over-title").textContent = title;
-      this.root.querySelector("#game-over-text").textContent = text;
+      this.root.querySelector("#game-over-text").textContent = displayText;
       overlay.classList.remove("hidden");
     }
     this.render();

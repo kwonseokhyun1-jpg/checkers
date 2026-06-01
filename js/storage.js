@@ -2,6 +2,7 @@
 
 const STORAGE_KEY = "cardCheckersProfile_v3";
 export const STARTING_GEMS = 400;
+export const WIN_GEMS = 10;
 
 function defaultProfile() {
   const collection = {};

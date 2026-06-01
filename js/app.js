@@ -5,6 +5,7 @@ import { getPlayableCards, getCardDef, DECK_SIZE, MAX_COPIES_PER_CARD } from "./
 import {
   loadProfile,
   saveProfile,
+  WIN_GEMS,
   createDeck,
   upsertDeck,
   deleteDeck,
@@ -221,12 +222,21 @@ function startMatch() {
   const root = $("view-match");
   root.innerHTML = getMatchHtml();
 
-  matchSession = new MatchSession(deck.cardIds, root, () => {
-    matchSession = null;
-    root.innerHTML = "";
-    $("view-match").classList.add("hidden");
-    showTab("play");
-  });
+  matchSession = new MatchSession(
+    deck.cardIds,
+    root,
+    () => {
+      matchSession = null;
+      root.innerHTML = "";
+      $("view-match").classList.add("hidden");
+      showTab("play");
+    },
+    () => {
+      profile.gems += WIN_GEMS;
+      saveProfile(profile);
+      updateGemHeader();
+    }
+  );
 
   matchSession.setMessage("3 cards in hand · 1 spell per turn · draw every 2 turns.");
   matchSession.render();
