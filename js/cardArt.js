@@ -1,10 +1,10 @@
 /**
- * Spell card UI — art on top, name + description on bottom
+ * Spell card UI — illustrated SVG art, rarity frames, tooltips
  */
 import { getCardEffectTags, formatEffectTooltip } from "./cardEffectTags.js";
 
 const THEME_STYLES = {
-  movement: { symbol: "↗", label: "Motion", anim: "motion" },
+  movement: { symbol: "↗", label: "Motion", anim: "movement" },
   combat: { symbol: "⚔", label: "Strike", anim: "combat" },
   defense: { symbol: "🛡", label: "Ward", anim: "defense" },
   debuff: { symbol: "❄", label: "Curse", anim: "debuff" },
@@ -30,6 +30,12 @@ export function cardHue(id) {
   return h;
 }
 
+function cardVariant(id) {
+  let v = 0;
+  for (let i = 0; i < id.length; i++) v = (v + id.charCodeAt(i) * 13) % 3;
+  return v;
+}
+
 export function inferTheme(card) {
   const blob = `${card.id} ${card.effect} ${card.name}`.toLowerCase();
   for (const [theme, keys] of THEME_KEYS) {
@@ -38,20 +44,111 @@ export function inferTheme(card) {
   return "arcane";
 }
 
-function artSvg(theme, hue, cardId) {
-  const gid = `g${String(cardId).replace(/[^a-zA-Z0-9]/g, "")}`;
+function safeId(cardId) {
+  return `ca${String(cardId).replace(/[^a-zA-Z0-9]/g, "")}`;
+}
+
+function starField(gid, hue, variant) {
+  const pts = [
+    [12, 18, 0.35], [48, 12, 0.5], [52, 44, 0.25], [18, 50, 0.4], [38, 28, 0.55],
+  ];
+  const offset = variant * 4;
+  return pts
+    .map(([x, y, o], i) => {
+      const px = ((x + offset + i * 7) % 56) + 4;
+      const py = ((y + offset * 2 + i * 5) % 52) + 6;
+      return `<circle cx="${px}" cy="${py}" r="1.2" fill="hsl(${hue} 90% 85% / ${o})"/>`;
+    })
+    .join("");
+}
+
+function themeIllustration(theme, variant) {
+  const v = variant;
   const shapes = {
-    movement: `<path d="M20 44 L44 20 M44 20 L36 20 M44 20 L44 28" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="28" cy="36" r="6" fill="currentColor" opacity="0.35"/>`,
-    combat: `<path d="M16 40 L32 16 L40 24 L24 48 Z" fill="currentColor" opacity="0.5"/><path d="M28 20 L44 36" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>`,
-    defense: `<path d="M32 14 L48 22 L48 38 C48 48 32 54 32 54 C32 54 16 48 16 38 L16 22 Z" fill="currentColor" opacity="0.45" stroke="currentColor" stroke-width="2"/>`,
-    debuff: `<circle cx="32" cy="32" r="14" fill="none" stroke="currentColor" stroke-width="2" opacity="0.6"/><path d="M24 28 L32 38 L40 26" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/>`,
-    transform: `<polygon points="32,14 46,30 38,46 26,46 18,30" fill="currentColor" opacity="0.4" stroke="currentColor" stroke-width="2"/>`,
-    board: `<rect x="14" y="18" width="36" height="28" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 26 H44 M20 34 H36" stroke="currentColor" stroke-width="2" opacity="0.5"/>`,
-    crown: `<path d="M14 38 L20 24 L26 32 L32 20 L38 32 L44 24 L50 38 Z" fill="currentColor" opacity="0.5"/><rect x="14" y="38" width="36" height="6" rx="1" fill="currentColor"/>`,
-    arcane: `<circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4"/><circle cx="32" cy="32" r="8" fill="currentColor" opacity="0.55"/>`,
+    movement: `
+      <g class="card-motif" opacity="0.95">
+        <path d="M18 ${44 - v} L42 ${18 + v} M42 ${18 + v} L34 ${18 + v} M42 ${18 + v} L42 ${26 + v}" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <circle cx="26" cy="38" r="7" fill="currentColor" opacity="0.2" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M46 46 Q52 38 58 46" stroke="currentColor" stroke-width="1.5" fill="none" opacity="0.5"/>
+      </g>`,
+    combat: `
+      <g class="card-motif">
+        <path d="M14 42 L30 ${14 + v} L38 22 L22 50 Z" fill="currentColor" opacity="0.35"/>
+        <path d="M26 ${18 + v} L50 42" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="38" cy="30" r="10" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>
+        <path d="M32 24 L44 36 M44 24 L32 36" stroke="currentColor" stroke-width="1.5" opacity="0.6"/>
+      </g>`,
+    defense: `
+      <g class="card-motif">
+        <path d="M32 12 L52 22 L52 40 C52 50 32 56 32 56 C32 56 12 50 12 40 L12 22 Z" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="2"/>
+        <path d="M32 20 L32 48" stroke="currentColor" stroke-width="2" opacity="0.5"/>
+        <path d="M22 32 H42" stroke="currentColor" stroke-width="2" opacity="0.5"/>
+      </g>`,
+    debuff: `
+      <g class="card-motif">
+        <circle cx="32" cy="32" r="16" fill="none" stroke="currentColor" stroke-width="2" opacity="0.5"/>
+        <path d="M24 ${28 + v} L32 40 L40 ${26 - v}" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <path d="M20 20 L24 24 M44 44 L40 40" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+      </g>`,
+    transform: `
+      <g class="card-motif">
+        <polygon points="32,12 48,28 40,50 24,50 16,28" fill="currentColor" opacity="0.25" stroke="currentColor" stroke-width="2"/>
+        <circle cx="32" cy="32" r="6" fill="currentColor" opacity="0.55"/>
+        <path d="M32 16 L32 24 M32 40 L32 48 M16 28 L24 32 M40 32 L48 28" stroke="currentColor" stroke-width="1.5" opacity="0.5"/>
+      </g>`,
+    board: `
+      <g class="card-motif">
+        <rect x="12" y="16" width="40" height="32" rx="5" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M18 26 H46 M18 34 H38 M18 42 H42" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>
+        <rect x="${20 + v}" y="22" width="8" height="8" rx="1" fill="currentColor" opacity="0.35"/>
+      </g>`,
+    crown: `
+      <g class="card-motif">
+        <path d="M12 40 L18 22 L26 30 L32 16 L38 30 L46 22 L52 40 Z" fill="currentColor" opacity="0.4"/>
+        <rect x="12" y="40" width="40" height="8" rx="2" fill="currentColor"/>
+        <circle cx="32" cy="24" r="4" fill="currentColor" opacity="0.7"/>
+      </g>`,
+    arcane: `
+      <g class="card-motif">
+        <circle cx="32" cy="32" r="20" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.35"/>
+        <circle cx="32" cy="32" r="12" fill="none" stroke="currentColor" stroke-width="1" opacity="0.5"/>
+        <circle cx="32" cy="32" r="5" fill="currentColor" opacity="0.65"/>
+        <path d="M32 8 L32 14 M32 50 L32 56 M8 32 L14 32 M50 32 L56 32" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>
+      </g>`,
   };
-  const inner = shapes[theme] || shapes.arcane;
-  return `<svg class="spell-card__svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="${gid}" cx="50%" cy="40%" r="55%"><stop offset="0%" stop-color="hsl(${hue} 70% 65% / 0.9)"/><stop offset="100%" stop-color="hsl(${hue} 50% 25% / 0.15)"/></radialGradient></defs><rect width="64" height="64" fill="url(#${gid})"/>${inner}</svg>`;
+  return shapes[theme] || shapes.arcane;
+}
+
+function artSvg(theme, hue, cardId) {
+  const gid = safeId(cardId);
+  const accent = (hue + 42) % 360;
+  const variant = cardVariant(cardId);
+  const inner = themeIllustration(theme, variant);
+  const stars = starField(gid, hue, variant);
+
+  return `<svg class="spell-card__svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <radialGradient id="${gid}-bg" cx="50%" cy="35%" r="65%">
+        <stop offset="0%" stop-color="hsl(${hue} 75% 58% / 0.95)"/>
+        <stop offset="55%" stop-color="hsl(${hue} 55% 32% / 0.5)"/>
+        <stop offset="100%" stop-color="hsl(${hue} 40% 12% / 0.2)"/>
+      </radialGradient>
+      <linearGradient id="${gid}-beam" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="hsl(${accent} 90% 70% / 0)"/>
+        <stop offset="45%" stop-color="hsl(${accent} 85% 65% / 0.35)"/>
+        <stop offset="100%" stop-color="hsl(${accent} 70% 40% / 0)"/>
+      </linearGradient>
+      <filter id="${gid}-glow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect width="64" height="64" fill="url(#${gid}-bg)"/>
+    <rect width="64" height="64" fill="url(#${gid}-beam)" opacity="0.9"/>
+    <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="hsl(${hue} 60% 70% / 0.35)" stroke-width="1"/>
+    ${stars}
+    <g filter="url(#${gid}-glow)" color="hsl(${hue} 88% 88%)">${inner}</g>
+  </svg>`;
 }
 
 function resolveSize(opts) {
@@ -114,6 +211,7 @@ export function renderSpellCardEl(def, opts = {}) {
     ${fxLayer}
     <div class="spell-card__frame">
       <div class="spell-card__art spell-card__art--animated" aria-hidden="true">
+        <div class="spell-card__art-shine"></div>
         ${artSvg(theme, hue, def.id)}
         <span class="spell-card__sigil">${style.symbol}</span>
       </div>
