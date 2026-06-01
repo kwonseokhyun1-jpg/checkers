@@ -1,4 +1,4 @@
-import { COLORS, getAllMovesForColor, applyMove, countPieces } from "./board.js";
+import { COLORS, getAllMovesForColor, applyMove, countPieces, squareName } from "./board.js";
 import { tryAutoPlay, canAiPlay } from "./cardEffects.js";
 
 function scoreBoard(board, aiColor) {
@@ -36,11 +36,6 @@ export function pickBestMove(board, color, state) {
     }
   }
   return best;
-}
-
-function squareName([r, c]) {
-  const files = "abcdefgh";
-  return `${files[c]}${8 - r}`;
 }
 
 /**
@@ -97,8 +92,8 @@ export function runAiTurn(state, opponentName = "Opponent") {
       captures: move.captures ? move.captures.map((c) => [...c]) : [],
       moveKind: move.type,
       text: cap
-        ? `Moved ${squareName(move.from)} → ${squareName(move.to)} (captured ${cap})`
-        : `Moved ${squareName(move.from)} → ${squareName(move.to)}`,
+        ? `Moved ${squareName(move.from[0], move.from[1])} → ${squareName(move.to[0], move.to[1])} (captured ${cap})`
+        : `Moved ${squareName(move.from[0], move.from[1])} → ${squareName(move.to[0], move.to[1])}`,
     });
     applyMove(state.board, move, state);
     if (state.meta.pendingDouble.black && move.type === "step") {
@@ -115,7 +110,7 @@ export function runAiTurn(state, opponentName = "Opponent") {
           to: [...ex.to],
           captures: ex.captures ? ex.captures.map((c) => [...c]) : [],
           moveKind: ex.type,
-          text: `Quick follow-up ${squareName(ex.from)} → ${squareName(ex.to)}`,
+          text: `Quick follow-up ${squareName(ex.from[0], ex.from[1])} → ${squareName(ex.to[0], ex.to[1])}`,
         });
       }
     }

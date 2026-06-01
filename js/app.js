@@ -26,6 +26,7 @@ import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
+import { boardFrameHtml } from "./board.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal } from "./cardPreview.js";
 import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
@@ -560,7 +561,7 @@ function getMatchHtml(opponentName = "Opponent") {
               <button type="button" id="btn-cancel-card" class="btn-text">Cancel spell</button>
             </div>
           </div>
-          <div id="board" class="board"></div>
+          ${boardFrameHtml()}
           <div id="ai-action-panel" class="ai-action-panel">
             <h3 class="ai-action-panel__title">${safe}</h3>
             <div id="ai-action-log" class="ai-action-log"></div>

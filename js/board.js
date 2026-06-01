@@ -14,6 +14,27 @@ function getSq(state, r, c) {
 
 export const SIZE = 8;
 export const COLORS = { RED: "red", BLACK: "black" };
+export const FILES = "abcdefgh";
+
+/** Algebraic square name (e.g. b6). Row 0 = rank 8, row 7 = rank 1. */
+export function squareName(row, col) {
+  return `${FILES[col]}${SIZE - row}`;
+}
+
+/** Board grid with a–h file labels and 1–8 rank labels. */
+export function boardFrameHtml() {
+  const fileLabels = [...FILES].map((f) => `<span class="board-label">${f}</span>`).join("");
+  const rankLabels = Array.from({ length: SIZE }, (_, row) =>
+    `<span class="board-label">${SIZE - row}</span>`
+  ).join("");
+  return `
+    <div class="board-frame">
+      <div class="board-files board-files--top" aria-hidden="true">${fileLabels}</div>
+      <div class="board-ranks" aria-hidden="true">${rankLabels}</div>
+      <div id="board" class="board" role="grid" aria-label="Checker board"></div>
+      <div class="board-files board-files--bottom" aria-hidden="true">${fileLabels}</div>
+    </div>`;
+}
 
 let nextPieceId = 1;
 
