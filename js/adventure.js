@@ -7,6 +7,9 @@ import { countById, shuffle } from "./deckRules.js";
 export const ADVENTURE_LEVEL_COUNT = 30;
 export const ADVENTURE_FIRST_CLEAR_GEMS = 50;
 export const ADVENTURE_REPEAT_CLEAR_GEMS = 20;
+export const ENEMY_DECK_GENERATION = 3;
+export const EARLY_STAGE_MAX_LEVEL = 10;
+const EARLY_COPIES_PER_CARD = 4;
 
 const OPPONENT_NAMES = [
   "Novice Adept",
@@ -108,7 +111,37 @@ function rarityWeight(levelNum, rarity) {
   return 5;
 }
 
+
+/** Early stages: only commons/uncommons, 4 copies per card until deck is full (no rarity rolls). */
+function buildEarlyCommonUncommonDeck(levelNum) {
+  const pool = getPlayableCards().filter(
+    (c) => c.rarity === "common" || c.rarity === "uncommon"
+  );
+  const ordered = [...pool].sort((a, b) => a.id.localeCompare(b.id));
+  // Stable variety per stage without random rarity distribution
+  const rot = (levelNum - 1) % Math.max(1, ordered.length);
+  const shuffled = [...ordered.slice(rot), ...ordered.slice(0, rot)];
+  const ids = [];
+  for (const card of shuffled) {
+    if (ids.length >= DECK_SIZE) break;
+    const room = DECK_SIZE - ids.length;
+    const copies = Math.min(EARLY_COPIES_PER_CARD, room);
+    for (let i = 0; i < copies; i++) ids.push(card.id);
+  }
+  return shuffle(ids);
+}
+
+export function migrateAdventureDecks(profile) {
+  if (!profile.adventure) profile.adventure = defaultAdventureProgress();
+  if (profile.adventure.enemyDeckGen === ENEMY_DECK_GENERATION) return;
+  profile.adventure.levelDecks = {};
+  profile.adventure.enemyDeckGen = ENEMY_DECK_GENERATION;
+}
+
 export function buildLevelEnemyDeck(levelNum) {
+  if (levelNum <= EARLY_STAGE_MAX_LEVEL) {
+    return buildEarlyCommonUncommonDeck(levelNum);
+  }
   const pool = getPlayableCards();
   const ids = [];
   while (ids.length < DECK_SIZE) {
@@ -155,6 +188,7 @@ export function getLevel(levelId) {
 /** Stable enemy deck per stage (stored in profile.adventure.levelDecks) */
 export function getOrCreateLevelEnemyDeck(profile, levelId) {
   if (!profile.adventure) profile.adventure = defaultAdventureProgress();
+  migrateAdventureDecks(profile);
   if (!profile.adventure.levelDecks) profile.adventure.levelDecks = {};
   const key = String(levelId);
   if (!Array.isArray(profile.adventure.levelDecks[key]) || profile.adventure.levelDecks[key].length !== DECK_SIZE) {

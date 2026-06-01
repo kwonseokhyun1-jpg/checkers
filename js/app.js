@@ -493,6 +493,9 @@ function openAdventurePrebattle(levelId) {
     opt.textContent = "No complete decks — build one in Decks";
     sel.appendChild(opt);
     $("btn-start-adventure").disabled = true;
+    requestAnimationFrame(() => {
+      $("btn-start-adventure")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
     return;
   }
   for (const d of validDecks) {
@@ -503,6 +506,12 @@ function openAdventurePrebattle(levelId) {
     sel.appendChild(opt);
   }
   $("btn-start-adventure").disabled = false;
+  const startBtn = $("btn-start-adventure");
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      startBtn?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  });
 }
 
 function startAdventureMatch() {

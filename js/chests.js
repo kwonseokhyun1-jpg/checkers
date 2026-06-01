@@ -2,9 +2,9 @@ import { getPlayableCards } from "./cardCatalog.js";
 import { saveProfile } from "./storage.js";
 
 export const CHESTS = [
-  { id: "bronze", name: "Bronze Reliquary", cost: 50, cards: 3, weights: { common: 70, uncommon: 25, rare: 5, epic: 0 } },
-  { id: "silver", name: "Silver Reliquary", cost: 100, cards: 5, weights: { common: 50, uncommon: 35, rare: 12, epic: 3 } },
-  { id: "gold", name: "Gold Reliquary", cost: 200, cards: 8, weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 } },
+  { id: "bronze", name: "Bronze Reliquary", cost: 25, cards: 3, weights: { common: 70, uncommon: 25, rare: 5, epic: 0 } },
+  { id: "silver", name: "Silver Reliquary", cost: 50, cards: 5, weights: { common: 50, uncommon: 35, rare: 12, epic: 3 } },
+  { id: "gold", name: "Gold Reliquary", cost: 100, cards: 8, weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 } },
 ];
 
 function pickRarity(weights) {
