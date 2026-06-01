@@ -25,6 +25,26 @@ export function inBounds(row, col) {
   return row >= 0 && row < SIZE && col >= 0 && col < SIZE;
 }
 
+export const SIGIL_MOVES = 2;
+
+export function hasKnightSigil(piece) {
+  return piece && (piece.knightTurns > 0 || piece.isKnight) && !piece.silenced;
+}
+
+function decrementSigilMoves(piece) {
+  if (!piece) return;
+  if (piece.knightTurns > 0) {
+    piece.knightTurns--;
+    if (piece.knightTurns <= 0) piece.knightCapture = false;
+  } else if (piece.isKnight) {
+    piece.isKnight = false;
+    piece.knightCapture = false;
+  }
+  if (piece.rookTurns > 0) piece.rookTurns--;
+  if (piece.bishopTurns > 0) piece.bishopTurns--;
+}
+
+
 export function createPiece(color, row, col, king = false) {
   return {
     id: nextPieceId++,
@@ -36,6 +56,7 @@ export function createPiece(color, row, col, king = false) {
     frozenTurns: 0,
     retreatTurns: 0,
     isKnight: false,
+    knightTurns: 0,
     rookTurns: 0,
     bishopTurns: 0,
     queenTurns: 0,
@@ -97,6 +118,7 @@ export function movePiece(board, fromR, fromC, toR, toC) {
   const piece = board[fromR][fromC];
   board[fromR][fromC] = null;
   setPiece(board, toR, toC, piece);
+  decrementSigilMoves(piece);
   return piece;
 }
 
@@ -147,7 +169,7 @@ function slideMoves(board, piece, state, dirs) {
 }
 
 export function forwardDirs(piece, dominion = false) {
-  if (piece.isKnight && !piece.silenced) return [];
+  if (hasKnightSigil(piece)) return [];
   const dirs = [];
   const treatKing = piece.king && !(piece.slowed > 0);
   if (piece.color === COLORS.RED) {
@@ -165,7 +187,7 @@ export function getStepMoves(board, piece, color, state = null) {
   if (isFrozen(piece) || piece.fortifyTurns > 0) return moves;
   const dom = state?.meta?.dominionTurn?.[color];
 
-  if (piece.isKnight && !piece.silenced)
+  if (hasKnightSigil(piece))
     return getKnightMoves(board, piece, state, piece.knightCapture);
 
   if (piece.queenTurns > 0 && !piece.silenced) {
@@ -204,8 +226,8 @@ export function getStepMoves(board, piece, color, state = null) {
 export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
   if (isFrozen(piece) || piece.rooted > 0 || piece.fortifyTurns > 0) return moves;
-  if (piece.isKnight && !piece.knightCapture) return moves;
-  if (piece.isKnight && piece.knightCapture)
+  if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
+  if (hasKnightSigil(piece) && piece.knightCapture)
     return getKnightMoves(board, piece, state, true);
 
   let dirs;
@@ -293,7 +315,7 @@ export function tickEffects(board, color, state = null) {
       if (!p || p.color !== color) continue;
       const dec = (k) => { if (p[k] > 0) p[k]--; };
       dec("shieldTurns"); dec("frozenTurns"); dec("retreatTurns");
-      dec("rookTurns"); dec("bishopTurns"); dec("queenTurns"); dec("wraithTurns");
+      dec("queenTurns"); dec("wraithTurns");
       dec("stoneTurns"); dec("rooted"); dec("slowed"); dec("silenced"); dec("hexed");
       dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns");
       if (p.venom > 0) {

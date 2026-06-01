@@ -586,7 +586,7 @@ export class MatchSession {
           el.className = `piece ${piece.color}${piece.king ? " king" : ""}`;
           if (piece.shieldTurns > 0) el.classList.add("shielded");
           if (piece.frozenTurns > 0) el.classList.add("frozen");
-          if (piece.isKnight) el.classList.add("knight-mark");
+          if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
           sq.appendChild(el);
         }
