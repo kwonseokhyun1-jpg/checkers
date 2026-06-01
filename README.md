@@ -1,4 +1,4 @@
-# Card Checkers
+# Arcane Checkers
 
 Classic checkers with a collectible spell-card layer. Earn **10 gems per win** to open chests and grow your collection. Spend **10 gems** to draw a random card, play effects on your turn, then make a normal checkers move.
 
@@ -16,7 +16,7 @@ Classic checkers with a collectible spell-card layer. Earn **10 gems per win** t
 
 ## Play online
 
-**[Play Card Checkers on GitHub Pages](https://kwonseokhyun1-jpg.github.io/checkers/)**
+**[Play Arcane Checkers on GitHub Pages](https://kwonseokhyun1-jpg.github.io/checkers/)**
 
 The site deploys automatically when changes are pushed to `main`.
 
