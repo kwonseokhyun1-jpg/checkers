@@ -561,6 +561,16 @@ function getMatchHtml(opponentName = "Opponent") {
               <button type="button" id="btn-cancel-card" class="btn-text">Cancel spell</button>
             </div>
           </div>
+          <div id="ai-spell-banner" class="ai-spell-banner hidden" role="status" aria-live="assertive">
+            <div class="ai-spell-banner__inner">
+              <span class="ai-spell-banner__icon" aria-hidden="true">✦</span>
+              <div class="ai-spell-banner__copy">
+                <p class="ai-spell-banner__label">Enemy spell</p>
+                <p id="ai-spell-banner-title" class="ai-spell-banner__title"></p>
+                <p id="ai-spell-banner-desc" class="ai-spell-banner__desc"></p>
+              </div>
+            </div>
+          </div>
           ${boardFrameHtml()}
           <div id="ai-action-panel" class="ai-action-panel">
             <h3 class="ai-action-panel__title">${safe}</h3>

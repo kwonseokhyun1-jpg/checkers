@@ -21,7 +21,7 @@ import {
   applyCard,
 } from "./cardEffects.js";
 import { runAiTurn } from "./ai.js";
-import { MAX_HAND, DRAW_EVERY_TURNS, START_HAND } from "./cardCatalog.js";
+import { MAX_HAND, DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview } from "./cardPreview.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
@@ -31,6 +31,17 @@ import { starsForRemainingPieces, formatStars } from "./adventure.js";
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/** Enemy turn replay pacing (ms) */
+const AI_PACE = {
+  beforeTurn: 1000,
+  spellWindUp: 700,
+  spellShow: 3200,
+  spellSettle: 600,
+  move: 2000,
+  message: 900,
+  explosion: 1000,
+};
 
 
 
@@ -471,7 +482,7 @@ export class MatchSession {
     this.state.phase = PHASE.CARDS;
     this.beginAiTurn();
     this.render();
-    setTimeout(() => this.runOpponentTurn(), 500);
+    setTimeout(() => this.runOpponentTurn(), AI_PACE.beforeTurn);
   }
 
   checkWin() {
@@ -522,21 +533,66 @@ ${starLine}`;
     this.render();
   }
 
+
+  showAiSpellBanner(cardName, cardDesc) {
+    const banner = this.$("ai-spell-banner");
+    const title = this.$("ai-spell-banner-title");
+    const desc = this.$("ai-spell-banner-desc");
+    if (title) title.textContent = cardName || "Spell";
+    if (desc) desc.textContent = cardDesc || "";
+    banner?.classList.remove("hidden");
+    this.$("ai-action-panel")?.classList.add("ai-action-panel--casting");
+    this.$("board")?.closest(".board-frame")?.classList.add("board-frame--ai-spell");
+    this.$("turn-banner")?.classList.add("turn-banner--enemy-spell");
+    if (this.$("turn-banner")) {
+      this.$("turn-banner").textContent = `${this.opponentName} casts ${cardName}!`;
+    }
+  }
+
+  hideAiSpellBanner() {
+    this.$("ai-spell-banner")?.classList.add("hidden");
+    this.$("ai-action-panel")?.classList.remove("ai-action-panel--casting");
+    this.$("board")?.closest(".board-frame")?.classList.remove("board-frame--ai-spell");
+    this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
+  }
+
   async replayAiLog(log) {
     const aiLog = this.$("ai-action-log");
     if (aiLog) aiLog.innerHTML = "";
 
     for (const entry of log) {
       if (entry.type === "spell") {
+        const def = entry.cardId ? getCardDef(entry.cardId) : null;
+        const cardName = entry.cardName || def?.name || "Spell";
+        const cardDesc = entry.cardDesc || def?.desc || entry.text || "";
+
         if (aiLog) {
-          aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell">✦ Cast <strong>${entry.cardName}</strong></div>`;
+          aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell ai-log-entry--active">✦ Casting <strong>${cardName}</strong></div>`;
+          aiLog.scrollTop = aiLog.scrollHeight;
         }
-        this.setMessage(`${this.opponentName} cast ${entry.cardName}.`);
+
+        this.showAiSpellBanner(cardName, cardDesc);
+        this.setMessage(`${this.opponentName} is casting ${cardName}…`);
         this.$("board")?.classList.add("board--ai-spell");
         this.render();
-        await delay(950);
+        await delay(AI_PACE.spellWindUp);
+
+        if (aiLog) {
+          const active = aiLog.querySelector(".ai-log-entry--active");
+          if (active) {
+            active.classList.remove("ai-log-entry--active");
+            active.innerHTML = `✦ Cast <strong>${cardName}</strong>`;
+          }
+        }
+        this.setMessage(`${this.opponentName} cast ${cardName}!`);
+        this.render();
+        await delay(AI_PACE.spellShow);
+
         this.$("board")?.classList.remove("board--ai-spell");
+        this.hideAiSpellBanner();
+        await delay(AI_PACE.spellSettle);
       } else if (entry.type === "move") {
+        this.hideAiSpellBanner();
         this.aiHighlight = {
           from: entry.from,
           to: entry.to,
@@ -544,15 +600,20 @@ ${starLine}`;
         };
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--move">♟ ${entry.text}</div>`;
+          aiLog.scrollTop = aiLog.scrollHeight;
         }
         this.setMessage(entry.text);
         this.render();
-        await delay(1200);
+        await delay(AI_PACE.move);
         this.aiHighlight = null;
+        this.render();
       } else if (entry.type === "message") {
-        if (aiLog) aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
+        if (aiLog) {
+          aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
+          aiLog.scrollTop = aiLog.scrollHeight;
+        }
         this.setMessage(entry.text);
-        await delay(450);
+        await delay(AI_PACE.message);
       }
     }
     if (aiLog) aiLog.scrollTop = aiLog.scrollHeight;
@@ -571,7 +632,7 @@ ${starLine}`;
       this.explosionFlash = s.lastExplosion;
       s.lastExplosion = null;
       this.render();
-      await delay(700);
+      await delay(AI_PACE.explosion);
       this.explosionFlash = null;
     }
 

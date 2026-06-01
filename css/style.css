@@ -2294,3 +2294,115 @@ body.chest-open-active {
   line-height: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
+
+/* Enemy spell announcement + slower turn feel */
+.ai-spell-banner {
+  width: min(92vw, 500px);
+  margin-bottom: 0.35rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 2px solid rgba(159, 122, 234, 0.65);
+  background: linear-gradient(135deg, rgba(76, 29, 149, 0.55), rgba(26, 16, 40, 0.92));
+  box-shadow: 0 0 28px rgba(159, 122, 234, 0.35), inset 0 0 20px rgba(159, 122, 234, 0.12);
+  animation: ai-spell-banner-in 0.45s ease;
+}
+
+.ai-spell-banner.hidden {
+  display: none;
+}
+
+.ai-spell-banner__inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+}
+
+.ai-spell-banner__icon {
+  font-size: 1.5rem;
+  color: var(--accent-violet, #9f7aea);
+  filter: drop-shadow(0 0 8px rgba(159, 122, 234, 0.8));
+  animation: ai-spell-icon-pulse 1s ease-in-out infinite;
+}
+
+.ai-spell-banner__label {
+  margin: 0;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-gem);
+  font-family: var(--font-heading);
+}
+
+.ai-spell-banner__title {
+  margin: 0.15rem 0 0.2rem;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  color: #f0e8ff;
+  -webkit-text-stroke: 1px rgba(26, 16, 40, 0.9);
+  text-shadow: 0 2px 0 #3d2a6b;
+}
+
+.ai-spell-banner__desc {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.turn-banner--enemy-spell {
+  background: rgba(159, 122, 234, 0.25);
+  color: #e9d8fd;
+  border: 1px solid rgba(159, 122, 234, 0.45);
+  animation: turn-banner-spell-pulse 1.2s ease-in-out infinite;
+}
+
+.ai-action-panel--casting {
+  border-color: rgba(159, 122, 234, 0.5);
+  box-shadow: 0 0 16px rgba(159, 122, 234, 0.2);
+}
+
+.ai-log-entry--active {
+  color: #e9d8fd !important;
+  font-weight: 600;
+  animation: ai-log-pulse 0.9s ease-in-out infinite;
+}
+
+.board-frame--ai-spell {
+  animation: board-frame-spell-glow 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.board-frame--ai-spell .board {
+  animation: board-spell-shake 0.5s ease-in-out infinite;
+}
+
+@keyframes ai-spell-banner-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes ai-spell-icon-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.85; }
+}
+
+@keyframes turn-banner-spell-pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(159, 122, 234, 0); }
+  50% { box-shadow: 0 0 20px rgba(159, 122, 234, 0.45); }
+}
+
+@keyframes ai-log-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.65; }
+}
+
+@keyframes board-frame-spell-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(159, 122, 234, 0); }
+  50% { box-shadow: 0 0 32px rgba(159, 122, 234, 0.55); }
+}
+
+@keyframes board-spell-shake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 1px); }
+  75% { transform: translate(2px, -1px); }
+}

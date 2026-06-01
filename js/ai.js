@@ -63,6 +63,7 @@ export function runAiTurn(state, opponentName = "Opponent") {
           type: "spell",
           cardName: card.name,
           cardId: card.id,
+          cardDesc: card.desc,
           text: res.message || `Cast ${card.name}`,
         });
         if (state.meta.counterspell?.[COLORS.RED]) {
