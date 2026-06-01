@@ -1,9 +1,7 @@
 import {
   COSMETIC_BOXES,
-  COSMETIC_ITEMS,
   COSMETIC_BY_ID,
   COSMETIC_TYPES,
-  cosmeticCssClass,
   equipCosmetic,
   getEquippedCosmetics,
   openCosmeticBox,
@@ -19,6 +17,49 @@ const RARITY_CLASS = {
   legendary: "rarity-legendary",
 };
 
+/** Cosmetic boxes — rendered in Vault → Cards tab */
+export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened } = {}) {
+  if (!listEl) return;
+  listEl.innerHTML = "";
+  for (const box of COSMETIC_BOXES) {
+    const canAfford = profile.gems >= box.cost;
+    const el = document.createElement("article");
+    el.className = `chest-card cosmetic-box-card${canAfford ? "" : " chest-card--locked"}`;
+    el.innerHTML = `
+      <div class="chest-card__body">
+        <span class="chest-card__tier">Cosmetic</span>
+        <h3 class="chest-card__name">${box.name}</h3>
+        <p class="chest-card__tagline">${box.pulls} unlocks · mixed rarities</p>
+        <p class="chest-card__cost">
+          <span class="chest-card__gem" aria-hidden="true">◆</span>
+          <span>${box.cost}</span>
+        </p>
+      </div>
+      <button type="button" class="btn-primary btn-open-cosmetic chest-card__btn" data-box="${box.id}">
+        ${canAfford ? "Unseal" : "Need more gems"}
+      </button>`;
+    const btn = el.querySelector(".btn-open-cosmetic");
+    btn.disabled = !canAfford;
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      const res = openCosmeticBox(profile, btn.dataset.box);
+      if (!res.success) {
+        if (logEl) logEl.textContent = res.message;
+        return;
+      }
+      saveProfile(profile);
+      onGemsChange?.();
+      const names = res.pulls.map((x) => `${x.name}${x.duplicate ? " (duplicate)" : ""}`).join(", ");
+      if (logEl) {
+        logEl.textContent = `Opened ${res.box.name}: ${names}${res.bonusGems ? ` · +${res.bonusGems} gems from duplicates` : ""}`;
+      }
+      onOpened?.(res);
+      renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened });
+    });
+    listEl.appendChild(el);
+  }
+}
+
 export function renderProfileTab(profile, root, { onGemsChange } = {}) {
   if (!root) return;
   const cos = getEquippedCosmetics(profile);
@@ -30,7 +71,7 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
     <section class="panel game-panel profile-panel">
       <header class="panel-head">
         <h2 class="panel-head__title">Arcane Profile</h2>
-        <p class="panel-head__desc">Equip cosmetics and open style boxes for avatars, banners, and piece skins.</p>
+        <p class="panel-head__desc">Preview and equip avatars, banners, and piece skins unlocked from the Vault.</p>
       </header>
       <div class="profile-showcase">
         <div class="profile-banner" id="profile-banner-preview" style="background:${bannerStyleFor(cos.equipped.banner)}"></div>
@@ -41,9 +82,6 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
           <p class="profile-equipped-line"><strong>Piece skin:</strong> ${skin?.name || "—"}</p>
         </div>
       </div>
-      <h3 class="profile-section-title">Cosmetic boxes</h3>
-      <div class="cosmetic-box-list" id="cosmetic-box-list"></div>
-      <p id="profile-cosmetic-log" class="chest-log" role="status"></p>
       <h3 class="profile-section-title">Your collection</h3>
       <div class="profile-cosmetic-filters">
         ${COSMETIC_TYPES.map(
@@ -54,8 +92,6 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
     </section>
   `;
 
-  const log = root.querySelector("#profile-cosmetic-log");
-  const boxList = root.querySelector("#cosmetic-box-list");
   const grid = root.querySelector("#profile-cosmetic-grid");
   let filter = "avatar";
 
@@ -96,12 +132,11 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
           saveProfile(profile);
           renderGrid();
           refreshShowcase();
-          if (log) log.textContent = res.message;
-        } else if (log) log.textContent = res.message;
+        }
       });
       grid.appendChild(card);
     }
-    if (!owned.length) grid.innerHTML = '<p class="muted">Open cosmetic boxes to unlock items.</p>';
+    if (!owned.length) grid.innerHTML = '<p class="muted">Open cosmetic boxes in the Vault (Cards tab) to unlock items.</p>';
   };
 
   for (const btn of root.querySelectorAll(".profile-filter-btn")) {
@@ -112,35 +147,5 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
     });
   }
   root.querySelector(".profile-filter-btn")?.classList.add("active");
-
-  for (const box of COSMETIC_BOXES) {
-    const el = document.createElement("div");
-    el.className = "chest-card cosmetic-box-card";
-    el.innerHTML = `
-      <h3 class="chest-card__name">${box.name}</h3>
-      <p class="chest-card__meta">${box.pulls} cosmetics · mixed rarities</p>
-      <p class="chest-card__cost"><span class="gem-cost">◆ ${box.cost}</span></p>
-      <button type="button" class="btn-primary btn-open-cosmetic" data-box="${box.id}">Unseal</button>`;
-    boxList.appendChild(el);
-  }
-
-  root.querySelectorAll(".btn-open-cosmetic").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const res = openCosmeticBox(profile, btn.dataset.box);
-      if (!res.success) {
-        if (log) log.textContent = res.message;
-        return;
-      }
-      saveProfile(profile);
-      onGemsChange?.();
-      const names = res.pulls.map((p) => `${p.name}${p.duplicate ? " (duplicate)" : ""}`).join(", ");
-      if (log) {
-        log.textContent = `Opened ${res.box.name}: ${names}${res.bonusGems ? ` · +${res.bonusGems} gems from duplicates` : ""}`;
-      }
-      renderGrid();
-      refreshShowcase();
-    });
-  });
-
   renderGrid();
 }
