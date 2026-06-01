@@ -17,7 +17,7 @@ const META_EFFECTS = new Set([
   "highlight_path", "pocket", "possession", "time_slip", "chameleon", "identity_theft",
   "succession", "twin_soul", "last_king", "coronation_day", "constitution", "sanctified",
   "sanctuary_pulse", "warp_gate", "bridge", "collapse", "darkness", "earthquake",
-  "scatter", "vacuum", "blizzard", "bait_switch", "hostile_swap", "fusion",
+  "scatter", "vacuum", "blizzard", "deep_freeze", "bait_switch", "hostile_swap", "fusion",
 ]);
 
 const KILL_EFFECTS = new Set([
@@ -56,7 +56,7 @@ const BUFF_EFFECTS = new Set([
 ]);
 
 const DEBUFF_EFFECTS = new Set([
-  "freeze_1", "freeze_2", "root_2", "slow_2", "silence_3", "rust", "hex_3", "fog_2",
+  "freeze_1", "freeze_2", "deep_freeze", "root_2", "slow_2", "silence_3", "rust", "hex_3", "fog_2",
   "panic", "demote", "reverse_only_2", "venom", "backpedal", "gravity_well",
 ]);
 

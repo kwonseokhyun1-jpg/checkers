@@ -58,11 +58,11 @@ SPELLS = [
     ("ghost_guard", "Ghost Guard", "When a friendly piece is captured, its square blocks enemies for 2 turns.", "rare", 3, "friendly", "ghost_guard"),
     ("fortify", "Fortify", "Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.", "rare", 3, "friendly", "fortify"),
     # === CROWD CONTROL ===
-    ("deep_freeze", "Deep Freeze", "Enemy cannot move for 2 of its owner's turns.", "uncommon", 4, "enemy", "freeze_2"),
+    ("deep_freeze", "Deep Freeze", "Freeze every enemy on one diagonal through your piece for 2 turns.", "uncommon", 4, "friendly", "deep_freeze"),
     ("root", "Root", "Enemy cannot jump or capture for 2 turns (can still step).", "uncommon", 4, "enemy", "root_2"),
     ("slow", "Slow", "Enemy kings move like men for 2 turns.", "uncommon", 4, "enemy", "slow_2"),
     ("blind", "Blind", "Opponent cannot play cards on their next turn.", "rare", 3, "instant", "blind"),
-    ("confusion", "Confusion", "On opponent's next turn, their move is chosen randomly.", "rare", 3, "instant", "confusion"),
+    ("confusion", "Confusion", "On opponent's next turn, their move is chosen randomly.", "epic", 2, "instant", "confusion"),
     ("silence", "Silence", "Suppress knight/retreat/bishop/rook movement on an enemy for 3 turns.", "uncommon", 4, "enemy", "silence_3"),
     ("rust", "Rust", "Target enemy cannot be crowned for the rest of the game.", "uncommon", 4, "enemy", "rust"),
     ("hex", "Hex", "Marked enemy cannot receive buffs for 3 turns.", "uncommon", 4, "enemy", "hex_3"),

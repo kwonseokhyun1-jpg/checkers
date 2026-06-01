@@ -5,6 +5,7 @@ const TAGS = {
   forward_bolt: ["Destroy first enemy on forward diagonal"],
   freeze_1: ["Enemy cannot move on their next turn"],
   freeze_2: ["Enemy cannot move on their next turn"],
+  deep_freeze: ["Freeze all enemies on one diagonal through your piece for 2 turns"],
   retreat_3: ["Backward movement for 3 turns"],
   crown: ["Instantly crown a friendly piece"],
   swap_friendly: ["Swap two friendly pieces"],

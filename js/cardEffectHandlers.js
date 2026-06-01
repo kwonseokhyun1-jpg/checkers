@@ -121,6 +121,7 @@ const EFFECTS = {
   fortify(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.fortifyTurns=2; return ok(); },
   reverse_only_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.reverseOnlyTurns=2; return ok(); },
   freeze_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.frozenTurns=1; return ok(); },
+  deep_freeze(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); let n=0; for(let i=-SIZE+1;i<SIZE;i++){ const t=at(state,r+i,c+i); if(t&&t.color!==color){ t.frozenTurns=Math.max(t.frozenTurns||0,2); n++; }} return n?ok():fail("No enemies on that diagonal"); },
   root_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.rooted=1; return ok(); },
   slow_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.slowed=2; return ok(); },
   blind(state, color, picks) { state.meta.blindNext[opp(color)]=true; return ok(); },
