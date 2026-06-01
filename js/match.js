@@ -26,6 +26,7 @@ import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview } from "./cardPreview.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
 import { buildAiDeck } from "./deckRules.js";
+import { starsForRemainingPieces, formatStars } from "./adventure.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -490,15 +491,31 @@ export class MatchSession {
     this.state.gameOver = title;
     const won = title.startsWith("Victory");
     let displayText = text;
-    if (won && !this.winRewarded) {
-      this.winRewarded = true;
-      const gemNote = this.onWin?.();
-      displayText = gemNote ? `${text} ${gemNote}` : `${text} +10 gems!`;
+    let stars = 0;
+    if (won) {
+      const remaining = countPieces(this.state.board, COLORS.RED);
+      stars = starsForRemainingPieces(remaining);
+      if (!this.winRewarded) {
+        this.winRewarded = true;
+        const gemNote = this.onWin?.(stars, remaining);
+        const starLine = `${formatStars(stars)} (${remaining} piece${remaining === 1 ? "" : "s"} left)`;
+        displayText = gemNote ? `${text}
+${starLine}
+${gemNote}` : `${text}
+${starLine}`;
+      }
     }
     const overlay = this.root.querySelector("#game-over");
     if (overlay) {
       this.root.querySelector("#game-over-title").textContent = title;
-      this.root.querySelector("#game-over-text").textContent = displayText;
+      const textEl = this.root.querySelector("#game-over-text");
+      if (textEl) textEl.textContent = displayText;
+      const starsEl = this.root.querySelector("#game-over-stars");
+      if (starsEl) {
+        starsEl.textContent = won ? formatStars(stars) : "";
+        starsEl.classList.toggle("hidden", !won);
+        starsEl.setAttribute("aria-label", won ? `${stars} of 3 stars` : "");
+      }
       overlay.classList.remove("hidden");
     }
     this.cancelCardPlay();

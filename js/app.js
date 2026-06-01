@@ -19,6 +19,8 @@ import {
   isLevelCleared,
   gemsForLevelClear,
   recordLevelClear,
+  formatStars,
+  getLevelStars,
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
@@ -418,11 +420,13 @@ function renderAdventureMap() {
     if (!unlocked) node.classList.add("adventure-node--locked");
     if (cleared) node.classList.add("adventure-node--cleared");
     node.disabled = !unlocked;
+    const stars = getLevelStars(progress, level.id);
+    const starBadge = stars > 0 ? `<span class="adventure-node__stars" aria-label="${stars} stars">${formatStars(stars)}</span>` : "";
     node.innerHTML = `
       <span class="adventure-node__num">${level.id}</span>
       <span class="adventure-node__name">${level.opponent}</span>
       <span class="adventure-node__flavor">${level.flavor}</span>
-      ${cleared ? '<span class="adventure-node__badge">✓</span>' : ""}
+      ${starBadge}
     `;
     node.addEventListener("click", () => openAdventurePrebattle(level.id));
     map.appendChild(node);
@@ -514,12 +518,12 @@ function startAdventureMatch() {
       $("view-match").classList.add("hidden");
       showTab("play");
     },
-    () => {
-      const { gems } = recordLevelClear(profile, levelId);
+    (stars) => {
+      const { gems, stars: bestStars } = recordLevelClear(profile, levelId, stars);
       profile.gems += gems;
       saveProfile(profile);
       updateGemHeader();
-      return `+${gems} gems!`;
+      return `+${gems} gems! · Best: ${formatStars(bestStars)}`;
     },
     { aiDeckIds: [...pendingEnemyDeck], opponentName }
   );
@@ -566,6 +570,7 @@ function getMatchHtml(opponentName = "Opponent") {
       <div id="game-over" class="overlay hidden">
         <div class="overlay-card">
           <h2 id="game-over-title">Victory</h2>
+          <div id="game-over-stars" class="game-over-stars hidden" aria-hidden="true"></div>
           <p id="game-over-text"></p>
           <button id="btn-restart-match" type="button" class="btn-primary">Back to map</button>
         </div>

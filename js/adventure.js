@@ -153,7 +153,24 @@ export function getOrCreateLevelEnemyDeck(profile, levelId) {
 }
 
 export function defaultAdventureProgress() {
-  return { highestUnlocked: 1, cleared: {} };
+  return { highestUnlocked: 1, cleared: {}, stars: {} };
+}
+
+/** 3★ if 3+ pieces left, 2★ if 2, 1★ if 1 */
+export function starsForRemainingPieces(remaining) {
+  const n = Number(remaining) || 0;
+  if (n >= 3) return 3;
+  if (n === 2) return 2;
+  return 1;
+}
+
+export function formatStars(stars) {
+  const n = Math.max(0, Math.min(3, Number(stars) || 0));
+  return "★".repeat(n) + "☆".repeat(3 - n);
+}
+
+export function getLevelStars(progress, levelId) {
+  return progress?.stars?.[String(levelId)] || 0;
 }
 
 export function isLevelUnlocked(progress, levelId) {
@@ -174,14 +191,18 @@ export function gemsForLevelClear(progress, levelId) {
   return isLevelCleared(progress, levelId) ? ADVENTURE_REPEAT_CLEAR_GEMS : ADVENTURE_FIRST_CLEAR_GEMS;
 }
 
-export function recordLevelClear(profile, levelId) {
+export function recordLevelClear(profile, levelId, starsEarned) {
   if (!profile.adventure) profile.adventure = defaultAdventureProgress();
+  if (!profile.adventure.stars) profile.adventure.stars = {};
   const key = String(levelId);
   const firstTime = !profile.adventure.cleared[key];
   profile.adventure.cleared[key] = true;
   unlockNextLevel(profile.adventure, Number(levelId));
   const gems = firstTime ? ADVENTURE_FIRST_CLEAR_GEMS : ADVENTURE_REPEAT_CLEAR_GEMS;
-  return { gems, firstTime };
+  const prevBest = profile.adventure.stars[key] || 0;
+  const stars = Math.max(prevBest, Math.min(3, Math.max(1, Number(starsEarned) || 1)));
+  profile.adventure.stars[key] = stars;
+  return { gems, firstTime, stars };
 }
 
 export function getEnemyDeckPreview(cardIds) {

@@ -1933,3 +1933,26 @@ body {
   overflow-y: auto;
   margin-bottom: 1rem;
 }
+
+.game-over-stars {
+  font-size: 2rem;
+  letter-spacing: 0.15em;
+  color: var(--accent-gold);
+  margin: 0.5rem 0 0.25rem;
+  line-height: 1;
+}
+.game-over-stars.hidden {
+  display: none;
+}
+#game-over-text {
+  white-space: pre-line;
+}
+.adventure-node__stars {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.7rem;
+  letter-spacing: -0.05em;
+  color: var(--accent-gold);
+  line-height: 1;
+}
