@@ -9,9 +9,7 @@ SPELLS = [
     ("aegis", "Aegis", "Shield a piece — it cannot be captured for 2 turns.", "common", 7, "friendly", "shield_2"),
     ("bolt", "Forward Bolt", "Eliminate the first enemy piece directly ahead along your piece's forward diagonal.", "uncommon", 6, "diagonal", "forward_bolt"),
     ("frost", "Frost Bind", "Freeze an enemy piece — it cannot move on its owner's next turn.", "uncommon", 6, "enemy", "freeze_1"),
-    ("retreat", "Retreat Ward", "Grant a piece backward movement for 3 turns.", "uncommon", 6, "friendly", "retreat_3"),
-    ("knight", "Knight's Sigil", "Transform a piece — it moves like a chess knight until the end of the game.", "rare", 4, "friendly", "knight_perm"),
-    ("crown", "Royal Decree", "Instantly crown one of your pieces (king movement).", "rare", 4, "friendly", "crown"),
+    ("retreat", "Retreat Ward", "Grant a piece backward movement for 3 turns.", "uncommon", 6, "friendly", "retreat_3"),    ("crown", "Royal Decree", "Instantly crown one of your pieces (king movement).", "rare", 4, "friendly", "crown"),
     ("swap", "Shadow Swap", "Swap positions of two of your pieces.", "uncommon", 5, "f_f", "swap_friendly"),
     ("double", "Quick March", "After your normal move, move the same piece again (non-capture step).", "rare", 3, "instant", "quick_march"),
     ("gem_cache", "Gem Cache", "Gain 20 gems immediately.", "common", 7, "instant", "gems_20"),
@@ -74,9 +72,7 @@ SPELLS = [
     ("bribery", "Bribery", "Steal up to 15 gems from opponent.", "uncommon", 4, "instant", "bribery_15"),
     # === TRANSFORMATION ===
     ("bishops_sigil", "Bishop's Sigil", "Piece slides diagonally any distance over empties for 3 turns.", "rare", 3, "friendly", "bishop_3"),
-    ("rooks_sigil", "Rook's Sigil", "Piece slides along rank/file over empties for 3 turns.", "rare", 3, "friendly", "rook_3"),
-    ("queens_crown", "Queen's Crown", "Piece has king + knight movement for 2 turns.", "epic", 2, "friendly", "queen_2"),
-    ("demote", "Demote", "Turn an enemy king back into a man.", "epic", 2, "enemy", "demote"),
+    ("rooks_sigil", "Rook's Sigil", "Piece slides along rank/file over empties for 3 turns.", "rare", 3, "friendly", "rook_3"),    ("demote", "Demote", "Turn an enemy king back into a man.", "epic", 2, "enemy", "demote"),
     ("promote_zone", "Promote Zone", "Treat your piece as on the promotion row for movement this turn.", "uncommon", 4, "friendly", "promote_zone"),
     ("twin_soul", "Twin Soul", "Split a man into two tokens on adjacent squares; linked fate.", "epic", 2, "friendly", "twin_soul"),
     ("fusion", "Fusion", "Merge two adjacent friendly men into one super-man (2-step non-capture).", "rare", 3, "f_f_adj", "fusion"),
@@ -148,11 +144,7 @@ SPELLS = [
     ("loading", "Loading…", "Draw 1 card.", "common", 6, "instant", "draw_1"),
     # === SYNERGY ===
     ("conduct", "Conduct", "If you played a movement card this turn, your checker step may be 2 squares.", "uncommon", 4, "instant", "conduct"),
-    ("cryo_bolt", "Cryo Bolt", "Forward Bolt on a frozen target breaks shield and destroys it.", "rare", 3, "diagonal", "cryo_bolt"),
-    ("knights_charge", "Knight's Charge", "Your knight piece may capture in an L-shape.", "rare", 3, "friendly", "knights_charge"),
-    ("shield_bash", "Shield Bash", "A shielded piece moves 1 square and destroys adjacent unshielded enemy.", "uncommon", 4, "friendly", "shield_bash"),
-    ("gem_knight", "Gem Knight", "Pay 5 gems: your knight gains shield for 1 turn.", "common", 5, "friendly", "gem_knight"),
-]
+    ("cryo_bolt", "Cryo Bolt", "Forward Bolt on a frozen target breaks shield and destroys it.", "rare", 3, "diagonal", "cryo_bolt"),    ("shield_bash", "Shield Bash", "A shielded piece moves 1 square and destroys adjacent unshielded enemy.", "uncommon", 4, "friendly", "shield_bash"),]
 
 def js_str(s):
     return s.replace("\\", "\\\\").replace('"', '\\"')

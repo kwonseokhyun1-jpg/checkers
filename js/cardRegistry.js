@@ -25,7 +25,6 @@ export const CARD_REGISTRY = [
   { id: "bolt", name: "Forward Bolt", desc: "Eliminate the first enemy piece directly ahead along your piece's forward diagonal.", rarity: "uncommon", weight: 6, mode: "diagonal", effect: "forward_bolt" },
   { id: "frost", name: "Frost Bind", desc: "Freeze an enemy piece — it cannot move on its owner's next turn.", rarity: "uncommon", weight: 6, mode: "enemy", effect: "freeze_1" },
   { id: "retreat", name: "Retreat Ward", desc: "Grant a piece backward movement for 3 turns.", rarity: "uncommon", weight: 6, mode: "friendly", effect: "retreat_3" },
-  { id: "knight", name: "Knight's Sigil", desc: "Transform a piece — it moves like a chess knight for its next 2 moves.", rarity: "rare", weight: 4, mode: "friendly", effect: "knight_perm" },
   { id: "crown", name: "Royal Decree", desc: "Instantly crown one of your pieces (king movement).", rarity: "rare", weight: 4, mode: "friendly", effect: "crown" },
   { id: "swap", name: "Shadow Swap", desc: "Swap positions of two of your pieces.", rarity: "uncommon", weight: 5, mode: "f_f", effect: "swap_friendly" },
   { id: "double", name: "Quick March", desc: "After your normal move, move the same piece again (non-capture step).", rarity: "rare", weight: 3, mode: "instant", effect: "quick_march" },
@@ -85,7 +84,6 @@ export const CARD_REGISTRY = [
   { id: "bribery", name: "Bribery", desc: "Steal up to 15 gems from opponent.", rarity: "uncommon", weight: 4, mode: "instant", effect: "bribery_15" },
   { id: "bishops_sigil", name: "Bishop's Sigil", desc: "Piece slides diagonally any distance over empties for its next 2 moves.", rarity: "rare", weight: 3, mode: "friendly", effect: "bishop_3" },
   { id: "rooks_sigil", name: "Rook's Sigil", desc: "Piece slides along rank/file over empties for its next 2 moves.", rarity: "rare", weight: 3, mode: "friendly", effect: "rook_3" },
-  { id: "queens_crown", name: "Queen's Crown", desc: "Piece has king + knight movement for 2 turns.", rarity: "epic", weight: 2, mode: "friendly", effect: "queen_2" },
   { id: "demote", name: "Demote", desc: "Turn an enemy king back into a man.", rarity: "epic", weight: 2, mode: "enemy", effect: "demote" },
   { id: "promote_zone", name: "Promote Zone", desc: "Treat your piece as on the promotion row for movement this turn.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "promote_zone" },
   { id: "twin_soul", name: "Twin Soul", desc: "Split a man into two tokens on adjacent squares; linked fate.", rarity: "epic", weight: 2, mode: "friendly", effect: "twin_soul" },
@@ -152,9 +150,7 @@ export const CARD_REGISTRY = [
   { id: "loading", name: "Loading…", desc: "Draw 1 card.", rarity: "common", weight: 6, mode: "instant", effect: "draw_1" },
   { id: "conduct", name: "Conduct", desc: "If you played a movement card this turn, your checker step may be 2 squares.", rarity: "uncommon", weight: 4, mode: "instant", effect: "conduct" },
   { id: "cryo_bolt", name: "Cryo Bolt", desc: "Forward Bolt on a frozen target breaks shield and destroys it.", rarity: "rare", weight: 3, mode: "diagonal", effect: "cryo_bolt" },
-  { id: "knights_charge", name: "Knight's Charge", desc: "Your knight piece may capture in an L-shape.", rarity: "rare", weight: 3, mode: "friendly", effect: "knights_charge" },
   { id: "shield_bash", name: "Shield Bash", desc: "A shielded piece moves 1 square and destroys adjacent unshielded enemy.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "shield_bash" },
-  { id: "gem_knight", name: "Gem Knight", desc: "Pay 5 gems: your knight gains shield for 1 turn.", rarity: "common", weight: 5, mode: "friendly", effect: "gem_knight" },
 ];
 
 export const CARD_IDS = Object.fromEntries(CARD_REGISTRY.map((c) => [c.id.toUpperCase().replace(/[^A-Z0-9]/g, '_'), c.id]));

@@ -27,13 +27,26 @@ export const ECONOMY_CARD_IDS = new Set([
   "echo",
 ]);
 
+/** Knight-movement spells removed from the game */
+export const KNIGHT_CARD_IDS = new Set([
+  "knight",
+  "knights_charge",
+  "gem_knight",
+  "queens_crown",
+]);
+
+export function isKnightCard(cardOrId) {
+  const id = typeof cardOrId === "string" ? cardOrId : cardOrId?.id;
+  return KNIGHT_CARD_IDS.has(id);
+}
+
 export function isEconomyCard(cardOrId) {
   const id = typeof cardOrId === "string" ? cardOrId : cardOrId?.id;
   return ECONOMY_CARD_IDS.has(id);
 }
 
 export function getPlayableCards() {
-  return CARD_REGISTRY.filter((c) => !isEconomyCard(c.id));
+  return CARD_REGISTRY.filter((c) => !isEconomyCard(c.id) && !isKnightCard(c.id));
 }
 
 export function getCardDef(id) {
