@@ -3,7 +3,7 @@
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget } from "./board.js";
 import { sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, chainLightningCanTarget } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
 export { applyCard, applyEffect };
@@ -67,7 +67,9 @@ export function getValidTargets(state, color, card, picks) {
       for (let r = 0; r < SIZE; r++)
         for (let c = 0; c < SIZE; c++) {
           const p = at(state, r, c);
-          if (p && p.color === color) res.push([r, c]);
+          if (!p || p.color !== color) continue;
+          if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
+          res.push([r, c]);
         }
       return res;
     case "enemy":
