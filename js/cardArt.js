@@ -192,6 +192,7 @@ export function renderSpellCardEl(def, opts = {}) {
     opts.selected ? "selected" : "",
     opts.static ? "static" : "",
     opts.deal ? "spell-card--deal" : "",
+    opts.fullDesc ? "spell-card--full-desc" : "",
   ]
     .filter(Boolean)
     .join(" ");

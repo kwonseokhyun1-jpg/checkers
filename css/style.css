@@ -994,7 +994,48 @@ body {
 }
 .spell-cast-bar.hidden { display: none; }
 .spell-cast-preview { flex-shrink: 0; }
-.spell-cast-preview .spell-card { max-width: 100px; pointer-events: none; }
+.spell-cast-preview .spell-card { pointer-events: none; }
+
+/* Full description — in-match hand & casting preview */
+.spell-card--full-desc .spell-card__desc,
+.hand.spell-hand .spell-card .spell-card__desc,
+.spell-cast-preview .spell-card .spell-card__desc {
+  display: block;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  line-clamp: unset;
+  white-space: normal;
+}
+
+.hand.spell-hand .spell-card {
+  width: 100%;
+}
+
+.hand.spell-hand .spell-card__body {
+  padding-bottom: 0.65rem;
+}
+
+.spell-cast-bar {
+  align-items: flex-start;
+}
+
+.spell-cast-preview .spell-card {
+  max-width: 176px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.spell-cast-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (min-width: 901px) {
+  .match-wrap .panel-player {
+    min-width: 240px;
+  }
+}
+
 .spell-cast-hint {
   margin: 0 0 0.35rem;
   font-size: 0.82rem;
