@@ -157,6 +157,28 @@ function updateGemHeader() {
   document.querySelector(".hud-gems")?.classList.toggle("hud-gems--low", profile.gems < 50);
 }
 
+
+function syncCollectionFilterControls() {
+  document.querySelectorAll(".collection-owned-only-toggle").forEach((el) => {
+    el.checked = collectionOwnedOnly;
+  });
+  const searchIds = ["collection-search", "inventory-search"];
+  for (const id of searchIds) {
+    const el = $(id);
+    if (el) el.value = collectionFilter;
+  }
+  const rarityIds = ["collection-rarity", "inventory-rarity"];
+  for (const id of rarityIds) {
+    const el = $(id);
+    if (el) el.value = collectionRarity;
+  }
+  const sortIds = ["collection-sort", "inventory-sort"];
+  for (const id of sortIds) {
+    const el = $(id);
+    if (el) el.value = collectionSort;
+  }
+}
+
 function showDeckSubview(sub) {
   deckSubview = sub;
   $("deck-subview-list")?.classList.toggle("hidden", sub !== "list");
@@ -165,6 +187,19 @@ function showDeckSubview(sub) {
 
   if (sub === "edit") {
     if (repairProfile(profile)) saveProfile(profile);
+    collectionRarity = "all";
+    collectionFilter = "";
+    collectionOwnedOnly = false;
+    syncCollectionFilterControls();
+  document.querySelectorAll(".btn-reset-collection-filters").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      collectionRarity = "all";
+      collectionFilter = "";
+      collectionOwnedOnly = false;
+      syncCollectionFilterControls();
+      syncCollectionFilter();
+    });
+  });
   }
   if (sub === "list") renderDeckList();
   if (sub === "edit") renderDeckEditor();
@@ -334,7 +369,7 @@ function renderInventoryGrid(container, opts = {}) {
     const empty = document.createElement("p");
     empty.className = "collection-grid-empty muted";
     empty.textContent = deckEdit
-      ? "No owned spells match your filters. Uncheck “Owned only” or unseal cards from the Vault."
+      ? "No spells match your filters. Try “All rarities”, clear search, or uncheck Owned only."
       : "No cards match your filters. Open chests in the Vault to discover spells.";
     container.appendChild(empty);
     return;
@@ -376,7 +411,8 @@ function renderInventoryGrid(container, opts = {}) {
 
       const card = renderSpellCardEl(def, {
         button: true,
-        disabled: deckEdit ? !addCheck.ok && owned < 1 : owned < 1 || atMaxCopies,
+        compact: true,
+        disabled: !deckEdit && (owned < 1 || atMaxCopies),
         onClick: (e) => {
           if (e.shiftKey) {
             openInspect();
@@ -440,10 +476,18 @@ function renderInventoryGrid(container, opts = {}) {
         wrap.appendChild(addBtn);
       }
 
+      if (deckEdit && !addCheck.ok) card.classList.add("spell-card--deck-blocked");
       container.appendChild(wrap);
     } catch (err) {
       console.error("Failed to render card:", def?.id, err);
     }
+  }
+
+  if (cards.length > 0 && container.childElementCount === 0) {
+    const fail = document.createElement("p");
+    fail.className = "collection-grid-empty collection-grid-empty--error";
+    fail.textContent = "Spells failed to display. Hard refresh the page (Ctrl+Shift+R).";
+    container.appendChild(fail);
   }
 }
 
@@ -893,12 +937,28 @@ function init() {
     if (deckSubview === "list") renderDeckList();
   };
   document.querySelectorAll(".collection-owned-only-toggle").forEach((el) => {
-    el.checked = collectionOwnedOnly;
     el.addEventListener("change", (e) => {
       collectionOwnedOnly = e.target.checked;
-      document.querySelectorAll(".collection-owned-only-toggle").forEach((x) => {
-        x.checked = collectionOwnedOnly;
-      });
+      syncCollectionFilterControls();
+  document.querySelectorAll(".btn-reset-collection-filters").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      collectionRarity = "all";
+      collectionFilter = "";
+      collectionOwnedOnly = false;
+      syncCollectionFilterControls();
+      syncCollectionFilter();
+    });
+  });
+      syncCollectionFilter();
+    });
+  });
+  syncCollectionFilterControls();
+  document.querySelectorAll(".btn-reset-collection-filters").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      collectionRarity = "all";
+      collectionFilter = "";
+      collectionOwnedOnly = false;
+      syncCollectionFilterControls();
       syncCollectionFilter();
     });
   });

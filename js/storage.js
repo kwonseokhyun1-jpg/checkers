@@ -210,8 +210,9 @@ export function addToCollection(profile, cardId, count = 1) {
 }
 
 export function collectionCount(profile, cardId) {
-  return profile.collection[cardId] || 0;
+  return profile?.collection?.[cardId] || 0;
 }
+
 
 export function totalCollectionCards(profile) {
   return Object.values(profile.collection).reduce((s, n) => s + n, 0);
