@@ -1,7 +1,5 @@
 import { COLORS, getAllMovesForColor, applyMove, countPieces } from "./board.js";
 import { tryAutoPlay, canAiPlay } from "./cardEffects.js";
-import { drawToHand } from "./deckPile.js";
-import { DRAW_EVERY_TURNS } from "./cardCatalog.js";
 
 function scoreBoard(board, aiColor) {
   const human = aiColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
@@ -40,13 +38,23 @@ export function pickBestMove(board, color, state) {
   return best;
 }
 
-export function runAiTurn(state, onMessage) {
+function squareName([r, c]) {
+  const files = "abcdefgh";
+  return `${files[c]}${8 - r}`;
+}
+
+/**
+ * Run AI turn; returns a replay log for the UI.
+ * @returns {Array<{type: string, [key: string]: unknown}>}
+ */
+export function runAiTurn(state) {
   const color = COLORS.BLACK;
   const hand = state.hands.black;
+  const log = [];
 
   if (state.meta.blindNext?.[color]) {
     state.meta.blindNext[color] = false;
-    onMessage?.("Shadow Court is blinded — skips spells.");
+    log.push({ type: "message", text: "Shadow Court is blinded — skips spells." });
   } else if (!state.spellPlayed.black && hand.length) {
     const playable = hand.filter((c) => canAiPlay(state, color, c));
     if (playable.length && Math.random() < 0.7) {
@@ -56,10 +64,15 @@ export function runAiTurn(state, onMessage) {
       if (res.success) {
         hand.splice(idx, 1);
         state.spellPlayed.black = true;
-        onMessage?.(`Shadow Court plays ${card.name}.`);
+        log.push({
+          type: "spell",
+          cardName: card.name,
+          cardId: card.id,
+          text: res.message || `Cast ${card.name}`,
+        });
         if (state.meta.counterspell?.[COLORS.RED]) {
           state.meta.counterspell[COLORS.RED] = false;
-          onMessage?.("Your Counterspell cancels their magic!");
+          log.push({ type: "message", text: "Your Counterspell cancels their magic!" });
         }
       }
     }
@@ -70,19 +83,45 @@ export function runAiTurn(state, onMessage) {
     state.meta.confuseNext[color] = false;
     const moves = getAllMovesForColor(state.board, color, state);
     move = moves[Math.floor(Math.random() * moves.length)] || null;
+    if (move) log.push({ type: "message", text: "Confusion — random move!" });
   } else {
     move = pickBestMove(state.board, color, state);
   }
 
   if (move) {
+    const cap = move.captures?.length || 0;
+    log.push({
+      type: "move",
+      from: [...move.from],
+      to: [...move.to],
+      captures: move.captures ? move.captures.map((c) => [...c]) : [],
+      moveKind: move.type,
+      text: cap
+        ? `Moved ${squareName(move.from)} → ${squareName(move.to)} (captured ${cap})`
+        : `Moved ${squareName(move.from)} → ${squareName(move.to)}`,
+    });
     applyMove(state.board, move, state);
-    onMessage?.("Shadow Court moves.");
     if (state.meta.pendingDouble.black && move.type === "step") {
       state.meta.pendingDouble.black = false;
       const extra = getAllMovesForColor(state.board, color, state).filter(
         (m) => m.from[0] === move.to[0] && m.from[1] === move.to[1] && m.type === "step"
       );
-      if (extra.length) applyMove(state.board, extra[0], state);
+      if (extra.length) {
+        const ex = extra[0];
+        applyMove(state.board, ex, state);
+        log.push({
+          type: "move",
+          from: [...ex.from],
+          to: [...ex.to],
+          captures: ex.captures ? ex.captures.map((c) => [...c]) : [],
+          moveKind: ex.type,
+          text: `Quick follow-up ${squareName(ex.from)} → ${squareName(ex.to)}`,
+        });
+      }
     }
+  } else {
+    log.push({ type: "message", text: "Shadow Court had no legal move." });
   }
+
+  return log;
 }
