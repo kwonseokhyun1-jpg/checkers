@@ -393,6 +393,19 @@ export class MatchSession {
 
   attachCardInput(el, card, canPlay) {
     const canCast = canPlay && this.canPlaySpells();
+    const s = this.state;
+    el.classList.toggle("disabled", !canCast);
+    if (!canCast) {
+      el.title =
+        s.phase === PHASE.MOVE
+          ? "Move phase — spells locked"
+          : s.meta.shatterSilenced?.red
+            ? "Shatter backlash — no spells this turn"
+            : s.spellPlayed.red
+              ? "Already cast a spell this turn"
+              : "Spells unavailable";
+      return;
+    }
     el.title = canCast
       ? "Tap to view · drag onto the board to cast"
       : "Tap to view card";
@@ -906,12 +919,14 @@ ${starLine}`;
 
     const canPlay = this.canPlaySpells();
     const castingId = this.cardPlay?.card?.instanceId;
+    handEl.classList.toggle("spell-hand--locked", !canPlay);
 
     for (const card of s.hands.red) {
       const el = renderSpellCardEl(card, {
         button: true,
         compact: true,
         selected: castingId === card.instanceId,
+        disabled: !canPlay,
       });
       this.attachCardInput(el, card, canPlay);
       handEl.appendChild(el);
