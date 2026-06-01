@@ -2,6 +2,18 @@
 
 Classic checkers with a collectible spell-card layer. You and the AI each start with **100 gems**. Spend **10 gems** to draw a random card, play effects on your turn, then make a normal checkers move.
 
+## Game modes
+
+1. **Chests** — Spend gems to open chests and grow your collection (economy spells are disabled).
+2. **Deck Builder** — Build a 30-card deck (max 3 copies per card) from cards you own.
+3. **Play** — Choose a deck and battle the AI (PvP planned).
+
+### Match rules
+
+- Start with **3 cards** in hand (max **5**)
+- Play **1 spell** per turn, then move
+- Draw **1 card every 2 turns** from your deck
+
 ## Play online
 
 **[Play Card Checkers on GitHub Pages](https://kwonseokhyun1-jpg.github.io/checkers/)**
