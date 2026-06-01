@@ -1,5 +1,5 @@
 /** Buy extra copies of owned spells from the collection inventory */
-import { getCardDef, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
+import { getCardDef, maxCopiesForCard } from "./cardCatalog.js";
 import { addToCollection, collectionCount, collectionRoom, saveProfile } from "./storage.js";
 
 export const BUY_COST_BY_RARITY = {
@@ -27,8 +27,9 @@ export function tryBuyCardCopy(profile, cardId) {
   const def = getCardDef(cardId);
   if (!def) return { success: false, message: "Unknown card." };
 
-  if (owned >= MAX_COPIES_PER_CARD) {
-    return { success: false, message: `You already own the maximum (${MAX_COPIES_PER_CARD} copies).` };
+  const cap = maxCopiesForCard(cardId);
+  if (owned >= cap) {
+    return { success: false, message: `You already own the maximum (${cap} copies).` };
   }
 
   const cost = getBuyCost(def.rarity);
@@ -41,7 +42,7 @@ export function tryBuyCardCopy(profile, cardId) {
   if (!added) {
     profile.gems += cost;
     saveProfile(profile);
-    return { success: false, message: `You already own the maximum (${MAX_COPIES_PER_CARD} copies).` };
+    return { success: false, message: `You already own the maximum copies for this rarity.` };
   }
 
   return {

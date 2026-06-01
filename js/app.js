@@ -1,7 +1,7 @@
 /**
  * Arcane Checkers — meta game (chests, decks, play) + match
  */
-import { getPlayableCards, getCardDef, DECK_SIZE, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
+import { getPlayableCards, getCardDef, DECK_SIZE, maxCopiesForCard } from "./cardCatalog.js";
 import {
   loadProfile,
   saveProfile,
@@ -100,7 +100,7 @@ function autoFinishDeck() {
 
   workingDeck = [];
   for (const { def, owned } of candidates) {
-    const copies = Math.min(owned, MAX_COPIES_PER_CARD);
+    const copies = Math.min(owned, maxCopiesForCard(def));
     for (let i = 0; i < copies && workingDeck.length < DECK_SIZE; i++) {
       workingDeck.push(def.id);
     }
@@ -300,7 +300,8 @@ function renderInventoryGrid(container, opts = {}) {
 
   for (const def of getFilteredCollection()) {
     const owned = collectionCount(profile, def.id);
-    const atMaxCopies = owned >= MAX_COPIES_PER_CARD;
+    const cap = maxCopiesForCard(def);
+    const atMaxCopies = owned >= cap;
     const cost = getBuyCost(def.rarity);
     const canAfford = profile.gems >= cost && !atMaxCopies;
     const wrap = document.createElement("div");
@@ -313,8 +314,8 @@ function renderInventoryGrid(container, opts = {}) {
       const addCheck = deckEdit ? canAddCardToDeck(workingDeck, def.id, profile) : { ok: false };
       showCardPreview(def, {
         meta: deckEdit
-          ? `Owned ${owned}/${MAX_COPIES_PER_CARD} · In deck ${inDeck}/${MAX_COPIES_PER_CARD} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
-          : `Owned ${owned}/${MAX_COPIES_PER_CARD}${atMaxCopies ? " · max copies" : ` · ${cost} gems per copy`}`,
+          ? `Owned ${owned}/${cap} · In deck ${inDeck}/${cap} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
+          : `Owned ${owned}/${cap}${atMaxCopies ? " · max copies" : ` · ${cost} gems per copy`}`,
         buyLabel: atMaxCopies ? "Max copies owned" : `Buy copy (${cost} gems)`,
         buyDisabled: !canAfford || atMaxCopies,
         onBuy: () => {
@@ -346,7 +347,7 @@ function renderInventoryGrid(container, opts = {}) {
       },
     });
     card.title = atMaxCopies
-      ? `${def.name} — max ${MAX_COPIES_PER_CARD} copies owned. Shift+click to inspect.`
+      ? `${def.name} — max ${cap} copies owned. Shift+click to inspect.`
       : `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
     wrap.appendChild(card);
 

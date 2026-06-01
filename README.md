@@ -5,7 +5,7 @@ Classic checkers with a collectible spell-card layer. Earn **10 gems per win** t
 ## Game modes
 
 1. **Chests** — Spend gems to open chests and grow your collection (economy spells are disabled).
-2. **Deck Builder** — Build a 30-card deck (max 3 copies per card) from cards you own.
+2. **Deck Builder** — Build a 30-card deck (max 4 copies for commons/uncommons, max 3 for rares/epics/legendaries) from cards you own.
 3. **Play** — Choose a deck and battle the AI (PvP planned).
 
 ### Match rules
