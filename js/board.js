@@ -64,6 +64,7 @@ export function createPiece(color, row, col, king = false) {
     stoneTurns: 0,
     rooted: 0,
     slowed: 0,
+    reverseOnlyTurns: 0,
     silenced: 0,
     hexed: 0,
     rusted: false,
@@ -171,6 +172,11 @@ function slideMoves(board, piece, state, dirs) {
 
 export function forwardDirs(piece, dominion = false) {
   if (hasKnightSigil(piece)) return [];
+  if (piece.reverseOnlyTurns > 0) {
+    return piece.color === COLORS.RED
+      ? [[1, -1], [1, 1]]
+      : [[-1, -1], [-1, 1]];
+  }
   const dirs = [];
   const treatKing = piece.king && !(piece.slowed > 0);
   if (piece.color === COLORS.RED) {
@@ -232,15 +238,19 @@ export function getJumpMoves(board, piece, color, state = null) {
     return getKnightMoves(board, piece, state, true);
 
   let dirs;
-  const treatKing = piece.king && !(piece.slowed > 0);
-  const dom = state?.meta?.dominionTurn?.[color];
-  if (treatKing) dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
-  else if (piece.color === COLORS.RED) {
-    dirs = [[-1,-1],[-1,1]];
-    if (piece.retreatTurns > 0 || dom) dirs.push([1,-1],[1,1]);
+  if (piece.reverseOnlyTurns > 0) {
+    dirs = forwardDirs(piece, state?.meta?.dominionTurn?.[color]);
   } else {
-    dirs = [[1,-1],[1,1]];
-    if (piece.retreatTurns > 0 || dom) dirs.push([-1,-1],[-1,1]);
+    const treatKing = piece.king && !(piece.slowed > 0);
+    const dom = state?.meta?.dominionTurn?.[color];
+    if (treatKing) dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
+    else if (piece.color === COLORS.RED) {
+      dirs = [[-1,-1],[-1,1]];
+      if (piece.retreatTurns > 0 || dom) dirs.push([1,-1],[1,1]);
+    } else {
+      dirs = [[1,-1],[1,1]];
+      if (piece.retreatTurns > 0 || dom) dirs.push([-1,-1],[-1,1]);
+    }
   }
 
   for (const [dr, dc] of dirs) {
@@ -345,7 +355,7 @@ export function tickEffects(board, color, state = null) {
       const dec = (k) => { if (p[k] > 0) p[k]--; };
       dec("shieldTurns"); dec("frozenTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
-      dec("stoneTurns"); dec("rooted"); dec("slowed"); dec("silenced"); dec("hexed");
+      dec("stoneTurns"); dec("rooted"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
       dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns");
       if (p.venom > 0) {
         p.venom--;

@@ -47,14 +47,14 @@ function squareName([r, c]) {
  * Run AI turn; returns a replay log for the UI.
  * @returns {Array<{type: string, [key: string]: unknown}>}
  */
-export function runAiTurn(state) {
+export function runAiTurn(state, opponentName = "Opponent") {
   const color = COLORS.BLACK;
   const hand = state.hands.black;
   const log = [];
 
   if (state.meta.blindNext?.[color]) {
     state.meta.blindNext[color] = false;
-    log.push({ type: "message", text: "Shadow Court is blinded — skips spells." });
+    log.push({ type: "message", text: `${opponentName} is blinded — skips spells.` });
   } else if (!state.spellPlayed.black && hand.length) {
     const playable = hand.filter((c) => canAiPlay(state, color, c));
     if (playable.length && Math.random() < 0.7) {
@@ -120,7 +120,7 @@ export function runAiTurn(state) {
       }
     }
   } else {
-    log.push({ type: "message", text: "Shadow Court had no legal move." });
+    log.push({ type: "message", text: `${opponentName} had no legal move.` });
   }
 
   return log;

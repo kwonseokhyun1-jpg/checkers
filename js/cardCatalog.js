@@ -28,6 +28,13 @@ export const ECONOMY_CARD_IDS = new Set([
 ]);
 
 /** Knight-movement spells removed from the game */
+export const REMOVED_CARD_IDS = new Set(["wild_magic"]);
+
+export function isRemovedCard(cardOrId) {
+  const id = typeof cardOrId === "string" ? cardOrId : cardOrId?.id;
+  return REMOVED_CARD_IDS.has(id);
+}
+
 export const KNIGHT_CARD_IDS = new Set([
   "knight",
   "knights_charge",
@@ -46,7 +53,7 @@ export function isEconomyCard(cardOrId) {
 }
 
 export function getPlayableCards() {
-  return CARD_REGISTRY.filter((c) => !isEconomyCard(c.id) && !isKnightCard(c.id));
+  return CARD_REGISTRY.filter((c) => !isEconomyCard(c.id) && !isKnightCard(c.id) && !isRemovedCard(c.id));
 }
 
 export function getCardDef(id) {
