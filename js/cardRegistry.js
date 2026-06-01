@@ -24,7 +24,7 @@ export const CARD_REGISTRY = [
   { id: "aegis", name: "Aegis", desc: "Shield a piece — it cannot be captured for 2 turns.", rarity: "common", weight: 7, mode: "friendly", effect: "shield_2" },
   { id: "bolt", name: "Forward Bolt", desc: "Eliminate the first enemy piece directly ahead along your piece's forward diagonal.", rarity: "uncommon", weight: 6, mode: "diagonal", effect: "forward_bolt" },
   { id: "frost", name: "Frost Bind", desc: "Freeze an enemy piece — it cannot move on its owner's next turn.", rarity: "uncommon", weight: 6, mode: "enemy", effect: "freeze_1" },
-  { id: "retreat", name: "Retreat Ward", desc: "Grant a piece backward movement for 3 turns.", rarity: "uncommon", weight: 6, mode: "friendly", effect: "retreat_3" },
+  { id: "retreat", name: "Retreat Ward", desc: "Grant a piece backward movement for 3 turns.", rarity: "common", weight: 6, mode: "friendly", effect: "retreat_3" },
   { id: "crown", name: "Royal Decree", desc: "Instantly crown one of your pieces (king movement).", rarity: "rare", weight: 4, mode: "friendly", effect: "crown" },
   { id: "swap", name: "Shadow Swap", desc: "Swap positions of two of your pieces.", rarity: "uncommon", weight: 5, mode: "f_f", effect: "swap_friendly" },
   { id: "double", name: "Quick March", desc: "After your normal move, move the same piece again (non-capture step).", rarity: "rare", weight: 3, mode: "instant", effect: "quick_march" },
