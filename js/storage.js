@@ -69,7 +69,7 @@ export function loadProfile() {
         migrateAdventureDecks(profile);
         return profile.adventure;
       })(),
-    });
+    }));
   } catch {
     return stripRemovedCards(stripKnightCards(defaultProfile()));
   }
