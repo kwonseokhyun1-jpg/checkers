@@ -19,11 +19,9 @@
   --shadow-glow: 0 0 48px rgba(92, 225, 230, 0.12);
   --radius: 14px;
   --radius-sm: 10px;
-  --font-display: "Luckiest Guy", "Titan One", cursive;
-  --font-heading: "Boogaloo", "Luckiest Guy", cursive;
-  --font-body: "Nunito", system-ui, sans-serif;
-  --arcane-stroke: #1a1028;
-  --arcane-shadow: #3d2a6b;
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-heading: "Sora", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
 }
 
 *,
@@ -463,7 +461,7 @@ body {
 }
 
 .modal-content h2 {
-  font-family: var(--font-display);
+  font-family: var(--font-heading); font-weight: 600;
   margin: 0 0 0.5rem;
   font-size: 1.25rem;
 }
@@ -504,7 +502,7 @@ body {
 }
 
 .overlay-card h2 {
-  font-family: var(--font-display);
+  font-family: var(--font-heading); font-weight: 600;
   margin: 0 0 0.5rem;
   color: var(--accent-gold);
 }
@@ -548,7 +546,7 @@ body {
   margin-top: 0.35rem;
 }
 .meta-panel { max-width: 900px; margin: 0 auto; }
-.meta-panel h2 { font-family: var(--font-display); margin-top: 0; }
+.meta-panel h2 { font-family: var(--font-heading); font-weight: 600; margin-top: 0; }
 .meta-desc { color: var(--text-muted); font-size: 0.9rem; }
 .chest-list {
   display: grid;
@@ -692,7 +690,7 @@ body {
   color: var(--text-muted);
 }
 .spell-card__name {
-  font-family: var(--font-display);
+  font-family: var(--font-heading); font-weight: 600;
   font-size: 0.82rem;
   margin: 0.15rem 0 0.2rem;
   line-height: 1.2;
@@ -850,7 +848,7 @@ body {
   background: hsl(220 18% 14%);
 }
 .deck-row-info { flex: 1; min-width: 0; }
-.deck-row-name { margin: 0 0 0.25rem; font-family: var(--font-display); font-size: 1.1rem; }
+.deck-row-name { margin: 0 0 0.25rem; font-size: 1.1rem; }
 .deck-row-hint {
   margin: 0.35rem 0 0;
   font-size: 0.8rem;
@@ -1029,21 +1027,14 @@ body {
   text-shadow: 0 0 12px var(--accent-gem);
 }
 
-.game-header__title.arcane-title,
-.arcane-title {
+.game-header__title {
   font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(1.75rem, 4.5vw, 2.35rem);
-  line-height: 1.05;
-  letter-spacing: 0.04em;
+  font-weight: 700;
+  font-size: clamp(1.45rem, 3.5vw, 1.95rem);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
   margin: 0.1rem 0 0;
-  background: linear-gradient(180deg, #f0e8ff 8%, #b794f6 42%, #6b46c1 88%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  -webkit-text-stroke: 2.5px var(--arcane-stroke);
-  paint-order: stroke fill;
-  filter: drop-shadow(0 3px 0 var(--arcane-shadow)) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.45));
+  color: #f8f4ff;
 }
 
 .hud-gems {
@@ -1166,10 +1157,8 @@ body {
 }
 
 .panel-head__title {
-  font-family: var(--font-display);
   font-size: 1.35rem;
   margin: 0 0 0.35rem;
-  color: var(--accent-gold);
 }
 
 .panel-head__desc,
@@ -1306,10 +1295,8 @@ body {
 }
 
 .chest-card__name {
-  font-family: var(--font-display);
   font-size: 1.1rem;
   margin: 0 0 0.2rem;
-  color: #fff;
 }
 
 .chest-card__tagline {
@@ -1380,7 +1367,7 @@ body {
 }
 
 .chest-pulls__label {
-  font-family: var(--font-display);
+  font-family: var(--font-heading); font-weight: 600;
   text-align: center;
   color: var(--accent-gold);
   margin: 0 0 1rem;
@@ -1397,7 +1384,7 @@ body {
 .chest-log {
   margin-top: 1rem;
   text-align: center;
-  font-family: var(--font-display);
+  font-family: var(--font-heading); font-weight: 600;
   color: var(--accent-gold);
   min-height: 1.5rem;
 }
@@ -1414,7 +1401,7 @@ body {
 }
 
 .btn-battle {
-  font-family: var(--font-display);
+  font-family: var(--font-heading); font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   box-shadow: 0 6px 24px rgba(232, 197, 71, 0.35);
@@ -1460,7 +1447,7 @@ body {
 }
 
 .match-banner {
-  font-family: var(--font-display);
+  font-family: var(--font-heading); font-weight: 600;
   letter-spacing: 0.04em;
 }
 
@@ -1689,7 +1676,8 @@ body {
 .spell-card__tooltip strong {
   display: block;
   color: var(--accent-gold);
-  font-family: var(--font-display);
+  font-family: var(--font-heading);
+  font-weight: 600;
   font-size: 0.8rem;
   margin-bottom: 0.35rem;
 }
@@ -1717,9 +1705,10 @@ body {
 }
 .ai-action-panel__title {
   margin: 0 0 0.35rem;
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  letter-spacing: 0.12em;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -1768,60 +1757,71 @@ body {
   50% { filter: drop-shadow(0 0 12px rgba(159, 122, 234, 0.6)); }
 }
 
-/* Chunky arcade display typography (arcane theme — not PvZ) */
-.arcane-heading,
+/* Natural typography */
 .panel-head__title,
 .chest-card__name,
 .deck-row-name,
 .overlay-card h2,
 .modal-content h2,
-.adventure-node__num,
 .prebattle-section-title,
-#game-over-title {
+#game-over-title,
+.chest-pulls__label,
+.chest-open-label,
+.chest-open-cards__title {
   font-family: var(--font-heading);
-  font-weight: 400;
-  letter-spacing: 0.03em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.panel-head__title,
+.panel-head__title {
+  font-size: clamp(1.1rem, 2.5vw, 1.3rem);
+  color: var(--text);
+}
+
 .chest-card__name,
 .deck-row-name {
-  font-size: clamp(1.15rem, 2.5vw, 1.45rem);
-  color: #e8dcff;
-  -webkit-text-stroke: 1.5px var(--arcane-stroke);
-  paint-order: stroke fill;
-  text-shadow:
-    0 2px 0 var(--arcane-shadow),
-    0 3px 6px rgba(0, 0, 0, 0.35);
+  font-size: 1.05rem;
+  color: #fff;
 }
 
 .game-header__eyebrow {
   font-family: var(--font-body);
-  font-weight: 800;
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
+  font-weight: 500;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--accent-gem);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .tab-btn.active {
-  font-family: var(--font-heading);
-  font-weight: 400;
-  letter-spacing: 0.04em;
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .turn-banner,
 .match-banner {
-  font-family: var(--font-heading);
-  font-weight: 400;
-  letter-spacing: 0.02em;
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .spell-card__name {
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.adventure-node__num {
   font-family: var(--font-heading);
-  font-weight: 400;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--accent-gold);
+}
+
+.board-label {
+  font-family: var(--font-body);
+  font-weight: 500;
 }
 
 /* Deck builder UX */
@@ -1934,7 +1934,7 @@ body {
   border-color: rgba(92, 225, 230, 0.45);
 }
 .adventure-node__num {
-  font-family: var(--font-display);
+  font-family: var(--font-heading); font-weight: 600;
   font-size: 1.1rem;
   color: var(--accent-gold);
 }
@@ -1972,7 +1972,7 @@ body {
   font-weight: 600;
 }
 .prebattle-section-title {
-  font-family: var(--font-display);
+  font-family: var(--font-heading); font-weight: 600;
   font-size: 1rem;
   margin: 1.25rem 0 0.5rem;
 }
@@ -2336,10 +2336,9 @@ body.chest-open-active {
 .ai-spell-banner__title {
   margin: 0.15rem 0 0.2rem;
   font-family: var(--font-heading);
-  font-size: 1.15rem;
+  font-weight: 600;
+  font-size: 1.05rem;
   color: #f0e8ff;
-  -webkit-text-stroke: 1px rgba(26, 16, 40, 0.9);
-  text-shadow: 0 2px 0 #3d2a6b;
 }
 
 .ai-spell-banner__desc {
