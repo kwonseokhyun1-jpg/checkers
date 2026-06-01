@@ -10,11 +10,23 @@ export const STARTING_GEMS = 400;
 export const TESTING_GEMS = 4000;
 export const WIN_GEMS = 10;
 
+/** 10 unique commons × 3 copies = 30-card starter deck */
+export const STARTER_COMMON_IDS = [
+  "nudge",
+  "retreat",
+  "long_step",
+  "sidestep",
+  "repel",
+  "leapfrog",
+  "venom",
+  "anchor",
+  "flank",
+  "recall",
+];
+
 function defaultProfile() {
   const collection = {};
-  const starterIds = [
-    "nudge", "aegis", "sidestep", "bolt", "retreat", "swap", "long_step", "crown", "mine", "venom",
-  ];
+  const starterIds = STARTER_COMMON_IDS;
   for (const id of starterIds) collection[id] = 3;
   const cardIds = starterIds.flatMap((id) => [id, id, id]);
   const starterDeck = {
