@@ -15,12 +15,12 @@ const THEME_STYLES = {
 };
 
 const THEME_KEYS = [
-  ["purify", "crown", ["purify", "crown", "coronation", "succession", "last_king", "constitution", "demote", "royal", "regicide"]],
+  ["crown", ["purify", "crown", "coronation", "succession", "last_king", "constitution", "demote", "royal", "regicide"]],
   ["combat", ["bolt", "shatter", "destroy", "snipe", "detonate", "duel", "execution", "cull", "venom", "fireline", "fireblast", "backstab", "sacrifice", "lightning", "cryo", "cross", "spear", "hunters", "ricochet", "bash", "mine", "overrun", "bomb"]],
   ["defense", ["shield", "aegis", "bulwark", "fortify", "sanctuary", "last_stand", "decoy", "ghost", "mirror_shield", "phalanx", "anchor", "iron_will", "pulse"]],
   ["debuff", ["freeze", "frost", "root", "slow", "blind", "confusion", "silence", "rust", "hex", "tangle", "fog", "panic", "bind", "deep_freeze", "blizzard"]],
   ["transform", ["knight", "bishop", "rook", "queen", "fusion", "chameleon", "wraith", "stone", "twin", "identity", "promote", "charge", "sigil", "demote"]],
-  ["trickster", "butterfly", "chaos"],
+  ["arcane", ["trickster", "butterfly", "chaos"]],
   ["board", ["obstacle", "bridge", "quicksand", "sanctified", "warp", "collapse", "darkness", "earthquake", "vacuum", "scatter", "gravity", "butterfly", "corner"]],
   ["movement", ["nudge", "blink", "step", "sidestep", "pull", "repel", "leap", "phase", "drift", "recall", "flank", "swap", "hostile", "bait", "mass_nudge", "march", "zeal", "retreat", "dominion", "parallel", "pocket", "possession", "uno", "mirror_move", "offering", "echo", "wild", "roulette", "coin", "rules", "conduct", "loading", "draw"]],
 ];
@@ -40,6 +40,7 @@ function cardVariant(id) {
 export function inferTheme(card) {
   const blob = `${card.id} ${card.effect} ${card.name}`.toLowerCase();
   for (const [theme, keys] of THEME_KEYS) {
+    if (!Array.isArray(keys)) continue;
     if (keys.some((k) => blob.includes(k))) return theme;
   }
   return "arcane";

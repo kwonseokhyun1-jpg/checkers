@@ -42,7 +42,14 @@ import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
 import { playChestOpenAnimation } from "./chestOpenAnimation.js";
 import { getBuyCost, tryBuyCardCopy } from "./cardShop.js";
 
-let profile = loadProfile();
+let profile;
+try {
+  profile = loadProfile();
+} catch (err) {
+  console.error("Failed to load profile, resetting save:", err);
+  localStorage.removeItem("cardCheckersProfile_v5");
+  profile = loadProfile();
+}
 let activeTab = "deck";
 /** @type {'list'|'edit'|'view'} */
 let deckSubview = "list";
