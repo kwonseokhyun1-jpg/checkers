@@ -96,6 +96,7 @@ export const CARD_REGISTRY = [
   { id: "sanctified_tile", name: "Sanctified Tile", desc: "Friendly pieces entering this dark square are crowned.", rarity: "uncommon", weight: 4, mode: "empty", effect: "sanctified" },
   { id: "warp_gate", name: "Warp Gate", desc: "Link two empty dark squares for instant travel between them.", rarity: "rare", weight: 3, mode: "empty_empty", effect: "warp_gate" },
   { id: "collapse", name: "Collapse", desc: "Remove one dark square from play (only one collapsed square at a time); piece on it relocates.", rarity: "epic", weight: 2, mode: "empty", effect: "collapse" },
+  { id: "trickster", name: "Trickster", desc: "Instantly swap the positions of four random pieces on the board.", rarity: "epic", weight: 2, mode: "instant", effect: "trickster" },
   { id: "purify", name: "Purify", desc: "Remove all shields and curses from every piece on the board.", rarity: "epic", weight: 2, mode: "instant", effect: "purify" },
   { id: "mirror_board", name: "Mirror Board", desc: "Confuse the AI's targeting for its next turn.", rarity: "common", weight: 5, mode: "instant", effect: "mirror_board" },
   { id: "darkness", name: "Darkness", desc: "Pieces on 4 dark squares around a point cannot be targeted by ranged spells for 2 turns.", rarity: "rare", weight: 3, mode: "empty", effect: "darkness" },

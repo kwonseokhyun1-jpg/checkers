@@ -1,9 +1,10 @@
 import { isKnightCard, isRemovedCard, getCardDef, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
 import { defaultAdventureProgress, migrateAdventureDecks } from "./adventure.js";
+import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
 
-const STORAGE_KEY = "cardCheckersProfile_v4";
+const STORAGE_KEY = "cardCheckersProfile_v5";
 export const STARTING_GEMS = 400;
 /** Testing grant — applied on each profile load for now */
 export const TESTING_GEMS = 4000;
@@ -29,6 +30,7 @@ function defaultProfile() {
     decks: [starterDeck],
     selectedDeckId: starterDeck.id,
     adventure: defaultAdventureProgress(),
+    cosmetics: structuredClone(DEFAULT_COSMETICS),
   };
 }
 
@@ -92,6 +94,7 @@ export function loadProfile() {
       collection: p.collection ?? {},
       decks: Array.isArray(p.decks) ? p.decks : [],
       selectedDeckId: p.selectedDeckId ?? null,
+      cosmetics: normalizeCosmetics(p.cosmetics),
       adventure: (() => {
         const adv = { ...defaultAdventureProgress(), ...(p.adventure || {}) };
         const profile = { adventure: adv };

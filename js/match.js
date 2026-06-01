@@ -11,7 +11,7 @@ import {
   countPieces,
   tickEffects,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -100,7 +100,7 @@ export class MatchSession {
    * @param {string} [options.opponentName]
    */
   constructor(deckCardIds, rootEl, onExit, onWin, options = {}) {
-    this.opponentName = options.opponentName || "Opponent";
+    this.cosmetics = options.cosmetics || null;
     this.state = createMatchState(deckCardIds, options.aiDeckIds ?? null);
     this.root = rootEl;
     this.onExit = () => {
@@ -646,6 +646,8 @@ ${starLine}`;
     if (spec.from && spec.from[0] === row && spec.from[1] === col) return "from";
     if (spec.to && spec.to[0] === row && spec.to[1] === col) return "to";
     if (spec.lineSquares?.some(([r, c]) => r === row && c === col)) return "line";
+    if (spec.visual === "fire" && spec.lineSquares?.some(([r, c]) => r === row && c === col)) return "fire-line";
+    if (spec.visual === "lightning" && spec.squares?.some(([r, c]) => r === row && c === col)) return "lightning";
     if (spec.squares?.some(([r, c]) => r === row && c === col)) {
       if (spec.type === "kill" || spec.type === "multi") return "kill";
       if (spec.type === "debuff") return "debuff";
@@ -664,6 +666,7 @@ ${starLine}`;
     const frame = this.$("board")?.closest(".board-frame");
     const board = this.$("board");
     frame?.classList.add(`board-frame--spell-${spec.type}`);
+    if (spec.visual) frame?.classList.add(`board-frame--fx-${spec.visual}`);
     if (spec.shake) {
       frame?.classList.add("board-frame--spell-impact");
       board?.classList.add("board--spell-shake");
@@ -678,6 +681,7 @@ ${starLine}`;
     this.spellAnimation = null;
     board?.classList.remove("board--spell-shake");
     frame?.classList.remove("board-frame--spell-impact");
+    if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
     frame?.classList.remove(`board-frame--spell-${spec.type}`);
     if (banner) banner.classList.remove(`spell-anim-${spec.type}`);
   }
@@ -753,7 +757,19 @@ ${starLine}`;
       return res;
     }
 
-    const spec = buildAnimSpec(card, picks, COLORS.RED);
+    const s = this.state;
+    let extra = {};
+    if (card.effect === "trickster") {
+      const plan = planTrickster(s);
+      if (!plan) return { success: false, message: "Need at least 4 pieces on the board." };
+      s.meta.pendingTrickster = plan;
+      extra.tricksterSquares = plan.squares;
+    }
+    if (card.effect === "chain_lightning" && picks.length) {
+      const [pr, pc] = picks[0];
+      extra.chainSquares = getChainLightningAnimSquares(s, pr, pc, COLORS.RED);
+    }
+    const spec = buildAnimSpec(card, picks, COLORS.RED, extra);
     await this.runSpellAnimation(spec);
     return applyCard(this.state, COLORS.RED, card, picks);
   }
@@ -1024,6 +1040,7 @@ ${starLine}`;
         let cls = `square ${isDarkSquare(row, col) ? "dark" : "light"}`;
         if (terrain?.mine) cls += " has-mine";
         if (terrain?.quicksand) cls += " has-quicksand";
+        if (isSquareCollapsed(s.meta, row, col)) cls += " square--collapsed";
         sq.className = cls;
 
         if (this.aiHighlight?.from?.[0] === row && this.aiHighlight?.from?.[1] === col) {
@@ -1059,13 +1076,17 @@ ${starLine}`;
         const animRole = this.squareInAnim(this.spellAnimation, row, col);
         if (animRole) {
           sq.classList.add(`spell-anim-${animRole}`);
+          if (this.spellAnimation?.visual === "fire" && animRole === "fire-line") sq.classList.add("spell-fx-fire");
+          if (this.spellAnimation?.visual === "lightning") sq.classList.add("spell-fx-lightning");
+          if (this.spellAnimation?.visual === "trickster") sq.classList.add("spell-fx-trickster");
           if (this.spellAnimation?.type) sq.classList.add(`spell-anim-type-${this.spellAnimation.type}`);
         }
 
         const piece = s.board[row][col];
         if (piece) {
           const el = document.createElement("span");
-          el.className = `piece ${piece.color}${piece.king ? " king" : ""}`;
+          const skin = this.cosmetics?.equipped?.pieceSkin || "skin_classic";
+          el.className = `piece ${piece.color}${piece.king ? " king" : ""} piece-skin-${skin.replace("skin_", "")}`;
           if (piece.shieldTurns > 0) el.classList.add("shielded");
           if (piece.frozenTurns > 0) el.classList.add("frozen");
           if (piece.paralyzedTurns > 0) el.classList.add("paralyzed-mark");

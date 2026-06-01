@@ -36,6 +36,10 @@
         <span class="tab-btn__icon" aria-hidden="true">▣</span>
         <span>Decks</span>
       </button>
+      <button type="button" class="tab-btn game-nav__btn" data-tab="profile" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">☺</span>
+        <span>Profile</span>
+      </button>
       <button type="button" class="tab-btn game-nav__btn" data-tab="chests" role="tab">
         <span class="tab-btn__icon" aria-hidden="true">◇</span>
         <span>Vault</span>
@@ -47,6 +51,8 @@
     </nav>
 
     <main class="game-main">
+            <div id="view-profile" class="view view-panel hidden"></div>
+
       <div id="view-chests" class="view view-panel hidden">
         <section class="panel game-panel vault-panel">
           <header class="panel-head">
