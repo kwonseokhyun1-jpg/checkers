@@ -113,7 +113,7 @@ SPELLS = [
     ("mirror_move", "Mirror Move", "After opponent moves, copy their move pattern with your piece if legal.", "rare", 3, "instant", "mirror_move"),
     ("time_slip", "Time Slip", "Undo your last checkers move (once per game).", "epic", 1, "instant", "time_slip"),
     ("parallel", "Parallel", "Play one additional card this turn.", "rare", 3, "instant", "parallel"),
-    ("counterspell", "Counterspell", "Cancel the next enemy card played.", "uncommon", 5, "instant", "counterspell"),
+    ("counterspell", "Counterspell", "Set a hidden trap: the next enemy spell is auto-cancelled when they cast it.", "uncommon", 5, "instant", "counterspell"),
     ("echo", "Echo", "Repeat the last card you played.", "rare", 3, "instant", "echo"),
     ("roulette", "Roulette", "Random card effect hits a random valid target.", "epic", 2, "instant", "roulette"),
     # === MULTI ===
