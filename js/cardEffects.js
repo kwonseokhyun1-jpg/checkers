@@ -37,6 +37,9 @@ export function getCardHint(card) {
     empty_empty: "Click two empty dark squares.",
     discard_pick: "Choose a card from your hand to discard.",
   };
+  if (card.effect === "counterspell" || card.id === "counterspell") {
+    return "Hidden trap — cancels their next spell when they cast it.";
+  }
   return hints[card.mode] || "Click valid targets on the board.";
 }
 

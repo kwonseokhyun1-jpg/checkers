@@ -28,9 +28,10 @@ import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
 import { boardFrameHtml } from "./board.js";
 import { renderSpellCardEl } from "./cardArt.js";
-import { showCardPreview, bindCardPreviewModal } from "./cardPreview.js";
+import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardPreview.js";
 import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
 import { playChestOpenAnimation } from "./chestOpenAnimation.js";
+import { getBuyCost, tryBuyCardCopy } from "./cardShop.js";
 
 let profile = loadProfile();
 let activeTab = "deck";
@@ -42,11 +43,70 @@ let viewingDeckId = null;
 let workingDeck = [];
 let collectionFilter = "";
 let collectionRarity = "all";
+let collectionSort = "rarity-desc";
+
+const RARITY_RANK = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
+
+function sortCollectionCards(cards) {
+  return [...cards].sort((a, b) => {
+    const ra = RARITY_RANK[a.rarity] ?? 0;
+    const rb = RARITY_RANK[b.rarity] ?? 0;
+    if (ra !== rb) return collectionSort === "rarity-asc" ? ra - rb : rb - ra;
+    return a.name.localeCompare(b.name);
+  });
+}
 let matchSession = null;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
 /** @type {string[]|null} */
 let pendingEnemyDeck = null;
+
+const RARITY_RANK = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
+
+function rarityRank(def) {
+  return RARITY_RANK[def?.rarity] ?? 0;
+}
+
+/** Unique cards in deck, rarest first */
+function getDeckStacks(cardIds) {
+  const counts = countById(cardIds);
+  return Object.entries(counts)
+    .map(([id, count]) => ({ def: getCardDef(id), count }))
+    .filter((x) => x.def)
+    .sort((a, b) => {
+      const dr = rarityRank(b.def) - rarityRank(a.def);
+      if (dr !== 0) return dr;
+      return a.def.name.localeCompare(b.def.name);
+    });
+}
+
+function removeOneFromDeck(cardId) {
+  const i = workingDeck.indexOf(cardId);
+  if (i < 0) return;
+  workingDeck.splice(i, 1);
+  renderDeckEditor();
+}
+
+function autoFinishDeck() {
+  const candidates = getPlayableCards()
+    .map((def) => ({ def, owned: collectionCount(profile, def.id) }))
+    .filter((x) => x.owned > 0)
+    .sort((a, b) => {
+      const dr = rarityRank(b.def) - rarityRank(a.def);
+      if (dr !== 0) return dr;
+      return a.def.name.localeCompare(b.def.name);
+    });
+
+  workingDeck = [];
+  for (const { def, owned } of candidates) {
+    const copies = Math.min(owned, MAX_COPIES_PER_CARD);
+    for (let i = 0; i < copies && workingDeck.length < DECK_SIZE; i++) {
+      workingDeck.push(def.id);
+    }
+    if (workingDeck.length >= DECK_SIZE) break;
+  }
+  renderDeckEditor();
+}
 
 const $ = (id) => document.getElementById(id);
 
@@ -188,7 +248,7 @@ function renderChests() {
 
 function getFilteredCollection() {
   const playable = getPlayableCards();
-  return playable.filter((c) => {
+  const filtered = playable.filter((c) => {
     if (collectionRarity !== "all" && c.rarity !== collectionRarity) return false;
     if (collectionFilter) {
       const q = collectionFilter.toLowerCase();
@@ -196,7 +256,116 @@ function getFilteredCollection() {
     }
     return collectionCount(profile, c.id) > 0;
   });
+  return sortCollectionCards(filtered);
 }
+
+function buyCardFromInventory(cardId, statusEl) {
+  const res = tryBuyCardCopy(profile, cardId);
+  if (statusEl) {
+    statusEl.textContent = res.message;
+    statusEl.className = res.success ? "inventory-status inventory-status--ok" : "inventory-status inventory-status--warn";
+  }
+  if (res.success) {
+    updateGemHeader();
+    if (deckSubview === "list") renderDeckList();
+    if (deckSubview === "edit") renderDeckEditor();
+  }
+  return res;
+}
+
+/**
+ * @param {HTMLElement|null} container
+ * @param {{ deckEdit?: boolean, statusEl?: HTMLElement|null }} opts
+ */
+function renderInventoryGrid(container, opts = {}) {
+  if (!container) return;
+  const { deckEdit = false, statusEl = null } = opts;
+  container.innerHTML = "";
+
+  for (const def of getFilteredCollection()) {
+    const owned = collectionCount(profile, def.id);
+    const cost = getBuyCost(def.rarity);
+    const canAfford = profile.gems >= cost;
+    const wrap = document.createElement("div");
+    wrap.className = "collection-card-wrap";
+
+    const buyOne = () => buyCardFromInventory(def.id, statusEl);
+
+    const openInspect = () => {
+      const inDeck = deckEdit ? countById(workingDeck)[def.id] || 0 : 0;
+      const addCheck = deckEdit ? canAddCardToDeck(workingDeck, def.id, profile) : { ok: false };
+      showCardPreview(def, {
+        meta: deckEdit
+          ? `Owned ${owned} · In deck ${inDeck}/${MAX_COPIES_PER_CARD} · ${cost} gems per copy`
+          : `Owned ${owned} · ${cost} gems per copy`,
+        buyLabel: `Buy copy (${cost} gems)`,
+        buyDisabled: !canAfford,
+        onBuy: () => {
+          buyOne();
+          closeCardPreview();
+        },
+        addDisabled: !addCheck.ok,
+        onAdd: deckEdit
+          ? () => {
+              if (!addCheck.ok) return;
+              workingDeck.push(def.id);
+              renderDeckEditor();
+              closeCardPreview();
+            }
+          : undefined,
+      });
+    };
+
+    const card = renderSpellCardEl(def, {
+      button: true,
+      onClick: (e) => {
+        if (e.shiftKey) {
+          openInspect();
+          return;
+        }
+        buyOne();
+      },
+    });
+    card.title = `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
+    wrap.appendChild(card);
+
+    const ownedBadge = document.createElement("span");
+    ownedBadge.className = "collection-owned-count";
+    ownedBadge.textContent = `×${owned}`;
+    wrap.appendChild(ownedBadge);
+
+    const costBadge = document.createElement("span");
+    costBadge.className = "collection-buy-cost";
+    costBadge.textContent = `${cost} ◆`;
+    if (!canAfford) costBadge.classList.add("collection-buy-cost--cant");
+    wrap.appendChild(costBadge);
+
+    if (deckEdit) {
+      const inDeck = countById(workingDeck)[def.id] || 0;
+      const addCheck = canAddCardToDeck(workingDeck, def.id, profile);
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "btn-add-to-deck";
+      addBtn.title = addCheck.ok ? "Add to deck" : addCheck.reason;
+      addBtn.textContent = "+";
+      addBtn.disabled = !addCheck.ok;
+      addBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!addCheck.ok) {
+          const deckStatus = $("deck-status");
+          if (deckStatus) deckStatus.textContent = addCheck.reason;
+          return;
+        }
+        workingDeck.push(def.id);
+        renderDeckEditor();
+      });
+      wrap.appendChild(addBtn);
+    }
+
+    container.appendChild(wrap);
+  }
+}
+
 
 function openDeckView(deckId) {
   viewingDeckId = deckId;
@@ -206,6 +375,9 @@ function openDeckView(deckId) {
 function renderDeckList() {
   updateGemHeader();
   const list = $("deck-list");
+  const invGrid = $("inventory-grid");
+  const invStatus = $("inventory-status");
+  if (invGrid) renderInventoryGrid(invGrid, { deckEdit: false, statusEl: invStatus });
   if (!list) return;
   list.innerHTML = "";
 
@@ -251,12 +423,16 @@ function renderDeckView() {
   }
 
   grid.innerHTML = "";
-  for (const id of deck.cardIds) {
-    const def = getCardDef(id);
-    if (def) {
-      const card = renderSpellCardEl(def, { button: true, onClick: () => showCardPreview(def) });
-      grid.appendChild(card);
-    }
+  for (const { def, count } of getDeckStacks(deck.cardIds)) {
+    const card = renderSpellCardEl(def, {
+      button: true,
+      meta: count > 1 ? `×${count}` : undefined,
+      onClick: () =>
+        showCardPreview(def, {
+          meta: count > 1 ? `${count} copies in this deck` : "In your deck",
+        }),
+    });
+    grid.appendChild(card);
   }
 }
 
@@ -284,53 +460,10 @@ function renderDeckEditor() {
   const pct = Math.min(100, (workingDeck.length / DECK_SIZE) * 100);
   if (progressFill) progressFill.style.width = `${pct}%`;
 
-  collEl.innerHTML = "";
-  for (const def of getFilteredCollection()) {
-    const owned = collectionCount(profile, def.id);
-    const inDeck = countById(workingDeck)[def.id] || 0;
-    const addCheck = canAddCardToDeck(workingDeck, def.id, profile);
-    const wrap = document.createElement("div");
-    wrap.className = "collection-card-wrap";
-
-    const addToDeck = () => {
-      if (!addCheck.ok) {
-        if (status) status.textContent = addCheck.reason;
-        return;
-      }
-      workingDeck.push(def.id);
-      renderDeckEditor();
-    };
-
-    const card = renderSpellCardEl(def, {
-      button: true,
-      onClick: () => {
-        showCardPreview(def, {
-          meta: `Owned ${owned} · In deck ${inDeck}/${MAX_COPIES_PER_CARD}`,
-          addDisabled: !addCheck.ok,
-          onAdd: addToDeck,
-        });
-      },
-    });
-    wrap.appendChild(card);
-
-    const addBtn = document.createElement("button");
-    addBtn.type = "button";
-    addBtn.className = "btn-add-to-deck";
-    addBtn.title = addCheck.ok ? "Add to deck" : addCheck.reason;
-    addBtn.textContent = "+";
-    addBtn.disabled = !addCheck.ok;
-    addBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      addToDeck();
-    });
-    wrap.appendChild(addBtn);
-    collEl.appendChild(wrap);
-  }
+  renderInventoryGrid(collEl, { deckEdit: true, statusEl: status });
 
   deckEl.innerHTML = "";
-  workingDeck.forEach((id, i) => {
-    const def = getCardDef(id);
-    if (!def) return;
+  for (const { def, count } of getDeckStacks(workingDeck)) {
     const slot = document.createElement("div");
     slot.className = "deck-slot-wrap";
     const card = renderSpellCardEl(def, {
@@ -338,33 +471,36 @@ function renderDeckEditor() {
       small: true,
       onClick: () => {
         showCardPreview(def, {
-          meta: "In your deck",
-          onRemove: () => {
-            workingDeck.splice(i, 1);
-            renderDeckEditor();
-          },
+          meta: count > 1 ? `×${count} in your deck` : "In your deck",
+          onRemove: () => removeOneFromDeck(def.id),
         });
       },
     });
+    slot.appendChild(card);
+    if (count > 1) {
+      const badge = document.createElement("span");
+      badge.className = "deck-stack-count";
+      badge.textContent = `×${count}`;
+      slot.appendChild(badge);
+    }
     const rem = document.createElement("button");
     rem.type = "button";
     rem.className = "deck-slot-remove";
-    rem.setAttribute("aria-label", "Remove from deck");
+    rem.setAttribute("aria-label", "Remove one copy from deck");
     rem.textContent = "×";
     rem.addEventListener("click", (e) => {
       e.stopPropagation();
-      workingDeck.splice(i, 1);
-      renderDeckEditor();
+      removeOneFromDeck(def.id);
     });
-    slot.appendChild(card);
     slot.appendChild(rem);
     deckEl.appendChild(slot);
-  });
-  for (let i = workingDeck.length; i < DECK_SIZE; i++) {
-    const empty = document.createElement("div");
-    empty.className = "deck-slot-empty";
-    empty.textContent = "+";
-    deckEl.appendChild(empty);
+  }
+  const openSlots = DECK_SIZE - workingDeck.length;
+  if (openSlots > 0) {
+    const hint = document.createElement("p");
+    hint.className = "deck-slots-open";
+    hint.textContent = openSlots === 1 ? "1 open slot" : `${openSlots} open slots`;
+    deckEl.appendChild(hint);
   }
 }
 
@@ -633,18 +769,51 @@ function init() {
     showAdventureMap();
   });
 
+  const syncCollectionFilter = () => {
+    if (deckSubview === "edit") renderDeckEditor();
+    if (deckSubview === "list") renderDeckList();
+  };
   $("collection-search")?.addEventListener("input", (e) => {
     collectionFilter = e.target.value;
-    if (deckSubview === "edit") renderDeckEditor();
+    const inv = $("inventory-search");
+    if (inv && inv.value !== collectionFilter) inv.value = collectionFilter;
+    syncCollectionFilter();
+  });
+  $("inventory-search")?.addEventListener("input", (e) => {
+    collectionFilter = e.target.value;
+    const coll = $("collection-search");
+    if (coll && coll.value !== collectionFilter) coll.value = collectionFilter;
+    syncCollectionFilter();
   });
   $("collection-rarity")?.addEventListener("change", (e) => {
     collectionRarity = e.target.value;
-    if (deckSubview === "edit") renderDeckEditor();
+    const inv = $("inventory-rarity");
+    if (inv) inv.value = collectionRarity;
+    syncCollectionFilter();
+  });
+  $("inventory-rarity")?.addEventListener("change", (e) => {
+    collectionRarity = e.target.value;
+    const coll = $("collection-rarity");
+    if (coll) coll.value = collectionRarity;
+    syncCollectionFilter();
+  });
+  $("collection-sort")?.addEventListener("change", (e) => {
+    collectionSort = e.target.value;
+    const inv = $("inventory-sort");
+    if (inv) inv.value = collectionSort;
+    syncCollectionFilter();
+  });
+  $("inventory-sort")?.addEventListener("change", (e) => {
+    collectionSort = e.target.value;
+    const coll = $("collection-sort");
+    if (coll) coll.value = collectionSort;
+    syncCollectionFilter();
   });
   $("btn-clear-deck")?.addEventListener("click", () => {
     workingDeck = [];
     renderDeckEditor();
   });
+  $("btn-auto-finish-deck")?.addEventListener("click", autoFinishDeck);
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
   $("btn-back-adventure")?.addEventListener("click", showAdventureMap);
   $("btn-start-adventure")?.addEventListener("click", startAdventureMatch);

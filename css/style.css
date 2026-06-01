@@ -622,7 +622,7 @@ body {
   color: var(--text);
   flex: 1;
 }
-.deck-actions, .row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.deck-actions, .row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
 .label-sm { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.75rem; }
 .btn-lg { margin-top: 1rem; width: 100%; padding: 0.75rem; }
 .play-lobby { max-width: 420px; }
@@ -777,6 +777,14 @@ body {
   gap: 0.65rem;
   max-height: 560px;
   overflow-y: auto;
+}
+
+.deck-slots-open {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
 }
 .deck-slots-grid {
   display: grid;
@@ -1842,6 +1850,49 @@ body {
   background: linear-gradient(90deg, var(--accent-violet), var(--accent-gem));
   transition: width 0.2s ease;
 }
+
+.inventory-panel { margin-top: 1.25rem; }
+.inventory-status {
+  min-height: 1.25rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0.35rem 0 0.5rem;
+}
+.inventory-status--ok { color: var(--accent-gem); }
+.inventory-status--warn { color: #e8a85c; }
+.collection-buy-cost {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  z-index: 2;
+  padding: 0.12rem 0.4rem;
+  border-radius: 6px;
+  background: rgba(8, 12, 28, 0.9);
+  border: 1px solid var(--card-border);
+  color: var(--accent-gem);
+  font-family: var(--font-ui);
+  font-size: 0.68rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+.collection-buy-cost--cant {
+  color: #c97878;
+  opacity: 0.85;
+}
+.collection-owned-count {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 2;
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+  background: rgba(8, 12, 28, 0.85);
+  border: 1px solid var(--card-border);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  pointer-events: none;
+}
 .collection-card-wrap {
   position: relative;
 }
@@ -1868,6 +1919,22 @@ body {
 }
 .deck-slot-wrap {
   position: relative;
+}
+.deck-stack-count {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 2;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  background: rgba(8, 12, 28, 0.88);
+  border: 1px solid var(--card-border);
+  color: var(--accent-gem);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  pointer-events: none;
 }
 .deck-slot-remove {
   position: absolute;
@@ -2407,6 +2474,22 @@ body.chest-open-active {
 }
 
 /* Cull — weakest enemy execution */
+
+.board-frame--counterspell {
+  box-shadow: 0 0 0 2px rgba(180, 120, 255, 0.65), 0 0 28px rgba(140, 90, 255, 0.35);
+}
+.turn-banner--counterspell {
+  color: #e8d4ff;
+  text-shadow: 0 0 12px rgba(180, 120, 255, 0.8);
+  animation: counterspell-flash 0.6s ease-in-out 2;
+}
+.match-wrap--counterspell .board-frame {
+  filter: saturate(1.15);
+}
+@keyframes counterspell-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
 .board-frame--cull {
   box-shadow: 0 0 36px rgba(180, 40, 40, 0.35);
 }

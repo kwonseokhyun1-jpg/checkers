@@ -55,8 +55,9 @@ export function runAiTurn(state, opponentName = "Opponent") {
     if (playable.length && Math.random() < 0.7) {
       const card = playable[Math.floor(Math.random() * playable.length)];
       const idx = hand.indexOf(card);
-      const res = tryAutoPlay(state, color, card);
-      if (res.success) {
+      const trapped = !!state.meta.counterspell?.[COLORS.RED];
+      if (trapped) {
+        state.meta.counterspell[COLORS.RED] = false;
         hand.splice(idx, 1);
         state.spellPlayed.black = true;
         log.push({
@@ -66,13 +67,26 @@ export function runAiTurn(state, opponentName = "Opponent") {
           cardDesc: card.desc,
           cardEffect: card.effect,
           cardMode: card.mode,
-          picks: res.picks || [],
-          text: res.message || `Cast ${card.name}`,
-          ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
+          picks: [],
+          countered: true,
+          text: `Cast ${card.name}`,
         });
-        if (state.meta.counterspell?.[COLORS.RED]) {
-          state.meta.counterspell[COLORS.RED] = false;
-          log.push({ type: "message", text: "Your Counterspell cancels their magic!" });
+      } else {
+        const res = tryAutoPlay(state, color, card);
+        if (res.success) {
+          hand.splice(idx, 1);
+          state.spellPlayed.black = true;
+          log.push({
+            type: "spell",
+            cardName: card.name,
+            cardId: card.id,
+            cardDesc: card.desc,
+            cardEffect: card.effect,
+            cardMode: card.mode,
+            picks: res.picks || [],
+            text: res.message || `Cast ${card.name}`,
+            ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
+          });
         }
       }
     }

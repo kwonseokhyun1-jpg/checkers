@@ -100,3 +100,15 @@ export function tickMeta(state, color) {
     state.meta.pocket = null;
   }
 }
+
+/** If caster's spell is trapped by the opponent's armed Counterspell, consume it. */
+export function tryConsumeCounterspell(state, casterColor) {
+  const trapOwner = casterColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
+  if (!state.meta.counterspell?.[trapOwner]) return null;
+  state.meta.counterspell[trapOwner] = false;
+  return { trapOwner };
+}
+
+export function hasCounterspellArmed(state, color) {
+  return !!state.meta.counterspell?.[color];
+}

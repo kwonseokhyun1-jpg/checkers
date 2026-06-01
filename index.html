@@ -69,6 +69,29 @@
             <button type="button" id="btn-new-deck" class="btn-primary">+ New deck</button>
           </div>
           <div id="deck-list" class="deck-list"></div>
+          <section class="inventory-panel panel game-panel">
+            <header class="panel-head">
+              <h2 class="panel-head__title">Spell inventory</h2>
+              <p class="panel-head__desc">Tap a card you own to buy another copy (10 / 20 / 30 / 40 / 50 gems by rarity). Shift+click to inspect.</p>
+            </header>
+            <div class="filter-row">
+              <input type="search" id="inventory-search" class="input-text" placeholder="Search cards…" />
+                              <select id="inventory-sort" class="select-input">
+                  <option value="rarity-desc">Rarity: high → low</option>
+                  <option value="rarity-asc">Rarity: low → high</option>
+                </select>
+                <select id="inventory-rarity" class="select-input">
+                <option value="all">All rarities</option>
+                <option value="common">Common</option>
+                <option value="uncommon">Uncommon</option>
+                <option value="rare">Rare</option>
+                <option value="epic">Epic</option>
+                <option value="legendary">Legendary</option>
+              </select>
+            </div>
+            <p id="inventory-status" class="inventory-status" role="status"></p>
+            <div id="inventory-grid" class="collection-grid"></div>
+          </section>
         </section>
 
         <section id="deck-subview-view" class="deck-subview panel game-panel hidden">
@@ -91,7 +114,7 @@
           <div class="deck-builder">
             <div class="deck-controls panel game-panel">
               <h2 id="edit-deck-heading" class="panel-head__title">Edit deck</h2>
-              <p class="panel-head__desc">30 cards · max 3 copies · use + on collection cards or tap to preview</p>
+              <p class="panel-head__desc">30 cards · max 3 copies · tap collection cards to buy copies · + adds to deck</p>
               <input type="text" id="deck-name-input" class="input-text" placeholder="Deck name" value="My Deck" />
               <div class="deck-progress-wrap" aria-hidden="true">
                 <div id="deck-progress-bar" class="deck-progress-bar"><div id="deck-progress-fill" class="deck-progress-fill"></div></div>
@@ -100,6 +123,7 @@
               <div id="deck-slots" class="deck-slots-grid"></div>
               <div class="deck-actions">
                 <button type="button" id="btn-save-deck" class="btn-primary">Save deck</button>
+                <button type="button" id="btn-auto-finish-deck" class="btn-secondary" title="Fill with your rarest owned cards (max 3 each)">Auto finish</button>
                 <button type="button" id="btn-clear-deck" class="btn-secondary">Clear all</button>
               </div>
             </div>
@@ -107,6 +131,10 @@
               <h2 class="panel-head__title">Spell collection</h2>
               <div class="filter-row">
                 <input type="search" id="collection-search" class="input-text" placeholder="Search cards…" />
+                                <select id="collection-sort" class="select-input">
+                  <option value="rarity-desc">Rarity: high → low</option>
+                  <option value="rarity-asc">Rarity: low → high</option>
+                </select>
                 <select id="collection-rarity" class="select-input">
                   <option value="all">All rarities</option>
                   <option value="common">Common</option>
