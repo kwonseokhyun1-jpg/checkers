@@ -47,7 +47,9 @@ export function runAiTurn(state, opponentName = "Opponent") {
   const hand = state.hands.black;
   const log = [];
 
-  if (state.meta.blindNext?.[color]) {
+  if (state.meta.shatterSilenced?.[color]) {
+    log.push({ type: "message", text: `${opponentName} is reeling from Shatter — no spells this turn.` });
+  } else if (state.meta.blindNext?.[color]) {
     state.meta.blindNext[color] = false;
     log.push({ type: "message", text: `${opponentName} is blinded — skips spells.` });
   } else if (!state.spellPlayed.black && hand.length) {

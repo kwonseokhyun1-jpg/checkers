@@ -11,7 +11,7 @@ const TAGS = {
   crown: ["Instantly crown a friendly piece"],
   swap_friendly: ["Swap two friendly pieces"],
   quick_march: ["Same piece moves again after your step"],
-  destroy_unshielded: ["Destroy any unshielded enemy"],
+  destroy_unshielded: ["Destroy any unshielded enemy", "You cannot cast spells on your next turn"],
   blink_2: ["Teleport within 2 squares"],
   long_step: ["Leap 2 squares diagonally (no capture)"],
   sidestep: ["Step 1 square horizontally"],
