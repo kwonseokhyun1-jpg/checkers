@@ -204,9 +204,13 @@ function* pickSequences(state, color, card, max = 24) {
 export function tryAutoPlay(state, color, card) {
   for (const picks of pickSequences(state, color, card)) {
     const res = applyCard(state, color, card, picks);
-    if (res.success) return res;
+    if (res.success) return { ...res, picks: picks.map((p) => [...p]) };
   }
-  if (isInstant(card)) return applyCard(state, color, card, []);
+  if (isInstant(card)) {
+    const res = applyCard(state, color, card, []);
+    if (res.success) return { ...res, picks: [] };
+    return res;
+  }
   return { success: false, message: "No valid play" };
 }
 

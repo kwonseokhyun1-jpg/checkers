@@ -27,7 +27,12 @@ import { showCardPreview } from "./cardPreview.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
 import { buildAiDeck } from "./deckRules.js";
 import { starsForRemainingPieces, formatStars } from "./adventure.js";
-import { findCullTarget, CULL_ANIMATION_MS } from "./cullAnimation.js";
+import {
+  findCullTarget,
+  cullVictimSnapshot,
+  buildAnimSpec,
+  MIN_SPELL_ANIM_MS,
+} from "./spellAnimations.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -105,6 +110,7 @@ export class MatchSession {
     this._suppressClick = false;
     this.aiHighlight = null;
     this.cullAnimation = null;
+    this.spellAnimation = null;
     this.actionBusy = false;
     this.bindEls();
     this.beginPlayerTurn();
@@ -218,19 +224,7 @@ export class MatchSession {
     if (!this.canPlaySpells()) return false;
 
     if (isInstant(card)) {
-      if (card.effect === "cull") {
-        void this.castInstantCull(card);
-        return true;
-      }
-      const res = playInstant(this.state, COLORS.RED, card);
-      if (!res.success) {
-        this.setMessage(res.message);
-        return false;
-      }
-      this.removeCardFromHand(card);
-      this.state.spellPlayed.red = true;
-      this.setMessage(res.message);
-      this.render();
+      void this.castInstantSpell(card);
       return true;
     }
 
@@ -270,16 +264,17 @@ export class MatchSession {
       this.render();
       return;
     }
-    const res = applyCard(this.state, COLORS.RED, card, picks);
-    if (!res.success) {
-      picks.pop();
-      this.setMessage(res.message);
-      this.validTargets = getValidTargets(this.state, COLORS.RED, card, picks);
-      this.updateSpellCastUI();
-      this.render();
-      return;
-    }
-    this.finishCardPlay(res.message);
+    void this.resolveTargetedSpell(card, [...picks]).then((res) => {
+      if (!res.success) {
+        picks.pop();
+        this.setMessage(res.message);
+        this.validTargets = getValidTargets(this.state, COLORS.RED, card, picks);
+        this.updateSpellCastUI();
+        this.render();
+        return;
+      }
+      this.finishCardPlay(res.message);
+    });
   }
 
   squareAtPoint(clientX, clientY) {
@@ -541,6 +536,104 @@ ${starLine}`;
   }
 
 
+  squareInAnim(spec, row, col) {
+    if (!spec) return null;
+    const key = `${row},${col}`;
+    if (spec.from && spec.from[0] === row && spec.from[1] === col) return "from";
+    if (spec.to && spec.to[0] === row && spec.to[1] === col) return "to";
+    if (spec.lineSquares?.some(([r, c]) => r === row && c === col)) return "line";
+    if (spec.squares?.some(([r, c]) => r === row && c === col)) {
+      if (spec.type === "kill" || spec.type === "multi") return "kill";
+      if (spec.type === "debuff") return "debuff";
+      if (spec.type === "buff") return "buff";
+      if (spec.type === "terrain") return "terrain";
+      if (spec.type === "swap") return "swap";
+      if (spec.type === "move") return "move";
+      return "hit";
+    }
+    return null;
+  }
+
+  async runSpellAnimation(spec) {
+    if (!spec || spec.type === "cull") return;
+    this.spellAnimation = spec;
+    const frame = this.$("board")?.closest(".board-frame");
+    frame?.classList.add(`board-frame--spell-${spec.type}`);
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = spec.label ? `${spec.label}…` : "Spell resolves…";
+      banner.className = `turn-banner spell-anim-${spec.type}`;
+    }
+    this.render();
+    await delay(spec.duration ?? MIN_SPELL_ANIM_MS);
+    this.spellAnimation = null;
+    frame?.classList.remove(`board-frame--spell-${spec.type}`);
+    if (banner) banner.classList.remove(`spell-anim-${spec.type}`);
+  }
+
+  async playCullAnimation(row, col, victim = null) {
+    const piece = this.state.board[row]?.[col];
+    const snap = victim || (piece ? cullVictimSnapshot(piece) : null);
+    this.cullAnimation = { row, col, victim: snap };
+    const frame = this.$("board")?.closest(".board-frame");
+    frame?.classList.add("board-frame--cull");
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = "Cull — the weakest falls…";
+      banner.className = "turn-banner cull-casting";
+    }
+    this.render();
+    await delay(2000);
+    this.cullAnimation = null;
+    frame?.classList.remove("board-frame--cull");
+    if (banner) banner.classList.remove("cull-casting");
+  }
+
+  async applySpellWithAnimation(card, picks) {
+    if (card.effect === "cull") {
+      const target = findCullTarget(this.state, COLORS.RED);
+      if (!target) return { success: false, message: "No enemy to cull." };
+      const victim = cullVictimSnapshot(target);
+      await this.playCullAnimation(target.row, target.col, victim);
+      return applyCard(this.state, COLORS.RED, card, picks);
+    }
+    const spec = buildAnimSpec(card, picks, COLORS.RED);
+    await this.runSpellAnimation(spec);
+    return applyCard(this.state, COLORS.RED, card, picks);
+  }
+
+  async castInstantSpell(card) {
+    if (this.actionBusy || this.state.spellPlayed.red) return;
+    if (!this.canPlaySpells()) return;
+    this.actionBusy = true;
+    this.cancelCardPlay();
+    try {
+      const res = await this.applySpellWithAnimation(card, []);
+      if (!res.success) {
+        this.setMessage(res.message || "Spell failed.");
+        return;
+      }
+      this.removeCardFromHand(card);
+      this.state.spellPlayed.red = true;
+      this.setMessage(res.message || "Spell cast.");
+      if (this.checkWin()) return;
+      this.render();
+    } finally {
+      this.actionBusy = false;
+    }
+  }
+
+  async resolveTargetedSpell(card, picks) {
+    this.actionBusy = true;
+    try {
+      const res = await this.applySpellWithAnimation(card, picks);
+      return res;
+    } finally {
+      this.actionBusy = false;
+    }
+  }
+
+
   showAiSpellBanner(cardName, cardDesc) {
     const banner = this.$("ai-spell-banner");
     const title = this.$("ai-spell-banner-title");
@@ -598,7 +691,16 @@ ${starLine}`;
           const [cr, cc] = entry.cullTarget;
           await this.playCullAnimation(cr, cc, entry.cullVictim || null);
         } else {
-          await delay(AI_PACE.spellShow);
+          const spec = buildAnimSpec(
+            {
+              effect: entry.cardEffect,
+              mode: entry.cardMode || def?.mode || "instant",
+              name: cardName,
+            },
+            entry.picks || [],
+            COLORS.BLACK
+          );
+          await this.runSpellAnimation(spec);
         }
 
         this.$("board")?.classList.remove("board--ai-spell");
@@ -620,6 +722,7 @@ ${starLine}`;
         await delay(AI_PACE.move);
         this.aiHighlight = null;
     this.cullAnimation = null;
+    this.spellAnimation = null;
     this.actionBusy = false;
         this.render();
       } else if (entry.type === "message") {
@@ -769,6 +872,12 @@ ${starLine}`;
           sq.classList.add("cull-execution");
         }
 
+        const animRole = this.squareInAnim(this.spellAnimation, row, col);
+        if (animRole) {
+          sq.classList.add(`spell-anim-${animRole}`);
+          if (this.spellAnimation?.type) sq.classList.add(`spell-anim-type-${this.spellAnimation.type}`);
+        }
+
         const piece = s.board[row][col];
         if (piece) {
           const el = document.createElement("span");
@@ -784,6 +893,8 @@ ${starLine}`;
             this.cullAnimation.col === col
           ) {
             el.classList.add("piece--cull-victim");
+          } else if (animRole === "kill" && this.spellAnimation?.type === "kill") {
+            el.classList.add("piece--spell-kill-victim");
           }
           sq.appendChild(el);
         } else if (
