@@ -173,7 +173,7 @@ function buildEffectListHtml(def) {
 export function renderSpellCardEl(def, opts = {}) {
   const theme = inferTheme(def);
   const hue = cardHue(def.id);
-  const style = THEME_STYLES[theme];
+  const style = THEME_STYLES[theme] || THEME_STYLES.arcane;
   const size = resolveSize(opts);
   const showDesc = size !== "tiny";
   const tag = opts.button ? "button" : "div";

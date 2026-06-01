@@ -6,6 +6,11 @@ import {
   isKnightCard,
   getCardDef,
 } from "./cardCatalog.js";
+
+function ownedCopies(profile, cardId) {
+  return profile?.collection?.[cardId] || 0;
+}
+
 export function countById(cardIds) {
   const map = {};
   for (const id of cardIds) {
