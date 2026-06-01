@@ -13,6 +13,7 @@ const TAGS = {
   quick_march: ["Same piece moves again after your step"],
   offering: ["Sacrifice your piece to draw 2 cards from deck"],
   destroy_unshielded: ["Destroy any unshielded enemy", "You cannot cast spells on your next turn"],
+  revive: ["Requires a captured friendly piece", "Place on any empty dark square", "Revived piece cannot capture this turn"],
   blink_2: ["Teleport within 2 squares"],
   long_step: ["Leap 2 squares diagonally (no capture)"],
   sidestep: ["Step 1 square horizontally"],

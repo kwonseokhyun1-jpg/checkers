@@ -66,7 +66,7 @@ export const CARD_REGISTRY = [
   { id: "last_stand", name: "Last Stand", desc: "If this piece would be captured this turn, it survives with shield for 1 turn instead.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "last_stand" },
   { id: "decoy", name: "Decoy", desc: "Place a decoy on an empty dark square; blocks one enemy move then vanishes.", rarity: "common", weight: 5, mode: "empty", effect: "decoy" },
   { id: "iron_will", name: "Iron Will", desc: "A frozen or rooted friendly piece may move once (consumes debuff).", rarity: "common", weight: 5, mode: "friendly", effect: "iron_will" },
-  { id: "revive", name: "Revive", desc: "Return a captured man to any empty square in your back 3 rows.", rarity: "legendary", weight: 1, mode: "empty", effect: "revive" },
+  { id: "revive", name: "Revive", desc: "Return your most recently captured man to any empty dark square. It cannot capture on the turn it returns.", rarity: "legendary", weight: 1, mode: "empty", effect: "revive" },
   { id: "ghost_guard", name: "Ghost Guard", desc: "When a friendly piece is captured, its square blocks enemies for 2 turns.", rarity: "rare", weight: 3, mode: "friendly", effect: "ghost_guard" },
   { id: "fortify", name: "Fortify", desc: "Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.", rarity: "rare", weight: 3, mode: "friendly", effect: "fortify" },
   { id: "deep_freeze", name: "Deep Freeze", desc: "Freeze every enemy on one diagonal through your piece for 2 turns.", rarity: "epic", weight: 2, mode: "friendly", effect: "deep_freeze" },

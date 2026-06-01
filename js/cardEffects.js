@@ -55,6 +55,7 @@ function emptyDark(state, r, c) {
 }
 
 export function getValidTargets(state, color, card, picks) {
+  if (card.effect === "revive" && !(state.captured?.[color]?.length)) return [];
   const o = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
   const res = [];
 

@@ -1896,6 +1896,10 @@ body {
 .board--ai-spell {
   animation: board-spell-flash 0.9s ease;
 }
+.piece.revived-mark {
+  box-shadow: 0 0 0 2px rgba(120, 200, 255, 0.85), 0 0 12px rgba(80, 160, 255, 0.45);
+}
+
 .piece.bomb-armed::after {
   content: "💣";
   position: absolute;

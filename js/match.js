@@ -392,8 +392,9 @@ export class MatchSession {
   }
 
   attachCardInput(el, card, canPlay) {
-    const canCast = canPlay && this.canPlaySpells();
     const s = this.state;
+    const hasTargets = isInstant(card) || getValidTargets(s, COLORS.RED, card, []).length > 0;
+    const canCast = canPlay && this.canPlaySpells() && hasTargets;
     el.classList.toggle("disabled", !canCast);
     if (!canCast) {
       el.title =
@@ -403,7 +404,9 @@ export class MatchSession {
             ? "Shatter backlash — no spells this turn"
             : s.spellPlayed.red
               ? "Already cast a spell this turn"
-              : "Spells unavailable";
+              : !hasTargets
+                ? "No valid targets for this spell"
+                : "Spells unavailable";
       return;
     }
     el.title = canCast
@@ -922,12 +925,14 @@ ${starLine}`;
     handEl.classList.toggle("spell-hand--locked", !canPlay);
 
     for (const card of s.hands.red) {
+      const playable =
+        canPlay && (isInstant(card) || getValidTargets(s, COLORS.RED, card, []).length > 0);
       const el = renderSpellCardEl(card, {
         button: true,
         compact: true,
         fullDesc: true,
         selected: castingId === card.instanceId,
-        disabled: !canPlay,
+        disabled: !playable,
       });
       this.attachCardInput(el, card, canPlay);
       handEl.appendChild(el);
@@ -1009,6 +1014,7 @@ ${starLine}`;
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
+          if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (
             this.cullAnimation &&
             this.cullAnimation.row === row &&

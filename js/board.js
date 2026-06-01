@@ -108,6 +108,7 @@ export function createPiece(color, row, col, king = false) {
     twinId: null,
     chameleonFrom: null,
     chameleonTurns: 0,
+    revivedNoCapture: false,
   };
 }
 
@@ -167,6 +168,7 @@ function squareBlocked(state, r, c) {
 const KNIGHT_OFFSETS = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
 
 export function getKnightMoves(board, piece, state, canCapture = false) {
+  if (piece.revivedNoCapture) canCapture = false;
   const moves = [];
   for (const [dr, dc] of KNIGHT_OFFSETS) {
     const nr = piece.row + dr, nc = piece.col + dc;
@@ -254,6 +256,7 @@ export function getStepMoves(board, piece, color, state = null) {
 
 export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
+  if (piece.revivedNoCapture) return moves;
   if (isFrozen(piece) || piece.rooted > 0 || piece.fortifyTurns > 0) return moves;
   if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
   if (hasKnightSigil(piece) && piece.knightCapture)
@@ -387,6 +390,7 @@ export function tickEffects(board, color, state = null) {
       if (p.panicTurn) { p.panicTurn = false; }
       if (p.pawnZeal) p.pawnZeal = false;
       if (p.promoteZone) p.promoteZone = false;
+      if (p.revivedNoCapture) p.revivedNoCapture = false;
     }
   }
   if (state?.squares) {
