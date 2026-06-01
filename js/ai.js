@@ -13,7 +13,7 @@ function scoreBoard(board, aiColor) {
       const sign = p.color === aiColor ? 1 : -1;
       score += 10 * sign;
       if (p.king) score += 4 * sign;
-      if (p.isKnight) score += 3 * sign;
+      if (p.knightTurns > 0 || p.isKnight) score += 3 * sign;
       if (p.shieldTurns) score += 2 * sign;
     }
   }
