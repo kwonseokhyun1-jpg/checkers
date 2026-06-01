@@ -23,6 +23,7 @@ import {
 } from "./cardEffects.js";
 import { runAiTurn } from "./ai.js";
 import { MAX_HAND, DRAW_EVERY_TURNS, START_HAND } from "./cardCatalog.js";
+import { renderSpellCardEl } from "./cardArt.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
 import { buildAiDeck } from "./deckRules.js";
 
@@ -151,6 +152,11 @@ export class MatchSession {
     this.validTargets = getValidTargets(this.state, COLORS.RED, card, []);
     const modal = this.root.querySelector("#card-modal");
     if (modal) {
+      const preview = this.root.querySelector("#modal-card-preview");
+      if (preview) {
+        preview.innerHTML = "";
+        preview.appendChild(renderSpellCardEl(card, { compact: true }));
+      }
       this.root.querySelector("#modal-title").textContent = card.name;
       this.root.querySelector("#modal-desc").textContent = card.desc;
       this.root.querySelector("#modal-hint").textContent = getCardHint(card);
@@ -358,15 +364,15 @@ export class MatchSession {
       s.turn === COLORS.RED && s.phase === PHASE.CARDS && !s.gameOver && !s.spellPlayed.red;
 
     for (const card of s.hands.red) {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = `card-mini ${card.rarity || "common"}`;
-      btn.innerHTML = `<span class="card-name">${card.name}</span><span class="card-desc">${card.desc}</span>`;
-      if (!canPlay) btn.classList.add("disabled");
-      btn.addEventListener("click", () => {
-        if (canPlay) this.startCardPlay(card);
+      const el = renderSpellCardEl(card, {
+        button: true,
+        compact: true,
+        disabled: !canPlay,
+        onClick: () => {
+          if (canPlay) this.startCardPlay(card);
+        },
       });
-      handEl.appendChild(btn);
+      handEl.appendChild(el);
     }
 
     const opp = this.$("hand-black");

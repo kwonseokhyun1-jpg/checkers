@@ -19,7 +19,7 @@
 
     <nav class="tabs" role="tablist">
       <button type="button" class="tab-btn active" data-tab="chests" role="tab">Chests</button>
-      <button type="button" class="tab-btn" data-tab="deck" role="tab">Deck Builder</button>
+      <button type="button" class="tab-btn" data-tab="deck" role="tab">Decks</button>
       <button type="button" class="tab-btn" data-tab="play" role="tab">Play</button>
     </nav>
 
@@ -28,41 +28,61 @@
         <h2>Open chests</h2>
         <p class="meta-desc">Spend gems to expand your collection. Economy spells are disabled and never drop from chests.</p>
         <div id="chest-list" class="chest-list"></div>
+        <div id="chest-pulls" class="chest-pulls"></div>
         <p id="chest-log" class="chest-log" role="status"></p>
       </section>
     </div>
 
     <div id="view-deck" class="view hidden">
-      <section class="deck-builder">
-        <div class="deck-controls panel">
-          <h2>Your deck</h2>
-          <p class="meta-desc">30 cards · max 3 copies each · economy spells cannot be added</p>
-          <input type="text" id="deck-name-input" class="input-text" placeholder="Deck name" value="My Deck" />
-          <p id="deck-status" class="deck-status warn">0/30 cards</p>
-          <div id="deck-slots" class="deck-slots"></div>
-          <div class="deck-actions">
-            <button type="button" id="btn-save-deck" class="btn-primary">Save deck</button>
-            <button type="button" id="btn-clear-deck" class="btn-secondary">Clear</button>
+      <!-- Default: deck list -->
+      <section id="deck-subview-list" class="deck-subview panel meta-panel">
+        <div class="deck-list-header">
+          <div>
+            <h2>Your decks</h2>
+            <p class="meta-desc">Build a 30-card deck (max 3 copies each) before playing.</p>
           </div>
-          <label class="label-sm">Load deck</label>
-          <div class="row">
-            <select id="saved-decks" class="select-input"></select>
-            <button type="button" id="btn-delete-deck" class="btn-secondary">Delete</button>
-          </div>
+          <button type="button" id="btn-new-deck" class="btn-primary">+ New deck</button>
         </div>
-        <div class="collection-panel panel">
-          <h2>Collection</h2>
-          <div class="filter-row">
-            <input type="search" id="collection-search" class="input-text" placeholder="Search cards…" />
-            <select id="collection-rarity" class="select-input">
-              <option value="all">All rarities</option>
-              <option value="common">Common</option>
-              <option value="uncommon">Uncommon</option>
-              <option value="rare">Rare</option>
-              <option value="epic">Epic</option>
-            </select>
+        <div id="deck-list" class="deck-list"></div>
+      </section>
+
+      <!-- View deck (read-only) -->
+      <section id="deck-subview-view" class="deck-subview panel hidden">
+        <button type="button" id="btn-back-from-view" class="btn-text">← Back to decks</button>
+        <h2 id="view-deck-title">Deck</h2>
+        <p id="view-deck-status" class="deck-status"></p>
+        <div id="view-deck-cards" class="spell-card-grid readonly"></div>
+      </section>
+
+      <!-- Edit / create deck -->
+      <section id="deck-subview-edit" class="deck-subview hidden">
+        <button type="button" id="btn-back-from-edit" class="btn-text">← Back to decks</button>
+        <div class="deck-builder">
+          <div class="deck-controls panel">
+            <h2 id="edit-deck-heading">Edit deck</h2>
+            <p class="meta-desc">30 cards · max 3 copies · tap collection cards to add</p>
+            <input type="text" id="deck-name-input" class="input-text" placeholder="Deck name" value="My Deck" />
+            <p id="deck-status" class="deck-status warn">0/30 cards</p>
+            <div id="deck-slots" class="deck-slots-grid"></div>
+            <div class="deck-actions">
+              <button type="button" id="btn-save-deck" class="btn-primary">Save deck</button>
+              <button type="button" id="btn-clear-deck" class="btn-secondary">Clear all</button>
+            </div>
           </div>
-          <div id="collection-grid" class="collection-grid"></div>
+          <div class="collection-panel panel">
+            <h2>Collection</h2>
+            <div class="filter-row">
+              <input type="search" id="collection-search" class="input-text" placeholder="Search cards…" />
+              <select id="collection-rarity" class="select-input">
+                <option value="all">All rarities</option>
+                <option value="common">Common</option>
+                <option value="uncommon">Uncommon</option>
+                <option value="rare">Rare</option>
+                <option value="epic">Epic</option>
+              </select>
+            </div>
+            <div id="collection-grid" class="collection-grid"></div>
+          </div>
         </div>
       </section>
     </div>
@@ -78,6 +98,7 @@
           <li>Start with <strong>3 cards</strong> in hand (max <strong>5</strong>)</li>
           <li><strong>1 spell</strong> per turn, then move a piece</li>
           <li>Draw <strong>1 card every 2 turns</strong> from your deck</li>
+          <li>Win a match to earn <strong>10 gems</strong></li>
         </ul>
       </section>
     </div>
