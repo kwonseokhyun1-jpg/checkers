@@ -1,4 +1,4 @@
-import { isKnightCard } from "./cardCatalog.js";
+import { isKnightCard, isRemovedCard, getCardDef } from "./cardCatalog.js";
 import { defaultAdventureProgress, migrateAdventureDecks } from "./adventure.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
@@ -10,7 +10,7 @@ export const WIN_GEMS = 10;
 function defaultProfile() {
   const collection = {};
   const starterIds = [
-    "nudge", "aegis", "frost", "bolt", "retreat", "swap", "long_step", "crown", "mine", "venom",
+    "nudge", "aegis", "sidestep", "bolt", "retreat", "swap", "long_step", "crown", "mine", "venom",
   ];
   for (const id of starterIds) collection[id] = 3;
   const cardIds = starterIds.flatMap((id) => [id, id, id]);
@@ -30,6 +30,18 @@ function defaultProfile() {
   };
 }
 
+
+function stripRemovedCards(profile) {
+  for (const id of Object.keys(profile.collection || {})) {
+    if (isRemovedCard(id) || !getCardDef(id)) delete profile.collection[id];
+  }
+  for (const deck of profile.decks || []) {
+    if (!Array.isArray(deck.cardIds)) continue;
+    deck.cardIds = deck.cardIds.filter((id) => !isRemovedCard(id) && getCardDef(id));
+  }
+  return profile;
+}
+
 function stripKnightCards(profile) {
   for (const id of Object.keys(profile.collection || {})) {
     if (isKnightCard(id)) delete profile.collection[id];
@@ -44,9 +56,9 @@ function stripKnightCards(profile) {
 export function loadProfile() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return stripKnightCards(defaultProfile());
+    if (!raw) return stripRemovedCards(stripKnightCards(defaultProfile()));
     const p = JSON.parse(raw);
-    return stripKnightCards({
+    return stripRemovedCards(stripKnightCards({
       gems: p.gems ?? STARTING_GEMS,
       collection: p.collection ?? {},
       decks: Array.isArray(p.decks) ? p.decks : [],
@@ -59,7 +71,7 @@ export function loadProfile() {
       })(),
     });
   } catch {
-    return stripKnightCards(defaultProfile());
+    return stripRemovedCards(stripKnightCards(defaultProfile()));
   }
 }
 

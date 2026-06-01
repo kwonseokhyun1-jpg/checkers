@@ -28,7 +28,33 @@ export const ECONOMY_CARD_IDS = new Set([
 ]);
 
 /** Knight-movement spells removed from the game */
-export const REMOVED_CARD_IDS = new Set(["wild_magic"]);
+export const REMOVED_CARD_IDS = new Set([
+  "wild_magic",
+  "frost",
+  "uno_reverse",
+  "coronation_day",
+  "gem_cache",
+  "bribery",
+  "prospect",
+  "tax",
+  "gamble",
+  "haggle",
+  "recycle",
+  "scout",
+  "forge",
+  "heist",
+  "donate",
+  "interest",
+  "bankrupt",
+  "coupon",
+  "hand_expand",
+  "mulligan",
+  "regicide",
+  "krabby_patty",
+  "loading",
+  "parallel",
+  "echo",
+]);
 
 export function isRemovedCard(cardOrId) {
   const id = typeof cardOrId === "string" ? cardOrId : cardOrId?.id;

@@ -43,6 +43,18 @@ let viewingDeckId = null;
 let workingDeck = [];
 let collectionFilter = "";
 let collectionRarity = "all";
+let collectionSort = "rarity-desc";
+
+const RARITY_RANK = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
+
+function sortCollectionCards(cards) {
+  return [...cards].sort((a, b) => {
+    const ra = RARITY_RANK[a.rarity] ?? 0;
+    const rb = RARITY_RANK[b.rarity] ?? 0;
+    if (ra !== rb) return collectionSort === "rarity-asc" ? ra - rb : rb - ra;
+    return a.name.localeCompare(b.name);
+  });
+}
 let matchSession = null;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
@@ -189,7 +201,7 @@ function renderChests() {
 
 function getFilteredCollection() {
   const playable = getPlayableCards();
-  return playable.filter((c) => {
+  const filtered = playable.filter((c) => {
     if (collectionRarity !== "all" && c.rarity !== collectionRarity) return false;
     if (collectionFilter) {
       const q = collectionFilter.toLowerCase();
@@ -197,6 +209,7 @@ function getFilteredCollection() {
     }
     return collectionCount(profile, c.id) > 0;
   });
+  return sortCollectionCards(filtered);
 }
 
 function buyCardFromInventory(cardId, statusEl) {
@@ -730,6 +743,18 @@ function init() {
     collectionRarity = e.target.value;
     const coll = $("collection-rarity");
     if (coll) coll.value = collectionRarity;
+    syncCollectionFilter();
+  });
+  $("collection-sort")?.addEventListener("change", (e) => {
+    collectionSort = e.target.value;
+    const inv = $("inventory-sort");
+    if (inv) inv.value = collectionSort;
+    syncCollectionFilter();
+  });
+  $("inventory-sort")?.addEventListener("change", (e) => {
+    collectionSort = e.target.value;
+    const coll = $("collection-sort");
+    if (coll) coll.value = collectionSort;
     syncCollectionFilter();
   });
   $("btn-clear-deck")?.addEventListener("click", () => {
