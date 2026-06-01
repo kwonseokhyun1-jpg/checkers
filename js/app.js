@@ -726,7 +726,7 @@ function getMatchHtml(opponentName = "Opponent") {
           <div class="pile-info">Deck: <span id="pile-count">0</span> left · Draw every 2 turns</div>
           <div class="hand-label">Hand <span id="hand-count">0/5</span></div>
           <div id="hand-red" class="hand spell-hand"></div>
-          <button id="btn-end-cards" type="button" class="btn-secondary">Done with spells → move</button>
+          <button id="btn-end-cards" type="button" class="btn-secondary">Done with spells → move (Enter)</button>
         </aside>
       </div>
       <div id="game-over" class="overlay hidden">

@@ -102,7 +102,10 @@ export class MatchSession {
     this.opponentName = options.opponentName || "Opponent";
     this.state = createMatchState(deckCardIds, options.aiDeckIds ?? null);
     this.root = rootEl;
-    this.onExit = onExit;
+    this.onExit = () => {
+      this.dispose();
+      onExit?.();
+    };
     this.onWin = onWin;
     this.winRewarded = false;
     this.cardPlay = null;
@@ -115,6 +118,7 @@ export class MatchSession {
     this.cullAnimation = null;
     this.spellAnimation = null;
     this.actionBusy = false;
+    this._onKeyDown = (e) => this.onKeyDown(e);
     this.bindEls();
     this.beginPlayerTurn();
     this.render();
@@ -131,6 +135,27 @@ export class MatchSession {
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
     this._onDocPointerMove = (e) => this.onDragMove(e);
     this._onDocPointerUp = (e) => this.onDragEnd(e);
+
+    document.addEventListener("keydown", this._onKeyDown);
+  }
+
+  dispose() {
+    document.removeEventListener("keydown", this._onKeyDown);
+    document.removeEventListener("pointermove", this._onDocPointerMove);
+    document.removeEventListener("pointerup", this._onDocPointerUp);
+    document.removeEventListener("pointercancel", this._onDocPointerUp);
+  }
+
+  onKeyDown(e) {
+    if (e.key !== "Enter" || e.repeat) return;
+    const tag = e.target?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target?.isContentEditable) return;
+    const s = this.state;
+    if (!s || s.gameOver || s.turn !== COLORS.RED || this.actionBusy) return;
+    if (s.phase === PHASE.CARDS) {
+      e.preventDefault();
+      this.beginMovePhase();
+    }
   }
 
   canPlaySpells() {

@@ -14,7 +14,7 @@ const TAGS = {
   blink_2: ["Teleport within 2 squares"],
   long_step: ["Leap 2 squares diagonally (no capture)"],
   sidestep: ["Step 1 square horizontally"],
-  mine: ["Trap on empty square — destroys lander"],
+  mine: ["Trap on empty square for 2 turns — destroys lander"],
   detonate: ["Destroy self + adjacent enemies"],
   venom: ["Poison — 2 ticks destroys target"],
   bomb: ["Arm friendly piece", "On next move: explodes", "Kills all adjacent pieces"],
