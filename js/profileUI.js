@@ -1,7 +1,7 @@
 import { COSMETIC_BOXES, COSMETIC_BY_ID, COSMETIC_TYPES, equipCosmetic, getEquippedCosmetics, openCosmeticBox } from "./cosmetics.js";
 import { COSMETIC_BOX_TIERS, cosmeticBoxSvgMarkup } from "./cosmeticArt.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
-import { renderAvatarPreview, bannerStyleFor } from "./cosmeticArt.js";
+import { renderAvatarPreview, bannerStyleFor, renderCosmeticPreviewHtml, cosmeticTypeLabel } from "./cosmeticArt.js";
 import { saveProfile } from "./storage.js";
 
 const RARITY_CLASS = {
@@ -88,18 +88,32 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
         <p class="panel-head__desc">Preview and equip avatars, banners, and piece skins unlocked from the Vault.</p>
       </header>
       <div class="profile-showcase">
-        <div class="profile-banner" id="profile-banner-preview" style="background:${bannerStyleFor(cos.equipped.banner)}"></div>
-        <div class="profile-avatar-wrap" id="profile-avatar-preview">${renderAvatarPreview(cos.equipped.avatar)}</div>
-        <div class="profile-showcase__meta">
-          <p class="profile-equipped-line"><strong>Avatar:</strong> ${avatar?.name || "—"}</p>
-          <p class="profile-equipped-line"><strong>Banner:</strong> ${banner?.name || "—"}</p>
-          <p class="profile-equipped-line"><strong>Piece skin:</strong> ${skin?.name || "—"}</p>
+        <div class="profile-showcase__banner" id="profile-banner-preview" style="background:${bannerStyleFor(cos.equipped.banner)}"></div>
+        <div class="profile-showcase__hero">
+          <div class="profile-avatar" id="profile-avatar-preview" aria-hidden="true">${renderAvatarPreview(cos.equipped.avatar)}</div>
+          <div class="profile-showcase__meta">
+            <p class="profile-showcase__title">Equipped loadout</p>
+            <ul class="profile-loadout">
+              <li class="profile-loadout__item">
+                <span class="profile-loadout__label">Avatar</span>
+                <span class="profile-loadout__value">${avatar?.name || "—"}</span>
+              </li>
+              <li class="profile-loadout__item">
+                <span class="profile-loadout__label">Banner</span>
+                <span class="profile-loadout__value">${banner?.name || "—"}</span>
+              </li>
+              <li class="profile-loadout__item">
+                <span class="profile-loadout__label">Pieces</span>
+                <span class="profile-loadout__value">${skin?.name || "—"}</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
       <h3 class="profile-section-title">Your collection</h3>
-      <div class="profile-cosmetic-filters">
+      <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
         ${COSMETIC_TYPES.map(
-          (t) => `<button type="button" class="btn-text profile-filter-btn" data-cos-filter="${t}">${t === "pieceSkin" ? "Piece skins" : t.charAt(0).toUpperCase() + t.slice(1)}</button>`
+          (t) => `<button type="button" class="profile-filter-btn" role="tab" data-cos-filter="${t}">${cosmeticTypeLabel(t) === "Piece skin" ? "Piece skins" : cosmeticTypeLabel(t) + "s"}</button>`
         ).join("")}
       </div>
       <div id="profile-cosmetic-grid" class="profile-cosmetic-grid"></div>
@@ -119,9 +133,21 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
     const meta = root.querySelector(".profile-showcase__meta");
     if (meta) {
       meta.innerHTML = `
-        <p class="profile-equipped-line"><strong>Avatar:</strong> ${av?.name || "—"}</p>
-        <p class="profile-equipped-line"><strong>Banner:</strong> ${bn?.name || "—"}</p>
-        <p class="profile-equipped-line"><strong>Piece skin:</strong> ${sk?.name || "—"}</p>`;
+        <p class="profile-showcase__title">Equipped loadout</p>
+        <ul class="profile-loadout">
+          <li class="profile-loadout__item">
+            <span class="profile-loadout__label">Avatar</span>
+            <span class="profile-loadout__value">${av?.name || "—"}</span>
+          </li>
+          <li class="profile-loadout__item">
+            <span class="profile-loadout__label">Banner</span>
+            <span class="profile-loadout__value">${bn?.name || "—"}</span>
+          </li>
+          <li class="profile-loadout__item">
+            <span class="profile-loadout__label">Pieces</span>
+            <span class="profile-loadout__value">${sk?.name || "—"}</span>
+          </li>
+        </ul>`;
     }
   };
 
@@ -135,10 +161,11 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
       const card = document.createElement("button");
       card.type = "button";
       card.className = `profile-cosmetic-card ${RARITY_CLASS[item.rarity] || ""} ${equipped ? "profile-cosmetic-card--equipped" : ""}`;
+      const preview = renderCosmeticPreviewHtml(id, item.type);
       card.innerHTML = `
         <span class="profile-cosmetic-card__rarity">${item.rarity}</span>
+        <div class="profile-cosmetic-card__art">${preview}</div>
         <strong class="profile-cosmetic-card__name">${item.name}</strong>
-        <span class="profile-cosmetic-card__type">${item.type}</span>
         <span class="profile-cosmetic-card__action">${equipped ? "Equipped" : "Equip"}</span>`;
       card.addEventListener("click", () => {
         const res = equipCosmetic(profile, filter, id);

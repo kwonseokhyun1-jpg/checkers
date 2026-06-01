@@ -146,12 +146,29 @@ export function bannerStyleFor(id) {
   return map[id] || map.banner_default;
 }
 
+export function cosmeticTypeLabel(type) {
+  if (type === "pieceSkin") return "Piece skin";
+  if (type === "avatar") return "Avatar";
+  if (type === "banner") return "Banner";
+  return type;
+}
+
 function skinPreviewHtml(skinId) {
   const slug = skinId.replace("skin_", "");
-  return `<div class="cosmetic-reveal-skin-preview">
+  return `<div class="cosmetic-skin-preview">
     <span class="piece red piece-skin-${slug} king"></span>
     <span class="piece black piece-skin-${slug}"></span>
   </div>`;
+}
+
+/** Shared preview markup for profile inventory, reveals, etc. */
+export function renderCosmeticPreviewHtml(id, type) {
+  if (type === "avatar") return renderAvatarPreview(id);
+  if (type === "banner") {
+    return `<div class="cosmetic-preview-banner" style="background:${bannerStyleFor(id)}"></div>`;
+  }
+  if (type === "pieceSkin") return skinPreviewHtml(id);
+  return "";
 }
 
 /**
@@ -163,16 +180,8 @@ export function renderCosmeticRevealEl(item) {
   el.className = `cosmetic-reveal-card rarity-${item.rarity} cosmetic-reveal-card--${item.type}`;
   if (item.duplicate) el.classList.add("cosmetic-reveal-card--duplicate");
 
-  let preview = "";
-  if (item.type === "avatar") preview = renderAvatarPreview(item.id);
-  else if (item.type === "banner") {
-    preview = `<div class="cosmetic-reveal-banner" style="background:${bannerStyleFor(item.id)}"></div>`;
-  } else if (item.type === "pieceSkin") {
-    preview = skinPreviewHtml(item.id);
-  }
-
-  const typeLabel =
-    item.type === "pieceSkin" ? "Piece skin" : item.type.charAt(0).toUpperCase() + item.type.slice(1);
+  const preview = renderCosmeticPreviewHtml(item.id, item.type);
+  const typeLabel = cosmeticTypeLabel(item.type);
 
   el.innerHTML = `
     <div class="cosmetic-reveal-card__frame">
