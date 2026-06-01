@@ -3,6 +3,7 @@ import {
   MAX_COPIES_PER_CARD,
   getPlayableCards,
   isEconomyCard,
+  isKnightCard,
   getCardDef,
 } from "./cardCatalog.js";
 import { collectionCount } from "./storage.js";
@@ -22,6 +23,7 @@ export function validateDeck(cardIds, profile) {
   }
   const counts = countById(cardIds);
   for (const [id, n] of Object.entries(counts)) {
+    if (isKnightCard(id)) errors.push(`Removed spell: ${getCardDef(id)?.name || id}`);
     if (isEconomyCard(id)) errors.push(`Economy spell disabled: ${getCardDef(id)?.name || id}`);
     if (n > MAX_COPIES_PER_CARD) errors.push(`Max ${MAX_COPIES_PER_CARD} copies of ${getCardDef(id)?.name || id}.`);
     if (profile && collectionCount(profile, id) < n) {
@@ -32,6 +34,7 @@ export function validateDeck(cardIds, profile) {
 }
 
 export function canAddCardToDeck(deckIds, cardId, profile) {
+  if (isKnightCard(cardId)) return { ok: false, reason: "This spell is no longer in the game." };
   if (isEconomyCard(cardId)) return { ok: false, reason: "Economy spells are disabled." };
   if (deckIds.length >= DECK_SIZE) return { ok: false, reason: "Deck is full (30 cards)." };
   const counts = countById(deckIds);

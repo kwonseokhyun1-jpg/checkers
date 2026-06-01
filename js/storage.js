@@ -1,3 +1,5 @@
+import { isKnightCard } from "./cardCatalog.js";
+
 /** Player profile: gems, collection, saved decks (localStorage) */
 
 const STORAGE_KEY = "cardCheckersProfile_v3";
@@ -7,7 +9,7 @@ export const WIN_GEMS = 10;
 function defaultProfile() {
   const collection = {};
   const starterIds = [
-    "nudge", "aegis", "frost", "bolt", "retreat", "swap", "knight", "crown", "mine", "venom",
+    "nudge", "aegis", "frost", "bolt", "retreat", "swap", "long_step", "crown", "mine", "venom",
   ];
   for (const id of starterIds) collection[id] = 3;
   const cardIds = starterIds.flatMap((id) => [id, id, id]);
@@ -26,19 +28,30 @@ function defaultProfile() {
   };
 }
 
+function stripKnightCards(profile) {
+  for (const id of Object.keys(profile.collection || {})) {
+    if (isKnightCard(id)) delete profile.collection[id];
+  }
+  for (const deck of profile.decks || []) {
+    if (!Array.isArray(deck.cardIds)) continue;
+    deck.cardIds = deck.cardIds.filter((id) => !isKnightCard(id));
+  }
+  return profile;
+}
+
 export function loadProfile() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultProfile();
+    if (!raw) return stripKnightCards(defaultProfile());
     const p = JSON.parse(raw);
-    return {
+    return stripKnightCards({
       gems: p.gems ?? STARTING_GEMS,
       collection: p.collection ?? {},
       decks: Array.isArray(p.decks) ? p.decks : [],
       selectedDeckId: p.selectedDeckId ?? null,
-    };
+    });
   } catch {
-    return defaultProfile();
+    return stripKnightCards(defaultProfile());
   }
 }
 

@@ -16,6 +16,7 @@ import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
 import { renderSpellCardEl } from "./cardArt.js";
+import { showCardPreview, bindCardPreviewModal } from "./cardPreview.js";
 
 let profile = loadProfile();
 let activeTab = "deck";
@@ -139,7 +140,12 @@ function renderChests() {
         pullsEl.innerHTML = `<p class="chest-pulls__label">Reliquary opened</p><div class="chest-pulls__grid"></div>`;
         const grid = pullsEl.querySelector(".chest-pulls__grid");
         for (const def of res.pulls) {
-          grid.appendChild(renderSpellCardEl(def, { static: true, meta: "Added to collection" }));
+          const pulled = renderSpellCardEl(def, {
+            button: true,
+            meta: "Added to collection",
+            onClick: () => showCardPreview(def, { meta: "Added to collection" }),
+          });
+          grid.appendChild(pulled);
         }
         pullsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
@@ -218,7 +224,10 @@ function renderDeckView() {
   grid.innerHTML = "";
   for (const id of deck.cardIds) {
     const def = getCardDef(id);
-    if (def) grid.appendChild(renderSpellCardEl(def, { static: true }));
+    if (def) {
+      const card = renderSpellCardEl(def, { button: true, onClick: () => showCardPreview(def) });
+      grid.appendChild(card);
+    }
   }
 }
 
@@ -249,15 +258,19 @@ function renderDeckEditor() {
     const addCheck = canAddCardToDeck(workingDeck, def.id, profile);
     const card = renderSpellCardEl(def, {
       button: true,
-      disabled: !addCheck.ok,
-      meta: `Owned ${owned} · In deck ${inDeck}/${MAX_COPIES_PER_CARD}`,
       onClick: () => {
-        if (!addCheck.ok) {
-          if (status) status.textContent = addCheck.reason;
-          return;
-        }
-        workingDeck.push(def.id);
-        renderDeckEditor();
+        showCardPreview(def, {
+          meta: `Owned ${owned} · In deck ${inDeck}/${MAX_COPIES_PER_CARD}`,
+          addDisabled: !addCheck.ok,
+          onAdd: () => {
+            if (!addCheck.ok) {
+              if (status) status.textContent = addCheck.reason;
+              return;
+            }
+            workingDeck.push(def.id);
+            renderDeckEditor();
+          },
+        });
       },
     });
     collEl.appendChild(card);
@@ -271,11 +284,16 @@ function renderDeckEditor() {
       button: true,
       small: true,
       onClick: () => {
-        workingDeck.splice(i, 1);
-        renderDeckEditor();
+        showCardPreview(def, {
+          meta: "In your deck",
+          onRemove: () => {
+            workingDeck.splice(i, 1);
+            renderDeckEditor();
+          },
+        });
       },
     });
-    card.title = "Click to remove";
+    card.title = "Tap to view";
     deckEl.appendChild(card);
   });
   for (let i = workingDeck.length; i < DECK_SIZE; i++) {
@@ -417,6 +435,7 @@ function getMatchHtml() {
 }
 
 function init() {
+  bindCardPreviewModal();
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => showTab(btn.dataset.tab));
   });

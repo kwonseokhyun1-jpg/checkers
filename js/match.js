@@ -23,6 +23,7 @@ import {
 import { runAiTurn } from "./ai.js";
 import { MAX_HAND, DRAW_EVERY_TURNS, START_HAND } from "./cardCatalog.js";
 import { renderSpellCardEl } from "./cardArt.js";
+import { showCardPreview } from "./cardPreview.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
 import { buildAiDeck } from "./deckRules.js";
 
