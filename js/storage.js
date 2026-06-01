@@ -1,5 +1,5 @@
 import { isKnightCard } from "./cardCatalog.js";
-import { defaultAdventureProgress } from "./adventure.js";
+import { defaultAdventureProgress, migrateAdventureDecks } from "./adventure.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
 
@@ -51,7 +51,12 @@ export function loadProfile() {
       collection: p.collection ?? {},
       decks: Array.isArray(p.decks) ? p.decks : [],
       selectedDeckId: p.selectedDeckId ?? null,
-      adventure: { ...defaultAdventureProgress(), ...(p.adventure || {}) },
+      adventure: (() => {
+        const adv = { ...defaultAdventureProgress(), ...(p.adventure || {}) };
+        const profile = { adventure: adv };
+        migrateAdventureDecks(profile);
+        return profile.adventure;
+      })(),
     });
   } catch {
     return stripKnightCards(defaultProfile());
