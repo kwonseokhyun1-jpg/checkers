@@ -6,7 +6,7 @@ import {
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
 } from "./board.js";
-import { sk, getSq, handLimit } from "./gameMeta.js";
+import { sk, getSq, handLimit, placeMine } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
 
@@ -89,7 +89,7 @@ const EFFECTS = {
   overrun(state, color, picks) { state.meta.pendingOverrun[color]=true; return ok(); },
   cross_bolt(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(const [tr,tc] of getBoltTarget(state.board,p)) kill(state,tr,tc,color); return ok(); },
   snipe(state, color, picks) { const [r,c]=p0(picks); const t=at(state,r,c); if(!t||t.color===color) return fail(); if(!kill(state,r,c,color)) return fail(); return ok(); },
-  mine(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); getSq(state,r,c).mine=color; return ok(); },
+  mine(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); if(sq.mine) return fail('Square already trapped'); placeMine(sq, color); return ok(); },
   bomb(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bombArmed=true; return ok("Bomb armed — explodes on next move."); },
   detonate(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r+dr,c+dc); if(t&&t.color!==color) kill(state,r+dr,c+dc,color);} return ok(); },
   ricochet(state, color, picks) { state.meta.pendingRicochet[color]=true; return ok(); },

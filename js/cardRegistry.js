@@ -46,7 +46,7 @@ export const CARD_REGISTRY = [
   { id: "overrun", name: "Overrun", desc: "After a capture this turn, slide 1 more square forward along the same diagonal if empty.", rarity: "uncommon", weight: 4, mode: "instant", effect: "overrun" },
   { id: "cross_bolt", name: "Cross Bolt", desc: "Destroy the first enemy on both forward diagonals from your piece (if any).", rarity: "rare", weight: 3, mode: "friendly", effect: "cross_bolt" },
   { id: "snipe", name: "Snipe", desc: "Destroy an enemy exactly 2 squares away on a diagonal with nothing between.", rarity: "uncommon", weight: 4, mode: "enemy", effect: "snipe" },
-  { id: "mine", name: "Mine", desc: "Place a trap on an empty dark square; next enemy to land there is destroyed.", rarity: "uncommon", weight: 5, mode: "empty", effect: "mine" },
+  { id: "mine", name: "Mine", desc: "Place a trap on an empty dark square for 2 turns; the next enemy to land there is destroyed.", rarity: "uncommon", weight: 5, mode: "empty", effect: "mine" },
   { id: "detonate", name: "Detonate", desc: "Destroy your own piece to also destroy all adjacent enemies (not shielded).", rarity: "rare", weight: 3, mode: "friendly", effect: "detonate" },
   { id: "ricochet", name: "Ricochet", desc: "Arm your next capture to also remove an enemy 2 squares behind the captured piece.", rarity: "rare", weight: 3, mode: "instant", effect: "ricochet" },
   { id: "duel", name: "Duel", desc: "Choose your piece and an adjacent enemy; both are destroyed unless shielded.", rarity: "uncommon", weight: 4, mode: "f_e_adj", effect: "duel" },

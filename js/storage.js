@@ -5,6 +5,8 @@ import { defaultAdventureProgress, migrateAdventureDecks } from "./adventure.js"
 
 const STORAGE_KEY = "cardCheckersProfile_v4";
 export const STARTING_GEMS = 400;
+/** Testing grant — applied on each profile load for now */
+export const TESTING_GEMS = 4000;
 export const WIN_GEMS = 10;
 
 function defaultProfile() {
@@ -22,7 +24,7 @@ function defaultProfile() {
   };
 
   return {
-    gems: STARTING_GEMS,
+    gems: TESTING_GEMS,
     collection,
     decks: [starterDeck],
     selectedDeckId: starterDeck.id,
@@ -59,7 +61,7 @@ export function loadProfile() {
     if (!raw) return stripRemovedCards(stripKnightCards(defaultProfile()));
     const p = JSON.parse(raw);
     return stripRemovedCards(stripKnightCards({
-      gems: p.gems ?? STARTING_GEMS,
+      gems: TESTING_GEMS,
       collection: p.collection ?? {},
       decks: Array.isArray(p.decks) ? p.decks : [],
       selectedDeckId: p.selectedDeckId ?? null,

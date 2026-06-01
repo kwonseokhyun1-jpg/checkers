@@ -38,6 +38,28 @@ export function createMatchMeta() {
   };
 }
 
+
+export const MINE_DURATION_TURNS = 2;
+
+export function getMineOwner(sq) {
+  if (!sq?.mine) return null;
+  return typeof sq.mine === "object" ? sq.mine.owner : sq.mine;
+}
+
+export function placeMine(sq, owner) {
+  sq.mine = { owner, turnsLeft: MINE_DURATION_TURNS };
+}
+
+export function tickMineDurability(state, ownerColor) {
+  if (!state?.squares || !ownerColor) return;
+  for (const sq of Object.values(state.squares)) {
+    if (!sq?.mine || typeof sq.mine !== "object") continue;
+    if (sq.mine.owner !== ownerColor || sq.mine.turnsLeft == null) continue;
+    sq.mine.turnsLeft -= 1;
+    if (sq.mine.turnsLeft <= 0) delete sq.mine;
+  }
+}
+
 export function sk(r, c) {
   return `${r},${c}`;
 }

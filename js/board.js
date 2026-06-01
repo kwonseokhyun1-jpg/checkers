@@ -1,4 +1,5 @@
 /** Checkers board logic with card-effect modifiers */
+import { getMineOwner, tickMineDurability } from "./gameMeta.js";
 
 function sk(r, c) {
   return `${r},${c}`;
@@ -348,7 +349,8 @@ export function applyMove(board, move, state = null) {
   const sq = state ? getSq(state, tr, tc) : null;
   if (sq?.sanctified === piece.color && !piece.king) piece.king = true;
   if (sq?.quicksand) { piece.frozenTurns = Math.max(piece.frozenTurns, 1); sq.quicksand = false; }
-  if (sq?.mine && sq.mine !== piece.color) {
+  const mineOwner = getMineOwner(sq);
+  if (mineOwner && mineOwner !== piece.color) {
     removePiece(board, tr, tc);
     sq.mine = null;
   }
@@ -388,6 +390,7 @@ export function tickEffects(board, color, state = null) {
     }
   }
   if (state?.squares) {
+    tickMineDurability(state, color);
     for (const k of Object.keys(state.squares)) {
       const sq = state.squares[k];
       if (sq.ghostBlock > 0) sq.ghostBlock--;
