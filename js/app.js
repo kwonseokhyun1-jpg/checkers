@@ -29,6 +29,7 @@ import { MatchSession } from "./match.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal } from "./cardPreview.js";
 import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
+import { playChestOpenAnimation } from "./chestOpenAnimation.js";
 
 let profile = loadProfile();
 let activeTab = "deck";
@@ -131,7 +132,8 @@ function renderChests() {
 
     const btn = card.querySelector(".chest-open");
     btn.disabled = !canAfford;
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
+      if (btn.disabled) return;
       const res = openChest(profile, chest.id);
       const log = $("chest-log");
       if (!res.success) {
@@ -142,8 +144,15 @@ function renderChests() {
         return;
       }
 
-      card.classList.add("chest-card--opening");
-      setTimeout(() => card.classList.remove("chest-card--opening"), 700);
+      saveProfile(profile);
+      updateGemHeader();
+      btn.disabled = true;
+
+      await playChestOpenAnimation({
+        tier: chest.id,
+        tierLabel: tier.label,
+        pulls: res.pulls,
+      });
 
       if (log) {
         log.textContent = `The ${tier.label} yields ${res.pulls.length} new spells!`;
@@ -170,7 +179,6 @@ function renderChests() {
         pullsEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
 
-      saveProfile(profile);
       renderChests();
     });
     list.appendChild(card);
