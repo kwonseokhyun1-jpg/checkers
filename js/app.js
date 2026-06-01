@@ -61,6 +61,53 @@ let selectedAdventureLevel = null;
 /** @type {string[]|null} */
 let pendingEnemyDeck = null;
 
+const RARITY_RANK = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
+
+function rarityRank(def) {
+  return RARITY_RANK[def?.rarity] ?? 0;
+}
+
+/** Unique cards in deck, rarest first */
+function getDeckStacks(cardIds) {
+  const counts = countById(cardIds);
+  return Object.entries(counts)
+    .map(([id, count]) => ({ def: getCardDef(id), count }))
+    .filter((x) => x.def)
+    .sort((a, b) => {
+      const dr = rarityRank(b.def) - rarityRank(a.def);
+      if (dr !== 0) return dr;
+      return a.def.name.localeCompare(b.def.name);
+    });
+}
+
+function removeOneFromDeck(cardId) {
+  const i = workingDeck.indexOf(cardId);
+  if (i < 0) return;
+  workingDeck.splice(i, 1);
+  renderDeckEditor();
+}
+
+function autoFinishDeck() {
+  const candidates = getPlayableCards()
+    .map((def) => ({ def, owned: collectionCount(profile, def.id) }))
+    .filter((x) => x.owned > 0)
+    .sort((a, b) => {
+      const dr = rarityRank(b.def) - rarityRank(a.def);
+      if (dr !== 0) return dr;
+      return a.def.name.localeCompare(b.def.name);
+    });
+
+  workingDeck = [];
+  for (const { def, owned } of candidates) {
+    const copies = Math.min(owned, MAX_COPIES_PER_CARD);
+    for (let i = 0; i < copies && workingDeck.length < DECK_SIZE; i++) {
+      workingDeck.push(def.id);
+    }
+    if (workingDeck.length >= DECK_SIZE) break;
+  }
+  renderDeckEditor();
+}
+
 const $ = (id) => document.getElementById(id);
 
 function showTab(tab) {
@@ -376,12 +423,16 @@ function renderDeckView() {
   }
 
   grid.innerHTML = "";
-  for (const id of deck.cardIds) {
-    const def = getCardDef(id);
-    if (def) {
-      const card = renderSpellCardEl(def, { button: true, onClick: () => showCardPreview(def) });
-      grid.appendChild(card);
-    }
+  for (const { def, count } of getDeckStacks(deck.cardIds)) {
+    const card = renderSpellCardEl(def, {
+      button: true,
+      meta: count > 1 ? `×${count}` : undefined,
+      onClick: () =>
+        showCardPreview(def, {
+          meta: count > 1 ? `${count} copies in this deck` : "In your deck",
+        }),
+    });
+    grid.appendChild(card);
   }
 }
 
@@ -412,9 +463,7 @@ function renderDeckEditor() {
   renderInventoryGrid(collEl, { deckEdit: true, statusEl: status });
 
   deckEl.innerHTML = "";
-  workingDeck.forEach((id, i) => {
-    const def = getCardDef(id);
-    if (!def) return;
+  for (const { def, count } of getDeckStacks(workingDeck)) {
     const slot = document.createElement("div");
     slot.className = "deck-slot-wrap";
     const card = renderSpellCardEl(def, {
@@ -422,33 +471,36 @@ function renderDeckEditor() {
       small: true,
       onClick: () => {
         showCardPreview(def, {
-          meta: "In your deck",
-          onRemove: () => {
-            workingDeck.splice(i, 1);
-            renderDeckEditor();
-          },
+          meta: count > 1 ? `×${count} in your deck` : "In your deck",
+          onRemove: () => removeOneFromDeck(def.id),
         });
       },
     });
+    slot.appendChild(card);
+    if (count > 1) {
+      const badge = document.createElement("span");
+      badge.className = "deck-stack-count";
+      badge.textContent = `×${count}`;
+      slot.appendChild(badge);
+    }
     const rem = document.createElement("button");
     rem.type = "button";
     rem.className = "deck-slot-remove";
-    rem.setAttribute("aria-label", "Remove from deck");
+    rem.setAttribute("aria-label", "Remove one copy from deck");
     rem.textContent = "×";
     rem.addEventListener("click", (e) => {
       e.stopPropagation();
-      workingDeck.splice(i, 1);
-      renderDeckEditor();
+      removeOneFromDeck(def.id);
     });
-    slot.appendChild(card);
     slot.appendChild(rem);
     deckEl.appendChild(slot);
-  });
-  for (let i = workingDeck.length; i < DECK_SIZE; i++) {
-    const empty = document.createElement("div");
-    empty.className = "deck-slot-empty";
-    empty.textContent = "+";
-    deckEl.appendChild(empty);
+  }
+  const openSlots = DECK_SIZE - workingDeck.length;
+  if (openSlots > 0) {
+    const hint = document.createElement("p");
+    hint.className = "deck-slots-open";
+    hint.textContent = openSlots === 1 ? "1 open slot" : `${openSlots} open slots`;
+    deckEl.appendChild(hint);
   }
 }
 
@@ -761,6 +813,7 @@ function init() {
     workingDeck = [];
     renderDeckEditor();
   });
+  $("btn-auto-finish-deck")?.addEventListener("click", autoFinishDeck);
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
   $("btn-back-adventure")?.addEventListener("click", showAdventureMap);
   $("btn-start-adventure")?.addEventListener("click", startAdventureMatch);
