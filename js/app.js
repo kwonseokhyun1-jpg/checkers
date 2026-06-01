@@ -5,12 +5,23 @@ import { getPlayableCards, getCardDef, DECK_SIZE, MAX_COPIES_PER_CARD } from "./
 import {
   loadProfile,
   saveProfile,
-  WIN_GEMS,
   createDeck,
   upsertDeck,
   deleteDeck,
   collectionCount,
 } from "./storage.js";
+import {
+  getAdventureLevels,
+  getLevel,
+  getOrCreateLevelEnemyDeck,
+  getEnemyDeckPreview,
+  isLevelUnlocked,
+  isLevelCleared,
+  gemsForLevelClear,
+  recordLevelClear,
+  formatStars,
+  getLevelStars,
+} from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
@@ -30,6 +41,10 @@ let workingDeck = [];
 let collectionFilter = "";
 let collectionRarity = "all";
 let matchSession = null;
+/** @type {number|null} */
+let selectedAdventureLevel = null;
+/** @type {string[]|null} */
+let pendingEnemyDeck = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -48,7 +63,7 @@ function showTab(tab) {
     viewingDeckId = null;
     showDeckSubview("list");
   }
-  if (tab === "play") renderPlayLobby();
+  if (tab === "play") showAdventureMap();
 }
 
 function updateGemHeader() {
@@ -256,35 +271,59 @@ function renderDeckEditor() {
     status.className = val.valid ? "deck-status ok" : "deck-status warn";
   }
 
+  const progressFill = $("deck-progress-fill");
+  const pct = Math.min(100, (workingDeck.length / DECK_SIZE) * 100);
+  if (progressFill) progressFill.style.width = `${pct}%`;
+
   collEl.innerHTML = "";
   for (const def of getFilteredCollection()) {
     const owned = collectionCount(profile, def.id);
     const inDeck = countById(workingDeck)[def.id] || 0;
     const addCheck = canAddCardToDeck(workingDeck, def.id, profile);
+    const wrap = document.createElement("div");
+    wrap.className = "collection-card-wrap";
+
+    const addToDeck = () => {
+      if (!addCheck.ok) {
+        if (status) status.textContent = addCheck.reason;
+        return;
+      }
+      workingDeck.push(def.id);
+      renderDeckEditor();
+    };
+
     const card = renderSpellCardEl(def, {
       button: true,
       onClick: () => {
         showCardPreview(def, {
           meta: `Owned ${owned} · In deck ${inDeck}/${MAX_COPIES_PER_CARD}`,
           addDisabled: !addCheck.ok,
-          onAdd: () => {
-            if (!addCheck.ok) {
-              if (status) status.textContent = addCheck.reason;
-              return;
-            }
-            workingDeck.push(def.id);
-            renderDeckEditor();
-          },
+          onAdd: addToDeck,
         });
       },
     });
-    collEl.appendChild(card);
+    wrap.appendChild(card);
+
+    const addBtn = document.createElement("button");
+    addBtn.type = "button";
+    addBtn.className = "btn-add-to-deck";
+    addBtn.title = addCheck.ok ? "Add to deck" : addCheck.reason;
+    addBtn.textContent = "+";
+    addBtn.disabled = !addCheck.ok;
+    addBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      addToDeck();
+    });
+    wrap.appendChild(addBtn);
+    collEl.appendChild(wrap);
   }
 
   deckEl.innerHTML = "";
   workingDeck.forEach((id, i) => {
     const def = getCardDef(id);
     if (!def) return;
+    const slot = document.createElement("div");
+    slot.className = "deck-slot-wrap";
     const card = renderSpellCardEl(def, {
       button: true,
       small: true,
@@ -298,8 +337,19 @@ function renderDeckEditor() {
         });
       },
     });
-    card.title = "Tap to view";
-    deckEl.appendChild(card);
+    const rem = document.createElement("button");
+    rem.type = "button";
+    rem.className = "deck-slot-remove";
+    rem.setAttribute("aria-label", "Remove from deck");
+    rem.textContent = "×";
+    rem.addEventListener("click", (e) => {
+      e.stopPropagation();
+      workingDeck.splice(i, 1);
+      renderDeckEditor();
+    });
+    slot.appendChild(card);
+    slot.appendChild(rem);
+    deckEl.appendChild(slot);
   });
   for (let i = workingDeck.length; i < DECK_SIZE; i++) {
     const empty = document.createElement("div");
@@ -345,17 +395,95 @@ function startNewDeck() {
   showDeckSubview("edit");
 }
 
-function renderPlayLobby() {
+function showAdventureMap() {
+  $("adventure-map-view")?.classList.remove("hidden");
+  $("adventure-prebattle")?.classList.add("hidden");
+  selectedAdventureLevel = null;
+  pendingEnemyDeck = null;
+  renderAdventureMap();
+}
+
+function renderAdventureMap() {
   updateGemHeader();
-  const sel = $("play-deck-select");
+  const map = $("adventure-map");
+  if (!map) return;
+  map.innerHTML = "";
+  const progress = profile.adventure;
+
+  for (const level of getAdventureLevels()) {
+    const unlocked = isLevelUnlocked(progress, level.id);
+    const cleared = isLevelCleared(progress, level.id);
+    const node = document.createElement("button");
+    node.type = "button";
+    node.className = "adventure-node";
+    node.dataset.level = String(level.id);
+    if (!unlocked) node.classList.add("adventure-node--locked");
+    if (cleared) node.classList.add("adventure-node--cleared");
+    node.disabled = !unlocked;
+    const stars = getLevelStars(progress, level.id);
+    const starBadge = stars > 0 ? `<span class="adventure-node__stars" aria-label="${stars} stars">${formatStars(stars)}</span>` : "";
+    node.innerHTML = `
+      <span class="adventure-node__num">${level.id}</span>
+      <span class="adventure-node__name">${level.opponent}</span>
+      <span class="adventure-node__flavor">${level.flavor}</span>
+      ${starBadge}
+    `;
+    node.addEventListener("click", () => openAdventurePrebattle(level.id));
+    map.appendChild(node);
+  }
+}
+
+function openAdventurePrebattle(levelId) {
+  const level = getLevel(levelId);
+  if (!level || !isLevelUnlocked(profile.adventure, levelId)) return;
+
+  selectedAdventureLevel = levelId;
+  pendingEnemyDeck = getOrCreateLevelEnemyDeck(profile, levelId);
+  saveProfile(profile);
+
+  $("adventure-map-view")?.classList.add("hidden");
+  $("adventure-prebattle")?.classList.remove("hidden");
+
+  const title = $("prebattle-title");
+  const flavor = $("prebattle-flavor");
+  const opponent = $("prebattle-opponent");
+  const gemHint = $("prebattle-gem-hint");
+  if (title) title.textContent = `${level.name}: ${level.opponent}`;
+  if (flavor) flavor.textContent = level.flavor;
+  if (opponent) opponent.textContent = "Review the enemy spell deck below, then choose your grimoire.";
+  if (gemHint) {
+    const gems = gemsForLevelClear(profile.adventure, levelId);
+    gemHint.textContent = isLevelCleared(profile.adventure, levelId)
+      ? `Repeat clear: +${gems} gems`
+      : `First clear: +${gems} gems`;
+  }
+
+  const preview = $("enemy-deck-preview");
+  if (preview) {
+    preview.innerHTML = "";
+    for (const { def, count } of getEnemyDeckPreview(pendingEnemyDeck)) {
+      const card = renderSpellCardEl(def, {
+        button: true,
+        small: true,
+        meta: count > 1 ? `×${count} in deck` : undefined,
+        onClick: () =>
+          showCardPreview(def, {
+            meta: count > 1 ? `${count} copies in enemy deck` : "Enemy deck",
+          }),
+      });
+      preview.appendChild(card);
+    }
+  }
+
+  const sel = $("adventure-deck-select");
   if (!sel) return;
   sel.innerHTML = "";
   const validDecks = profile.decks.filter((d) => d.cardIds.length === DECK_SIZE);
   if (!validDecks.length) {
     const opt = document.createElement("option");
-    opt.textContent = "No complete decks — build one in Decks tab";
+    opt.textContent = "No complete decks — build one in Decks";
     sel.appendChild(opt);
-    $("btn-start-match").disabled = true;
+    $("btn-start-adventure").disabled = true;
     return;
   }
   for (const d of validDecks) {
@@ -365,19 +493,22 @@ function renderPlayLobby() {
     if (d.id === profile.selectedDeckId) opt.selected = true;
     sel.appendChild(opt);
   }
-  $("btn-start-match").disabled = false;
+  $("btn-start-adventure").disabled = false;
 }
 
-function startMatch() {
-  const deckId = $("play-deck-select")?.value;
+function startAdventureMatch() {
+  const deckId = $("adventure-deck-select")?.value;
   const deck = profile.decks.find((d) => d.id === deckId);
-  if (!deck || deck.cardIds.length !== DECK_SIZE) return;
+  const level = selectedAdventureLevel ? getLevel(selectedAdventureLevel) : null;
+  if (!deck || deck.cardIds.length !== DECK_SIZE || !level || !pendingEnemyDeck) return;
 
+  const opponentName = level.opponent;
   $("view-play").classList.add("hidden");
   $("view-match").classList.remove("hidden");
   const root = $("view-match");
-  root.innerHTML = getMatchHtml();
+  root.innerHTML = getMatchHtml(opponentName);
 
+  const levelId = selectedAdventureLevel;
   matchSession = new MatchSession(
     deck.cardIds,
     root,
@@ -387,25 +518,29 @@ function startMatch() {
       $("view-match").classList.add("hidden");
       showTab("play");
     },
-    () => {
-      profile.gems += WIN_GEMS;
+    (stars) => {
+      const { gems, stars: bestStars } = recordLevelClear(profile, levelId, stars);
+      profile.gems += gems;
       saveProfile(profile);
       updateGemHeader();
-    }
+      return `+${gems} gems! · Best: ${formatStars(bestStars)}`;
+    },
+    { aiDeckIds: [...pendingEnemyDeck], opponentName }
   );
 
   matchSession.setMessage("Drag a spell onto the board or tap a card, then pick highlighted squares.");
   matchSession.render();
 }
 
-function getMatchHtml() {
+function getMatchHtml(opponentName = "Opponent") {
+  const safe = opponentName.replace(/</g, "");
   return `
     <div class="match-wrap match-scene">
       <button type="button" id="btn-leave-match" class="btn-text">← Leave match</button>
       <div class="game-layout">
         <aside class="panel panel-opponent">
-          <div class="player-badge opponent"><span class="piece-icon black"></span> Shadow Court</div>
-          <div class="hand-label">AI hand</div>
+          <div class="player-badge opponent"><span class="piece-icon black"></span> ${safe}</div>
+          <div class="hand-label">Enemy hand</div>
           <div id="hand-black" class="hand hand-hidden"></div>
         </aside>
         <section class="board-section">
@@ -419,7 +554,7 @@ function getMatchHtml() {
           </div>
           <div id="board" class="board"></div>
           <div id="ai-action-panel" class="ai-action-panel">
-            <h3 class="ai-action-panel__title">Shadow Court</h3>
+            <h3 class="ai-action-panel__title">${safe}</h3>
             <div id="ai-action-log" class="ai-action-log"></div>
           </div>
           <div id="message" class="message"></div>
@@ -435,8 +570,9 @@ function getMatchHtml() {
       <div id="game-over" class="overlay hidden">
         <div class="overlay-card">
           <h2 id="game-over-title">Victory</h2>
+          <div id="game-over-stars" class="game-over-stars hidden" aria-hidden="true"></div>
           <p id="game-over-text"></p>
-          <button id="btn-restart-match" type="button" class="btn-primary">Back to lobby</button>
+          <button id="btn-restart-match" type="button" class="btn-primary">Back to map</button>
         </div>
       </div>
     </div>
@@ -466,7 +602,7 @@ function init() {
     if (!deck || !confirm(`Delete deck "${deck.name}"?`)) return;
     deleteDeck(profile, deck.id);
     showDeckSubview("list");
-    renderPlayLobby();
+    showAdventureMap();
   });
 
   $("collection-search")?.addEventListener("input", (e) => {
@@ -482,8 +618,9 @@ function init() {
     renderDeckEditor();
   });
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
-  $("btn-start-match")?.addEventListener("click", startMatch);
-  $("play-deck-select")?.addEventListener("change", (e) => {
+  $("btn-back-adventure")?.addEventListener("click", showAdventureMap);
+  $("btn-start-adventure")?.addEventListener("click", startAdventureMatch);
+  $("adventure-deck-select")?.addEventListener("change", (e) => {
     profile.selectedDeckId = e.target.value;
     saveProfile(profile);
   });

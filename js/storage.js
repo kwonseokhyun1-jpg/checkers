@@ -1,8 +1,9 @@
 import { isKnightCard } from "./cardCatalog.js";
+import { defaultAdventureProgress } from "./adventure.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
 
-const STORAGE_KEY = "cardCheckersProfile_v3";
+const STORAGE_KEY = "cardCheckersProfile_v4";
 export const STARTING_GEMS = 400;
 export const WIN_GEMS = 10;
 
@@ -25,6 +26,7 @@ function defaultProfile() {
     collection,
     decks: [starterDeck],
     selectedDeckId: starterDeck.id,
+    adventure: defaultAdventureProgress(),
   };
 }
 
@@ -49,6 +51,7 @@ export function loadProfile() {
       collection: p.collection ?? {},
       decks: Array.isArray(p.decks) ? p.decks : [],
       selectedDeckId: p.selectedDeckId ?? null,
+      adventure: { ...defaultAdventureProgress(), ...(p.adventure || {}) },
     });
   } catch {
     return stripKnightCards(defaultProfile());

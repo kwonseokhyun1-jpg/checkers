@@ -19,8 +19,11 @@
   --shadow-glow: 0 0 48px rgba(92, 225, 230, 0.12);
   --radius: 14px;
   --radius-sm: 10px;
-  --font-display: "Cinzel", serif;
-  --font-body: "Outfit", system-ui, sans-serif;
+  --font-display: "Luckiest Guy", "Titan One", cursive;
+  --font-heading: "Boogaloo", "Luckiest Guy", cursive;
+  --font-body: "Nunito", system-ui, sans-serif;
+  --arcane-stroke: #1a1028;
+  --arcane-shadow: #3d2a6b;
 }
 
 *,
@@ -1026,24 +1029,21 @@ body {
   text-shadow: 0 0 12px var(--accent-gem);
 }
 
-.game-header__eyebrow {
-  margin: 0;
+.game-header__title.arcane-title,
+.arcane-title {
   font-family: var(--font-display);
-  font-size: 0.72rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--accent-gem);
-}
-
-.game-header__title {
+  font-weight: 400;
+  font-size: clamp(1.75rem, 4.5vw, 2.35rem);
+  line-height: 1.05;
+  letter-spacing: 0.04em;
   margin: 0.1rem 0 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.35rem, 3vw, 1.85rem);
-  font-weight: 700;
-  background: linear-gradient(135deg, #fff8e7, var(--accent-gold));
+  background: linear-gradient(180deg, #f0e8ff 8%, #b794f6 42%, #6b46c1 88%);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 2.5px var(--arcane-stroke);
+  paint-order: stroke fill;
+  filter: drop-shadow(0 3px 0 var(--arcane-shadow)) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.45));
 }
 
 .hud-gems {
@@ -1766,4 +1766,243 @@ body {
 @keyframes board-spell-flash {
   0%, 100% { filter: none; }
   50% { filter: drop-shadow(0 0 12px rgba(159, 122, 234, 0.6)); }
+}
+
+/* Chunky arcade display typography (arcane theme — not PvZ) */
+.arcane-heading,
+.panel-head__title,
+.chest-card__name,
+.deck-row-name,
+.overlay-card h2,
+.modal-content h2,
+.adventure-node__num,
+.prebattle-section-title,
+#game-over-title {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+}
+
+.panel-head__title,
+.chest-card__name,
+.deck-row-name {
+  font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+  color: #e8dcff;
+  -webkit-text-stroke: 1.5px var(--arcane-stroke);
+  paint-order: stroke fill;
+  text-shadow:
+    0 2px 0 var(--arcane-shadow),
+    0 3px 6px rgba(0, 0, 0, 0.35);
+}
+
+.game-header__eyebrow {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-gem);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.tab-btn.active {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.turn-banner,
+.match-banner {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+.spell-card__name {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* Deck builder UX */
+.deck-progress-wrap {
+  margin: 0.75rem 0 1rem;
+}
+.deck-progress-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 0.35rem;
+}
+.deck-progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent-violet), var(--accent-gem));
+  transition: width 0.2s ease;
+}
+.collection-card-wrap {
+  position: relative;
+}
+.btn-add-to-deck {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-gem);
+  color: var(--bg-deep);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+.btn-add-to-deck:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.deck-slot-wrap {
+  position: relative;
+}
+.deck-slot-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 2;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(232, 93, 93, 0.9);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.deck-slot-wrap:hover .deck-slot-remove,
+.deck-slot-remove:focus {
+  opacity: 1;
+}
+
+/* Adventure map */
+.adventure-panel {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.adventure-map {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+  max-height: min(70vh, 560px);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+.adventure-node {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel-elevated);
+  color: var(--text);
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, transform 0.15s;
+  position: relative;
+}
+.adventure-node:hover:not(:disabled) {
+  border-color: var(--accent-gem);
+  transform: translateY(-2px);
+}
+.adventure-node--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.adventure-node--cleared {
+  border-color: rgba(92, 225, 230, 0.45);
+}
+.adventure-node__num {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--accent-gold);
+}
+.adventure-node__name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+.adventure-node__flavor {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.adventure-node__badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  color: var(--accent-gem);
+  font-size: 0.9rem;
+}
+.adventure-prebattle {
+  max-width: 900px;
+  margin: 0 auto;
+}
+.prebattle-opponent {
+  color: var(--text-muted);
+  margin: 0.25rem 0 0.75rem;
+}
+.prebattle-gem-hint {
+  display: inline-block;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(232, 197, 71, 0.12);
+  color: var(--accent-gold);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.prebattle-section-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  margin: 1.25rem 0 0.5rem;
+}
+.spell-card-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem;
+  max-height: 280px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.game-over-stars {
+  font-size: 2rem;
+  letter-spacing: 0.15em;
+  color: var(--accent-gold);
+  margin: 0.5rem 0 0.25rem;
+  line-height: 1;
+}
+.game-over-stars.hidden {
+  display: none;
+}
+#game-over-text {
+  white-space: pre-line;
+}
+.adventure-node__stars {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 0.7rem;
+  letter-spacing: -0.05em;
+  color: var(--accent-gold);
+  line-height: 1;
 }

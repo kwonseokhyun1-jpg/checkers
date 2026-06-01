@@ -26,6 +26,7 @@ import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview } from "./cardPreview.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
 import { buildAiDeck } from "./deckRules.js";
+import { starsForRemainingPieces, formatStars } from "./adventure.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -72,8 +73,14 @@ function picksRequired(card) {
 }
 
 export class MatchSession {
-  constructor(deckCardIds, rootEl, onExit, onWin) {
-    this.state = createMatchState(deckCardIds);
+  /**
+   * @param {object} [options]
+   * @param {string[]} [options.aiDeckIds]
+   * @param {string} [options.opponentName]
+   */
+  constructor(deckCardIds, rootEl, onExit, onWin, options = {}) {
+    this.opponentName = options.opponentName || "Opponent";
+    this.state = createMatchState(deckCardIds, options.aiDeckIds ?? null);
     this.root = rootEl;
     this.onExit = onExit;
     this.onWin = onWin;
@@ -474,7 +481,7 @@ export class MatchSession {
       return true;
     }
     if (countPieces(s.board, COLORS.RED) === 0) {
-      this.showGameOver("Defeat", "The Shadow Court wiped your forces.");
+      this.showGameOver("Defeat", "Your forces were wiped out.");
       return true;
     }
     return false;
@@ -484,15 +491,31 @@ export class MatchSession {
     this.state.gameOver = title;
     const won = title.startsWith("Victory");
     let displayText = text;
-    if (won && !this.winRewarded) {
-      this.winRewarded = true;
-      this.onWin?.();
-      displayText = `${text} +10 gems!`;
+    let stars = 0;
+    if (won) {
+      const remaining = countPieces(this.state.board, COLORS.RED);
+      stars = starsForRemainingPieces(remaining);
+      if (!this.winRewarded) {
+        this.winRewarded = true;
+        const gemNote = this.onWin?.(stars, remaining);
+        const starLine = `${formatStars(stars)} (${remaining} piece${remaining === 1 ? "" : "s"} left)`;
+        displayText = gemNote ? `${text}
+${starLine}
+${gemNote}` : `${text}
+${starLine}`;
+      }
     }
     const overlay = this.root.querySelector("#game-over");
     if (overlay) {
       this.root.querySelector("#game-over-title").textContent = title;
-      this.root.querySelector("#game-over-text").textContent = displayText;
+      const textEl = this.root.querySelector("#game-over-text");
+      if (textEl) textEl.textContent = displayText;
+      const starsEl = this.root.querySelector("#game-over-stars");
+      if (starsEl) {
+        starsEl.textContent = won ? formatStars(stars) : "";
+        starsEl.classList.toggle("hidden", !won);
+        starsEl.setAttribute("aria-label", won ? `${stars} of 3 stars` : "");
+      }
       overlay.classList.remove("hidden");
     }
     this.cancelCardPlay();
@@ -508,7 +531,7 @@ export class MatchSession {
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell">✦ Cast <strong>${entry.cardName}</strong></div>`;
         }
-        this.setMessage(`Shadow Court cast ${entry.cardName}.`);
+        this.setMessage(`${this.opponentName} cast ${entry.cardName}.`);
         this.$("board")?.classList.add("board--ai-spell");
         this.render();
         await delay(950);
@@ -538,10 +561,10 @@ export class MatchSession {
   async runOpponentTurn() {
     const s = this.state;
     if (s.gameOver) return;
-    this.setMessage("Shadow Court is acting…");
+    this.setMessage(`${this.opponentName} is acting…`);
     this.render();
 
-    const log = runAiTurn(s);
+    const log = runAiTurn(s, this.opponentName);
     await this.replayAiLog(log);
 
     if (s.lastExplosion) {
@@ -556,11 +579,11 @@ export class MatchSession {
     tickMeta(s, COLORS.BLACK);
 
     if (countPieces(s.board, COLORS.RED) === 0) {
-      this.showGameOver("Defeat", "The Shadow Court destroyed your army.");
+      this.showGameOver("Defeat", "You lost all your pieces.");
       return;
     }
     if (countPieces(s.board, COLORS.BLACK) === 0) {
-      this.showGameOver("Victory!", "The Shadow Court falls!");
+      this.showGameOver("Victory!", "You cleared the stage!");
       return;
     }
 
@@ -697,7 +720,7 @@ export class MatchSession {
           banner.className = "turn-banner";
         }
       } else {
-        banner.textContent = "Shadow Court is thinking…";
+        banner.textContent = `${this.opponentName} is thinking…`;
         banner.className = "turn-banner opponent-turn";
       }
     }
