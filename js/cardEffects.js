@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getTeleportTargets, getBoltTarget } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget } from "./board.js";
 import { sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -132,6 +132,7 @@ export function getValidTargets(state, color, card, picks) {
       const [pr, pc] = picks[0];
       const p = at(state, pr, pc);
       if (!p) return [];
+      if (card.effect === "fireblast") return getFireblastTarget(state.board, p);
       return getBoltTarget(state.board, p);
     }
     case "any_piece":

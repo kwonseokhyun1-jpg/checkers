@@ -24,6 +24,7 @@ const BOARD_SHAKE_EFFECTS = new Set([
   "chain_lightning",
   "earthquake",
   "fireline",
+  "fireblast",
   "cross_bolt",
   "duel",
   "scatter",
@@ -37,7 +38,7 @@ const BOARD_SHAKE_EFFECTS = new Set([
 ]);
 
 const KILL_EFFECTS = new Set([
-  "snipe", "destroy_unshielded", "execution", "forward_bolt", "cryo_bolt",
+  "snipe", "destroy_unshielded", "execution", "forward_bolt", "fireblast", "cryo_bolt",
   "coin_flip", "sacrifice", "backstab", "shatter",
 ]);
 
