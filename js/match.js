@@ -337,21 +337,22 @@ export class MatchSession {
   }
 
   attachCardInput(el, card, canPlay) {
-    if (!canPlay) return;
-    el.title = isInstant(card)
-      ? "Tap to play instantly"
-      : "Drag onto highlighted squares or tap the card then tap the board";
+    const canCast = canPlay && this.canPlaySpells();
+    el.title = canCast
+      ? "Tap to view · drag onto the board to cast"
+      : "Tap to view card";
 
-    if (isInstant(card)) {
-      el.addEventListener("click", () => {
-        if (this._suppressClick || !this.canPlaySpells()) return;
-        this.startCardPlay(card);
+    el.addEventListener("click", () => {
+      if (this._suppressClick) return;
+      showCardPreview(card, {
+        meta: canCast ? "Cast this spell, then move a piece." : "Inspecting spell",
+        onPlay: canCast ? () => this.startCardPlay(card) : undefined,
       });
-      return;
-    }
+    });
+
+    if (!canCast || isInstant(card)) return;
 
     el.classList.add("spell-card--draggable");
-
     el.addEventListener("pointerdown", (e) => {
       if (!this.canPlaySpells() || e.button !== 0) return;
       e.preventDefault();
@@ -533,10 +534,9 @@ export class MatchSession {
       const el = renderSpellCardEl(card, {
         button: true,
         compact: true,
-        disabled: !canPlay,
         selected: castingId === card.instanceId,
       });
-      if (canPlay) this.attachCardInput(el, card, true);
+      this.attachCardInput(el, card, canPlay);
       handEl.appendChild(el);
     }
 
