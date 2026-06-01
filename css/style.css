@@ -3053,3 +3053,43 @@ body.chest-open-active {
 .profile-cosmetic-card__name { display: block; font-size: 0.88rem; margin: 0.2rem 0; }
 .profile-cosmetic-card__type { font-size: 0.72rem; opacity: 0.7; }
 .profile-cosmetic-card__action { font-size: 0.75rem; color: var(--accent-gem, #5ce1e6); }
+
+/* Vault sub-tabs (Cards) */
+.vault-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+}
+.vault-tab {
+  font-family: var(--font-ui, "DM Sans", sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: rgba(232, 236, 244, 0.65);
+  cursor: pointer;
+}
+.vault-tab.active,
+.vault-tab[aria-selected="true"] {
+  color: var(--accent-gem, #5ce1e6);
+  background: rgba(92, 225, 230, 0.12);
+}
+.vault-section-title {
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 1.05rem;
+  margin: 1.25rem 0 0.65rem;
+}
+.vault-section-title--cosmetics {
+  margin-top: 2rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.vault-section-desc {
+  font-size: 0.85rem;
+  opacity: 0.75;
+  margin: -0.35rem 0 0.75rem;
+}

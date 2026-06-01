@@ -26,7 +26,7 @@ import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
-import { renderProfileTab } from "./profileUI.js";
+import { renderProfileTab, renderCosmeticBoxes } from "./profileUI.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { boardFrameHtml } from "./board.js";
 import { renderSpellCardEl } from "./cardArt.js";
@@ -251,6 +251,14 @@ function renderChests() {
     });
     list.appendChild(card);
   }
+
+  renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
+    logEl: $("cosmetic-box-log"),
+    onGemsChange: updateGemHeader,
+    onOpened: () => {
+      if (activeTab === "profile") renderProfile();
+    },
+  });
 }
 
 function getFilteredCollection() {
