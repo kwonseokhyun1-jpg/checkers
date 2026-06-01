@@ -1,6 +1,6 @@
 # Card Checkers
 
-Classic checkers with a collectible spell-card layer. You and the AI each start with **100 gems**. Spend **10 gems** to draw a random card, play effects on your turn, then make a normal checkers move.
+Classic checkers with a collectible spell-card layer. Earn **10 gems per win** to open chests and grow your collection. Spend **10 gems** to draw a random card, play effects on your turn, then make a normal checkers move.
 
 ## Game modes
 
