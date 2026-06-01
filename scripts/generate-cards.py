@@ -24,7 +24,7 @@ SPELLS = [
     ("phase_walk", "Phase Walk", "Move through one friendly piece to land on the empty square beyond it.", "rare", 3, "f_empty", "phase_walk"),
     ("corner_hop", "Corner Hop", "Teleport to any empty dark square in the opposite corner quadrant of the board.", "rare", 3, "f_empty", "corner_hop"),
     ("anchor", "Anchor", "Your piece cannot be moved by enemy cards for 2 turns (still moves on your turn).", "uncommon", 4, "friendly", "anchor_2"),
-    ("drift", "Drift", "Slide a piece any number of empty squares along one diagonal until blocked.", "rare", 3, "f_empty", "drift"),
+    ("drift", "Drift", "Slide a piece any number of empty squares along one diagonal until blocked.", "epic", 2, "f_empty", "drift"),
     ("recall", "Recall", "Return one of your pieces to any empty dark square in its starting row.", "uncommon", 4, "f_empty", "recall"),
     ("flank", "Flank", "Move your piece to any empty dark square up to 3 steps away along a diagonal.", "uncommon", 4, "f_empty", "flank_3"),
     ("rooks_mark", "Rook's Mark", "For 2 turns, a piece may slide along a rank or file over empty dark squares.", "rare", 3, "friendly", "rook_2"),

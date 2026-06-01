@@ -39,7 +39,7 @@ export const CARD_REGISTRY = [
   { id: "phase_walk", name: "Phase Walk", desc: "Move through one friendly piece to land on the empty square beyond it.", rarity: "rare", weight: 3, mode: "f_empty", effect: "phase_walk" },
   { id: "corner_hop", name: "Corner Hop", desc: "Teleport to any empty dark square in the opposite corner quadrant of the board.", rarity: "rare", weight: 3, mode: "f_empty", effect: "corner_hop" },
   { id: "anchor", name: "Anchor", desc: "Your piece cannot be moved by enemy cards for 2 turns (still moves on your turn).", rarity: "uncommon", weight: 4, mode: "friendly", effect: "anchor_2" },
-  { id: "drift", name: "Drift", desc: "Slide a piece any number of empty squares along one diagonal until blocked.", rarity: "rare", weight: 3, mode: "f_empty", effect: "drift" },
+  { id: "drift", name: "Drift", desc: "Slide a piece any number of empty squares along one diagonal until blocked.", rarity: "epic", weight: 2, mode: "f_empty", effect: "drift" },
   { id: "recall", name: "Recall", desc: "Return one of your pieces to any empty dark square in its starting row.", rarity: "uncommon", weight: 4, mode: "f_empty", effect: "recall" },
   { id: "flank", name: "Flank", desc: "Move your piece to any empty dark square up to 3 steps away along a diagonal.", rarity: "uncommon", weight: 4, mode: "f_empty", effect: "flank_3" },
   { id: "rooks_mark", name: "Rook's Mark", desc: "For 2 turns, a piece may slide along a rank or file over empty dark squares.", rarity: "rare", weight: 3, mode: "friendly", effect: "rook_2" },

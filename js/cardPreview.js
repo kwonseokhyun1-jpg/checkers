@@ -17,6 +17,8 @@ export function closeCardPreview() {
  * @param {() => void} [opts.onAdd] — deck builder: add to deck
  * @param {() => void} [opts.onRemove] — remove from deck slot
  * @param {() => void} [opts.onPlay] — match: cast spell
+ * @param {() => void} [opts.onBuy] — inventory: buy a copy
+ * @param {boolean} [opts.buyDisabled]
  * @param {string} [opts.meta] — extra line under card
  */
 export function showCardPreview(def, opts = {}) {
@@ -63,6 +65,19 @@ export function showCardPreview(def, opts = {}) {
         }
       });
       row.appendChild(add);
+    }
+    if (opts.onBuy) {
+      const buy = document.createElement("button");
+      buy.type = "button";
+      buy.className = "btn-primary";
+      buy.textContent = opts.buyLabel || "Buy copy";
+      buy.disabled = !!opts.buyDisabled;
+      buy.addEventListener("click", () => {
+        if (!opts.buyDisabled) {
+          opts.onBuy();
+        }
+      });
+      row.appendChild(buy);
     }
     if (opts.onRemove) {
       const rem = document.createElement("button");
