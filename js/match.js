@@ -21,7 +21,7 @@ import {
   applyCard,
 } from "./cardEffects.js";
 import { runAiTurn } from "./ai.js";
-import { MAX_HAND, DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
+import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview } from "./cardPreview.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
@@ -913,7 +913,7 @@ ${starLine}`;
     if (!handEl) return;
     handEl.innerHTML = "";
     const s = this.state;
-    if (countEl) countEl.textContent = `${s.hands.red.length}/${MAX_HAND}`;
+    if (countEl) countEl.textContent = String(s.hands.red.length);
     const pileEl = this.$("pile-count");
     if (pileEl) pileEl.textContent = String(pileRemaining(s, COLORS.RED));
 

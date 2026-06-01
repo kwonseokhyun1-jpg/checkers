@@ -56,6 +56,7 @@ export const REMOVED_CARD_IDS = new Set([
   "parallel",
   "echo",
   "chameleon",
+  "time_slip",
 ]);
 
 export function isRemovedCard(cardOrId) {
@@ -91,5 +92,6 @@ export function getCardDef(id) {
 export const DECK_SIZE = 30;
 export const MAX_COPIES_PER_CARD = 3;
 export const START_HAND = 3;
-export const MAX_HAND = 5;
+/** @deprecated No hand cap in match — kept for legacy references */
+export const MAX_HAND = Infinity;
 export const DRAW_EVERY_TURNS = 2;

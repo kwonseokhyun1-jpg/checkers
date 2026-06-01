@@ -21,7 +21,7 @@ const THEME_KEYS = [
   ["debuff", ["freeze", "frost", "root", "slow", "blind", "confusion", "silence", "rust", "hex", "tangle", "fog", "panic", "bind", "deep_freeze", "blizzard"]],
   ["transform", ["knight", "bishop", "rook", "queen", "fusion", "chameleon", "wraith", "stone", "twin", "identity", "promote", "charge", "sigil", "demote"]],
   ["board", ["obstacle", "bridge", "quicksand", "sanctified", "warp", "collapse", "darkness", "earthquake", "vacuum", "scatter", "gravity", "butterfly", "corner"]],
-  ["movement", ["nudge", "blink", "step", "sidestep", "pull", "repel", "leap", "phase", "drift", "recall", "flank", "swap", "hostile", "bait", "mass_nudge", "march", "zeal", "retreat", "dominion", "parallel", "pocket", "possession", "uno", "mirror_move", "time_slip", "echo", "wild", "roulette", "coin", "rules", "conduct", "loading", "draw"]],
+  ["movement", ["nudge", "blink", "step", "sidestep", "pull", "repel", "leap", "phase", "drift", "recall", "flank", "swap", "hostile", "bait", "mass_nudge", "march", "zeal", "retreat", "dominion", "parallel", "pocket", "possession", "uno", "mirror_move", "offering", "echo", "wild", "roulette", "coin", "rules", "conduct", "loading", "draw"]],
 ];
 
 export function cardHue(id) {
