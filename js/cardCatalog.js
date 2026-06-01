@@ -25,6 +25,7 @@ export const ECONOMY_CARD_IDS = new Set([
   "gem_knight",
   "parallel",
   "echo",
+  "chameleon",
 ]);
 
 /** Knight-movement spells removed from the game */
@@ -54,6 +55,7 @@ export const REMOVED_CARD_IDS = new Set([
   "loading",
   "parallel",
   "echo",
+  "chameleon",
 ]);
 
 export function isRemovedCard(cardOrId) {
