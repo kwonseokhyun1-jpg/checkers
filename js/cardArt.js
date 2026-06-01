@@ -15,7 +15,7 @@ const THEME_STYLES = {
 };
 
 const THEME_KEYS = [
-  ["crown", ["crown", "coronation", "exile_king", "succession", "last_king", "constitution", "demote", "royal", "regicide"]],
+  ["purify", "crown", ["purify", "crown", "coronation", "succession", "last_king", "constitution", "demote", "royal", "regicide"]],
   ["combat", ["bolt", "shatter", "destroy", "snipe", "detonate", "duel", "execution", "cull", "venom", "fireline", "fireblast", "backstab", "sacrifice", "lightning", "cryo", "cross", "spear", "hunters", "ricochet", "bash", "mine", "overrun", "bomb"]],
   ["defense", ["shield", "aegis", "bulwark", "fortify", "sanctuary", "last_stand", "decoy", "ghost", "mirror_shield", "phalanx", "anchor", "iron_will", "pulse"]],
   ["debuff", ["freeze", "frost", "root", "slow", "blind", "confusion", "silence", "rust", "hex", "tangle", "fog", "panic", "bind", "deep_freeze", "blizzard"]],

@@ -109,6 +109,7 @@ export function createPiece(color, row, col, king = false) {
     chameleonFrom: null,
     chameleonTurns: 0,
     revivedNoCapture: false,
+    paralyzedTurns: 0,
   };
 }
 
@@ -158,7 +159,7 @@ function isFrozen(piece) {
 function squareBlocked(state, r, c) {
   if (!inBounds(r, c)) return true;
   const key = sk(r, c);
-  if (state?.meta?.collapsed?.has(key)) return true;
+  if (state?.meta?.collapsedSquare === key) return true;
   const sq = state?.squares?.[key];
   if (sq?.obstacle) return true;
   if (sq?.ghostBlock > 0) return true;
@@ -379,7 +380,7 @@ export function tickEffects(board, color, state = null) {
       const p = board[r][c];
       if (!p || p.color !== color) continue;
       const dec = (k) => { if (p[k] > 0) p[k]--; };
-      dec("shieldTurns"); dec("frozenTurns"); dec("retreatTurns");
+      dec("shieldTurns"); dec("frozenTurns"); dec("paralyzedTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
       dec("stoneTurns"); dec("rooted"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
       dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns");

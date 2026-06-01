@@ -49,7 +49,7 @@ function at(state, r, c) {
 
 function emptyDark(state, r, c) {
   const k = sk(r, c);
-  if (state.meta.collapsed?.has(k)) return false;
+  if (state.meta.collapsedSquare === k) return false;
   if (state.squares[k]?.obstacle) return false;
   return isDarkSquare(r, c) && !at(state, r, c);
 }

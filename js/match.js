@@ -21,6 +21,7 @@ import {
   applyCard,
 } from "./cardEffects.js";
 import { runAiTurn } from "./ai.js";
+import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview } from "./cardPreview.js";
@@ -161,6 +162,35 @@ export class MatchSession {
   canPlaySpells() {
     const s = this.state;
     return s.turn === COLORS.RED && s.phase === PHASE.CARDS && !s.gameOver && !s.spellPlayed.red && !s.meta.shatterSilenced?.red && !this.actionBusy;
+  }
+
+
+  showPieceInfo(piece, row, col) {
+    const infoEl = this.$("piece-info");
+    const { buffs, curses } = getPieceStatus(piece);
+    if (infoEl) {
+      const buffText = buffs.length
+        ? buffs.map((b) => (b.turns != null ? `${b.label} (${b.turns})` : b.label)).join(", ")
+        : "None";
+      const curseText = curses.length
+        ? curses.map((c) => (c.turns != null ? `${c.label} (${c.turns})` : c.label)).join(", ")
+        : "None";
+      const side = piece.color === COLORS.RED ? "Your" : "Enemy";
+      const role = piece.king ? "king" : "man";
+      infoEl.innerHTML = `<strong>${side} ${role}</strong> <span class="piece-info__pos">(${row + 1}, ${col + 1})</span>
+        <span class="piece-info__buffs">Buffs: ${buffText}</span>
+        <span class="piece-info__curses">Curses: ${curseText}</span>`;
+      infoEl.classList.remove("hidden");
+    }
+    this.setMessage(formatPieceStatusMessage(piece, row, col));
+  }
+
+  clearPieceInfo() {
+    const infoEl = this.$("piece-info");
+    if (infoEl) {
+      infoEl.classList.add("hidden");
+      infoEl.innerHTML = "";
+    }
   }
 
   setMessage(text) {
@@ -439,6 +469,16 @@ export class MatchSession {
       this.onCardTargetClick(row, col);
       return;
     }
+
+    const piece = s.board[row][col];
+    if (piece) {
+      this.showPieceInfo(piece, row, col);
+      if (s.phase !== PHASE.MOVE) {
+        this.render();
+        return;
+      }
+    }
+
     if (s.phase !== PHASE.MOVE) return;
 
     const clicked = this.validMoves.find((m) => m.to[0] === row && m.to[1] === col);
@@ -447,25 +487,33 @@ export class MatchSession {
       return;
     }
 
-    const piece = s.board[row][col];
     if (piece && piece.color === COLORS.RED) {
       this.selectedSquare = [row, col];
       this.validMoves = getAllMovesForColor(s.board, COLORS.RED, s).filter(
         (m) => m.from[0] === row && m.from[1] === col
       );
-      this.setMessage(
-        this.validMoves.length
-          ? this.validMoves.some((m) => m.captures?.length)
+      if (!this.validMoves.length) {
+        this.setMessage(
+          piece.paralyzedTurns > 0
+            ? "Paralyzed — cannot move yet."
+            : piece.frozenTurns > 0
+              ? "Frozen — cannot move."
+              : "This piece cannot move."
+        );
+        this.selectedSquare = null;
+      } else {
+        this.setMessage(
+          this.validMoves.some((m) => m.captures?.length)
             ? "Jump to capture!"
             : "Choose destination."
-          : "This piece cannot move."
-      );
-      if (!this.validMoves.length) this.selectedSquare = null;
+        );
+      }
       this.render();
       return;
     }
     this.selectedSquare = null;
     this.validMoves = [];
+    if (!piece) this.clearPieceInfo();
     this.render();
   }
 
@@ -1011,6 +1059,7 @@ ${starLine}`;
           el.className = `piece ${piece.color}${piece.king ? " king" : ""}`;
           if (piece.shieldTurns > 0) el.classList.add("shielded");
           if (piece.frozenTurns > 0) el.classList.add("frozen");
+          if (piece.paralyzedTurns > 0) el.classList.add("paralyzed-mark");
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
