@@ -561,7 +561,12 @@ ${starLine}`;
     if (!spec || spec.type === "cull") return;
     this.spellAnimation = spec;
     const frame = this.$("board")?.closest(".board-frame");
+    const board = this.$("board");
     frame?.classList.add(`board-frame--spell-${spec.type}`);
+    if (spec.shake) {
+      frame?.classList.add("board-frame--spell-impact");
+      board?.classList.add("board--spell-shake");
+    }
     const banner = this.$("turn-banner");
     if (banner) {
       banner.textContent = spec.label ? `${spec.label}…` : "Spell resolves…";
@@ -570,6 +575,8 @@ ${starLine}`;
     this.render();
     await delay((spec.duration ?? MIN_SPELL_ANIM_MS) + SPELL_BANNER_EXTRA_MS);
     this.spellAnimation = null;
+    board?.classList.remove("board--spell-shake");
+    frame?.classList.remove("board-frame--spell-impact");
     frame?.classList.remove(`board-frame--spell-${spec.type}`);
     if (banner) banner.classList.remove(`spell-anim-${spec.type}`);
   }
@@ -609,7 +616,8 @@ ${starLine}`;
     const snap = victim || (piece ? cullVictimSnapshot(piece) : null);
     this.cullAnimation = { row, col, victim: snap };
     const frame = this.$("board")?.closest(".board-frame");
-    frame?.classList.add("board-frame--cull");
+    frame?.classList.add("board-frame--cull", "board-frame--spell-impact");
+    this.$("board")?.classList.add("board--spell-shake");
     const banner = this.$("turn-banner");
     if (banner) {
       banner.textContent = "Cull — the weakest falls…";
@@ -618,7 +626,8 @@ ${starLine}`;
     this.render();
     await delay(2000 + SPELL_BANNER_EXTRA_MS);
     this.cullAnimation = null;
-    frame?.classList.remove("board-frame--cull");
+    this.$("board")?.classList.remove("board--spell-shake");
+    frame?.classList.remove("board-frame--cull", "board-frame--spell-impact");
     if (banner) banner.classList.remove("cull-casting");
   }
 

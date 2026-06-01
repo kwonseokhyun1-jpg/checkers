@@ -7,17 +7,33 @@ import { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS } from "./cullAni
 export const MIN_SPELL_ANIM_MS = 1000;
 export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS };
 
-/** Meta / hand / gem effects — board shimmer only */
+/** Meta / hand / turn-rule spells — shimmer only, no board shake */
 const META_EFFECTS = new Set([
-  "gems_20", "gems_5", "bribery_15", "quick_march", "overrun", "ricochet", "blind",
-  "confusion", "counterspell", "dominion", "conduct", "draw_1", "donate", "tax",
-  "gamble", "haggle", "hand_expand", "recycle", "scout", "forge", "coupon",
-  "interest", "bankrupt", "prospect", "heist", "mulligan", "regicide", "mirror_move",
-  "uno_reverse", "parallel", "echo", "roulette", "rules_lawyer", "loading", "mirror_board",
-  "highlight_path", "pocket", "possession", "time_slip", "chameleon", "identity_theft",
-  "succession", "twin_soul", "last_king", "coronation_day", "constitution", "sanctified",
-  "sanctuary_pulse", "warp_gate", "bridge", "collapse", "darkness", "earthquake",
-  "scatter", "vacuum", "blizzard", "deep_freeze", "bait_switch", "hostile_swap", "fusion",
+  "quick_march", "overrun", "ricochet", "blind", "confusion", "counterspell", "dominion",
+  "conduct", "mirror_move", "roulette", "rules_lawyer", "mirror_board", "highlight_path",
+  "pocket", "possession", "time_slip", "chameleon", "identity_theft", "succession",
+  "twin_soul", "last_king", "constitution", "sanctuary_pulse", "parallel", "echo",
+]);
+
+/** Board shake — heavy impact only */
+const BOARD_SHAKE_EFFECTS = new Set([
+  "destroy_unshielded",
+  "shatter",
+  "execution",
+  "detonate",
+  "chain_lightning",
+  "earthquake",
+  "fireline",
+  "cross_bolt",
+  "duel",
+  "scatter",
+  "vacuum",
+  "blizzard",
+  "deep_freeze",
+  "gravity_well",
+  "shield_bash",
+  "cryo_bolt",
+  "cull",
 ]);
 
 const KILL_EFFECTS = new Set([
@@ -25,18 +41,17 @@ const KILL_EFFECTS = new Set([
   "coin_flip", "sacrifice", "backstab", "shatter",
 ]);
 
+/** Multi-target damage / lines — not movement */
 const MULTI_KILL_EFFECTS = new Set([
-  "cross_bolt", "detonate", "fireline", "chain_lightning", "duel", "mass_nudge",
-  "shield_bash", "spear_thrust", "bulwark", "gravity_well", "chain_pull", "repel",
-  "leapfrog", "phase_walk", "corner_hop", "drift", "flank_3", "recall", "blink_2",
-  "long_step", "sidestep", "nudge", "hostile_swap", "butterfly", "scatter", "vacuum",
-  "earthquake", "blizzard", "sanctuary", "tangle", "iron_will",
+  "cross_bolt", "detonate", "fireline", "chain_lightning", "duel",
+  "shield_bash", "spear_thrust", "bulwark", "gravity_well",
+  "earthquake", "blizzard", "sanctuary", "tangle", "scatter", "vacuum",
 ]);
 
 const MOVE_EFFECTS = new Set([
   "blink_2", "long_step", "sidestep", "nudge", "chain_pull", "repel", "leapfrog",
-  "phase_walk", "corner_hop", "drift", "recall", "flank_3", "blink_2", "warp_gate",
-  "bridge", "bait_switch", "hostile_swap", "possession", "time_slip", "chameleon",
+  "phase_walk", "corner_hop", "drift", "recall", "flank_3", "warp_gate",
+  "bridge", "bait_switch", "hostile_swap", "mass_nudge", "butterfly", "iron_will",
 ]);
 
 const SWAP_EFFECTS = new Set([
@@ -44,21 +59,34 @@ const SWAP_EFFECTS = new Set([
 ]);
 
 const TERRAIN_EFFECTS = new Set([
-  "mine", "decoy", "quicksand", "obstacle", "collapse",
+  "mine", "decoy", "quicksand", "obstacle", "collapse", "sanctified",
 ]);
 
 const BUFF_EFFECTS = new Set([
   "shield_2", "retreat_3", "knight_perm", "crown", "rook_2", "bishop_2", "bishop_3",
   "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "mirror_shield", "phalanx",
   "last_stand", "ghost_guard", "fortify", "hunters_mark", "promote_zone", "revive",
-  "wraith_2", "stone_form", "rally", "bulwark", "sanctuary", "iron_will", "fusion",
-  "highlight_path",
+  "wraith_2", "stone_form", "rally", "fusion",
 ]);
 
 const DEBUFF_EFFECTS = new Set([
   "freeze_1", "freeze_2", "deep_freeze", "root_2", "slow_2", "silence_3", "rust", "hex_3", "fog_2",
-  "panic", "demote", "reverse_only_2", "venom", "backpedal", "gravity_well",
+  "panic", "demote", "reverse_only_2", "venom", "backpedal",
 ]);
+
+function animShake(effect, type) {
+  if (type === "instant" || type === "buff" || type === "move" || type === "swap" || type === "terrain") {
+    return false;
+  }
+  if (META_EFFECTS.has(effect)) return false;
+  if (BOARD_SHAKE_EFFECTS.has(effect)) return true;
+  if (type === "kill") return ["destroy_unshielded", "shatter", "execution", "detonate"].includes(effect);
+  return false;
+}
+
+function withSpec(base, effect) {
+  return { ...base, shake: animShake(effect, base.type) };
+}
 
 function adjSquares(row, col) {
   const out = [];
@@ -115,20 +143,33 @@ export function buildAnimSpec(card, picks = [], _color) {
   const label = card.name || "Spell";
 
   if (effect === "cull") {
-    return { type: "cull", duration: CULL_ANIMATION_MS, label, squares: [] };
+    return withSpec({ type: "cull", duration: CULL_ANIMATION_MS, label, squares: [] }, effect);
   }
 
   if (META_EFFECTS.has(effect) && !p.length) {
-    return { type: "instant", duration: MIN_SPELL_ANIM_MS, label, squares: [] };
+    return withSpec({ type: "instant", duration: MIN_SPELL_ANIM_MS, label, squares: [] }, effect);
   }
 
   if (KILL_EFFECTS.has(effect) && p.length) {
-    return {
+    return withSpec({
       type: "kill",
       duration: MIN_SPELL_ANIM_MS,
       label,
       squares: [p[p.length - 1]],
-    };
+    }, effect);
+  }
+
+  if ((MOVE_EFFECTS.has(effect) || (p.length >= 2 && mode !== "empty_empty")) && p.length >= 2) {
+    const lineSquares = squaresBetween(p[0], p[1]);
+    return withSpec({
+      type: "move",
+      duration: MIN_SPELL_ANIM_MS,
+      label,
+      squares: p.slice(0, 2),
+      from: p[0],
+      to: p[1],
+      lineSquares,
+    }, effect);
   }
 
   if (MULTI_KILL_EFFECTS.has(effect)) {
@@ -139,7 +180,7 @@ export function buildAnimSpec(card, picks = [], _color) {
     if (p.length >= 2) {
       squares = uniqueSquares([...squares, ...squaresBetween(p[0], p[1])]);
     }
-    return {
+    return withSpec({
       type: "multi",
       duration: Math.max(MIN_SPELL_ANIM_MS, 1200),
       label,
@@ -147,52 +188,39 @@ export function buildAnimSpec(card, picks = [], _color) {
       from: p[0],
       to: p[1],
       lineSquares: p.length >= 2 ? squaresBetween(p[0], p[1]) : [],
-    };
+    }, effect);
   }
 
   if (SWAP_EFFECTS.has(effect) && p.length >= 2) {
-    return {
+    return withSpec({
       type: "swap",
       duration: MIN_SPELL_ANIM_MS,
       label,
       squares: p.slice(0, 2),
       from: p[0],
       to: p[1],
-    };
-  }
-
-  if ((MOVE_EFFECTS.has(effect) || (p.length >= 2 && mode !== "empty_empty")) && p.length >= 2) {
-    const lineSquares = squaresBetween(p[0], p[1]);
-    return {
-      type: "move",
-      duration: MIN_SPELL_ANIM_MS,
-      label,
-      squares: p.slice(0, 2),
-      from: p[0],
-      to: p[1],
-      lineSquares,
-    };
+    }, effect);
   }
 
   if (TERRAIN_EFFECTS.has(effect) && p.length) {
-    return { type: "terrain", duration: MIN_SPELL_ANIM_MS, label, squares: p };
+    return withSpec({ type: "terrain", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
   }
 
   if (p.length === 1) {
     if (mode === "enemy" || DEBUFF_EFFECTS.has(effect)) {
-      return { type: "debuff", duration: MIN_SPELL_ANIM_MS, label, squares: p };
+      return withSpec({ type: "debuff", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
     }
     if (mode === "friendly" || BUFF_EFFECTS.has(effect)) {
-      return { type: "buff", duration: MIN_SPELL_ANIM_MS, label, squares: p };
+      return withSpec({ type: "buff", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
     }
     if (mode === "empty" || mode === "any_square") {
-      return { type: "terrain", duration: MIN_SPELL_ANIM_MS, label, squares: p };
+      return withSpec({ type: "terrain", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
     }
-    return { type: "generic", duration: MIN_SPELL_ANIM_MS, label, squares: p };
+    return withSpec({ type: "generic", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
   }
 
   if (p.length >= 2) {
-    return {
+    return withSpec({
       type: "generic",
       duration: MIN_SPELL_ANIM_MS,
       label,
@@ -200,10 +228,10 @@ export function buildAnimSpec(card, picks = [], _color) {
       from: p[0],
       to: p[1],
       lineSquares: squaresBetween(p[0], p[1]),
-    };
+    }, effect);
   }
 
-  return { type: "instant", duration: MIN_SPELL_ANIM_MS, label, squares: [] };
+  return withSpec({ type: "instant", duration: MIN_SPELL_ANIM_MS, label, squares: [] }, effect);
 }
 
 export function needsBoardAnimation(card) {
