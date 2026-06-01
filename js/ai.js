@@ -65,6 +65,8 @@ export function runAiTurn(state, opponentName = "Opponent") {
           cardId: card.id,
           cardDesc: card.desc,
           cardEffect: card.effect,
+          cardMode: card.mode,
+          picks: res.picks || [],
           text: res.message || `Cast ${card.name}`,
           ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
         });
