@@ -1,6 +1,6 @@
 /** Buy extra copies of owned spells from the collection inventory */
-import { getCardDef } from "./cardCatalog.js";
-import { addToCollection, collectionCount, saveProfile } from "./storage.js";
+import { getCardDef, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
+import { addToCollection, collectionCount, collectionRoom, saveProfile } from "./storage.js";
 
 export const BUY_COST_BY_RARITY = {
   common: 10,
@@ -27,18 +27,26 @@ export function tryBuyCardCopy(profile, cardId) {
   const def = getCardDef(cardId);
   if (!def) return { success: false, message: "Unknown card." };
 
+  if (owned >= MAX_COPIES_PER_CARD) {
+    return { success: false, message: `You already own the maximum (${MAX_COPIES_PER_CARD} copies).` };
+  }
+
   const cost = getBuyCost(def.rarity);
   if (profile.gems < cost) {
     return { success: false, message: `Need ${cost} gems (${profile.gems} available).` };
   }
 
   profile.gems -= cost;
-  addToCollection(profile, cardId, 1);
-  saveProfile(profile);
+  const added = addToCollection(profile, cardId, 1);
+  if (!added) {
+    profile.gems += cost;
+    saveProfile(profile);
+    return { success: false, message: `You already own the maximum (${MAX_COPIES_PER_CARD} copies).` };
+  }
 
   return {
     success: true,
     cost,
-    message: `+1 ${def.name} for ${cost} gems (${owned + 1} owned).`,
+    message: `+1 ${def.name} for ${cost} gems (${owned + added} owned).`,
   };
 }

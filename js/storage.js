@@ -1,4 +1,4 @@
-import { isKnightCard, isRemovedCard, getCardDef } from "./cardCatalog.js";
+import { isKnightCard, isRemovedCard, getCardDef, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
 import { defaultAdventureProgress, migrateAdventureDecks } from "./adventure.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
@@ -44,6 +44,33 @@ function stripRemovedCards(profile) {
   return profile;
 }
 
+function capCollection(profile) {
+  for (const id of Object.keys(profile.collection || {})) {
+    const n = profile.collection[id];
+    if (n > MAX_COPIES_PER_CARD) profile.collection[id] = MAX_COPIES_PER_CARD;
+    if (n <= 0) delete profile.collection[id];
+  }
+  return profile;
+}
+
+function trimDecksToCollection(profile) {
+  for (const deck of profile.decks || []) {
+    if (!Array.isArray(deck.cardIds)) continue;
+    const used = {};
+    const trimmed = [];
+    for (const id of deck.cardIds) {
+      const owned = profile.collection[id] || 0;
+      const n = used[id] || 0;
+      if (n < owned && n < MAX_COPIES_PER_CARD) {
+        trimmed.push(id);
+        used[id] = n + 1;
+      }
+    }
+    deck.cardIds = trimmed;
+  }
+  return profile;
+}
+
 function stripKnightCards(profile) {
   for (const id of Object.keys(profile.collection || {})) {
     if (isKnightCard(id)) delete profile.collection[id];
@@ -58,9 +85,9 @@ function stripKnightCards(profile) {
 export function loadProfile() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return stripRemovedCards(stripKnightCards(defaultProfile()));
+    if (!raw) return trimDecksToCollection(capCollection(stripRemovedCards(stripKnightCards(defaultProfile()))));
     const p = JSON.parse(raw);
-    return stripRemovedCards(stripKnightCards({
+    return trimDecksToCollection(capCollection(stripRemovedCards(stripKnightCards({
       gems: TESTING_GEMS,
       collection: p.collection ?? {},
       decks: Array.isArray(p.decks) ? p.decks : [],
@@ -71,9 +98,9 @@ export function loadProfile() {
         migrateAdventureDecks(profile);
         return profile.adventure;
       })(),
-    }));
+    }))));
   } catch {
-    return stripRemovedCards(stripKnightCards(defaultProfile()));
+    return trimDecksToCollection(capCollection(stripRemovedCards(stripKnightCards(defaultProfile()))));
   }
 }
 
@@ -81,9 +108,19 @@ export function saveProfile(profile) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
 }
 
+export function collectionRoom(profile, cardId) {
+  return Math.max(0, MAX_COPIES_PER_CARD - collectionCount(profile, cardId));
+}
+
+/** @returns {number} copies actually added (capped at MAX_COPIES_PER_CARD) */
 export function addToCollection(profile, cardId, count = 1) {
-  profile.collection[cardId] = (profile.collection[cardId] || 0) + count;
-  saveProfile(profile);
+  const room = collectionRoom(profile, cardId);
+  const added = Math.min(count, room);
+  if (added > 0) {
+    profile.collection[cardId] = collectionCount(profile, cardId) + added;
+    saveProfile(profile);
+  }
+  return added;
 }
 
 export function collectionCount(profile, cardId) {
