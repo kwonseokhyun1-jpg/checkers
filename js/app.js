@@ -4,6 +4,7 @@
 import { getPlayableCards, getCardDef, DECK_SIZE, maxCopiesForCard } from "./cardCatalog.js";
 import {
   loadProfile,
+  repairProfile,
   saveProfile,
   createDeck,
   upsertDeck,
@@ -162,6 +163,9 @@ function showDeckSubview(sub) {
   $("deck-subview-edit")?.classList.toggle("hidden", sub !== "edit");
   $("deck-subview-view")?.classList.toggle("hidden", sub !== "view");
 
+  if (sub === "edit") {
+    if (repairProfile(profile)) saveProfile(profile);
+  }
   if (sub === "list") renderDeckList();
   if (sub === "edit") renderDeckEditor();
   if (sub === "view") renderDeckView();
@@ -308,99 +312,138 @@ function buyCardFromInventory(cardId, statusEl) {
  * @param {HTMLElement|null} container
  * @param {{ deckEdit?: boolean, statusEl?: HTMLElement|null }} opts
  */
+function addCardToWorkingDeck(cardId) {
+  const addCheck = canAddCardToDeck(workingDeck, cardId, profile);
+  if (!addCheck.ok) {
+    const deckStatus = $("deck-status");
+    if (deckStatus) deckStatus.textContent = addCheck.reason;
+    return false;
+  }
+  workingDeck.push(cardId);
+  renderDeckEditor();
+  return true;
+}
+
 function renderInventoryGrid(container, opts = {}) {
   if (!container) return;
   const { deckEdit = false, statusEl = null } = opts;
   container.innerHTML = "";
 
-  for (const def of getFilteredCollection()) {
-    const owned = collectionCount(profile, def.id);
-    const cap = maxCopiesForCard(def);
-    const atMaxCopies = owned >= cap;
-    const cost = getBuyCost(def.rarity);
-    const canAfford = profile.gems >= cost && !atMaxCopies;
-    const wrap = document.createElement("div");
-    wrap.className = "collection-card-wrap" + (owned < 1 ? " collection-card-wrap--unowned" : "");
+  const cards = getFilteredCollection();
+  if (!cards.length) {
+    const empty = document.createElement("p");
+    empty.className = "collection-grid-empty muted";
+    empty.textContent = deckEdit
+      ? "No owned spells match your filters. Uncheck “Owned only” or unseal cards from the Vault."
+      : "No cards match your filters. Open chests in the Vault to discover spells.";
+    container.appendChild(empty);
+    return;
+  }
 
-    const buyOne = () => buyCardFromInventory(def.id, statusEl);
-
-    const openInspect = () => {
-      const inDeck = deckEdit ? countById(workingDeck)[def.id] || 0 : 0;
+  for (const def of cards) {
+    try {
+      const owned = collectionCount(profile, def.id);
+      const cap = maxCopiesForCard(def);
+      const atMaxCopies = owned >= cap;
+      const cost = getBuyCost(def.rarity);
+      const canAfford = profile.gems >= cost && !atMaxCopies;
       const addCheck = deckEdit ? canAddCardToDeck(workingDeck, def.id, profile) : { ok: false };
-      showCardPreview(def, {
-        meta: deckEdit
-          ? `Owned ${owned}/${cap} · In deck ${inDeck}/${cap} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
-          : `Owned ${owned}/${cap}${atMaxCopies ? " · max copies" : ` · ${cost} gems per copy`}`,
-        buyLabel: atMaxCopies ? "Max copies owned" : `Buy copy (${cost} gems)`,
-        buyDisabled: !canAfford || atMaxCopies,
-        onBuy: () => {
+      const wrap = document.createElement("div");
+      wrap.className = "collection-card-wrap" + (owned < 1 ? " collection-card-wrap--unowned" : "");
+
+      const buyOne = () => buyCardFromInventory(def.id, statusEl);
+
+      const openInspect = () => {
+        const inDeck = deckEdit ? countById(workingDeck)[def.id] || 0 : 0;
+        showCardPreview(def, {
+          meta: deckEdit
+            ? `Owned ${owned}/${cap} · In deck ${inDeck}/${cap} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
+            : `Owned ${owned}/${cap}${atMaxCopies ? " · max copies" : ` · ${cost} gems per copy`}`,
+          buyLabel: atMaxCopies ? "Max copies owned" : `Buy copy (${cost} gems)`,
+          buyDisabled: !canAfford || atMaxCopies || owned < 1,
+          onBuy: () => {
+            buyOne();
+            closeCardPreview();
+          },
+          addDisabled: !addCheck.ok,
+          onAdd: deckEdit
+            ? () => {
+                if (addCardToWorkingDeck(def.id)) closeCardPreview();
+              }
+            : undefined,
+        });
+      };
+
+      const card = renderSpellCardEl(def, {
+        button: true,
+        disabled: deckEdit ? !addCheck.ok && owned < 1 : owned < 1 || atMaxCopies,
+        onClick: (e) => {
+          if (e.shiftKey) {
+            openInspect();
+            return;
+          }
+          if (deckEdit) {
+            if (addCheck.ok) addCardToWorkingDeck(def.id);
+            else if ($("deck-status")) $("deck-status").textContent = addCheck.reason;
+            return;
+          }
+          if (owned < 1 || atMaxCopies) return;
           buyOne();
-          closeCardPreview();
         },
-        addDisabled: !addCheck.ok,
-        onAdd: deckEdit
-          ? () => {
-              if (!addCheck.ok) return;
-              workingDeck.push(def.id);
-              renderDeckEditor();
-              closeCardPreview();
-            }
-          : undefined,
       });
-    };
+      card.title = deckEdit
+        ? addCheck.ok
+          ? `${def.name} — tap to add to deck. Shift+click to inspect.`
+          : `${def.name} — ${addCheck.reason}. Shift+click to inspect.`
+        : atMaxCopies
+          ? `${def.name} — max ${cap} copies owned. Shift+click to inspect.`
+          : `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
+      wrap.appendChild(card);
 
-    const card = renderSpellCardEl(def, {
-      button: true,
-      disabled: owned < 1 || atMaxCopies,
-      onClick: (e) => {
-        if (e.shiftKey) {
-          openInspect();
-          return;
-        }
-        if (owned < 1 || atMaxCopies) return;
-        buyOne();
-      },
-    });
-    card.title = atMaxCopies
-      ? `${def.name} — max ${cap} copies owned. Shift+click to inspect.`
-      : `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
-    wrap.appendChild(card);
+      const ownedBadge = document.createElement("span");
+      ownedBadge.className = "collection-owned-count";
+      ownedBadge.textContent = owned > 0 ? `×${owned}` : "—";
+      wrap.appendChild(ownedBadge);
 
-    const ownedBadge = document.createElement("span");
-    ownedBadge.className = "collection-owned-count";
-    ownedBadge.textContent = owned > 0 ? `×${owned}` : "—";
-    wrap.appendChild(ownedBadge);
+      if (!deckEdit) {
+        const costBadge = document.createElement("span");
+        costBadge.className = "collection-buy-cost";
+        costBadge.textContent = atMaxCopies ? "MAX" : `${cost} ◆`;
+        if (!canAfford || atMaxCopies) costBadge.classList.add("collection-buy-cost--cant");
+        wrap.appendChild(costBadge);
+      } else if (owned >= 1 && !atMaxCopies) {
+        const costBadge = document.createElement("button");
+        costBadge.type = "button";
+        costBadge.className = "collection-buy-cost collection-buy-cost--btn";
+        costBadge.textContent = `${cost} ◆`;
+        costBadge.title = `Buy another copy (${cost} gems)`;
+        costBadge.disabled = !canAfford;
+        if (!canAfford) costBadge.classList.add("collection-buy-cost--cant");
+        costBadge.addEventListener("click", (e) => {
+          e.stopPropagation();
+          buyOne();
+        });
+        wrap.appendChild(costBadge);
+      }
 
-    const costBadge = document.createElement("span");
-    costBadge.className = "collection-buy-cost";
-    costBadge.textContent = `${cost} ◆`;
-    if (!canAfford || atMaxCopies) costBadge.classList.add("collection-buy-cost--cant");
-    if (atMaxCopies) costBadge.textContent = "MAX";
-    wrap.appendChild(costBadge);
+      if (deckEdit) {
+        const addBtn = document.createElement("button");
+        addBtn.type = "button";
+        addBtn.className = "btn-add-to-deck";
+        addBtn.title = addCheck.ok ? "Add to deck" : addCheck.reason;
+        addBtn.textContent = "+";
+        addBtn.disabled = !addCheck.ok;
+        addBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          addCardToWorkingDeck(def.id);
+        });
+        wrap.appendChild(addBtn);
+      }
 
-    if (deckEdit) {
-      const inDeck = countById(workingDeck)[def.id] || 0;
-      const addCheck = canAddCardToDeck(workingDeck, def.id, profile);
-      const addBtn = document.createElement("button");
-      addBtn.type = "button";
-      addBtn.className = "btn-add-to-deck";
-      addBtn.title = addCheck.ok ? "Add to deck" : addCheck.reason;
-      addBtn.textContent = "+";
-      addBtn.disabled = !addCheck.ok;
-      addBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        if (!addCheck.ok) {
-          const deckStatus = $("deck-status");
-          if (deckStatus) deckStatus.textContent = addCheck.reason;
-          return;
-        }
-        workingDeck.push(def.id);
-        renderDeckEditor();
-      });
-      wrap.appendChild(addBtn);
+      container.appendChild(wrap);
+    } catch (err) {
+      console.error("Failed to render card:", def?.id, err);
     }
-
-    container.appendChild(wrap);
   }
 }
 

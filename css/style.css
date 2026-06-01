@@ -3432,3 +3432,18 @@ body.chest-open-active {
   margin: 0 0 0.75rem;
   min-height: 1.2em;
 }
+
+.collection-grid-empty {
+  grid-column: 1 / -1;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  line-height: 1.5;
+}
+.collection-buy-cost--btn {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+}
+.collection-buy-cost--btn:not(:disabled):hover {
+  filter: brightness(1.15);
+}
