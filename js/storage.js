@@ -1,4 +1,4 @@
-import { isKnightCard, isRemovedCard, getCardDef, maxCopiesForCard } from "./cardCatalog.js";
+import { isKnightCard, isRemovedCard, getCardDef, maxCopiesForCard, DECK_SIZE } from "./cardCatalog.js";
 import { defaultAdventureProgress, migrateAdventureDecks } from "./adventure.js";
 import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
 
@@ -56,6 +56,59 @@ function defaultProfile() {
 }
 
 
+
+function totalOwnedCards(profile) {
+  return Object.values(profile.collection || {}).reduce((sum, n) => sum + (Number(n) || 0), 0);
+}
+
+function hasValidDeck(profile) {
+  return (profile.decks || []).some(
+    (d) => Array.isArray(d.cardIds) && d.cardIds.length === DECK_SIZE
+  );
+}
+
+/** Restore starter collection/deck when saves are empty or trimmed to nothing. */
+export function repairProfile(profile) {
+  let changed = false;
+  const owned = totalOwnedCards(profile);
+
+  if (owned < 1) {
+    for (const id of STARTER_COMMON_IDS) {
+      if ((profile.collection[id] || 0) < 1) {
+        profile.collection[id] = STARTER_COPIES_PER_CARD;
+        changed = true;
+      }
+    }
+  }
+
+  if (!hasValidDeck(profile)) {
+    const cardIds = buildStarterDeckCardIds();
+    let starter = (profile.decks || []).find((d) => d.id === "deck-starter");
+    if (!starter) {
+      profile.decks = profile.decks || [];
+      starter = {
+        id: "deck-starter",
+        name: "Starter Deck",
+        cardIds,
+        updatedAt: Date.now(),
+      };
+      profile.decks.unshift(starter);
+    } else {
+      starter.cardIds = cardIds;
+      starter.name = starter.name || "Starter Deck";
+      starter.updatedAt = Date.now();
+    }
+    profile.selectedDeckId = starter.id;
+    changed = true;
+  } else if (!profile.selectedDeckId || !(profile.decks || []).some((d) => d.id === profile.selectedDeckId)) {
+    profile.selectedDeckId = profile.decks.find((d) => d.cardIds?.length === 30)?.id || profile.decks[0]?.id;
+    changed = true;
+  }
+
+  return changed;
+}
+
+
 function stripRemovedCards(profile) {
   for (const id of Object.keys(profile.collection || {})) {
     if (isRemovedCard(id) || !getCardDef(id)) delete profile.collection[id];
@@ -109,9 +162,13 @@ function stripKnightCards(profile) {
 export function loadProfile() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return trimDecksToCollection(capCollection(stripRemovedCards(stripKnightCards(defaultProfile()))));
+    if (!raw) {
+      const profile = trimDecksToCollection(capCollection(stripRemovedCards(stripKnightCards(defaultProfile()))));
+      repairProfile(profile);
+      return profile;
+    }
     const p = JSON.parse(raw);
-    return trimDecksToCollection(capCollection(stripRemovedCards(stripKnightCards({
+    const profile = trimDecksToCollection(capCollection(stripRemovedCards(stripKnightCards({
       gems: TESTING_GEMS,
       collection: p.collection ?? {},
       decks: Array.isArray(p.decks) ? p.decks : [],
@@ -119,13 +176,17 @@ export function loadProfile() {
       cosmetics: normalizeCosmetics(p.cosmetics),
       adventure: (() => {
         const adv = { ...defaultAdventureProgress(), ...(p.adventure || {}) };
-        const profile = { adventure: adv };
-        migrateAdventureDecks(profile);
-        return profile.adventure;
+        const stub = { adventure: adv };
+        migrateAdventureDecks(stub);
+        return stub.adventure;
       })(),
     }))));
+    if (repairProfile(profile)) saveProfile(profile);
+    return profile;
   } catch {
-    return trimDecksToCollection(capCollection(stripRemovedCards(stripKnightCards(defaultProfile()))));
+    const profile = trimDecksToCollection(capCollection(stripRemovedCards(stripKnightCards(defaultProfile()))));
+    repairProfile(profile);
+    return profile;
   }
 }
 

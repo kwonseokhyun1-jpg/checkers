@@ -6,8 +6,6 @@ import {
   isKnightCard,
   getCardDef,
 } from "./cardCatalog.js";
-import { collectionCount } from "./storage.js";
-
 export function countById(cardIds) {
   const map = {};
   for (const id of cardIds) {
@@ -27,7 +25,7 @@ export function validateDeck(cardIds, profile) {
     if (isEconomyCard(id)) errors.push(`Economy spell disabled: ${getCardDef(id)?.name || id}`);
     const cap = maxCopiesForCard(id);
     if (n > cap) errors.push(`Max ${cap} copies of ${getCardDef(id)?.name || id}.`);
-    if (profile && collectionCount(profile, id) < n) {
+    if (profile && ownedCopies(profile, id) < n) {
       errors.push(`Not enough copies of ${getCardDef(id)?.name || id} in collection.`);
     }
   }
@@ -42,7 +40,7 @@ export function canAddCardToDeck(deckIds, cardId, profile) {
   const inDeck = counts[cardId] || 0;
   const cap = maxCopiesForCard(cardId);
   if (inDeck >= cap) return { ok: false, reason: `Max ${cap} copies of this card.` };
-  const owned = collectionCount(profile, cardId);
+  const owned = ownedCopies(profile, cardId);
   if (owned <= inDeck) return { ok: false, reason: "No more copies in collection." };
   return { ok: true };
 }
