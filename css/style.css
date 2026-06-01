@@ -622,7 +622,7 @@ body {
   color: var(--text);
   flex: 1;
 }
-.deck-actions, .row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+.deck-actions, .row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
 .label-sm { font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.75rem; }
 .btn-lg { margin-top: 1rem; width: 100%; padding: 0.75rem; }
 .play-lobby { max-width: 420px; }
@@ -777,6 +777,14 @@ body {
   gap: 0.65rem;
   max-height: 560px;
   overflow-y: auto;
+}
+
+.deck-slots-open {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
 }
 .deck-slots-grid {
   display: grid;
@@ -1868,6 +1876,22 @@ body {
 }
 .deck-slot-wrap {
   position: relative;
+}
+.deck-stack-count {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  z-index: 2;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  background: rgba(8, 12, 28, 0.88);
+  border: 1px solid var(--card-border);
+  color: var(--accent-gem);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.2;
+  pointer-events: none;
 }
 .deck-slot-remove {
   position: absolute;
