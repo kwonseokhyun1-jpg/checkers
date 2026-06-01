@@ -195,7 +195,44 @@ const EFFECTS = {
   fireline(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?-1:1; for(const dc of [-1,1]){ let rr=p.row+dir,cc=p.col+dc; while(inBounds(rr,cc)&&isDarkSquare(rr,cc)){ const t=at(state,rr,cc); if(t){ if(t.color!==color) kill(state,rr,cc,color); break;} rr+=dir; cc+=dc;}} return ok(); },
   sanctuary_pulse(state, color, picks) { const rows=backRow(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&rows.includes(r)) p.shieldTurns=Math.max(p.shieldTurns,1);} return ok(); },
   mass_nudge(state, color, picks) { let n=0; for(const p of [...fri(state,color)]){ if(n>=2) break; const adj=getAdjacentEmpty(state.board,p); if(adj.length){ const [tr,tc]=adj[0]; movePiece(state.board,p.row,p.col,tr,tc); n++; markMove(state,color);} } return n?ok():fail('No targets'); },
-  chain_lightning(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?-1:1; let hits=0; for(const dc of [-1,1]){ let rr=p.row+dir,cc=p.col+dc; while(inBounds(rr,cc)&&hits<3){ const t=at(state,rr,cc); if(t){ if(t.color!==color&&kill(state,rr,cc,color)) hits++; break;} rr+=dir; cc+=dc;}} return hits?ok():fail(); },
+  chain_lightning(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color !== color) return fail();
+    const dir = p.color === COLORS.RED ? -1 : 1;
+    const countEnemies = (dc) => {
+      let n = 0;
+      let rr = p.row + dir, cc = p.col + dc;
+      while (inBounds(rr, cc) && isDarkSquare(rr, cc)) {
+        const t = at(state, rr, cc);
+        if (t) {
+          if (t.color !== color) n++;
+          else break;
+        }
+        rr += dir;
+        cc += dc;
+      }
+      return n;
+    };
+    const left = countEnemies(-1);
+    const right = countEnemies(1);
+    let dc = right > left ? 1 : -1;
+    if (left === 0 && right === 0) return fail("No enemies on a forward diagonal");
+    const MAX_CHAIN = 2;
+    let hits = 0;
+    let rr = p.row + dir, cc = p.col + dc;
+    while (inBounds(rr, cc) && isDarkSquare(rr, cc) && hits < MAX_CHAIN) {
+      const t = at(state, rr, cc);
+      if (t) {
+        if (t.color !== color) {
+          if (kill(state, rr, cc, color)) hits++;
+        } else break;
+      }
+      rr += dir;
+      cc += dc;
+    }
+    return hits ? ok(`Chain Lightning — ${hits} struck along the denser diagonal.`) : fail("No valid targets");
+  },
   vacuum(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const all=fri(state,color).concat(en(state,color)); for(const p of all){ const dr=Math.sign(r-p.row),dc=Math.sign(c-p.col); const nr=p.row+dr,nc=p.col+dc; if((nr!==r||nc!==c)&&emptyDark(state,nr,nc)) movePiece(state.board,p.row,p.col,nr,nc);} return ok(); },
   scatter(state, color, picks) { const [r,c]=p0(picks); const all=[]; for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ if(!dr&&!dc) continue; const pr=r+dr,pc=c+dc; const p=at(state,pr,pc); if(p) all.push(p);} for(const p of all){ const dr=Math.sign(p.row-r)||1, dc=Math.sign(p.col-c)||1; const nr=p.row+dr,nc=p.col+dc; if(emptyDark(state,nr,nc)) movePiece(state.board,p.row,p.col,nr,nc);} return ok(); },
   dominion(state, color, picks) { state.meta.dominionTurn[color]=true; return ok(); },
