@@ -53,7 +53,7 @@ export const CARD_REGISTRY = [
   { id: "overrun", name: "Overrun", desc: "After a capture this turn, slide 1 more square forward along the same diagonal if empty.", rarity: "uncommon", weight: 4, mode: "instant", effect: "overrun" },
   { id: "hunters_mark", name: "Hunter's Mark", desc: "Mark an enemy; your next capture may jump to it from 2 squares away.", rarity: "uncommon", weight: 4, mode: "enemy", effect: "hunters_mark" },
   { id: "landmine", name: "Landmine", desc: "Hidden trap on an empty dark square for 2 turns — destroys the next enemy to land there (invisible until it triggers).", rarity: "uncommon", weight: 5, mode: "empty", effect: "landmine" },
-  { id: "offering", name: "Offering", desc: "Sacrifice one of your pieces; you may cast another spell immediately afterward.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "offering" },
+  { id: "offering", name: "Offering", desc: "Sacrifice one of your pieces; you may cast another spell immediately afterward.", rarity: "rare", weight: 3, mode: "friendly", effect: "offering" },
   { id: "backpedal", name: "Forced Retreat", desc: "Enemy can only move backward for 2 turns and cannot capture.", rarity: "uncommon", weight: 5, mode: "enemy", effect: "reverse_only_2" },
   { id: "root", name: "Root", desc: "Enemy cannot jump or capture on its next turn (can still step).", rarity: "uncommon", weight: 4, mode: "enemy", effect: "root_2" },
   { id: "sacrifice", name: "Sacrifice", desc: "Destroy one of your pieces to destroy any enemy (including kings).", rarity: "uncommon", weight: 4, mode: "f_e", effect: "sacrifice" },
