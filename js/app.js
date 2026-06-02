@@ -911,6 +911,33 @@ function renderAdventureMap() {
     pinsLayer?.appendChild(pin);
   });
 
+
+  const stageList = $("adventure-stage-list");
+  if (stageList) {
+    stageList.innerHTML = "";
+    for (const level of levels) {
+      const unlocked = isLevelUnlocked(progress, level.id);
+      const cleared = isLevelCleared(progress, level.id);
+      const isNext = level.id === nextId && unlocked;
+      const stars = getLevelStars(progress, level.id);
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "adventure-stage-row";
+      if (!unlocked) row.disabled = true;
+      if (cleared) row.classList.add("adventure-stage-row--cleared");
+      if (isNext) row.classList.add("adventure-stage-row--next");
+      row.innerHTML = `
+        <span class="adventure-stage-row__main">
+          <span class="adventure-stage-row__title">${level.stageInWorld}. ${level.opponent}</span>
+          <span class="adventure-stage-row__flavor">${level.flavor}</span>
+        </span>
+        ${isNext ? '<span class="adventure-stage-row__badge">Next</span>' : ""}
+        ${stars > 0 ? `<span class="adventure-stage-row__stars">${formatStars(stars)}</span>` : ""}`;
+      row.addEventListener("click", () => openAdventureStage(level.id));
+      stageList.appendChild(row);
+    }
+  }
+
   if (pathEl && points.length > 1) {
     pathEl.innerHTML = `<polyline points="${points.join(" ")}" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.35"/>`;
   }
@@ -1091,6 +1118,9 @@ function init() {
   bindCardPreviewModal();
   bindAdventureMapCapture();
   ensureStageModalOnBody();
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAdventurePrebattle();
+  });
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => showTab(btn.dataset.tab));
   });

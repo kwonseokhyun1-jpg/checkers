@@ -160,7 +160,12 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
       await signIn(identifier, password);
       close();
     } catch (err) {
-      const msg = err?.message || "Authentication failed";
+      let msg = err?.message || "Authentication failed";
+      if (msg.includes("over_email_send_rate_limit") || msg.includes("rate limit")) {
+        msg = "Too many sign-up attempts. Wait a few minutes or sign in with an existing account.";
+      } else if (msg.includes("User already registered")) {
+        msg = "That email is already registered. Try Sign in instead.";
+      }
       if (msg.includes("Invalid login credentials")) {
         setError("Wrong email/username or password.");
       } else if (msg.includes("Email not confirmed")) {
