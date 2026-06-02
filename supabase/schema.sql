@@ -65,23 +65,45 @@ create policy "pvp_join_waiting"
   using (status = 'waiting' and guest_id is null)
   with check (auth.uid() = guest_id);
 
--- Auto-create profile on sign-up
+-- Auto-create profile on sign-up (must not fail auth insert — see fix_signup_trigger.sql)
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
-security definer set search_path = public
+security definer
+set search_path = public
 as $$
+declare
+  desired_username text;
+  desired_display text;
+  fallback_username text;
 begin
-  insert into public.profiles (id, display_name, username)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
-    coalesce(new.raw_user_meta_data->>'username', 'player_' || left(new.id::text, 8))
-  )
-  on conflict (id) do nothing;
+  desired_username := nullif(trim(coalesce(new.raw_user_meta_data->>'username', '')), '');
+  desired_display := nullif(trim(coalesce(new.raw_user_meta_data->>'display_name', '')), '');
+  fallback_username := 'player_' || left(replace(new.id::text, '-', ''), 8);
+
+  begin
+    insert into public.profiles (id, display_name, username)
+    values (
+      new.id,
+      coalesce(desired_display, split_part(coalesce(new.email, ''), '@', 1)),
+      coalesce(desired_username, fallback_username)
+    );
+  exception
+    when unique_violation then
+      insert into public.profiles (id, display_name, username)
+      values (
+        new.id,
+        coalesce(desired_display, split_part(coalesce(new.email, ''), '@', 1)),
+        fallback_username
+      )
+      on conflict (id) do nothing;
+  end;
+
   return new;
 end;
 $$;
+
+alter function public.handle_new_user() owner to postgres;
 
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
@@ -95,6 +117,24 @@ create policy "pvp_delete_host_waiting"
   on public.pvp_matches for delete
   using (auth.uid() = host_id and status = 'waiting');
 
+
+-- Case-insensitive username availability (sign-up)
+create or replace function public.username_is_available(name text)
+returns boolean
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select not exists (
+    select 1
+    from public.profiles p
+    where p.username is not null
+      and lower(p.username) = lower(trim(name))
+  );
+$$;
+
+grant execute on function public.username_is_available(text) to anon, authenticated;
 
 -- Resolve username or email for password sign-in (client calls before signInWithPassword)
 create or replace function public.email_for_login(identifier text)

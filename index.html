@@ -2,12 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#080a12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>Arcane Checkers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:opsz,wght@9..144,600;700&family=Sora:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/mobile-game.css" />
 </head>
 <body>
   <div class="ambient-bg" aria-hidden="true"></div>
@@ -46,21 +49,21 @@
         <span class="tab-btn__icon" aria-hidden="true">▣</span>
         <span>Decks</span>
       </button>
-      <button type="button" class="tab-btn game-nav__btn" data-tab="profile" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">☺</span>
-        <span>Profile</span>
-      </button>
       <button type="button" class="tab-btn game-nav__btn" data-tab="chests" role="tab">
         <span class="tab-btn__icon" aria-hidden="true">◇</span>
         <span>Vault</span>
       </button>
-      <button type="button" class="tab-btn game-nav__btn" data-tab="play" role="tab">
+      <button type="button" class="tab-btn game-nav__btn game-nav__btn--play" data-tab="play" role="tab">
         <span class="tab-btn__icon" aria-hidden="true">⚔</span>
-        <span>Adventure</span>
+        <span>Play</span>
       </button>
       <button type="button" class="tab-btn game-nav__btn" data-tab="pvp" role="tab">
         <span class="tab-btn__icon" aria-hidden="true">⚡</span>
         <span>PvP</span>
+      </button>
+      <button type="button" class="tab-btn game-nav__btn" data-tab="profile" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">☺</span>
+        <span>Profile</span>
       </button>
     </nav>
 
@@ -229,7 +232,8 @@
       <h2 id="auth-modal-title" class="panel-head__title">Sign in</h2>
       <form id="auth-form" class="auth-form">
         <label class="label-sm auth-field-signup" for="auth-username">Username</label>
-        <input type="text" id="auth-username" class="input-text auth-field-signup" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="Shown in game and for sign-in" />
+        <input type="text" id="auth-username" class="input-text auth-field-signup" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="Your in-game name" />
+        <p id="auth-username-hint" class="auth-username-hint auth-field-signup" aria-live="polite"></p>
         <label class="label-sm" for="auth-identifier">Username or email</label>
         <input type="text" id="auth-identifier" autocomplete="username" class="input-text" required  />
         <label class="label-sm" for="auth-password">Password</label>
