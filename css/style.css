@@ -3491,6 +3491,8 @@ body.chest-open-active {
   font: inherit;
   cursor: pointer;
   border: none;
+  pointer-events: auto;
+  z-index: 4;
 }
 .collection-buy-cost--btn:not(:disabled):hover {
   filter: brightness(1.15);
