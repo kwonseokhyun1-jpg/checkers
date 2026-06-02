@@ -117,6 +117,19 @@ export function runAiTurn(state, opponentName = "Opponent") {
         : `Moved ${squareName(move.from[0], move.from[1])} → ${squareName(move.to[0], move.to[1])}`,
     });
     applyMove(state.board, move, state);
+    const [br, bc] = move.to;
+    const landed = state.board[br]?.[bc];
+    if (landed?.bearAwakened && !state.meta.bearBonusUsed?.[COLORS.BLACK]) {
+      state.meta.bearBonusUsed[COLORS.BLACK] = true;
+      const extras = getAllMovesForColor(state.board, COLORS.BLACK, state).filter(
+        (m) => m.from[0] === br && m.from[1] === bc
+      );
+      if (extras.length) {
+        const extra = extras[Math.floor(Math.random() * extras.length)];
+        applyMove(state.board, extra, state);
+        if (state.boardFx) { /* FX shown on client replay */ }
+      }
+    }
     if (state.meta.pendingDouble.black && move.type === "step") {
       state.meta.pendingDouble.black = false;
       const extra = getAllMovesForColor(state.board, color, state).filter(

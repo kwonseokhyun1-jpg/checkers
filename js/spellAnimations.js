@@ -3,6 +3,7 @@
  */
 import { SIZE, inBounds, isDarkSquare } from "./board.js";
 import { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS } from "./cullAnimation.js";
+import { visualForEffect } from "./spellFx.js";
 
 export const MIN_SPELL_ANIM_MS = 1000;
 export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS };
@@ -67,7 +68,7 @@ const TERRAIN_EFFECTS = new Set([
 const BUFF_EFFECTS = new Set([
   "shield_2", "retreat_3", "knight_perm", "crown", "rook_2", "bishop_2", "bishop_3",
   "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "mirror_shield", "phalanx",
-  "last_stand", "ghost_guard", "fortify", "vengeance", "stall", "hunters_mark", "promote_zone", "revive",
+  "last_stand", "ghost_guard", "fortify", "vengeance", "hibernation", "stall", "hunters_mark", "promote_zone", "revive",
   "wraith_2", "stone_form", "rally", "fusion",
 ]);
 
@@ -89,6 +90,38 @@ function animShake(effect, type) {
 function withSpec(base, effect) {
   return { ...base, shake: animShake(effect, base.type) };
 }
+
+const VISUAL_DURATION_MS = {
+  coin: 1400,
+  duel: 1500,
+  stab: 1200,
+  snipe: 1300,
+  backstab: 1200,
+  sacrifice: 1600,
+  execution: 1400,
+  shadow: 2000,
+  cryo: 1300,
+  shatter: 1400,
+  lightning: 1400,
+  fire: 1300,
+  vengeance: 1100,
+  hibernation: 1200,
+  bomb_arm: 1000,
+  landmine_arm: 1000,
+};
+
+function animDurationForEffect(effect, fallback = MIN_SPELL_ANIM_MS) {
+  const visual = visualForEffect(effect);
+  const ms = visual ? VISUAL_DURATION_MS[visual] : fallback;
+  return Math.max(MIN_SPELL_ANIM_MS, ms ?? fallback);
+}
+
+function withVisual(base, effect) {
+  const visual = visualForEffect(effect);
+  if (!visual) return withSpec(base, effect);
+  return withSpec({ ...base, visual }, effect);
+}
+
 
 function adjSquares(row, col) {
   const out = [];
@@ -185,8 +218,18 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
+  if (effect === "coin_flip") {
+    return withVisual({
+      type: "instant",
+      duration: animDurationForEffect(effect),
+      label,
+      squares: [],
+      overlay: "coin",
+    }, effect);
+  }
+
   if (effect === "cull") {
-    return withSpec({ type: "cull", duration: CULL_ANIMATION_MS, label, squares: [] }, effect);
+    return withVisual({ type: "cull", duration: CULL_ANIMATION_MS, label, squares: [] }, effect);
   }
 
   if (META_EFFECTS.has(effect) && !p.length) {
@@ -194,11 +237,53 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
   }
 
   if (KILL_EFFECTS.has(effect) && p.length) {
-    return withSpec({
+    const dur = animDurationForEffect(effect);
+    if (effect === "forward_bolt" || effect === "cryo_bolt") {
+      return withVisual({
+        type: "kill",
+        duration: dur,
+        label,
+        squares: [p[1]],
+        from: p[0],
+        to: p[1],
+        lineSquares: squaresBetween(p[0], p[1]),
+      }, effect);
+    }
+    if (effect === "sacrifice") {
+      return withVisual({
+        type: "kill",
+        duration: dur,
+        label,
+        squares: p,
+        from: p[0],
+        to: p[1],
+      }, effect);
+    }
+    if (effect === "backstab" && extra.backstabTo) {
+      return withVisual({
+        type: "kill",
+        duration: dur,
+        label,
+        squares: [extra.backstabTo],
+        from: p[0],
+        to: extra.backstabTo,
+      }, effect);
+    }
+    if (effect === "snipe" || effect === "execution" || effect === "destroy_unshielded") {
+      return withVisual({
+        type: "kill",
+        duration: dur,
+        label,
+        squares: p,
+        to: p[0],
+      }, effect);
+    }
+    return withVisual({
       type: "kill",
-      duration: MIN_SPELL_ANIM_MS,
+      duration: dur,
       label,
       squares: [p[p.length - 1]],
+      to: p[p.length - 1],
     }, effect);
   }
 
@@ -223,9 +308,10 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     if (p.length >= 2) {
       squares = uniqueSquares([...squares, ...squaresBetween(p[0], p[1])]);
     }
-    return withSpec({
+    const dur = effect === "duel" ? animDurationForEffect("duel") : Math.max(MIN_SPELL_ANIM_MS, 1200);
+    return withVisual({
       type: "multi",
-      duration: Math.max(MIN_SPELL_ANIM_MS, 1200),
+      duration: dur,
       label,
       squares,
       from: p[0],
@@ -242,6 +328,26 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
       squares: p.slice(0, 2),
       from: p[0],
       to: p[1],
+    }, effect);
+  }
+
+  if (effect === "landmine" && p.length === 1) {
+    return withVisual({
+      type: "terrain",
+      duration: animDurationForEffect("landmine"),
+      label,
+      squares: p,
+      to: p[0],
+    }, "landmine");
+  }
+
+  if ((effect === "vengeance" || effect === "hibernation" || effect === "bomb") && p.length === 1) {
+    return withVisual({
+      type: "buff",
+      duration: animDurationForEffect(effect),
+      label,
+      squares: p,
+      to: p[0],
     }, effect);
   }
 

@@ -35,6 +35,9 @@ import {
   buildAnimSpec,
   MIN_SPELL_ANIM_MS,
 } from "./spellAnimations.js";
+import { applySquareSpellFx, mountSpellOverlay, removeSpellOverlay } from "./spellFx.js";
+import { boardFxDuration } from "./boardFx.js";
+import { planTrickster, getChainLightningAnimSquares } from "./cardEffectHandlers.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -129,6 +132,7 @@ export class MatchSession {
     this.aiHighlight = null;
     this.cullAnimation = null;
     this.spellAnimation = null;
+    this.boardFx = null;
     this.actionBusy = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.bindEls();
@@ -546,6 +550,47 @@ export class MatchSession {
     return true;
   }
 
+
+  playBoardFx(s, onDone) {
+    this.boardFx = { ...s.boardFx, squares: s.boardFx.squares.map(([r, c]) => [r, c]) };
+    s.boardFx = null;
+    const kind = this.boardFx.kind || "bomb";
+    const labels = {
+      bomb: "Bomb detonates — adjacent pieces destroyed!",
+      mine: "Landmine explodes!",
+      vengeance: "Vengeance — blood for blood!",
+    };
+    this.setMessage(labels[kind] || "Blast!");
+    const frame = this.$("board")?.closest(".board-frame");
+    frame?.classList.add(`board-frame--fx-${kind}`, "board-frame--spell-impact");
+    this.$("board")?.classList.add("board--spell-shake");
+    this.render();
+    const ms = boardFxDuration(kind);
+    setTimeout(() => {
+      this.boardFx = null;
+      frame?.classList.remove(`board-frame--fx-${kind}`, "board-frame--spell-impact");
+      this.$("board")?.classList.remove("board--spell-shake");
+      if (this.checkWin()) return;
+      onDone?.();
+    }, ms);
+  }
+
+  tryBearBonusMove(s, color, landR, landC) {
+    const landed = s.board[landR]?.[landC];
+    if (!landed?.bearAwakened || s.meta.bearBonusUsed?.[color]) return false;
+    const extras = getAllMovesForColor(s.board, color, s).filter(
+      (m) => m.from[0] === landR && m.from[1] === landC
+    );
+    if (!extras.length) return false;
+    s.meta.bearBonusUsed[color] = true;
+    s.phase = PHASE.MOVE;
+    this.validMoves = extras;
+    this.selectedSquare = [landR, landC];
+    this.setMessage("Awoken Bear — move again!");
+    this.render();
+    return true;
+  }
+
   executeHumanMove(move) {
     const s = this.state;
     this.cancelCardPlay();
@@ -571,20 +616,13 @@ export class MatchSession {
           return;
         }
       }
+      if (this.tryBearBonusMove(s, this.localColor, landR, landC)) return;
       if (this.tryPressExtraMove(s, this.localColor)) return;
       this.endHumanTurn();
     };
 
-    if (s.lastExplosion) {
-      this.explosionFlash = [...s.lastExplosion];
-      s.lastExplosion = null;
-      this.setMessage("Bomb detonates — adjacent pieces destroyed!");
-      this.render();
-      setTimeout(() => {
-        this.explosionFlash = null;
-        if (this.checkWin()) return;
-        finish();
-      }, 750);
+    if (s.boardFx) {
+      this.playBoardFx(s, finish);
       return;
     }
 
@@ -719,8 +757,10 @@ ${starLine}`;
     this.spellAnimation = spec;
     const frame = this.$("board")?.closest(".board-frame");
     const board = this.$("board");
+    let overlay = null;
     frame?.classList.add(`board-frame--spell-${spec.type}`);
     if (spec.visual) frame?.classList.add(`board-frame--fx-${spec.visual}`);
+    if (spec.overlay) overlay = mountSpellOverlay(frame, spec.overlay);
     if (spec.shake) {
       frame?.classList.add("board-frame--spell-impact");
       board?.classList.add("board--spell-shake");
@@ -733,11 +773,25 @@ ${starLine}`;
     this.render();
     await delay((spec.duration ?? MIN_SPELL_ANIM_MS) + SPELL_BANNER_EXTRA_MS);
     this.spellAnimation = null;
+    this.boardFx = null;
+    removeSpellOverlay(overlay);
     board?.classList.remove("board--spell-shake");
     frame?.classList.remove("board-frame--spell-impact");
     if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
     frame?.classList.remove(`board-frame--spell-${spec.type}`);
     if (banner) banner.classList.remove(`spell-anim-${spec.type}`);
+  }
+
+  async runVictimSquareFlash(spec) {
+    if (!spec) return;
+    this.spellAnimation = spec;
+    const frame = this.$("board")?.closest(".board-frame");
+    if (spec.visual) frame?.classList.add(`board-frame--fx-${spec.visual}`);
+    this.render();
+    await delay((spec.duration ?? 900) + 400);
+    this.spellAnimation = null;
+    this.boardFx = null;
+    if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
   }
 
   async runHiddenCounterspellCast() {
@@ -775,7 +829,7 @@ ${starLine}`;
     const snap = victim || (piece ? cullVictimSnapshot(piece) : null);
     this.cullAnimation = { row, col, victim: snap };
     const frame = this.$("board")?.closest(".board-frame");
-    frame?.classList.add("board-frame--cull", "board-frame--spell-impact");
+    frame?.classList.add("board-frame--cull", "board-frame--fx-shadow", "board-frame--spell-impact");
     this.$("board")?.classList.add("board--spell-shake");
     const banner = this.$("turn-banner");
     if (banner) {
@@ -786,7 +840,7 @@ ${starLine}`;
     await delay(2000 + SPELL_BANNER_EXTRA_MS);
     this.cullAnimation = null;
     this.$("board")?.classList.remove("board--spell-shake");
-    frame?.classList.remove("board-frame--cull", "board-frame--spell-impact");
+    frame?.classList.remove("board-frame--cull", "board-frame--fx-shadow", "board-frame--spell-impact");
     if (banner) banner.classList.remove("cull-casting");
   }
 
@@ -819,10 +873,38 @@ ${starLine}`;
       s.meta.pendingTrickster = plan;
       extra.tricksterSquares = plan.squares;
     }
+    if (card.effect === "backstab" && picks.length) {
+      const [r, c] = picks[0];
+      const dir = this.localColor === COLORS.RED ? 1 : -1;
+      for (const dc of [-1, 1]) {
+        const t = s.board[r + dir]?.[c + dc];
+        if (t && t.color !== this.localColor) {
+          extra.backstabTo = [r + dir, c + dc];
+          break;
+        }
+      }
+    }
     if (card.effect === "chain_lightning" && picks.length) {
       const [pr, pc] = picks[0];
       extra.chainSquares = getChainLightningAnimSquares(s, pr, pc, this.localColor);
     }
+    if (card.effect === "coin_flip") {
+      const spec = buildAnimSpec(card, [], this.localColor, extra);
+      await this.runSpellAnimation(spec);
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (res.success && res.victimSquare) {
+        await this.runVictimSquareFlash({
+          type: "kill",
+          visual: "coin",
+          duration: 900,
+          label: card.name,
+          squares: [res.victimSquare],
+          to: res.victimSquare,
+        });
+      }
+      return res;
+    }
+
     const spec = buildAnimSpec(card, picks, this.localColor, extra);
     await this.runSpellAnimation(spec);
     return applyCard(this.state, this.localColor, card, picks);
@@ -973,6 +1055,7 @@ ${starLine}`;
         this.aiHighlight = null;
     this.cullAnimation = null;
     this.spellAnimation = null;
+    this.boardFx = null;
     this.actionBusy = false;
         this.render();
       } else if (entry.type === "message") {
@@ -997,12 +1080,8 @@ ${starLine}`;
     const log = runAiTurn(s, this.opponentName);
     await this.replayAiLog(log);
 
-    if (s.lastExplosion) {
-      this.explosionFlash = s.lastExplosion;
-      s.lastExplosion = null;
-      this.render();
-      await delay(AI_PACE.explosion);
-      this.explosionFlash = null;
+    if (s.boardFx) {
+      await new Promise((resolve) => this.playBoardFx(s, resolve));
     }
 
     tickEffects(s.board, COLORS.BLACK, s);
@@ -1108,7 +1187,9 @@ ${starLine}`;
         if (this.aiHighlight?.captures?.some(([r, c]) => r === row && c === col)) {
           sq.classList.add("ai-capture");
         }
-        if (this.explosionFlash?.[0] === row && this.explosionFlash?.[1] === col) {
+        if (this.boardFx?.squares?.some(([r, c]) => r === row && c === col)) {
+          sq.classList.add(`board-fx-${this.boardFx.kind}`, "board-fx-blast");
+        } else if (this.explosionFlash?.[0] === row && this.explosionFlash?.[1] === col) {
           sq.classList.add("explosion-flash");
         }
         if (this.selectedSquare?.[0] === row && this.selectedSquare?.[1] === col) sq.classList.add("selected");
@@ -1126,15 +1207,23 @@ ${starLine}`;
           this.cullAnimation.row === row &&
           this.cullAnimation.col === col
         ) {
-          sq.classList.add("cull-execution");
+          sq.classList.add("cull-execution", "spell-fx-shadow");
         }
 
         const animRole = this.squareInAnim(this.spellAnimation, row, col);
         if (animRole) {
           sq.classList.add(`spell-anim-${animRole}`);
-          if (this.spellAnimation?.visual === "fire" && animRole === "fire-line") sq.classList.add("spell-fx-fire");
-          if (this.spellAnimation?.visual === "lightning") sq.classList.add("spell-fx-lightning");
-          if (this.spellAnimation?.visual === "trickster") sq.classList.add("spell-fx-trickster");
+          const vis = this.spellAnimation?.visual;
+          if (vis) {
+            applySquareSpellFx(sq, vis, animRole, {
+              from: this.spellAnimation.from,
+              to: this.spellAnimation.to,
+              row,
+              col,
+            });
+            if (vis === "fire" && animRole === "fire-line") sq.classList.add("spell-fx-fire-line");
+            if (vis === "trickster") sq.classList.add("spell-fx-trickster");
+          }
           if (this.spellAnimation?.type) sq.classList.add(`spell-anim-type-${this.spellAnimation.type}`);
         }
 
@@ -1155,6 +1244,9 @@ ${starLine}`;
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
+          if (piece.hibernationTurns > 0) el.classList.add("hibernating");
+          if (piece.bearAwakened) el.classList.add("bear-awoken");
+          if (piece.vengeanceTurns > 0) el.classList.add("vengeance-mark");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (
             this.cullAnimation &&
