@@ -17,6 +17,7 @@
 - **Krabby Patty** — Gain 5 gems. Delicious.
 - **Loading…** — Draw 1 card.
 - **Mirror Board** — Confuse the AI's targeting for its next turn.
+- **Backstep** — Move one of your pieces 1 square straight backward onto an empty dark square.
 - **Nudge** — Displace one of your pieces 1 square to an adjacent empty dark square.
 - **Pawn's Zeal** — A non-king takes one extra forward step this turn after your main move.
 - **Prospect** — Gain 10 gems now and 10 more at the start of your next turn.
@@ -81,7 +82,6 @@
 - **Blind** — Opponent cannot play cards on their next turn.
 - **Blink** — Teleport your piece to any empty dark square within 2 steps (Chebyshev).
 - **Blizzard** — Freeze up to 3 enemy men along a diagonal line you choose.
-- **Bridge** — Link two empty dark squares; either can be entered from the other.
 - **Bulwark** — All your pieces on one diagonal line gain shield for 1 turn.
 - **Butterfly Effect** — Shuffle pieces on the 4 center dark squares randomly.
 - **Chain Pull** — Pull an adjacent enemy piece 1 square toward you into an empty dark square behind it.
@@ -145,7 +145,6 @@
 - **Revive** — Return a captured man to any empty square in your back 3 rows.
 - **Roulette** — Random card effect hits a random valid target.
 - **Shatter** — Destroy any enemy piece on the board (not shielded).
-- **Time Slip** — Undo your last checkers move (once per game).
 - **Twin Soul** — Split a man into two tokens on adjacent squares; linked fate.
 - **Wild Magic** — Apply a random card effect from the entire pool.
 

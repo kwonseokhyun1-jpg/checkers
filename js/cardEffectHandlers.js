@@ -3,7 +3,7 @@
  */
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget, piecesOfColor, enemyPieces,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine } from "./gameMeta.js";
@@ -137,6 +137,7 @@ function promoRow(color) { return color === COLORS.RED ? 0 : 7; }
 
 
 const EFFECTS = {
+  backstep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const allowed=getBackstepTarget(state.board,p); if(!allowed.some(([r,c])=>r===r2&&c===c2)) return fail("No square behind"); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok("Backstep!"); },
   nudge(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   shield_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=2; return ok(); },
   forward_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!kill(state,r2,c2,color)) return fail(); return ok(); },
@@ -235,7 +236,6 @@ const EFFECTS = {
   wraith_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.wraithTurns=2; return ok(); },
   stone_form(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.king=true; p.stoneTurns=2; return ok(); },
   obstacle(state, color, picks) { const [r,c]=p0(picks); if(isDarkSquare(r,c)) return fail('Pick a light square'); getSq(state,r,c).obstacle=true; return ok(); },
-  bridge(state, color, picks) { if(picks.length<2) return fail(); const k1=sk(...p0(picks)),k2=sk(...p1(picks)); state.squares[k1]={...state.squares[k1],bridge:k2}; state.squares[k2]={...state.squares[k2],bridge:k1}; return ok(); },
   quicksand(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); getSq(state,r,c).quicksand=true; return ok(); },
   sanctified(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); getSq(state,r,c).sanctified=color; return ok(); },
   warp_gate(state, color, picks) { if(picks.length<2) return fail(); const k1=sk(...p0(picks)),k2=sk(...p1(picks)); state.squares[k1]={...state.squares[k1],warp:k2}; state.squares[k2]={...state.squares[k2],warp:k1}; return ok(); },

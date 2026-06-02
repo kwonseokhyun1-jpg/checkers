@@ -101,7 +101,17 @@ export class MatchSession {
    */
   constructor(deckCardIds, rootEl, onExit, onWin, options = {}) {
     this.cosmetics = options.cosmetics || null;
-    this.state = createMatchState(deckCardIds, options.aiDeckIds ?? null);
+    this.isPvp = !!options.pvp;
+    this.localColor = options.localColor ?? COLORS.RED;
+    this.opponentColor = this.localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+    this.onStateSync = options.onStateSync ?? null;
+    this.onPvpWin = options.onPvpWin ?? null;
+    this._syncBusy = false;
+    if (options.initialState) {
+      this.state = options.initialState;
+    } else {
+      this.state = createMatchState(deckCardIds, options.aiDeckIds ?? null);
+    }
     this.root = rootEl;
     this.onExit = () => {
       this.dispose();
@@ -152,7 +162,7 @@ export class MatchSession {
     const tag = e.target?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target?.isContentEditable) return;
     const s = this.state;
-    if (!s || s.gameOver || s.turn !== COLORS.RED || this.actionBusy) return;
+    if (!s || s.gameOver || s.turn !== this.localColor || this.actionBusy) return;
     if (s.phase === PHASE.CARDS) {
       e.preventDefault();
       this.beginMovePhase();
@@ -161,13 +171,13 @@ export class MatchSession {
 
   canMovePieces() {
     const s = this.state;
-    return s.turn === COLORS.RED && !s.gameOver && !this.actionBusy && !this.cardPlay;
+    return s.turn === this.localColor && !s.gameOver && !this.actionBusy && !this.cardPlay;
   }
 
   canPlaySpells() {
     const s = this.state;
     return (
-      s.turn === COLORS.RED &&
+      s.turn === this.localColor &&
       s.phase === PHASE.CARDS &&
       !s.gameOver &&
       !s.spellPlayed.red &&
@@ -188,7 +198,7 @@ export class MatchSession {
       const curseText = curses.length
         ? curses.map((c) => (c.turns != null ? `${c.label} (${c.turns})` : c.label)).join(", ")
         : "None";
-      const side = piece.color === COLORS.RED ? "Your" : "Enemy";
+      const side = piece.color === this.localColor ? "Your" : "Enemy";
       const role = piece.king ? "king" : "man";
       infoEl.innerHTML = `<strong>${side} ${role}</strong> <span class="piece-info__pos">(${row + 1}, ${col + 1})</span>
         <span class="piece-info__buffs">Buffs: ${buffText}</span>
@@ -212,32 +222,30 @@ export class MatchSession {
   }
 
   beginPlayerTurn() {
+    this.beginTurn(this.localColor);
+  }
+
+  beginTurn(color) {
     const s = this.state;
-    s.turnNumber.red++;
-    s.spellPlayed.red = false;
+    s.turnNumber[color]++;
+    s.spellPlayed[color] = false;
     s.phase = PHASE.CARDS;
-    if (s.turnNumber.red > 1 && s.turnNumber.red % DRAW_EVERY_TURNS === 0) {
-      const n = drawToHand(s, COLORS.RED, 1);
+    if (s.turnNumber[color] > 1 && s.turnNumber[color] % DRAW_EVERY_TURNS === 0) {
+      const n = drawToHand(s, color, 1);
       if (n) this.setMessage("Drew a card from your deck.");
     }
-    startTurnMeta(s, COLORS.RED);
-    if (s.meta.shatterSilenced?.red) {
+    startTurnMeta(s, color);
+    if (color === this.localColor && s.meta.shatterSilenced?.[color]) {
       this.setMessage("Shatter backlash — no spells this turn. Select a piece to move.");
     }
   }
 
   beginAiTurn() {
-    const s = this.state;
-    s.turnNumber.black++;
-    s.spellPlayed.black = false;
-    if (s.turnNumber.black > 1 && s.turnNumber.black % DRAW_EVERY_TURNS === 0) {
-      drawToHand(s, COLORS.BLACK, 1);
-    }
-    startTurnMeta(s, COLORS.BLACK);
+    this.beginTurn(this.opponentColor);
   }
 
   removeCardFromHand(card) {
-    const hand = this.state.hands.red;
+    const hand = this.state.hands[this.localColor];
     const i = hand.findIndex((c) => c.instanceId === card.instanceId);
     if (i >= 0) hand.splice(i, 1);
   }
@@ -302,14 +310,14 @@ export class MatchSession {
       return true;
     }
 
-    const targets = getValidTargets(this.state, COLORS.RED, card, []);
+    const targets = getValidTargets(this.state, this.localColor, card, []);
     if (!targets.length) {
       this.setMessage("No valid targets for this spell right now.");
       return false;
     }
 
     if (this.cardPlay?.card?.instanceId === card.instanceId) {
-      this.validTargets = getValidTargets(this.state, COLORS.RED, card, this.cardPlay.picks);
+      this.validTargets = getValidTargets(this.state, this.localColor, card, this.cardPlay.picks);
       this.updateSpellCastUI();
       return true;
     }
@@ -324,7 +332,7 @@ export class MatchSession {
   onCardTargetClick(row, col) {
     if (!this.cardPlay) return;
     const { card, picks } = this.cardPlay;
-    const allowed = getValidTargets(this.state, COLORS.RED, card, picks);
+    const allowed = getValidTargets(this.state, this.localColor, card, picks);
     if (!allowed.some(([r, c]) => r === row && c === col)) {
       this.setMessage("Invalid target — pick a highlighted square.");
       return;
@@ -332,7 +340,7 @@ export class MatchSession {
     picks.push([row, col]);
     const need = picksRequired(card);
     if (picks.length < need) {
-      this.validTargets = getValidTargets(this.state, COLORS.RED, card, picks);
+      this.validTargets = getValidTargets(this.state, this.localColor, card, picks);
       this.selectedSquare = picks[picks.length - 1];
       this.updateSpellCastUI();
       this.render();
@@ -342,7 +350,7 @@ export class MatchSession {
       if (!res.success) {
         picks.pop();
         this.setMessage(res.message);
-        this.validTargets = getValidTargets(this.state, COLORS.RED, card, picks);
+        this.validTargets = getValidTargets(this.state, this.localColor, card, picks);
         this.updateSpellCastUI();
         this.render();
         return;
@@ -436,7 +444,7 @@ export class MatchSession {
 
   attachCardInput(el, card, canPlay) {
     const s = this.state;
-    const hasTargets = isInstant(card) || getValidTargets(s, COLORS.RED, card, []).length > 0;
+    const hasTargets = isInstant(card) || getValidTargets(s, this.localColor, card, []).length > 0;
     const canCast = canPlay && this.canPlaySpells() && hasTargets;
     el.classList.toggle("disabled", !canCast);
     if (!canCast) {
@@ -477,7 +485,7 @@ export class MatchSession {
 
   onSquareClick(row, col) {
     const s = this.state;
-    if (s.gameOver || s.turn !== COLORS.RED) return;
+    if (s.gameOver || s.turn !== this.localColor) return;
     if (this.cardPlay) {
       this.onCardTargetClick(row, col);
       return;
@@ -494,9 +502,9 @@ export class MatchSession {
     const piece = s.board[row][col];
     if (piece) this.showPieceInfo(piece, row, col);
 
-    if (piece && piece.color === COLORS.RED) {
+    if (piece && piece.color === this.localColor) {
       this.selectedSquare = [row, col];
-      this.validMoves = getAllMovesForColor(s.board, COLORS.RED, s).filter(
+      this.validMoves = getAllMovesForColor(s.board, this.localColor, s).filter(
         (m) => m.from[0] === row && m.from[1] === col
       );
       if (!this.validMoves.length) {
@@ -525,7 +533,7 @@ export class MatchSession {
   }
 
   continueMultiJump(fromR, fromC) {
-    const jumps = getAllMovesForColor(this.state.board, COLORS.RED, this.state).filter(
+    const jumps = getAllMovesForColor(this.state.board, this.localColor, this.state).filter(
       (m) => m.type === "jump" && m.from[0] === fromR && m.from[1] === fromC && m.captures?.length
     );
     if (!jumps.length) return false;
@@ -550,7 +558,7 @@ export class MatchSession {
       this.validMoves = [];
       if (s.meta.pendingDouble.red && move.type === "step") {
         s.meta.pendingDouble.red = false;
-        const extras = getAllMovesForColor(s.board, COLORS.RED, s).filter(
+        const extras = getAllMovesForColor(s.board, this.localColor, s).filter(
           (m) => m.from[0] === landR && m.from[1] === landC && m.type === "step"
         );
         if (extras.length) {
@@ -582,23 +590,31 @@ export class MatchSession {
 
   endHumanTurn() {
     if (this.checkWin()) return;
-    tickEffects(this.state.board, COLORS.RED, this.state);
-    tickMeta(this.state, COLORS.RED);
-    this.state.turn = COLORS.BLACK;
+    tickEffects(this.state.board, this.localColor, this.state);
+    tickMeta(this.state, this.localColor);
+    this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
     this.beginAiTurn();
     this.render();
+    if (this.isPvp) {
+      this.setMessage("Waiting for opponent…");
+      this._syncBusy = true;
+      Promise.resolve(this.onStateSync?.(this.state)).finally(() => {
+        this._syncBusy = false;
+      });
+      return;
+    }
     setTimeout(() => this.runOpponentTurn(), AI_PACE.beforeTurn);
   }
 
   checkWin() {
     const s = this.state;
-    if (countPieces(s.board, COLORS.BLACK) === 0) {
-      this.showGameOver("Victory!", "You captured all enemy pieces.");
+    if (countPieces(s.board, this.opponentColor) === 0) {
+      this.showGameOver("Victory!", this.isPvp ? "You won the match!" : "You captured all enemy pieces.");
       return true;
     }
-    if (countPieces(s.board, COLORS.RED) === 0) {
-      this.showGameOver("Defeat", "Your forces were wiped out.");
+    if (countPieces(s.board, this.localColor) === 0) {
+      this.showGameOver("Defeat", this.isPvp ? "You lost the match." : "Your forces were wiped out.");
       return true;
     }
     return false;
@@ -609,8 +625,8 @@ export class MatchSession {
     const won = title.startsWith("Victory");
     let displayText = text;
     let stars = 0;
-    if (won) {
-      const remaining = countPieces(this.state.board, COLORS.RED);
+    if (won && !this.isPvp) {
+      const remaining = countPieces(this.state.board, this.localColor);
       stars = starsForRemainingPieces(remaining);
       if (!this.winRewarded) {
         this.winRewarded = true;
@@ -634,6 +650,10 @@ ${starLine}`;
         starsEl.setAttribute("aria-label", won ? `${stars} of 3 stars` : "");
       }
       overlay.classList.remove("hidden");
+    }
+    if (this.isPvp && this.state.gameOver) {
+      const won = title.startsWith("Victory");
+      this.onPvpWin?.(won);
     }
     this.cancelCardPlay();
     this.render();
@@ -737,22 +757,22 @@ ${starLine}`;
   }
 
   async applySpellWithAnimation(card, picks) {
-    const countered = tryConsumeCounterspell(this.state, COLORS.RED);
+    const countered = tryConsumeCounterspell(this.state, this.localColor);
     if (countered) {
       await this.runCounterspellReveal();
       return { success: false, message: "Enemy Counterspell! Your spell fizzles." };
     }
 
     if (card.effect === "cull") {
-      const target = findCullTarget(this.state, COLORS.RED);
+      const target = findCullTarget(this.state, this.localColor);
       if (!target) return { success: false, message: "No enemy to cull." };
       const victim = cullVictimSnapshot(target);
       await this.playCullAnimation(target.row, target.col, victim);
-      return applyCard(this.state, COLORS.RED, card, picks);
+      return applyCard(this.state, this.localColor, card, picks);
     }
 
     if (card.effect === "counterspell") {
-      const res = applyCard(this.state, COLORS.RED, card, picks);
+      const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success) await this.runHiddenCounterspellCast();
       return res;
     }
@@ -767,11 +787,11 @@ ${starLine}`;
     }
     if (card.effect === "chain_lightning" && picks.length) {
       const [pr, pc] = picks[0];
-      extra.chainSquares = getChainLightningAnimSquares(s, pr, pc, COLORS.RED);
+      extra.chainSquares = getChainLightningAnimSquares(s, pr, pc, this.localColor);
     }
-    const spec = buildAnimSpec(card, picks, COLORS.RED, extra);
+    const spec = buildAnimSpec(card, picks, this.localColor, extra);
     await this.runSpellAnimation(spec);
-    return applyCard(this.state, COLORS.RED, card, picks);
+    return applyCard(this.state, this.localColor, card, picks);
   }
 
   async castInstantSpell(card) {
@@ -933,6 +953,7 @@ ${starLine}`;
   }
 
   async runOpponentTurn() {
+    if (this.isPvp) return;
     const s = this.state;
     if (s.gameOver) return;
     this.setMessage(`${this.opponentName} is acting…`);
@@ -952,16 +973,16 @@ ${starLine}`;
     tickEffects(s.board, COLORS.BLACK, s);
     tickMeta(s, COLORS.BLACK);
 
-    if (countPieces(s.board, COLORS.RED) === 0) {
+    if (countPieces(s.board, this.localColor) === 0) {
       this.showGameOver("Defeat", "You lost all your pieces.");
       return;
     }
-    if (countPieces(s.board, COLORS.BLACK) === 0) {
+    if (countPieces(s.board, this.opponentColor) === 0) {
       this.showGameOver("Victory!", "You cleared the stage!");
       return;
     }
 
-    s.turn = COLORS.RED;
+    s.turn = this.localColor;
     s.phase = PHASE.CARDS;
     this.beginPlayerTurn();
     this.setMessage("Your turn — cast a spell or select a piece to move.");
@@ -970,10 +991,10 @@ ${starLine}`;
 
   beginMovePhase() {
     const s = this.state;
-    if (s.gameOver || s.turn !== COLORS.RED) return;
+    if (s.gameOver || s.turn !== this.localColor) return;
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
-    const moves = getAllMovesForColor(s.board, COLORS.RED, s);
+    const moves = getAllMovesForColor(s.board, this.localColor, s);
     if (!moves.length) {
       this.setMessage("No moves — turn passes.");
       this.endHumanTurn();
@@ -991,7 +1012,7 @@ ${starLine}`;
     const s = this.state;
     if (countEl) countEl.textContent = String(s.hands.red.length);
     const pileEl = this.$("pile-count");
-    if (pileEl) pileEl.textContent = String(pileRemaining(s, COLORS.RED));
+    if (pileEl) pileEl.textContent = String(pileRemaining(s, this.localColor));
 
     const canPlay = this.canPlaySpells();
     const castingId = this.cardPlay?.card?.instanceId;
@@ -999,7 +1020,7 @@ ${starLine}`;
 
     for (const card of s.hands.red) {
       const playable =
-        canPlay && (isInstant(card) || getValidTargets(s, COLORS.RED, card, []).length > 0);
+        canPlay && (isInstant(card) || getValidTargets(s, this.localColor, card, []).length > 0);
       const el = renderSpellCardEl(card, {
         button: true,
         compact: true,
@@ -1085,8 +1106,14 @@ ${starLine}`;
         const piece = s.board[row][col];
         if (piece) {
           const el = document.createElement("span");
-          const skin = this.cosmetics?.equipped?.pieceSkin || "skin_classic";
-          el.className = `piece ${piece.color}${piece.king ? " king" : ""} piece-skin-${skin.replace("skin_", "")}`;
+          let skinClass = "";
+          if (piece.color === this.localColor && this.cosmetics?.equipped?.pieceSkin) {
+            const skinId = this.cosmetics.equipped.pieceSkin;
+            if (skinId && skinId !== "skin_classic") {
+              skinClass = ` piece-skin-${skinId.replace("skin_", "")}`;
+            }
+          }
+          el.className = `piece ${piece.color}${piece.king ? " king" : ""}${skinClass}`;
           if (piece.shieldTurns > 0) el.classList.add("shielded");
           if (piece.frozenTurns > 0) el.classList.add("frozen");
           if (piece.paralyzedTurns > 0) el.classList.add("paralyzed-mark");
@@ -1126,7 +1153,7 @@ ${starLine}`;
     const banner = this.$("turn-banner");
     if (banner) {
       if (s.gameOver) banner.textContent = "Game over";
-      else if (s.turn === COLORS.RED) {
+      else if (s.turn === this.localColor) {
         const spellNote = s.meta.shatterSilenced?.red
           ? "No spells (Shatter backlash) · "
           : s.spellPlayed.red
@@ -1148,7 +1175,7 @@ ${starLine}`;
       }
     }
     const endBtn = this.root.querySelector("#btn-end-cards");
-    if (endBtn) endBtn.disabled = s.turn !== COLORS.RED || s.phase !== PHASE.CARDS || !!s.gameOver;
+    if (endBtn) endBtn.disabled = s.turn !== this.localColor || s.phase !== PHASE.CARDS || !!s.gameOver;
     this.updateSpellCastUI();
     this.renderHand();
     this.renderBoard();

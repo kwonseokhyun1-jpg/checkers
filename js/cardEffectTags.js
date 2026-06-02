@@ -6,7 +6,7 @@ const TAGS = {
   trickster: ["Swap 4 random pieces on the board"],
   purify: ["Removes all shields and curses board-wide"],
   chain_lightning: ["Strike adjacent enemies only", "Up to 2 kills if enemies touch each other", "Your piece is paralyzed 2 turns"],
-  fireblast: ["Your piece, then first enemy ahead — burns through shields"],
+  fireblast: ["Your piece, then first enemy directly ahead — burns through shields"],
   freeze_1: ["Enemy cannot move on their next turn"],
   freeze_2: ["Enemy cannot move on their next turn"],
   deep_freeze: ["Freeze all enemies on one diagonal through your piece for 2 turns"],

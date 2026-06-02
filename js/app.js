@@ -35,8 +35,12 @@ import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
 import { renderProfileTab, renderCosmeticBoxes } from "./profileUI.js";
+import { initAuthUI } from "./authUI.js";
+import { initPvpUI } from "./pvpUI.js";
+import { getMatchHtml } from "./matchView.js";
+import { initAuth } from "./auth.js";
+import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
-import { boardFrameHtml } from "./board.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardPreview.js";
 import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
@@ -75,6 +79,7 @@ function sortCollectionCards(cards) {
   });
 }
 let matchSession = null;
+let pvpController = null;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
 let selectedAdventureWorldId = 1;
@@ -145,6 +150,7 @@ function showTab(tab) {
   }
   if (tab === "profile") renderProfile();
   if (tab === "play") showAdventureMap();
+  if (tab === "pvp") pvpController?.render();
 }
 
 function renderProfile() {
@@ -848,63 +854,6 @@ function startAdventureMatch() {
   matchSession.render();
 }
 
-function getMatchHtml(opponentName = "Opponent") {
-  const safe = opponentName.replace(/</g, "");
-  return `
-    <div class="match-wrap match-scene">
-      <button type="button" id="btn-leave-match" class="btn-text">← Leave match</button>
-      <div class="game-layout">
-        <aside class="panel panel-opponent">
-          <div class="player-badge opponent"><span class="piece-icon black"></span> ${safe}</div>
-          <div class="hand-label">Enemy hand</div>
-          <div id="hand-black" class="hand hand-hidden"></div>
-        </aside>
-        <section class="board-section">
-          <div id="turn-banner" class="turn-banner match-banner">Your turn</div>
-          <div id="spell-cast-bar" class="spell-cast-bar hidden">
-            <div id="spell-cast-preview" class="spell-cast-preview"></div>
-            <div class="spell-cast-copy">
-              <p id="spell-cast-hint" class="spell-cast-hint">Select targets on the board</p>
-              <button type="button" id="btn-cancel-card" class="btn-text">Cancel spell</button>
-            </div>
-          </div>
-          <div id="ai-spell-banner" class="ai-spell-banner hidden" role="status" aria-live="assertive">
-            <div class="ai-spell-banner__inner">
-              <span class="ai-spell-banner__icon" aria-hidden="true">✦</span>
-              <div class="ai-spell-banner__copy">
-                <p class="ai-spell-banner__label">Enemy spell</p>
-                <p id="ai-spell-banner-title" class="ai-spell-banner__title"></p>
-                <p id="ai-spell-banner-desc" class="ai-spell-banner__desc"></p>
-              </div>
-            </div>
-          </div>
-          ${boardFrameHtml()}
-          <div id="ai-action-panel" class="ai-action-panel">
-            <h3 class="ai-action-panel__title">${safe}</h3>
-            <div id="ai-action-log" class="ai-action-log"></div>
-          </div>
-          <div id="piece-info" class="piece-info hidden" role="status" aria-live="polite"></div>
-          <div id="message" class="message"></div>
-        </section>
-        <aside class="panel panel-player">
-          <div class="player-badge you"><span class="piece-icon red"></span> You</div>
-          <div class="pile-info">Deck: <span id="pile-count">0</span> left · Draw every 2 turns</div>
-          <div class="hand-label">Hand <span id="hand-count">0/5</span></div>
-          <div id="hand-red" class="hand spell-hand"></div>
-          <button id="btn-end-cards" type="button" class="btn-secondary">Skip spell (Enter)</button>
-        </aside>
-      </div>
-      <div id="game-over" class="overlay hidden">
-        <div class="overlay-card">
-          <h2 id="game-over-title">Victory</h2>
-          <div id="game-over-stars" class="game-over-stars hidden" aria-hidden="true"></div>
-          <p id="game-over-text"></p>
-          <button id="btn-restart-match" type="button" class="btn-primary">Back to map</button>
-        </div>
-      </div>
-    </div>
-  `;
-}
 
 function init() {
   bindCardPreviewModal();
@@ -1005,6 +954,40 @@ function init() {
   $("adventure-deck-select")?.addEventListener("change", (e) => {
     profile.selectedDeckId = e.target.value;
     saveProfile(profile);
+  });
+
+  const authModal = document.getElementById("auth-modal");
+  const authBtn = document.getElementById("auth-header-btn");
+  initAuthUI({
+    authBtn,
+    modal: authModal,
+    onSignedIn: () => {
+      profile = loadProfile();
+      updateGemHeader();
+      renderDeckList();
+      pvpController?.render();
+    },
+  });
+
+  pvpController = initPvpUI({
+    root: document.getElementById("view-pvp"),
+    getProfile: () => profile,
+    openAuthModal: () => authModal?.classList.remove("hidden"),
+  });
+
+  initAuth().then(async (user) => {
+    if (user) {
+      try {
+        const cloud = await pullCloudProfile();
+        if (cloud) profile = cloud;
+      } catch (e) {
+        console.warn(e);
+      }
+      repairProfile(profile);
+      saveProfile(profile);
+      updateGemHeader();
+      renderDeckList();
+    }
   });
 
   repairProfile(profile);

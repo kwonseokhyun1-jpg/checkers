@@ -53,6 +53,7 @@ function defaultProfile() {
     selectedDeckId: starterDeck.id,
     adventure: defaultAdventureProgress(),
     cosmetics: structuredClone(DEFAULT_COSMETICS),
+    savedAt: Date.now(),
   };
 }
 
