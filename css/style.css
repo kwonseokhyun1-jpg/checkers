@@ -3471,3 +3471,103 @@ body.chest-open-active {
 .filter-reset-btn:hover {
   background: rgba(92, 225, 230, 0.12);
 }
+
+/* Auth */
+.game-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+.auth-header-btn {
+  white-space: nowrap;
+  min-height: 40px;
+  font-size: 0.8rem;
+  padding: 0.4rem 0.75rem;
+}
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.auth-modal.hidden { display: none; }
+.auth-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.85);
+  backdrop-filter: blur(6px);
+}
+.auth-modal-dialog {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 380px;
+  padding: 1.25rem;
+}
+.auth-modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  color: var(--text);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.auth-error {
+  color: var(--accent-red);
+  font-size: 0.85rem;
+  min-height: 1.25rem;
+  margin: 0;
+}
+.auth-toggle-mode { margin-top: 0.75rem; }
+
+/* PvP */
+.pvp-panel { max-width: 28rem; margin: 0 auto; }
+.pvp-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+.pvp-join-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.pvp-join-row .input-text { flex: 1; text-transform: uppercase; }
+.pvp-status {
+  font-size: 0.9rem;
+  color: var(--accent-gem);
+  min-height: 1.5rem;
+}
+.pvp-status--error { color: var(--accent-red); }
+.pvp-waiting {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px dashed var(--card-border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+.pvp-waiting.hidden { display: none; }
+.pvp-room-code {
+  font-size: 1.25rem;
+  margin: 0 0 0.5rem;
+}
+.pvp-room-code strong {
+  letter-spacing: 0.2em;
+  color: var(--accent-gold);
+}

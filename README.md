@@ -55,3 +55,7 @@ Then visit http://localhost:8080
 - On your turn: play any number of cards (optional), tap **Done playing cards**, then move.
 - Mandatory jumps when available; multi-jump chains when possible.
 - Reach the far row to crown, or use **Royal Decree**.
+
+## Online accounts & PvP
+
+See **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)** for Supabase auth, cloud saves, and 1v1 PvP.
