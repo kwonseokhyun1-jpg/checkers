@@ -393,17 +393,18 @@ export function getEnemyDeckPreview(cardIds) {
 }
 
 /** Portrait map pin positions (% of canvas) per stage in world (1–10). */
+/** Stage positions (% of map) along the island path — beach to summit. */
 export const MAP_PIN_LAYOUT = [
-  { left: 72, top: 88 },
-  { left: 38, top: 78 },
-  { left: 58, top: 68 },
-  { left: 28, top: 58 },
-  { left: 62, top: 50 },
-  { left: 42, top: 42 },
-  { left: 68, top: 34 },
-  { left: 32, top: 26 },
-  { left: 52, top: 16 },
-  { left: 46, top: 6 },
+  { left: 52, top: 82 },
+  { left: 64, top: 74 },
+  { left: 74, top: 66 },
+  { left: 72, top: 56 },
+  { left: 60, top: 50 },
+  { left: 46, top: 46 },
+  { left: 32, top: 52 },
+  { left: 26, top: 62 },
+  { left: 38, top: 72 },
+  { left: 50, top: 28 },
 ];
 
 export function getNextPlayableLevelId(progress) {

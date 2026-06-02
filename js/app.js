@@ -732,54 +732,63 @@ function startNewDeck() {
   showDeckSubview("edit");
 }
 
+function closeAdventurePrebattle() {
+  $("adventure-prebattle")?.classList.add("hidden");
+  document.body.classList.remove("adventure-stage-open");
+  selectedAdventureLevel = null;
+}
+
 function showAdventureMap() {
   profile.adventure = repairAdventureProgress(profile.adventure);
   $("adventure-map-view")?.classList.remove("hidden");
-  $("adventure-prebattle")?.classList.add("hidden");
-  selectedAdventureLevel = null;
+  closeAdventurePrebattle();
   pendingEnemyDeck = null;
   renderAdventureMap();
 }
 
 
 function getMapSceneryMarkup(theme) {
-  if (theme === "verdant") {
-    return `<svg class="adventure-map-scenery-svg" viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      <defs>
-        <linearGradient id="mapSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#5a9ec8"/>
-          <stop offset="45%" stop-color="#8ec4a8"/>
-          <stop offset="100%" stop-color="#2d5a38"/>
-        </linearGradient>
-        <linearGradient id="mapHill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#3d7a48"/>
-          <stop offset="100%" stop-color="#1a3a24"/>
-        </linearGradient>
-      </defs>
-      <rect width="400" height="700" fill="url(#mapSky)"/>
-      <ellipse cx="200" cy="520" rx="260" ry="120" fill="url(#mapHill)" opacity="0.9"/>
-      <ellipse cx="90" cy="560" rx="100" ry="70" fill="#1e4a2e" opacity="0.85"/>
-      <ellipse cx="320" cy="550" rx="110" ry="75" fill="#1e4a2e" opacity="0.85"/>
-      <!-- castle -->
-      <path fill="#2a3548" d="M155 380 h90 v55 h-90z M170 355 h15 v25 h-15z M215 355 h15 v25 h-15z M185 340 h30 v15 h-30z"/>
-      <path fill="#3a4a5a" d="M160 435 h80 v12 h-80z"/>
-      <rect x="192" y="395" width="16" height="22" rx="2" fill="#1a2430"/>
-      <!-- trees -->
-      <polygon points="55,480 70,420 85,480" fill="#0f2818"/>
-      <rect x="66" y="478" width="8" height="18" fill="#3d2818"/>
-      <polygon points="30,510 48,440 66,510" fill="#143220"/>
-      <rect x="42" y="508" width="10" height="22" fill="#3d2818"/>
-      <polygon points="330,470 348,400 366,470" fill="#0f2818"/>
-      <rect x="341" y="468" width="8" height="20" fill="#3d2818"/>
-      <polygon points="355,500 375,430 395,500" fill="#143220"/>
-      <rect x="368" y="498" width="10" height="24" fill="#3d2818"/>
-      <polygon points="110,520 128,455 146,520" fill="#0f2818"/>
-      <rect x="121" y="518" width="8" height="16" fill="#3d2818"/>
-      <polygon points="250,515 268,450 286,515" fill="#143220"/>
-      <rect x="259" y="513" width="8" height="18" fill="#3d2818"/>
-    </svg>`;
-  }
-  return "";
+  const ocean = theme === "frost" ? "#1a3050" : theme === "ember" ? "#2a1810" : theme === "void" ? "#12082a" : theme === "legend" ? "#1a1830" : "#0d2848";
+  const land = theme === "frost" ? "#5a7a6a" : theme === "ember" ? "#6a4a30" : theme === "void" ? "#4a3868" : theme === "legend" ? "#6a5a38" : "#3d7a48";
+  const beach = theme === "frost" ? "#9ab8c8" : theme === "ember" ? "#c8a070" : "#c4b090";
+  return `<svg class="adventure-map-scenery-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="mapOcean" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${ocean}"/>
+        <stop offset="100%" stop-color="#061018"/>
+      </linearGradient>
+      <linearGradient id="mapLand" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${land}"/>
+        <stop offset="100%" stop-color="#1a3020"/>
+      </linearGradient>
+      <filter id="mapSoft" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="0.4" />
+      </filter>
+    </defs>
+    <rect width="100" height="100" fill="url(#mapOcean)"/>
+    <!-- waves -->
+    <ellipse cx="18" cy="88" rx="14" ry="3" fill="rgba(255,255,255,0.06)"/>
+    <ellipse cx="82" cy="92" rx="18" ry="4" fill="rgba(255,255,255,0.05)"/>
+    <ellipse cx="50" cy="95" rx="22" ry="4" fill="rgba(255,255,255,0.07)"/>
+    <!-- island -->
+    <path fill="url(#mapLand)" stroke="rgba(255,255,255,0.12)" stroke-width="0.35"
+      d="M50 20 C62 20 72 26 78 36 C84 46 82 58 74 68 C68 78 58 84 50 86 C42 84 32 78 26 68 C18 58 16 46 22 36 C28 26 38 20 50 20 Z"/>
+    <!-- beach cove -->
+    <path fill="${beach}" opacity="0.55"
+      d="M42 80 C48 84 56 84 62 80 C58 86 50 88 42 86 Z"/>
+    <!-- castle summit -->
+    <path fill="#2a3548" d="M46 24 h8 v6 h-8z M44 22 h4 v4 h-4z M52 22 h4 v4 h-4z M47 20 h6 v2 h-6z"/>
+    <rect x="48.5" y="27" width="3" height="2" fill="#1a2430"/>
+    <!-- trees -->
+    <polygon points="24,62 26,56 28,62" fill="#0f2818"/>
+    <polygon points="74,58 76,52 78,58" fill="#143220"/>
+    <polygon points="34,70 36,64 38,70" fill="#0f2818"/>
+    <polygon points="66,72 68,66 70,72" fill="#143220"/>
+    <polygon points="58,38 60,32 62,38" fill="#0f2818"/>
+    <!-- path on island (decorative) -->
+    <path fill="none" stroke="rgba(200,180,120,0.35)" stroke-width="0.6" stroke-dasharray="2 1.5"
+      d="M52 82 L64 74 L74 66 L72 56 L60 50 L46 46 L32 52 L26 62 L38 72 L50 28"/>
+  </svg>`;
 }
 
 
@@ -833,9 +842,9 @@ function renderAdventureMap() {
   const map = $("adventure-map");
   if (!map) return;
   const theme = worldMeta?.theme || "verdant";
-  map.className = `adventure-map-canvas adventure-map-canvas--${theme}`;
+  map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--island`;
   map.setAttribute("role", "group");
-  map.setAttribute("aria-label", "Stage map");
+  map.setAttribute("aria-label", "Island stage map");
   map.innerHTML = `
     <div class="adventure-map-canvas__bg" aria-hidden="true">
       <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
@@ -858,6 +867,18 @@ function renderAdventureMap() {
     }
     saveProfile(profile);
     openAdventurePrebattle(levelId);
+  }
+
+  if (!map.dataset.pinsBound) {
+    map.dataset.pinsBound = "1";
+    const onPinActivate = (e) => {
+      const pin = e.target.closest(".adventure-map-pin");
+      if (!pin || pin.disabled) return;
+      e.preventDefault();
+      e.stopPropagation();
+      activateMapPin(Number(pin.dataset.level));
+    };
+    map.addEventListener("click", onPinActivate);
   }
 
   levels.forEach((level, i) => {
@@ -888,12 +909,6 @@ function renderAdventureMap() {
       <span class="adventure-map-pin__flavor">${level.flavor}</span>
       ${starLine}`;
     if (!unlocked) pin.disabled = true;
-    const go = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      activateMapPin(level.id);
-    };
-    pin.addEventListener("click", go);
     pin.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
@@ -920,11 +935,9 @@ function openAdventurePrebattle(levelId) {
   pendingEnemyDeck = getOrCreateLevelEnemyDeck(profile, levelId);
   saveProfile(profile);
 
-  $("adventure-map-view")?.classList.add("hidden");
-  $("adventure-prebattle")?.classList.remove("hidden");
-  requestAnimationFrame(() => {
-    $("adventure-prebattle")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
+  const modal = $("adventure-prebattle");
+  modal?.classList.remove("hidden");
+  document.body.classList.add("adventure-stage-open");
 
   const title = $("prebattle-title");
   const flavor = $("prebattle-flavor");
@@ -960,7 +973,10 @@ function openAdventurePrebattle(levelId) {
   if (repairProfile(profile)) saveProfile(profile);
 
   const sel = $("adventure-deck-select");
-  if (!sel) return;
+  if (!sel) {
+    if (opponent) opponent.textContent = "Deck selector missing — hard refresh the page.";
+    return;
+  }
   sel.innerHTML = "";
   const validDecks = profile.decks.filter((d) => validateDeck(d.cardIds, profile).valid);
   if (!validDecks.length) {
@@ -998,6 +1014,7 @@ function openAdventurePrebattle(levelId) {
 }
 
 function startAdventureMatch() {
+  closeAdventurePrebattle();
   const deckId = $("adventure-deck-select")?.value;
   const deck = profile.decks.find((d) => d.id === deckId);
   const level = selectedAdventureLevel ? getLevel(selectedAdventureLevel) : null;
@@ -1108,7 +1125,8 @@ function init() {
   $("btn-beginner-fill-deck")?.addEventListener("click", autoFinishBeginnerDeck);
   $("btn-auto-finish-deck")?.addEventListener("click", autoFinishDeck);
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
-  $("btn-back-adventure")?.addEventListener("click", showAdventureMap);
+  $("btn-back-adventure")?.addEventListener("click", closeAdventurePrebattle);
+  $("adventure-stage-backdrop")?.addEventListener("click", closeAdventurePrebattle);
   $("btn-start-adventure")?.addEventListener("click", startAdventureMatch);
   $("adventure-deck-select")?.addEventListener("change", (e) => {
     profile.selectedDeckId = e.target.value;
