@@ -388,9 +388,10 @@ function buyCardFromInventory(cardId, statusEl) {
   const res = tryBuyCardCopy(profile, cardId);
   if (statusEl) {
     statusEl.textContent = res.message;
-    statusEl.className = res.success ? "inventory-status inventory-status--ok" : "inventory-status inventory-status--warn";
+    statusEl.className = res.success ? "deck-status ok" : "deck-status warn";
   }
   if (res.success) {
+    saveProfile(profile);
     updateCurrencyHeader();
     if (deckSubview === "list") renderDeckList();
     if (deckSubview === "edit") renderDeckEditor();
