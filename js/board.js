@@ -1,5 +1,5 @@
 /** Checkers board logic with card-effect modifiers */
-import { getMineOwner, tickMineDurability } from "./gameMeta.js";
+import { getMineOwner, tickMineDurability, collapsedSquareKey } from "./gameMeta.js";
 
 function sk(r, c) {
   return `${r},${c}`;
@@ -159,7 +159,7 @@ function isFrozen(piece) {
 function squareBlocked(state, r, c) {
   if (!inBounds(r, c)) return true;
   const key = sk(r, c);
-  if (state?.meta?.collapsedSquare === key) return true;
+  if (collapsedSquareKey(state?.meta) === key) return true;
   const sq = state?.squares?.[key];
   if (sq?.obstacle) return true;
   if (sq?.ghostBlock > 0) return true;
