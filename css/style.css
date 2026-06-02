@@ -583,6 +583,7 @@ body {
   border-color: transparent;
 }
 .view.hidden { display: none; }
+.hidden { display: none !important; }
 .header-gems {
   color: var(--accent-gem);
   font-weight: 600;
@@ -2228,6 +2229,19 @@ body {
   right: 8px;
   color: var(--accent-gem);
   font-size: 0.9rem;
+}
+
+.adventure-prebattle .select-input,
+#adventure-deck-select {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-height: 2.75rem;
+  margin: 0.35rem 0 0.75rem;
+  box-sizing: border-box;
+  cursor: pointer;
+  position: relative;
+  z-index: 3;
 }
 .adventure-prebattle {
   max-width: 900px;
