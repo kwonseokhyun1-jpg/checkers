@@ -3,11 +3,12 @@ import {
   initAuth,
   signIn,
   signUp,
-  isUsernameAvailable,
   signOut,
   onAuthChange,
   isAuthAvailable,
   fetchProfileRow,
+  isUsernameAvailable,
+  suggestAvailableUsername,
 } from "./auth.js";
 import { upsertProfileRow } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
@@ -27,25 +28,69 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
   const title = modal.querySelector("#auth-modal-title");
   const toggle = modal.querySelector("#auth-toggle-mode");
   const errorEl = modal.querySelector("#auth-error");
+  const usernameHint = modal.querySelector("#auth-username-hint");
   const closeBtn = modal.querySelector("#auth-close");
   const backdrop = modal.querySelector(".auth-modal-backdrop");
+  const submitBtn = form?.querySelector('button[type="submit"]');
 
   let mode = "signin";
+  let usernameCheckTimer = null;
 
   function syncAuthFields() {
     form?.querySelectorAll(".auth-field-signup").forEach((el) => {
       el.classList.toggle("hidden", mode !== "signup");
     });
     const idInput = form?.querySelector("#auth-identifier");
+    const idLabel = form?.querySelector('label[for="auth-identifier"]');
+    if (idLabel) idLabel.textContent = mode === "signup" ? "Email" : "Username or email";
     if (idInput) {
       idInput.placeholder = mode === "signup" ? "you@email.com" : "username or email";
       idInput.type = mode === "signup" ? "email" : "text";
       idInput.autocomplete = mode === "signup" ? "email" : "username";
     }
+    if (submitBtn) submitBtn.textContent = mode === "signup" ? "Create account" : "Sign in";
+    if (usernameHint) usernameHint.textContent = "";
+    usernameHint?.classList.remove("auth-username-hint--ok", "auth-username-hint--bad");
   }
 
   function setError(msg) {
     if (errorEl) errorEl.textContent = msg || "";
+  }
+
+  function setUsernameHint(msg, state = "") {
+    if (!usernameHint) return;
+    usernameHint.textContent = msg || "";
+    usernameHint.classList.remove("auth-username-hint--ok", "auth-username-hint--bad");
+    if (state === "ok") usernameHint.classList.add("auth-username-hint--ok");
+    if (state === "bad") usernameHint.classList.add("auth-username-hint--bad");
+  }
+
+  async function scheduleUsernameCheck() {
+    if (mode !== "signup") return;
+    const username = form?.querySelector("#auth-username")?.value?.trim();
+    if (!username) {
+      setUsernameHint("");
+      return;
+    }
+    if (!USERNAME_RE.test(username)) {
+      setUsernameHint("3–24 letters, numbers, or underscore", "bad");
+      return;
+    }
+    setUsernameHint("Checking…");
+    const available = await isUsernameAvailable(username);
+    if (!available) {
+      const alt = await suggestAvailableUsername(username);
+      setUsernameHint(
+        alt ? `Taken — try "${alt}"` : "That username is taken",
+        "bad"
+      );
+      if (alt && usernameHint) {
+        usernameHint.dataset.suggestion = alt;
+      }
+      return;
+    }
+    if (usernameHint) delete usernameHint.dataset.suggestion;
+    setUsernameHint("Available", "ok");
   }
 
   function open(modeOverride) {
@@ -65,6 +110,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
   function close() {
     modal.classList.add("hidden");
     setError("");
+    setUsernameHint("");
   }
 
   function updateHeaderBtn(user) {
@@ -102,6 +148,22 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
   closeBtn?.addEventListener("click", close);
   backdrop?.addEventListener("click", close);
 
+  const usernameInput = form?.querySelector("#auth-username");
+  usernameInput?.addEventListener("input", () => {
+    clearTimeout(usernameCheckTimer);
+    usernameCheckTimer = setTimeout(() => {
+      scheduleUsernameCheck().catch(() => setUsernameHint(""));
+    }, 350);
+  });
+
+  usernameHint?.addEventListener("click", () => {
+    const alt = usernameHint?.dataset?.suggestion;
+    if (!alt || !usernameInput) return;
+    usernameInput.value = alt;
+    delete usernameHint.dataset.suggestion;
+    scheduleUsernameCheck().catch(() => {});
+  });
+
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     setError("");
@@ -109,9 +171,11 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
     const username = form.querySelector("#auth-username")?.value?.trim();
     const password = form.querySelector("#auth-password")?.value;
     if (!identifier || !password) {
-      setError("Username or email and password required.");
+      setError(mode === "signup" ? "Email and password required." : "Username or email and password required.");
       return;
     }
+
+    if (submitBtn) submitBtn.disabled = true;
 
     try {
       if (mode === "signup") {
@@ -124,13 +188,20 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
           return;
         }
 
-        const available = await isUsernameAvailable(username);
-        if (!available) {
-          setError(`Username "${username}" is already taken. Pick another.`);
+        let chosenUsername = username;
+        if (!(await isUsernameAvailable(chosenUsername))) {
+          const alt = await suggestAvailableUsername(chosenUsername);
+          if (alt) {
+            setError(`"${chosenUsername}" is taken. Try "${alt}" or tap the hint below.`);
+            setUsernameHint(`Tap to use "${alt}"`, "bad");
+            if (usernameHint) usernameHint.dataset.suggestion = alt;
+            return;
+          }
+          setError(`Username "${chosenUsername}" is already taken. Pick another.`);
           return;
         }
 
-        const data = await signUp(identifier, password, username, username);
+        const data = await signUp(identifier, password, chosenUsername, chosenUsername);
         const user = data.session?.user ?? getCurrentUser();
 
         if (user) {
@@ -141,11 +212,27 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
               : {};
           profileJson.loginEmail = identifier.toLowerCase();
 
-          await upsertProfileRow(user.id, {
-            username,
-            display_name: username,
-            profile_json: profileJson,
-          });
+          try {
+            await upsertProfileRow(user.id, {
+              username: chosenUsername,
+              display_name: chosenUsername,
+              profile_json: profileJson,
+            });
+          } catch (profileErr) {
+            const code = profileErr?.code || profileErr?.details?.code;
+            if (code === "23505") {
+              const alt = await suggestAvailableUsername(chosenUsername);
+              setError(
+                alt
+                  ? `Account created but "${chosenUsername}" was taken. Sign in and change your name to "${alt}", or try sign up again with that username.`
+                  : "Account created but that username was just taken. Sign in with your email and pick another name in Profile."
+              );
+              mode = "signin";
+              open("signin");
+              return;
+            }
+            throw profileErr;
+          }
 
           try {
             await pullCloudProfile();
@@ -172,8 +259,10 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
         msg.includes("username_taken") ||
         err?.code === "23505"
       ) {
-        msg =
-          "Could not create your account. That username may already be taken, or the database needs an update — run supabase/fix_signup_trigger.sql in the Supabase SQL Editor, then try again.";
+        const alt = username && USERNAME_RE.test(username) ? await suggestAvailableUsername(username) : null;
+        msg = alt
+          ? `Sign-up failed (username conflict). Try "${alt}" instead.`
+          : "Sign-up failed on the server. Try a different username, or sign in if you already have an account.";
       } else if (msg.includes("over_email_send_rate_limit") || msg.includes("rate limit")) {
         msg = "Too many sign-up attempts. Wait a few minutes or sign in with an existing account.";
       } else if (msg.includes("User already registered")) {
@@ -186,6 +275,8 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
       } else {
         setError(msg);
       }
+    } finally {
+      if (submitBtn) submitBtn.disabled = false;
     }
   });
 

@@ -55,6 +55,21 @@ export async function isUsernameAvailable(username) {
   return !row;
 }
 
+
+export async function suggestAvailableUsername(base, maxTries = 8) {
+  const root = String(base || "").trim().replace(/[^A-Za-z0-9_]/g, "").slice(0, 20);
+  if (!root || root.length < 3) return null;
+  const candidates = [root];
+  for (let i = 2; i <= maxTries; i += 1) candidates.push(`${root}${i}`);
+  for (const name of candidates) {
+    if (name.length > 24) continue;
+    if (await isUsernameAvailable(name)) return name;
+  }
+  const suffix = String(Date.now()).slice(-5);
+  const fallback = `${root.slice(0, 18)}_${suffix}`.slice(0, 24);
+  return (await isUsernameAvailable(fallback)) ? fallback : null;
+}
+
 export async function signUp(email, password, displayName, username) {
   const sb = getSupabase();
   if (!sb) throw new Error("Supabase is not configured. Add your anon key to js/supabaseConfig.js");
@@ -64,13 +79,14 @@ export async function signUp(email, password, displayName, username) {
     throw new Error("Sign up requires a valid email address.");
   }
 
+  // Do not pass username in auth metadata — the DB trigger inserts profiles and
+  // fails the whole signup on duplicate usernames. We set username after sign-up.
   const { data, error } = await sb.auth.signUp({
     email: normalizedEmail,
     password,
     options: {
       data: {
         display_name: displayName || normalizedEmail.split("@")[0],
-        username: username || displayName || normalizedEmail.split("@")[0],
       },
     },
   });
