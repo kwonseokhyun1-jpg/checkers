@@ -85,7 +85,7 @@ SPELLS = [
     ("quicksand", "Quicksand", "Empty dark square freezes the next piece that ends a turn there.", "uncommon", 4, "empty", "quicksand"),
     ("sanctified_tile", "Sanctified Tile", "Friendly pieces entering this dark square are crowned.", "rare", 3, "empty", "sanctified"),
     ("warp_gate", "Warp Gate", "Link two empty dark squares for instant travel between them.", "rare", 3, "empty_empty", "warp_gate"),
-    ("collapse", "Collapse", "Remove a dark square from play; piece on it moves to nearest empty dark square.", "epic", 2, "empty", "collapse"),
+    ("collapse", "Collapse", "Remove a dark square from play for 3 turns (only one collapsed square at a time); piece on it relocates.", "epic", 2, "empty", "collapse"),
     ("mirror_board", "Mirror Board", "Confuse the AI's targeting for its next turn.", "common", 5, "instant", "mirror_board"),
     ("darkness", "Darkness", "Pieces on 4 dark squares around a point cannot be targeted by ranged spells for 2 turns.", "rare", 3, "empty", "darkness"),
     ("highlight_path", "Highlight Path", "Reduce AI strength slightly for 2 turns (reveals intent).", "common", 5, "instant", "highlight_path"),

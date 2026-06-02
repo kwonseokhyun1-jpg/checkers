@@ -120,6 +120,10 @@ export function startTurnMeta(state, color) {
     state.meta.shatterSilenced[color] = false;
   }
   if (state.meta.constitutionTurns[color] > 0) state.meta.constitutionTurns[color]--;
+  if (state.meta.collapsedSquare && typeof state.meta.collapsedSquare === "object") {
+    state.meta.collapsedSquare.turnsLeft -= 1;
+    if (state.meta.collapsedSquare.turnsLeft <= 0) state.meta.collapsedSquare = null;
+  }
 }
 
 export function tickMeta(state, color) {
@@ -145,11 +149,19 @@ export function hasCounterspellArmed(state, color) {
 }
 
 
-export function isSquareCollapsed(meta, r, c) {
-  if (!meta?.collapsedSquare) return false;
-  return meta.collapsedSquare === `${r},${c}`;
+export function collapsedSquareKey(meta) {
+  if (!meta?.collapsedSquare) return null;
+  return typeof meta.collapsedSquare === "string"
+    ? meta.collapsedSquare
+    : meta.collapsedSquare.square;
 }
 
-export function setCollapsedSquare(meta, r, c) {
-  meta.collapsedSquare = `${r},${c}`;
+export function isSquareCollapsed(meta, r, c) {
+  return collapsedSquareKey(meta) === `${r},${c}`;
+}
+
+export const COLLAPSE_DURATION_TURNS = 3;
+
+export function setCollapsedSquare(meta, r, c, turnsLeft = COLLAPSE_DURATION_TURNS) {
+  meta.collapsedSquare = { square: `${r},${c}`, turnsLeft };
 }

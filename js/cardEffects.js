@@ -2,6 +2,7 @@
  * Card targeting UI + AI auto-play
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget, getBackstepTarget } from "./board.js";
+import { collapsedSquareKey } from "./gameMeta.js";
 import { sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -49,7 +50,7 @@ function at(state, r, c) {
 
 function emptyDark(state, r, c) {
   const k = sk(r, c);
-  if (state.meta.collapsedSquare === k) return false;
+  if (collapsedSquareKey(state.meta) === k) return false;
   if (state.squares[k]?.obstacle) return false;
   return isDarkSquare(r, c) && !at(state, r, c);
 }
