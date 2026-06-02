@@ -45,6 +45,7 @@ export const CARD_REGISTRY = [
   { id: "shadow_swap", name: "Shadow Swap", desc: "Swap positions of two of your pieces.", rarity: "common", weight: 5, mode: "f_f", effect: "swap_friendly" },
   { id: "press", name: "Press", desc: "Force an enemy piece to take an extra move on its owner's turn (after its normal move).", rarity: "common", weight: 6, mode: "enemy", effect: "press" },
   { id: "long_step", name: "Long Step", desc: "Move one of your pieces 2 squares diagonally if the path is clear (no capture).", rarity: "epic", weight: 2, mode: "f_empty", effect: "long_step" },
+  { id: "ward", name: "Ward", desc: "Shield a friendly piece for 1 turn — blocks one capture or spell hit (shields can be burned off).", rarity: "common", weight: 6, mode: "friendly", effect: "shield_1" },
   { id: "aegis", name: "Aegis", desc: "Shield a piece — it cannot be captured for 2 turns.", rarity: "uncommon", weight: 6, mode: "friendly", effect: "shield_2" },
   { id: "stab", name: "Stab", desc: "Eliminate the first enemy piece directly ahead along your piece's forward diagonal.", rarity: "uncommon", weight: 6, mode: "diagonal", effect: "forward_bolt" },
   { id: "crown", name: "Royal Decree", desc: "Instantly crown one of your pieces (king movement).", rarity: "uncommon", weight: 4, mode: "friendly", effect: "crown" },

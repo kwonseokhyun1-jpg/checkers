@@ -1,6 +1,7 @@
 /** Short effect bullets for card hover tooltips */
 const TAGS = {
   nudge: ["Move your piece 1 adjacent square"],
+  shield_1: ["Shield 1 turn — blocks one capture or spell hit"],
   shield_2: ["Shield 2 turns — cannot be captured"],
   forward_bolt: ["Destroy first enemy on forward diagonal (Stab)"],
   trickster: ["Swap 6 random pieces on the board"],
