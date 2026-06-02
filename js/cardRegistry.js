@@ -23,7 +23,7 @@ export const CARD_PLAY_MODES = {
 export const CARD_REGISTRY = [
   { id: "nudge", name: "Nudge", desc: "Displace one of your pieces 1 square to an adjacent empty dark square.", rarity: "common", weight: 8, mode: "f_empty", effect: "nudge" },
   { id: "backstep", name: "Backstep", desc: "Move one of your pieces 1 square straight backward onto an empty dark square.", rarity: "common", weight: 6, mode: "f_empty", effect: "backstep" },
-  { id: "retreat", name: "Retreat Ward", desc: "Grant a piece backward movement for 3 turns.", rarity: "common", weight: 6, mode: "friendly", effect: "retreat_3" },
+  { id: "retreat", name: "Retreat", desc: "Grant a piece backward movement for 3 turns.", rarity: "common", weight: 6, mode: "friendly", effect: "retreat_3" },
   { id: "anchor", name: "Anchor", desc: "Your piece cannot be moved by enemy cards for 2 turns (still moves on your turn).", rarity: "common", weight: 6, mode: "friendly", effect: "anchor_2" },
   { id: "recall", name: "Recall", desc: "Return one of your pieces to any empty dark square in its starting row.", rarity: "common", weight: 6, mode: "f_empty", effect: "recall" },
   { id: "repel", name: "Repel", desc: "Push an adjacent enemy piece 1 square away if the landing square is empty.", rarity: "common", weight: 6, mode: "friendly", effect: "repel" },
