@@ -10,6 +10,7 @@ import {
   upsertDeck,
   deleteDeck,
   collectionCount,
+  buildBeginnerDeckCardIds,
 } from "./storage.js";
 import {
   getAdventureLevels,
@@ -133,6 +134,11 @@ function autoFinishDeck() {
     }
     if (workingDeck.length >= DECK_SIZE) break;
   }
+  renderDeckEditor();
+}
+
+function autoFinishBeginnerDeck() {
+  workingDeck = buildBeginnerDeckCardIds(profile.collection || {});
   renderDeckEditor();
 }
 
@@ -1002,6 +1008,7 @@ function init() {
     workingDeck = [];
     renderDeckEditor();
   });
+  $("btn-beginner-fill-deck")?.addEventListener("click", autoFinishBeginnerDeck);
   $("btn-auto-finish-deck")?.addEventListener("click", autoFinishDeck);
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
   $("btn-back-adventure")?.addEventListener("click", showAdventureMap);

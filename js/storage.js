@@ -1,4 +1,4 @@
-import { isKnightCard, isRemovedCard, getCardDef, maxCopiesForCard, DECK_SIZE } from "./cardCatalog.js";
+import { isKnightCard, isRemovedCard, getCardDef, getPlayableCards, maxCopiesForCard, DECK_SIZE } from "./cardCatalog.js";
 import { defaultAdventureProgress, migrateAdventureDecks } from "./adventure.js";
 import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
 
@@ -13,7 +13,7 @@ export const TESTING_STARS = 30;
 export const TESTING_GEMS = 4000;
 export const WIN_GEMS = 10;
 
-/** Starter deck: commons only, up to 4 copies per card (30 cards). */
+/** Starter / beginner deck: 3× each curated common until 30 cards (10 × 3). */
 export const STARTER_COPIES_PER_CARD = 3;
 export const STARTER_COMMON_IDS = [
   "nudge",
@@ -24,19 +24,49 @@ export const STARTER_COMMON_IDS = [
   "anchor",
   "recall",
   "barrier",
+  "ward",
+  "hex",
 ];
 
 export function buildStarterDeckCardIds() {
   const ids = [];
   for (const id of STARTER_COMMON_IDS) {
-    for (let i = 0; i < STARTER_COPIES_PER_CARD; i++) ids.push(id);
+    for (let i = 0; i < STARTER_COPIES_PER_CARD; i++) {
+      if (ids.length >= DECK_SIZE) break;
+      ids.push(id);
+    }
+    if (ids.length >= DECK_SIZE) break;
   }
-  let i = 0;
-  while (ids.length < 30) {
-    ids.push(STARTER_COMMON_IDS[i % STARTER_COMMON_IDS.length]);
-    i++;
+  return ids.slice(0, DECK_SIZE);
+}
+
+/**
+ * Beginner fill: 3 copies of each owned common (catalog order) until deck is 30.
+ * @param {Record<string, number>} collection
+ */
+
+function starterDeckNeedsRepair(deck) {
+  if (!deck?.cardIds || deck.cardIds.length !== DECK_SIZE) return true;
+  const sorted = [...deck.cardIds].sort().join(",");
+  const target = [...buildStarterDeckCardIds()].sort().join(",");
+  return sorted !== target;
+}
+
+export function buildBeginnerDeckCardIds(collection = {}) {
+  const commons = getPlayableCards()
+    .filter((c) => c.rarity === "common")
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const ids = [];
+  for (const def of commons) {
+    const owned = collection[def.id] || 0;
+    if (owned < 1) continue;
+    const copies = Math.min(owned, STARTER_COPIES_PER_CARD, maxCopiesForCard(def));
+    for (let i = 0; i < copies; i++) {
+      if (ids.length >= DECK_SIZE) return ids;
+      ids.push(def.id);
+    }
   }
-  return ids.slice(0, 30);
+  return ids;
 }
 
 function defaultProfile() {
@@ -86,6 +116,14 @@ export function repairProfile(profile) {
       profile.collection[id] = Math.max(n, STARTER_COPIES_PER_CARD);
       changed = true;
     }
+  }
+
+  const starter = profile.decks.find((d) => d.id === "deck-starter");
+  if (starter && starterDeckNeedsRepair(starter)) {
+    const cardIds = buildStarterDeckCardIds();
+    starter.cardIds = [...cardIds];
+    starter.updatedAt = Date.now();
+    changed = true;
   }
 
   if (!hasValidDeck(profile)) {
