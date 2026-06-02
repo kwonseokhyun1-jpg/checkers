@@ -2996,6 +2996,436 @@ body.chest-open-active {
 }
 @keyframes board-lightning-pulse {
   0%, 100% { filter: brightness(1); }
+
+
+/* ── Spell FX: coin, duel, stab, snipe, backstab, sacrifice, execution, shadow, cryo, shatter ── */
+.spell-board-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spell-board-overlay--coin::before {
+  content: "🪙";
+  font-size: 4.5rem;
+  filter: drop-shadow(0 0 20px rgba(255, 215, 80, 0.9));
+  animation: spell-coin-flip 1.2s ease-in-out 2;
+}
+@keyframes spell-coin-flip {
+  0% { transform: rotateY(0deg) scale(0.6); opacity: 0; }
+  25% { opacity: 1; }
+  50% { transform: rotateY(540deg) scale(1.1); }
+  100% { transform: rotateY(1080deg) scale(1); opacity: 0.85; }
+}
+.board-frame--fx-coin { box-shadow: 0 0 40px rgba(255, 200, 60, 0.4); }
+
+.square.spell-fx-coin-victim::after {
+  content: "✦";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: #ffd87a;
+  animation: spell-coin-hit 0.5s ease-out 3;
+  pointer-events: none;
+}
+@keyframes spell-coin-hit {
+  0% { transform: scale(2); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: scale(0.5); opacity: 0; }
+}
+
+/* Duel — sword clash */
+.board-frame--fx-duel { box-shadow: 0 0 36px rgba(200, 160, 80, 0.45); }
+.square.spell-fx-duel { overflow: visible; }
+.square.spell-fx-duel-attacker::before,
+.square.spell-fx-duel-defender::before {
+  content: "⚔";
+  position: absolute;
+  font-size: 1.35rem;
+  z-index: 4;
+  pointer-events: none;
+  text-shadow: 0 0 10px rgba(255, 220, 120, 0.9);
+}
+.square.spell-fx-duel-attacker::before {
+  top: 10%;
+  left: 55%;
+  animation: spell-duel-slash-a 0.45s ease-in-out 4;
+}
+.square.spell-fx-duel-defender::before {
+  bottom: 10%;
+  right: 55%;
+  transform: scaleX(-1);
+  animation: spell-duel-slash-b 0.45s ease-in-out 4;
+}
+.square.spell-fx-duel-attacker::after,
+.square.spell-fx-duel-defender::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255, 200, 80, 0.5), transparent 70%);
+  animation: spell-duel-spark 0.3s ease-in-out 6;
+  pointer-events: none;
+}
+@keyframes spell-duel-slash-a {
+  0%, 100% { transform: rotate(-35deg) translate(0, 0); }
+  50% { transform: rotate(25deg) translate(-4px, 4px); }
+}
+@keyframes spell-duel-slash-b {
+  0%, 100% { transform: scaleX(-1) rotate(-35deg); }
+  50% { transform: scaleX(-1) rotate(25deg) translate(4px, -4px); }
+}
+@keyframes spell-duel-spark {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.9; }
+}
+
+/* Stab / forward bolt */
+.square.spell-fx-stab.spell-fx-caster::after {
+  content: "🗡";
+  position: absolute;
+  right: 5%;
+  top: 20%;
+  font-size: 1.1rem;
+  animation: spell-stab-lunge 0.35s ease-in-out 5;
+  pointer-events: none;
+  z-index: 4;
+}
+.square.spell-fx-stab.spell-fx-victim {
+  animation: spell-stab-impact 0.4s ease-in-out 4;
+  box-shadow: inset 0 0 0 3px rgba(220, 60, 60, 0.9);
+}
+.square.spell-fx-stab.spell-fx-victim::before {
+  content: "";
+  position: absolute;
+  inset: 15% 45% 15% 15%;
+  background: linear-gradient(90deg, transparent, rgba(200, 40, 40, 0.85), transparent);
+  animation: spell-stab-blood 0.5s ease-out 3;
+  pointer-events: none;
+}
+@keyframes spell-stab-lunge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(55%); }
+}
+@keyframes spell-stab-impact {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.5); transform: scale(0.92); }
+}
+@keyframes spell-stab-blood {
+  0% { opacity: 0; width: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0.3; }
+}
+
+/* Snipe */
+.board-frame--fx-snipe { box-shadow: inset 0 0 0 1px rgba(255, 80, 80, 0.2); }
+.square.spell-fx-snipe.spell-fx-snipe-target {
+  animation: spell-snipe-lock 0.5s ease-in-out 3;
+}
+.square.spell-fx-snipe-target::before {
+  content: "";
+  position: absolute;
+  inset: 8%;
+  border: 2px solid rgba(255, 60, 60, 0.95);
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.5), inset 0 0 12px rgba(255,0,0,0.3);
+  animation: spell-snipe-crosshair 0.6s ease-in-out 3;
+  pointer-events: none;
+}
+.square.spell-fx-snipe-target::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, rgba(255,80,60,0.9) 40%, rgba(255,80,60,0.9) 60%, transparent);
+  transform: translateX(-50%);
+  animation: spell-snipe-beam 0.25s ease-out 2;
+  pointer-events: none;
+  z-index: 5;
+}
+@keyframes spell-snipe-lock {
+  0%, 100% { box-shadow: inset 0 0 0 2px rgba(255, 60, 60, 0.5); }
+  50% { box-shadow: inset 0 0 0 4px rgba(255, 60, 60, 1), 0 0 20px rgba(255, 60, 60, 0.6); }
+}
+@keyframes spell-snipe-crosshair {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(0.85); opacity: 1; }
+}
+@keyframes spell-snipe-beam {
+  0% { opacity: 0; height: 0; }
+  30% { opacity: 1; height: 120%; top: -10%; }
+  100% { opacity: 0; }
+}
+
+/* Backstab */
+.square.spell-fx-backstab.spell-fx-backstab-assassin::after {
+  content: "🗡";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) rotate(180deg);
+  font-size: 1rem;
+  animation: spell-backstab-stab 0.4s ease-in-out 4;
+  pointer-events: none;
+  z-index: 4;
+  filter: drop-shadow(0 0 6px #a00);
+}
+.square.spell-fx-backstab.spell-fx-backstab-victim {
+  animation: spell-backstab-hit 0.45s ease-in-out 3;
+  box-shadow: inset 0 0 18px rgba(120, 0, 0, 0.75);
+}
+@keyframes spell-backstab-stab {
+  0%, 100% { transform: translateX(-50%) rotate(180deg) translateY(0); }
+  50% { transform: translateX(-50%) rotate(180deg) translateY(-45%); }
+}
+@keyframes spell-backstab-hit {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(0.5) sepia(1) hue-rotate(-40deg); }
+}
+
+/* Sacrifice skull ritual */
+.board-frame--fx-sacrifice {
+  box-shadow: 0 0 44px rgba(120, 60, 180, 0.5);
+  animation: board-sacrifice-glow 1s ease-in-out 2;
+}
+.square.spell-fx-sacrifice-altar::before {
+  content: "💀";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  animation: spell-sacrifice-skull 0.8s ease-in-out 3;
+  pointer-events: none;
+  z-index: 4;
+}
+.square.spell-fx-sacrifice-altar::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(140, 80, 220, 0.45), transparent 65%);
+  animation: spell-sacrifice-aura 1s ease-in-out 3;
+  pointer-events: none;
+}
+.square.spell-fx-sacrifice-victim {
+  animation: spell-sacrifice-drain 0.7s ease-in-out 4;
+  box-shadow: inset 0 0 0 3px rgba(180, 100, 255, 0.85);
+}
+@keyframes board-sacrifice-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.12) hue-rotate(15deg); }
+}
+@keyframes spell-sacrifice-skull {
+  0%, 100% { transform: scale(0.8) rotate(-8deg); opacity: 0.6; }
+  50% { transform: scale(1.15) rotate(8deg); opacity: 1; }
+}
+@keyframes spell-sacrifice-aura {
+  0%, 100% { opacity: 0.3; transform: scale(0.9); }
+  50% { opacity: 0.85; transform: scale(1.1); }
+}
+@keyframes spell-sacrifice-drain {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(0.4) saturate(0.3); transform: scale(0.9); }
+}
+
+/* Execution */
+.board-frame--fx-execution { box-shadow: 0 0 32px rgba(80, 80, 90, 0.6); }
+.square.spell-fx-execution.spell-fx-execution-block::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 15%;
+  right: 15%;
+  height: 18%;
+  background: linear-gradient(180deg, #4a4a52, #2a2a30);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+  z-index: 3;
+  pointer-events: none;
+}
+.square.spell-fx-execution.spell-fx-execution-block::after {
+  content: "⚔";
+  position: absolute;
+  top: -5%;
+  left: 50%;
+  font-size: 1.6rem;
+  transform: translateX(-50%);
+  animation: spell-execution-blade 0.55s ease-in-out 3;
+  pointer-events: none;
+  z-index: 5;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.8));
+}
+@keyframes spell-execution-blade {
+  0%, 100% { transform: translateX(-50%) translateY(-120%) rotate(0deg); opacity: 0; }
+  40% { opacity: 1; }
+  55% { transform: translateX(-50%) translateY(35%) rotate(8deg); }
+  70% { transform: translateX(-50%) translateY(40%) rotate(-4deg); }
+}
+
+/* Cull shadow */
+.board-frame--fx-shadow {
+  box-shadow: 0 0 48px rgba(20, 10, 40, 0.75);
+  animation: board-shadow-pulse 0.8s ease-in-out 3;
+}
+.square.spell-fx-shadow.cull-execution::after {
+  content: "";
+  position: absolute;
+  inset: -15%;
+  background: radial-gradient(ellipse at center, rgba(40, 20, 80, 0.7), transparent 70%);
+  animation: spell-shadow-tendrils 0.9s ease-in-out 4;
+  pointer-events: none;
+  z-index: 2;
+}
+.square.spell-fx-shadow.cull-execution::before {
+  content: "☠";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  opacity: 0.7;
+  animation: spell-shadow-skull 1s ease-in-out 2;
+  pointer-events: none;
+}
+@keyframes board-shadow-pulse {
+  0%, 100% { filter: brightness(0.85); }
+  50% { filter: brightness(1.05); }
+}
+@keyframes spell-shadow-tendrils {
+  0%, 100% { transform: scale(0.85); opacity: 0.4; }
+  50% { transform: scale(1.15); opacity: 0.95; }
+}
+@keyframes spell-shadow-skull {
+  0% { transform: scale(0.5); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+/* Cryo bolt — ice + zap */
+.board-frame--fx-cryo { box-shadow: 0 0 36px rgba(100, 200, 255, 0.5); }
+.square.spell-fx-cryo.spell-fx-caster::after {
+  content: "❄⚡";
+  position: absolute;
+  font-size: 0.95rem;
+  right: 8%;
+  top: 15%;
+  animation: spell-cryo-bolt 0.35s ease-in-out 5;
+  pointer-events: none;
+  z-index: 4;
+}
+.square.spell-fx-cryo.spell-fx-victim {
+  animation: spell-cryo-shock 0.35s ease-in-out 6;
+  box-shadow: inset 0 0 20px rgba(100, 220, 255, 0.85);
+}
+.square.spell-fx-cryo.spell-fx-victim::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(180, 240, 255, 0.5), transparent);
+  animation: spell-cryo-crack 0.4s ease-out 4;
+  pointer-events: none;
+}
+@keyframes spell-cryo-bolt {
+  0%, 100% { transform: translate(0, 0); opacity: 1; }
+  50% { transform: translate(50%, 20%); opacity: 0.9; filter: brightness(1.8); }
+}
+@keyframes spell-cryo-shock {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(2) contrast(1.2); }
+}
+@keyframes spell-cryo-crack {
+  0% { opacity: 0; }
+  50% { opacity: 1; background-image: repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(255,255,255,0.4) 3px, rgba(255,255,255,0.4) 5px); }
+  100% { opacity: 0.3; }
+}
+
+/* Shatter */
+.board-frame--fx-shatter { box-shadow: 0 0 40px rgba(180, 220, 255, 0.45); }
+.square.spell-fx-shatter.spell-fx-shatter-target {
+  animation: spell-shatter-break 0.5s ease-in-out 4;
+}
+.square.spell-fx-shatter-target::before {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  background:
+    linear-gradient(125deg, transparent 42%, rgba(255,255,255,0.85) 43%, rgba(255,255,255,0.85) 45%, transparent 46%),
+    linear-gradient(55deg, transparent 52%, rgba(200,230,255,0.9) 53%, rgba(200,230,255,0.9) 55%, transparent 56%),
+    linear-gradient(-35deg, transparent 38%, rgba(255,255,255,0.7) 39%, rgba(255,255,255,0.7) 41%, transparent 42%);
+  animation: spell-shatter-crack 0.45s ease-out 4;
+  pointer-events: none;
+  z-index: 4;
+}
+.square.spell-fx-shatter-target::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(220, 240, 255, 0.6), transparent 65%);
+  animation: spell-shatter-burst 0.4s ease-out 3;
+  pointer-events: none;
+}
+@keyframes spell-shatter-break {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.05); }
+  50% { transform: scale(0.88) rotate(2deg); }
+  75% { transform: scale(0.95) rotate(-2deg); }
+}
+@keyframes spell-shatter-crack {
+  0% { opacity: 0; transform: scale(0.5); }
+  40% { opacity: 1; }
+  100% { opacity: 0.6; transform: scale(1.1); }
+}
+@keyframes spell-shatter-burst {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Chain lightning — enhanced nodes */
+.square.spell-fx-lightning.spell-fx-lightning-node::after {
+  animation: spell-lightning-arc 0.2s ease-in-out 8;
+}
+.square.spell-fx-lightning-node::before {
+  content: "";
+  position: absolute;
+  inset: -5%;
+  border: 2px solid rgba(140, 220, 255, 0.6);
+  border-radius: 4px;
+  animation: spell-lightning-ring 0.35s ease-out 5;
+  pointer-events: none;
+}
+.board-frame--fx-lightning .square.spell-anim-line,
+.board-frame--fx-lightning .square.spell-anim-lightning {
+  background-image: linear-gradient(90deg, transparent, rgba(120, 200, 255, 0.35), transparent);
+  animation: spell-lightning-chain 0.25s ease-in-out 6;
+}
+@keyframes spell-lightning-arc {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.7; }
+  50% { transform: scale(1.2) rotate(12deg); opacity: 1; }
+}
+@keyframes spell-lightning-ring {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+@keyframes spell-lightning-chain {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.6); box-shadow: inset 0 0 16px rgba(100, 200, 255, 0.8); }
+}
+
+.square.spell-fx-fire-line {
+  background-image: linear-gradient(135deg, rgba(255, 140, 40, 0.35), transparent);
+  animation: spell-fire-pulse 0.3s ease-in-out 5;
+}
   50% { filter: brightness(1.15); }
 }
 
