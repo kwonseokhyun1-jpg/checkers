@@ -37,7 +37,7 @@ export async function initAuth() {
   return currentUser;
 }
 
-export async function signUp(email, password, displayName) {
+export async function signUp(email, password, displayName, username) {
   const sb = getSupabase();
   if (!sb) throw new Error("Supabase is not configured. Add your anon key to js/supabaseConfig.js");
 
@@ -45,17 +45,33 @@ export async function signUp(email, password, displayName) {
     email,
     password,
     options: {
-      data: { display_name: displayName || email.split("@")[0] },
+      data: {
+        display_name: displayName || email.split("@")[0],
+        username: username || displayName || email.split("@")[0],
+      },
     },
   });
   if (error) throw error;
   return data;
 }
 
-export async function signIn(email, password) {
+export async function resolveLoginEmail(identifier) {
+  const trimmed = String(identifier || "").trim();
+  if (!trimmed) throw new Error("Enter your username or email.");
+  if (trimmed.includes("@")) return trimmed;
+  const sb = getSupabase();
+  if (!sb) throw new Error("Supabase is not configured.");
+  const { data, error } = await sb.rpc("email_for_login", { identifier: trimmed });
+  if (error) throw error;
+  if (!data) throw new Error("Unknown username or email.");
+  return data;
+}
+
+export async function signIn(identifier, password) {
   const sb = getSupabase();
   if (!sb) throw new Error("Supabase is not configured. Add your anon key to js/supabaseConfig.js");
 
+  const email = await resolveLoginEmail(identifier);
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) throw error;
   return data;

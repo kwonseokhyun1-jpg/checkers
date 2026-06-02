@@ -3571,3 +3571,277 @@ body.chest-open-active {
   letter-spacing: 0.2em;
   color: var(--accent-gold);
 }
+
+
+/* ── Header currency (gems + stars) ── */
+.hud-currency {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+.hud-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 200, 80, 0.12);
+  border: 1px solid rgba(255, 200, 80, 0.35);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.hud-stars__icon { font-size: 0.95rem; }
+.hud-stars--low { opacity: 0.55; }
+.hud-stars--pulse {
+  transform: scale(1.08);
+  box-shadow: 0 0 18px rgba(255, 200, 80, 0.55);
+}
+
+/* Star collect fly animation */
+.star-collect-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  pointer-events: none;
+}
+.star-collect-fly {
+  position: fixed;
+  z-index: 1201;
+  font-size: 1.75rem;
+  color: var(--accent-gold);
+  text-shadow: 0 0 12px rgba(255, 200, 80, 0.9);
+  transform: translate(0, 0);
+  will-change: transform, opacity;
+}
+.game-over-star-gain {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin: 0.25rem 0;
+}
+.game-over-star-gain.hidden { display: none; }
+
+/* Mystery box */
+.mystery-box-card { margin-top: 1rem; }
+.mystery-box {
+  position: relative;
+  padding: 1.25rem;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(167, 139, 250, 0.45);
+  background: linear-gradient(145deg, rgba(40, 20, 60, 0.9), rgba(15, 10, 30, 0.95));
+  text-align: center;
+  overflow: hidden;
+}
+.mystery-box__glow {
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.25), transparent 60%);
+  animation: mystery-pulse 3s ease-in-out infinite;
+}
+@keyframes mystery-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+.mystery-box__icon {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #e9d5ff;
+  position: relative;
+}
+.mystery-box__title { position: relative; margin: 0.5rem 0 0.25rem; font-family: var(--font-heading); }
+.mystery-box__desc { position: relative; font-size: 0.85rem; color: var(--text-muted); margin: 0 0 0.75rem; }
+.mystery-box__cost { position: relative; font-weight: 700; color: var(--accent-gold); margin-bottom: 0.75rem; }
+.mystery-box--locked { opacity: 0.65; }
+
+/* Auth signup fields toggle */
+.auth-field-signup.hidden { display: none; }
+
+/* ── Portrait adventure map ── */
+.adventure-panel {
+  max-width: 100%;
+  padding-bottom: 0.5rem;
+}
+.adventure-map-scene {
+  position: relative;
+  margin: 0.5rem 0 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--card-border);
+  overflow: hidden;
+  background: #0a1218;
+}
+.adventure-map-canvas {
+  position: relative;
+  min-height: min(72vh, 640px);
+  max-height: min(78vh, 720px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+.adventure-map-canvas__bg {
+  position: absolute;
+  inset: 0;
+  min-height: 100%;
+  pointer-events: none;
+}
+.adventure-map-canvas--verdant .adventure-map-canvas__bg {
+  background:
+    linear-gradient(180deg, rgba(8, 20, 12, 0.2), rgba(8, 12, 20, 0.85)),
+    radial-gradient(ellipse 120% 80% at 70% 10%, #1a4a3a 0%, transparent 50%),
+    radial-gradient(ellipse 90% 60% at 20% 80%, #2d5a28 0%, transparent 45%),
+    linear-gradient(165deg, #1a3328 0%, #0d1a14 40%, #142238 100%);
+}
+.adventure-map-canvas--frost .adventure-map-canvas__bg {
+  background:
+    linear-gradient(180deg, #1a3050 0%, #0a1420 50%, #1e3a5f 100%),
+    radial-gradient(circle at 80% 20%, rgba(180, 220, 255, 0.35), transparent 40%);
+}
+.adventure-map-canvas--ember .adventure-map-canvas__bg {
+  background:
+    linear-gradient(180deg, #3a1810 0%, #1a0a08 45%, #2a1810 100%),
+    radial-gradient(circle at 30% 70%, rgba(255, 120, 40, 0.25), transparent 45%);
+}
+.adventure-map-canvas--void .adventure-map-canvas__bg {
+  background:
+    linear-gradient(180deg, #1a1035 0%, #080510 50%, #201040 100%),
+    radial-gradient(circle at 50% 30%, rgba(120, 80, 255, 0.3), transparent 50%);
+}
+.adventure-map-canvas--legend .adventure-map-canvas__bg {
+  background:
+    linear-gradient(180deg, #2a2010 0%, #100a18 50%, #1a2848 100%),
+    radial-gradient(circle at 60% 40%, rgba(255, 215, 120, 0.2), transparent 45%);
+}
+.adventure-map-path {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 560px;
+  color: rgba(125, 211, 252, 0.5);
+  pointer-events: none;
+}
+.adventure-map-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  max-width: 42%;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+  text-align: center;
+}
+.adventure-map-pin--locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(0.6);
+}
+.adventure-map-pin__diamond {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #7dd3fc, #38bdf8);
+  transform: rotate(45deg);
+  border-radius: 4px;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.7);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+}
+.adventure-map-pin--cleared .adventure-map-pin__diamond {
+  background: linear-gradient(135deg, #5ce1e6, #2dd4bf);
+}
+.adventure-map-pin--next .adventure-map-pin__diamond {
+  width: 36px;
+  height: 36px;
+  box-shadow: 0 0 24px rgba(125, 211, 252, 0.95);
+  animation: map-pin-pulse 1.5s ease-in-out infinite;
+}
+@keyframes map-pin-pulse {
+  0%, 100% { box-shadow: 0 0 16px rgba(125, 211, 252, 0.7); }
+  50% { box-shadow: 0 0 28px rgba(125, 211, 252, 1); }
+}
+.adventure-map-pin__next {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #7dd3fc;
+  text-transform: uppercase;
+}
+.adventure-map-pin__title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+.adventure-map-pin__flavor {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.adventure-map-pin__stars {
+  font-size: 0.65rem;
+  color: var(--accent-gold);
+}
+.adventure-world-shields {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0.5rem 0 0.25rem;
+  margin-top: 0.25rem;
+}
+.adventure-world-shield {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.45rem 0.65rem;
+  border: 2px solid var(--card-border);
+  border-radius: 12px 12px 16px 16px;
+  background: var(--bg-panel-elevated);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 3.5rem;
+}
+.adventure-world-shield__icon {
+  width: 2rem;
+  height: 2.25rem;
+  border-radius: 8px 8px 12px 12px;
+  background: linear-gradient(180deg, #4a6a9a, #2a3a5a);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+.adventure-world-shield.active {
+  border-color: var(--accent-gem);
+  color: var(--text);
+}
+.adventure-world-shield.active .adventure-world-shield__icon {
+  background: linear-gradient(180deg, #5ce1e6, #2a6a8a);
+}
+.adventure-world-shield:nth-child(2) .adventure-world-shield__icon { background: linear-gradient(180deg, #4ade80, #166534); }
+.adventure-world-shield:nth-child(3) .adventure-world-shield__icon { background: linear-gradient(180deg, #f97316, #7c2d12); }
+.adventure-world-shield:nth-child(4) .adventure-world-shield__icon { background: linear-gradient(180deg, #a78bfa, #4c1d95); }
+.adventure-world-shield:nth-child(5) .adventure-world-shield__icon { background: linear-gradient(180deg, #fcd34d, #92400e); }
+.adventure-world-shield--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.adventure-world-hint {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin: 0 0 0.35rem;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .adventure-map-pin__title { font-size: 0.68rem; }
+  .adventure-map-pin { max-width: 46%; }
+}

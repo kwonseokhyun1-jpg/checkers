@@ -94,3 +94,22 @@ alter publication supabase_realtime add table public.pvp_matches;
 create policy "pvp_delete_host_waiting"
   on public.pvp_matches for delete
   using (auth.uid() = host_id and status = 'waiting');
+
+
+-- Resolve username or email for password sign-in (client calls before signInWithPassword)
+create or replace function public.email_for_login(identifier text)
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select u.email::text
+  from auth.users u
+  left join public.profiles p on p.id = u.id
+  where lower(u.email) = lower(identifier)
+     or lower(p.username) = lower(identifier)
+  limit 1;
+$$;
+
+grant execute on function public.email_for_login(text) to anon, authenticated;

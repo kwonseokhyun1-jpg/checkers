@@ -46,6 +46,7 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
         <div class="game-over-card">
           <h2 id="game-over-title">Game over</h2>
           <div id="game-over-stars" class="game-over-stars hidden" aria-hidden="true"></div>
+          <p id="game-over-star-gain" class="game-over-star-gain hidden"></p>
           <p id="game-over-text"></p>
           <button id="btn-restart-match" type="button" class="btn-primary">Back</button>
         </div>

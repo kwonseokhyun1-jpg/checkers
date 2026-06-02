@@ -1,7 +1,7 @@
 /**
  * Adventure — 5 worlds × 10 stages (50 total). Worlds 4–5 unlock after clearing stage 30.
  */
-import { getPlayableCards, getCardDef, DECK_SIZE, maxCopiesForCard, maxCopiesForRarity } from "./cardCatalog.js";
+import { getPlayableCards, getCardDef, DECK_SIZE, maxCopiesForCard, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
 import { countById, shuffle } from "./deckRules.js";
 
 export const ADVENTURE_LEVEL_COUNT = 50;
@@ -10,7 +10,7 @@ export const ADVENTURE_FIRST_CLEAR_GEMS = 50;
 export const ADVENTURE_REPEAT_CLEAR_GEMS = 20;
 export const ENEMY_DECK_GENERATION = 5;
 export const BONUS_WORLDS_UNLOCK_AT_LEVEL = 30;
-const EARLY_COPIES_PER_CARD = 4;
+const EARLY_COPIES_PER_CARD = 3;
 
 export const WORLDS = [
   {
@@ -361,7 +361,9 @@ export function recordLevelClear(profile, levelId, starsEarned) {
   const prevBest = profile.adventure.stars[key] || 0;
   const stars = Math.max(prevBest, Math.min(3, Math.max(1, Number(starsEarned) || 1)));
   profile.adventure.stars[key] = stars;
-  return { gems, firstTime, stars };
+  const starsGained = Math.max(0, stars - prevBest);
+  if (starsGained > 0) profile.stars = (profile.stars ?? 0) + starsGained;
+  return { gems, firstTime, stars, starsGained };
 }
 
 export function getEnemyDeckPreview(cardIds) {
@@ -370,4 +372,31 @@ export function getEnemyDeckPreview(cardIds) {
     .map(([id, n]) => ({ def: getCardDef(id), count: n }))
     .filter((x) => x.def)
     .sort((a, b) => a.def.name.localeCompare(b.def.name));
+}
+
+/** Portrait map pin positions (% of canvas) per stage in world (1–10). */
+export const MAP_PIN_LAYOUT = [
+  { left: 72, top: 88 },
+  { left: 38, top: 78 },
+  { left: 58, top: 68 },
+  { left: 28, top: 58 },
+  { left: 62, top: 50 },
+  { left: 42, top: 42 },
+  { left: 68, top: 34 },
+  { left: 32, top: 26 },
+  { left: 52, top: 16 },
+  { left: 46, top: 6 },
+];
+
+export function getNextPlayableLevelId(progress) {
+  const next = progress?.highestUnlocked || 1;
+  if (next <= ADVENTURE_LEVEL_COUNT && isLevelUnlocked(progress, next)) return next;
+  for (let id = 1; id <= ADVENTURE_LEVEL_COUNT; id++) {
+    if (isLevelUnlocked(progress, id) && !isLevelCleared(progress, id)) return id;
+  }
+  return Math.min(ADVENTURE_LEVEL_COUNT, progress?.highestUnlocked || 1);
+}
+
+export function totalMapStars(progress) {
+  return Object.values(progress?.stars || {}).reduce((s, n) => s + (Number(n) || 0), 0);
 }

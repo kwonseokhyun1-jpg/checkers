@@ -1,23 +1,23 @@
 /** SVG art, vault thumbnails, and reveal tiles for profile cosmetics */
 
 export const COSMETIC_BOX_TIERS = {
-  style_crate: {
-    label: "Style Crate",
-    tagline: "Warm lacquer · common flair",
+  bronze: {
+    label: "Bronze Vanity",
+    tagline: "Same odds as Bronze Reliquary",
     visual: "bronze",
     accent: "#c77dff",
     glow: "rgba(199, 125, 255, 0.45)",
   },
-  arcane_vanity: {
-    label: "Arcane Vanity",
-    tagline: "Mirror glass · rare couture",
+  silver: {
+    label: "Silver Vanity",
+    tagline: "Same odds as Silver Reliquary",
     visual: "silver",
     accent: "#7dd3fc",
     glow: "rgba(125, 211, 252, 0.5)",
   },
-  legend_relic: {
-    label: "Legend Relic",
-    tagline: "Royal seal · legendary glam",
+  gold: {
+    label: "Gold Vanity",
+    tagline: "Same odds as Gold Reliquary",
     visual: "gold",
     accent: "#ffd87a",
     glow: "rgba(255, 216, 122, 0.55)",
@@ -117,23 +117,70 @@ export function cosmeticBoxSvgMarkup(boxId) {
 }
 
 export function renderAvatarPreview(id) {
-  const palettes = {
-    avatar_default: ["#5a6a8a", "#8fa4c4"],
-    avatar_mystic: ["#6b4fd4", "#c4a8ff"],
-    avatar_shadow: ["#1a1f2e", "#4a5568"],
-    avatar_sun: ["#c9a227", "#ffe08a"],
-    avatar_void: ["#0d0a18", "#7b5cff"],
-  };
-  const [a, b] = palettes[id] || palettes.avatar_default;
-  const gid = `av-g-${id.replace(/[^a-z0-9]/gi, "")}`;
-  return `<svg viewBox="0 0 64 64" class="cosmetic-avatar-svg" aria-hidden="true">
-    <defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${a}"/><stop offset="100%" stop-color="${b}"/></linearGradient></defs>
-    <circle cx="32" cy="32" r="30" fill="url(#${gid})" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
-    <circle cx="32" cy="26" r="10" fill="rgba(255,255,255,0.2)"/>
-    <path d="M14 52 Q32 40 50 52" fill="rgba(0,0,0,0.25)"/>
-    <text x="32" y="58" text-anchor="middle" font-size="14" fill="rgba(255,255,255,0.5)">✦</text>
+  const art = AVATAR_ART[id] || AVATAR_ART.avatar_default;
+  const gid = `av-${id.replace(/[^a-z0-9]/gi, "")}`;
+  return `<svg viewBox="0 0 64 64" class="cosmetic-avatar-svg cosmetic-avatar-svg--${id.replace("avatar_", "")}" aria-hidden="true">
+    <defs>
+      <linearGradient id="${gid}-bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="${art.bg[0]}"/>
+        <stop offset="100%" stop-color="${art.bg[1]}"/>
+      </linearGradient>
+      <radialGradient id="${gid}-glow" cx="50%" cy="35%" r="55%">
+        <stop offset="0%" stop-color="${art.glow}" stop-opacity="0.85"/>
+        <stop offset="100%" stop-color="${art.bg[1]}" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <rect width="64" height="64" rx="14" fill="url(#${gid}-bg)"/>
+    <circle cx="32" cy="30" r="22" fill="url(#${gid}-glow)"/>
+    ${art.svg}
   </svg>`;
 }
+
+const AVATAR_ART = {
+  avatar_default: {
+    bg: ["#4a5f7a", "#1e2a3a"],
+    glow: "#8fa4c4",
+    svg: `<ellipse cx="32" cy="38" rx="14" ry="16" fill="#2a3548"/>
+      <circle cx="32" cy="24" r="11" fill="#c5d4ea"/>
+      <rect x="22" y="14" width="20" height="6" rx="2" fill="#6b7f9c"/>
+      <circle cx="28" cy="24" r="2" fill="#1a2030"/>
+      <circle cx="36" cy="24" r="2" fill="#1a2030"/>`,
+  },
+  avatar_mystic: {
+    bg: ["#4c1d95", "#1e1035"],
+    glow: "#c4a8ff",
+    svg: `<path d="M32 12 L42 22 L38 44 L26 44 L22 22 Z" fill="#2d1b4e" stroke="#c4a8ff" stroke-width="1.5"/>
+      <circle cx="32" cy="28" r="8" fill="#0f0618" stroke="#e9d5ff" stroke-width="2"/>
+      <circle cx="32" cy="28" r="3" fill="#a78bfa"/>
+      <path d="M20 48 Q32 36 44 48" fill="none" stroke="#7c3aed" stroke-width="2"/>`,
+  },
+  avatar_shadow: {
+    bg: ["#111827", "#030712"],
+    glow: "#6b7280",
+    svg: `<path d="M18 50 Q32 20 46 50 Z" fill="#0a0f18"/>
+      <ellipse cx="32" cy="26" rx="12" ry="14" fill="#1f2937"/>
+      <path d="M22 18 Q32 8 42 18 L40 26 Q32 22 24 26 Z" fill="#030712"/>
+      <ellipse cx="27" cy="28" rx="2" ry="3" fill="#9ca3af" opacity="0.8"/>
+      <ellipse cx="37" cy="28" rx="2" ry="3" fill="#9ca3af" opacity="0.8"/>`,
+  },
+  avatar_sun: {
+    bg: ["#b45309", "#451a03"],
+    glow: "#fde68a",
+    svg: `<circle cx="32" cy="30" r="14" fill="#fbbf24" stroke="#fef3c7" stroke-width="2"/>
+      <path d="M32 6 L34 14 M32 54 L34 46 M6 30 L14 32 M54 30 L46 32 M12 14 L18 20 M46 46 L52 52 M46 14 L52 8 M12 46 L18 52" stroke="#fde68a" stroke-width="2" stroke-linecap="round"/>
+      <path d="M24 48 Q32 40 40 48" fill="#d97706"/>`,
+  },
+  avatar_void: {
+    bg: ["#0c0a14", "#312e81"],
+    glow: "#818cf8",
+    svg: `<circle cx="32" cy="32" r="18" fill="#05030a" stroke="#6366f1" stroke-width="2"/>
+      <ellipse cx="32" cy="32" rx="10" ry="14" fill="#1e1b4b"/>
+      <circle cx="32" cy="32" r="4" fill="#c7d2fe"/>
+      <circle cx="26" cy="24" r="1.5" fill="#fff" opacity="0.9"/>
+      <circle cx="38" cy="28" r="1" fill="#fff" opacity="0.7"/>
+      <circle cx="30" cy="38" r="1.2" fill="#fff" opacity="0.6"/>`,
+  },
+};
 
 export function bannerStyleFor(id) {
   const map = {

@@ -4,15 +4,17 @@ import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
 
-const STORAGE_KEY = "cardCheckersProfile_v6";
+const STORAGE_KEY = "cardCheckersProfile_v7";
 const LEGACY_STORAGE_KEY = "cardCheckersProfile_v5";
 export const STARTING_GEMS = 400;
+export const STARTING_STARS = 0;
+export const TESTING_STARS = 30;
 /** Testing grant — applied on each profile load for now */
 export const TESTING_GEMS = 4000;
 export const WIN_GEMS = 10;
 
 /** Starter deck: commons only, up to 4 copies per card (30 cards). */
-export const STARTER_COPIES_PER_CARD = 4;
+export const STARTER_COPIES_PER_CARD = 3;
 export const STARTER_COMMON_IDS = [
   "nudge",
   "retreat",
@@ -26,11 +28,15 @@ export const STARTER_COMMON_IDS = [
 
 export function buildStarterDeckCardIds() {
   const ids = [];
-  for (const id of STARTER_COMMON_IDS.slice(0, 7)) {
+  for (const id of STARTER_COMMON_IDS) {
     for (let i = 0; i < STARTER_COPIES_PER_CARD; i++) ids.push(id);
   }
-  ids.push(STARTER_COMMON_IDS[7], STARTER_COMMON_IDS[7]);
-  return ids;
+  let i = 0;
+  while (ids.length < 30) {
+    ids.push(STARTER_COMMON_IDS[i % STARTER_COMMON_IDS.length]);
+    i++;
+  }
+  return ids.slice(0, 30);
 }
 
 function defaultProfile() {
@@ -46,6 +52,7 @@ function defaultProfile() {
 
   return {
     gems: TESTING_GEMS,
+    stars: TESTING_STARS,
     collection,
     decks: [starterDeck],
     selectedDeckId: starterDeck.id,
@@ -174,6 +181,7 @@ function normalizeLoadedProfile(parsed) {
 
   return {
     gems: typeof parsed.gems === "number" ? parsed.gems : TESTING_GEMS,
+    stars: typeof parsed.stars === "number" ? parsed.stars : STARTING_STARS,
     collection: parsed.collection && typeof parsed.collection === "object" ? parsed.collection : {},
     decks: Array.isArray(parsed.decks) ? parsed.decks : [],
     selectedDeckId: parsed.selectedDeckId ?? null,
@@ -183,6 +191,7 @@ function normalizeLoadedProfile(parsed) {
 }
 
 function finalizeProfile(profile) {
+  if (typeof profile.stars !== "number") profile.stars = 0;
   let p = stripKnightCards(profile);
   p = stripRemovedCards(p);
   p = capCollection(p);
