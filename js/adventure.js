@@ -1,7 +1,14 @@
 /**
  * Adventure — 5 worlds × 10 stages (50 total). Worlds 4–5 unlock after clearing stage 30.
  */
-import { getPlayableCards, getCardDef, DECK_SIZE, maxCopiesForCard, MAX_COPIES_PER_CARD } from "./cardCatalog.js";
+import {
+  getPlayableCards,
+  getCardDef,
+  DECK_SIZE,
+  maxCopiesForCard,
+  maxCopiesForRarity,
+  MAX_COPIES_PER_CARD,
+} from "./cardCatalog.js";
 import { countById, shuffle } from "./deckRules.js";
 
 export const ADVENTURE_LEVEL_COUNT = 50;
@@ -249,11 +256,16 @@ export function migrateAdventureDecks(profile) {
   profile.adventure.enemyDeckGen = ENEMY_DECK_GENERATION;
 }
 
+function ensureEnemyDeckSize(ids) {
+  if (Array.isArray(ids) && ids.length === DECK_SIZE) return ids;
+  return buildWeightedDeck(1);
+}
+
 export function buildLevelEnemyDeck(levelNum) {
   const world = getWorldForLevel(levelNum).id;
-  if (world === 5) return buildEpicLegendaryDeck();
-  if (world === 1) return buildEarlyCommonUncommonDeck(levelNum);
-  return buildWeightedDeck(levelNum);
+  if (world === 5) return ensureEnemyDeckSize(buildEpicLegendaryDeck());
+  if (world === 1) return ensureEnemyDeckSize(buildEarlyCommonUncommonDeck(levelNum));
+  return ensureEnemyDeckSize(buildWeightedDeck(levelNum));
 }
 
 export function getAdventureLevels() {
