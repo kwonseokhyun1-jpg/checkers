@@ -37,6 +37,24 @@ export async function initAuth() {
   return currentUser;
 }
 
+export async function isUsernameAvailable(username) {
+  const sb = getSupabase();
+  if (!sb) return true;
+  const name = String(username || "").trim();
+  if (!name) return false;
+
+  const { data, error } = await sb.rpc("username_is_available", { name });
+  if (!error && typeof data === "boolean") return data;
+
+  const { data: row, error: qErr } = await sb
+    .from("profiles")
+    .select("id")
+    .ilike("username", name)
+    .maybeSingle();
+  if (qErr) throw qErr;
+  return !row;
+}
+
 export async function signUp(email, password, displayName, username) {
   const sb = getSupabase();
   if (!sb) throw new Error("Supabase is not configured. Add your anon key to js/supabaseConfig.js");

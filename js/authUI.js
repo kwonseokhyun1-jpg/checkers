@@ -3,6 +3,7 @@ import {
   initAuth,
   signIn,
   signUp,
+  isUsernameAvailable,
   signOut,
   onAuthChange,
   isAuthAvailable,
@@ -123,6 +124,12 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
           return;
         }
 
+        const available = await isUsernameAvailable(username);
+        if (!available) {
+          setError(`Username "${username}" is already taken. Pick another.`);
+          return;
+        }
+
         const data = await signUp(identifier, password, username, username);
         const user = data.session?.user ?? getCurrentUser();
 
@@ -160,7 +167,14 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
       close();
     } catch (err) {
       let msg = err?.message || "Authentication failed";
-      if (msg.includes("over_email_send_rate_limit") || msg.includes("rate limit")) {
+      if (
+        msg.includes("Database error saving new user") ||
+        msg.includes("username_taken") ||
+        err?.code === "23505"
+      ) {
+        msg =
+          "Could not create your account. That username may already be taken, or the database needs an update — run supabase/fix_signup_trigger.sql in the Supabase SQL Editor, then try again.";
+      } else if (msg.includes("over_email_send_rate_limit") || msg.includes("rate limit")) {
         msg = "Too many sign-up attempts. Wait a few minutes or sign in with an existing account.";
       } else if (msg.includes("User already registered")) {
         msg = "That email is already registered. Try Sign in instead.";
