@@ -107,7 +107,6 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
     const identifier = form.querySelector("#auth-identifier")?.value?.trim();
     const username = form.querySelector("#auth-username")?.value?.trim();
     const password = form.querySelector("#auth-password")?.value;
-    const displayName = form.querySelector("#auth-display-name")?.value?.trim();
     if (!identifier || !password) {
       setError("Username or email and password required.");
       return;
@@ -124,7 +123,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
           return;
         }
 
-        const data = await signUp(identifier, password, displayName, username);
+        const data = await signUp(identifier, password, username, username);
         const user = data.session?.user ?? getCurrentUser();
 
         if (user) {
@@ -137,7 +136,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
 
           await upsertProfileRow(user.id, {
             username,
-            display_name: displayName || username,
+            display_name: username,
             profile_json: profileJson,
           });
 

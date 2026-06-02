@@ -228,10 +228,8 @@
       <button type="button" id="auth-close" class="auth-modal-close" aria-label="Close">×</button>
       <h2 id="auth-modal-title" class="panel-head__title">Sign in</h2>
       <form id="auth-form" class="auth-form">
-        <label class="label-sm auth-field-signup" for="auth-username">Username (sign up)</label>
-        <input type="text" id="auth-username" class="input-text auth-field-signup" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" />
-        <label class="label-sm auth-field-signup" for="auth-display-name">Display name (sign up)</label>
-        <input type="text" id="auth-display-name" class="input-text" autocomplete="nickname" />
+        <label class="label-sm auth-field-signup" for="auth-username">Username</label>
+        <input type="text" id="auth-username" class="input-text auth-field-signup" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" placeholder="Shown in game and for sign-in" />
         <label class="label-sm" for="auth-identifier">Username or email</label>
         <input type="text" id="auth-identifier" autocomplete="username" class="input-text" required  />
         <label class="label-sm" for="auth-password">Password</label>
