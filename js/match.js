@@ -36,6 +36,7 @@ import {
   MIN_SPELL_ANIM_MS,
 } from "./spellAnimations.js";
 import { applySquareSpellFx, mountSpellOverlay, removeSpellOverlay } from "./spellFx.js";
+import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares } from "./cardEffectHandlers.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
@@ -131,6 +132,7 @@ export class MatchSession {
     this.aiHighlight = null;
     this.cullAnimation = null;
     this.spellAnimation = null;
+    this.boardFx = null;
     this.actionBusy = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.bindEls();
@@ -548,6 +550,47 @@ export class MatchSession {
     return true;
   }
 
+
+  playBoardFx(s, onDone) {
+    this.boardFx = { ...s.boardFx, squares: s.boardFx.squares.map(([r, c]) => [r, c]) };
+    s.boardFx = null;
+    const kind = this.boardFx.kind || "bomb";
+    const labels = {
+      bomb: "Bomb detonates — adjacent pieces destroyed!",
+      mine: "Landmine explodes!",
+      vengeance: "Vengeance — blood for blood!",
+    };
+    this.setMessage(labels[kind] || "Blast!");
+    const frame = this.$("board")?.closest(".board-frame");
+    frame?.classList.add(`board-frame--fx-${kind}`, "board-frame--spell-impact");
+    this.$("board")?.classList.add("board--spell-shake");
+    this.render();
+    const ms = boardFxDuration(kind);
+    setTimeout(() => {
+      this.boardFx = null;
+      frame?.classList.remove(`board-frame--fx-${kind}`, "board-frame--spell-impact");
+      this.$("board")?.classList.remove("board--spell-shake");
+      if (this.checkWin()) return;
+      onDone?.();
+    }, ms);
+  }
+
+  tryBearBonusMove(s, color, landR, landC) {
+    const landed = s.board[landR]?.[landC];
+    if (!landed?.bearAwakened || s.meta.bearBonusUsed?.[color]) return false;
+    const extras = getAllMovesForColor(s.board, color, s).filter(
+      (m) => m.from[0] === landR && m.from[1] === landC
+    );
+    if (!extras.length) return false;
+    s.meta.bearBonusUsed[color] = true;
+    s.phase = PHASE.MOVE;
+    this.validMoves = extras;
+    this.selectedSquare = [landR, landC];
+    this.setMessage("Awoken Bear — move again!");
+    this.render();
+    return true;
+  }
+
   executeHumanMove(move) {
     const s = this.state;
     this.cancelCardPlay();
@@ -573,20 +616,13 @@ export class MatchSession {
           return;
         }
       }
+      if (this.tryBearBonusMove(s, this.localColor, landR, landC)) return;
       if (this.tryPressExtraMove(s, this.localColor)) return;
       this.endHumanTurn();
     };
 
-    if (s.lastExplosion) {
-      this.explosionFlash = [...s.lastExplosion];
-      s.lastExplosion = null;
-      this.setMessage("Bomb detonates — adjacent pieces destroyed!");
-      this.render();
-      setTimeout(() => {
-        this.explosionFlash = null;
-        if (this.checkWin()) return;
-        finish();
-      }, 750);
+    if (s.boardFx) {
+      this.playBoardFx(s, finish);
       return;
     }
 
@@ -737,6 +773,7 @@ ${starLine}`;
     this.render();
     await delay((spec.duration ?? MIN_SPELL_ANIM_MS) + SPELL_BANNER_EXTRA_MS);
     this.spellAnimation = null;
+    this.boardFx = null;
     removeSpellOverlay(overlay);
     board?.classList.remove("board--spell-shake");
     frame?.classList.remove("board-frame--spell-impact");
@@ -753,6 +790,7 @@ ${starLine}`;
     this.render();
     await delay((spec.duration ?? 900) + 400);
     this.spellAnimation = null;
+    this.boardFx = null;
     if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
   }
 
@@ -1017,6 +1055,7 @@ ${starLine}`;
         this.aiHighlight = null;
     this.cullAnimation = null;
     this.spellAnimation = null;
+    this.boardFx = null;
     this.actionBusy = false;
         this.render();
       } else if (entry.type === "message") {
@@ -1041,12 +1080,8 @@ ${starLine}`;
     const log = runAiTurn(s, this.opponentName);
     await this.replayAiLog(log);
 
-    if (s.lastExplosion) {
-      this.explosionFlash = s.lastExplosion;
-      s.lastExplosion = null;
-      this.render();
-      await delay(AI_PACE.explosion);
-      this.explosionFlash = null;
+    if (s.boardFx) {
+      await new Promise((resolve) => this.playBoardFx(s, resolve));
     }
 
     tickEffects(s.board, COLORS.BLACK, s);
@@ -1152,7 +1187,9 @@ ${starLine}`;
         if (this.aiHighlight?.captures?.some(([r, c]) => r === row && c === col)) {
           sq.classList.add("ai-capture");
         }
-        if (this.explosionFlash?.[0] === row && this.explosionFlash?.[1] === col) {
+        if (this.boardFx?.squares?.some(([r, c]) => r === row && c === col)) {
+          sq.classList.add(`board-fx-${this.boardFx.kind}`, "board-fx-blast");
+        } else if (this.explosionFlash?.[0] === row && this.explosionFlash?.[1] === col) {
           sq.classList.add("explosion-flash");
         }
         if (this.selectedSquare?.[0] === row && this.selectedSquare?.[1] === col) sq.classList.add("selected");
@@ -1207,6 +1244,9 @@ ${starLine}`;
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
+          if (piece.hibernationTurns > 0) el.classList.add("hibernating");
+          if (piece.bearAwakened) el.classList.add("bear-awoken");
+          if (piece.vengeanceTurns > 0) el.classList.add("vengeance-mark");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (
             this.cullAnimation &&

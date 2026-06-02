@@ -68,7 +68,7 @@ const TERRAIN_EFFECTS = new Set([
 const BUFF_EFFECTS = new Set([
   "shield_2", "retreat_3", "knight_perm", "crown", "rook_2", "bishop_2", "bishop_3",
   "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "mirror_shield", "phalanx",
-  "last_stand", "ghost_guard", "fortify", "vengeance", "stall", "hunters_mark", "promote_zone", "revive",
+  "last_stand", "ghost_guard", "fortify", "vengeance", "hibernation", "stall", "hunters_mark", "promote_zone", "revive",
   "wraith_2", "stone_form", "rally", "fusion",
 ]);
 
@@ -104,6 +104,10 @@ const VISUAL_DURATION_MS = {
   shatter: 1400,
   lightning: 1400,
   fire: 1300,
+  vengeance: 1100,
+  hibernation: 1200,
+  bomb_arm: 1000,
+  landmine_arm: 1000,
 };
 
 function animDurationForEffect(effect, fallback = MIN_SPELL_ANIM_MS) {
@@ -324,6 +328,26 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
       squares: p.slice(0, 2),
       from: p[0],
       to: p[1],
+    }, effect);
+  }
+
+  if (effect === "landmine" && p.length === 1) {
+    return withVisual({
+      type: "terrain",
+      duration: animDurationForEffect("landmine"),
+      label,
+      squares: p,
+      to: p[0],
+    }, "landmine");
+  }
+
+  if ((effect === "vengeance" || effect === "hibernation" || effect === "bomb") && p.length === 1) {
+    return withVisual({
+      type: "buff",
+      duration: animDurationForEffect(effect),
+      label,
+      squares: p,
+      to: p[0],
     }, effect);
   }
 

@@ -38,6 +38,7 @@ export function createMatchMeta() {
     turnNumber: 0,
     collapsedSquare: null,
     extraSpellCast: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    bearBonusUsed: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingPressMove: { [COLORS.RED]: false, [COLORS.BLACK]: false },
   };
 }
@@ -128,6 +129,8 @@ export function startTurnMeta(state, color) {
   state.meta.optionalJumps[color] = false;
   state.meta.dominionTurn[color] = false;
   state.meta.extraSpellCast[color] = false;
+  state.meta.bearBonusUsed = state.meta.bearBonusUsed || { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  state.meta.bearBonusUsed[color] = false;
   if (state.meta.mirrorBoardTurns[opp] > 0) state.meta.mirrorBoardTurns[opp]--;
   if (state.meta.highlightTurns[opp] > 0) state.meta.highlightTurns[opp]--;
   if (state.meta.fogTurns[color] > 0) {

@@ -152,7 +152,6 @@ const EFFECTS = {
     if (!t || t.color === color) return fail();
     if (t.shieldTurns > 0) t.shieldTurns = 0;
     if (!kill(state, r2, c2, color)) return fail();
-    state.lastExplosion = [r2, c2];
     return ok("Fireblast!");
   },
   freeze_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.frozenTurns=1; return ok(); },
@@ -232,6 +231,7 @@ const EFFECTS = {
   },
   press(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.pressExtraMove=true; return ok(); },
   vengeance(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.vengeanceTurns=2; return ok(); },
+  hibernation(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(p.hibernationTurns>0) return fail("Already hibernating."); p.hibernationTurns=2; p.bearAwakened=false; return ok("Hibernation — wakes as a king in 2 turns."); },
   barrier(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); sq.barrier={owner:color,turnsLeft:1}; return ok(); },
   iron_will(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.frozenTurns=0; p.rooted=0; return ok(); },
   revive(state, color, picks) { const [r,c]=p0(picks); const cap=state.captured[color]; if(!cap?.length) return fail('Revive requires a captured piece'); if(!emptyDark(state,r,c)) return fail(); const data=cap.pop(); const p=createPiece(color,r,c,data.king); p.revivedNoCapture=true; state.board[r][c]=p; return ok('Piece revived — it cannot capture this turn.'); },

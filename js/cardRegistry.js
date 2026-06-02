@@ -70,6 +70,7 @@ export const CARD_REGISTRY = [
   { id: "bulwark", name: "Bulwark", desc: "All your pieces on one diagonal line gain shield for 2 turns.", rarity: "rare", weight: 3, mode: "friendly", effect: "bulwark" },
   { id: "darkness", name: "Darkness", desc: "Pieces on nearby dark squares cannot be targeted by ranged spells or captured for 2 turns.", rarity: "rare", weight: 3, mode: "empty", effect: "darkness" },
   { id: "stall", name: "Stall", desc: "Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.", rarity: "rare", weight: 3, mode: "friendly", effect: "fortify" },
+  { id: "hibernation", name: "Hibernation", desc: "Your piece sleeps immobile for 2 turns, then awakens as a king with a bear mark — it may move twice each turn forever after.", rarity: "rare", weight: 3, mode: "friendly", effect: "hibernation" },
   { id: "vengeance", name: "Vengeance", desc: "For 2 turns, if this piece is captured, the capturer is destroyed too.", rarity: "rare", weight: 3, mode: "friendly", effect: "vengeance" },
   { id: "sanctuary", name: "Sanctuary", desc: "Friendly pieces on 6 nearby dark squares cannot be captured for 1 turn.", rarity: "rare", weight: 3, mode: "empty", effect: "sanctuary" },
   { id: "fusion", name: "Fusion", desc: "Merge two adjacent friendly men into one super-man (2-step non-capture).", rarity: "rare", weight: 3, mode: "f_f_adj", effect: "fusion" },

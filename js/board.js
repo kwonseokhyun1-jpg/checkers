@@ -1,5 +1,6 @@
 /** Checkers board logic with card-effect modifiers */
 import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine } from "./gameMeta.js";
+import { queueBoardFx } from "./boardFx.js";
 
 function sk(r, c) {
   return `${r},${c}`;
@@ -110,6 +111,10 @@ export function createPiece(color, row, col, king = false) {
     chameleonTurns: 0,
     revivedNoCapture: false,
     paralyzedTurns: 0,
+    vengeanceTurns: 0,
+    hibernationTurns: 0,
+    bearAwakened: false,
+    pressExtraMove: false,
   };
 }
 
@@ -223,7 +228,7 @@ export function forwardDirs(piece, dominion = false) {
 
 export function getStepMoves(board, piece, color, state = null) {
   const moves = [];
-  if (isFrozen(piece) || piece.fortifyTurns > 0) return moves;
+  if (isFrozen(piece) || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
   const dom = state?.meta?.dominionTurn?.[color];
 
   if (hasKnightSigil(piece))
@@ -266,7 +271,7 @@ export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
   if (piece.revivedNoCapture) return moves;
   if (piece.reverseOnlyTurns > 0 || piece.noCaptureTurns > 0) return moves;
-  if (isFrozen(piece) || piece.rooted > 0 || piece.fortifyTurns > 0) return moves;
+  if (isFrozen(piece) || piece.rooted > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
   if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
   if (hasKnightSigil(piece) && piece.knightCapture)
     return getKnightMoves(board, piece, state, true);
@@ -346,6 +351,7 @@ export function applyMove(board, move, state = null) {
     const cap = board[cr][cc];
     if (cap) {
       if (cap.vengeanceTurns > 0 && piece) {
+        queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
         removePiece(board, piece.row, piece.col);
         piece = null;
       }
@@ -378,6 +384,7 @@ export function applyMove(board, move, state = null) {
     revealMine(sq);
     const mineOwner = getMineOwner(sq);
     if (mineOwner && mineOwner !== piece.color && piece) {
+      queueBoardFx(state, "mine", tr, tc);
       removePiece(board, tr, tc);
       sq.mine = null;
       return null;
@@ -385,6 +392,7 @@ export function applyMove(board, move, state = null) {
   } else {
     const mineOwner = getMineOwner(sq);
     if (mineOwner && mineOwner !== piece.color && piece) {
+      queueBoardFx(state, "mine", tr, tc);
       removePiece(board, tr, tc);
       sq.mine = null;
       return null;
@@ -393,7 +401,7 @@ export function applyMove(board, move, state = null) {
   if (piece && piece.bombArmed) {
     piece.bombArmed = false;
     explodeBombAt(board, state, tr, tc);
-    if (state) state.lastExplosion = [tr, tc];
+    if (state) queueBoardFx(state, "bomb", tr, tc);
     return null;
   }
   return piece;

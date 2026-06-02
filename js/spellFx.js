@@ -16,9 +16,15 @@ export const EFFECT_VISUAL = {
   destroy_unshielded: "shatter",
   chain_lightning: "lightning",
   fireblast: "fire",
+  vengeance: "vengeance",
+  hibernation: "hibernation",
+  bomb: "bomb_arm",
+  landmine: "landmine_arm",
 };
 
 export function visualForEffect(effect) {
+  if (effect === "bomb") return EFFECT_VISUAL.bomb_arm;
+  if (effect === "landmine") return EFFECT_VISUAL.landmine_arm;
   return EFFECT_VISUAL[effect] || null;
 }
 
@@ -61,6 +67,18 @@ export function applySquareSpellFx(square, visual, animRole, ctx) {
   }
   if (visual === "lightning") {
     square.classList.add("spell-fx-lightning-node");
+  }
+  if (visual === "vengeance" && animRole === "buff") {
+    square.classList.add("spell-fx-vengeance-mark");
+  }
+  if (visual === "hibernation" && animRole === "buff") {
+    square.classList.add("spell-fx-hibernate-bed");
+  }
+  if (visual === "bomb_arm" && animRole === "buff") {
+    square.classList.add("spell-fx-bomb-arm");
+  }
+  if (visual === "landmine_arm" && (animRole === "terrain" || animRole === "hit")) {
+    square.classList.add("spell-fx-mine-arm");
   }
   if (visual === "coin" && animRole === "kill") {
     square.classList.add("spell-fx-coin-victim");

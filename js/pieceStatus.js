@@ -16,6 +16,8 @@ const BUFF_RULES = [
   { key: "mirrorShield", label: "Mirror Shield", bool: true },
   { key: "ghostGuard", label: "Ghost Guard", bool: true },
   { key: "bombArmed", label: "Bomb Armed", bool: true },
+  { key: "hibernationTurns", label: "Hibernating", turns: true },
+  { key: "bearAwakened", label: "Awoken Bear", bool: true },
   { key: "pawnZeal", label: "Pawn's Zeal", bool: true },
   { key: "promoteZone", label: "Promotion Zone", bool: true },
   { key: "succession", label: "Succession", bool: true },
@@ -107,6 +109,8 @@ export function cleansePiece(piece) {
   piece.rustedTurns = 0;
   piece.hunterMark = false;
   piece.vengeanceTurns = 0;
+  piece.hibernationTurns = 0;
+  piece.bearAwakened = false;
   piece.noCaptureTurns = 0;
   piece.pressExtraMove = false;
   piece.bishopTurns = 0;
