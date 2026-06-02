@@ -6,9 +6,12 @@ import {
   signOut,
   onAuthChange,
   isAuthAvailable,
+  fetchProfileRow,
 } from "./auth.js";
 import { upsertProfileRow } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
+
+const USERNAME_RE = /^[A-Za-z0-9_]{3,24}$/;
 
 /**
  * @param {object} opts
@@ -33,7 +36,11 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
       el.classList.toggle("hidden", mode !== "signup");
     });
     const idInput = form?.querySelector("#auth-identifier");
-    if (idInput) idInput.placeholder = mode === "signup" ? "you@email.com" : "username or email";
+    if (idInput) {
+      idInput.placeholder = mode === "signup" ? "you@email.com" : "username or email";
+      idInput.type = mode === "signup" ? "email" : "text";
+      idInput.autocomplete = mode === "signup" ? "email" : "username";
+    }
   }
 
   function setError(msg) {
@@ -105,24 +112,62 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
       setError("Username or email and password required.");
       return;
     }
+
     try {
       if (mode === "signup") {
-        if (!username || username.length < 3) {
-        setError("Choose a username (3–24 letters, numbers, underscore).");
+        if (!identifier.includes("@")) {
+          setError("Use your email address to sign up.");
+          return;
+        }
+        if (!username || !USERNAME_RE.test(username)) {
+          setError("Choose a username (3–24 letters, numbers, underscore).");
+          return;
+        }
+
+        const data = await signUp(identifier, password, displayName, username);
+        const user = data.session?.user ?? getCurrentUser();
+
+        if (user) {
+          const existing = await fetchProfileRow(user.id);
+          const profileJson =
+            existing?.profile_json && typeof existing.profile_json === "object"
+              ? { ...existing.profile_json }
+              : {};
+          profileJson.loginEmail = identifier.toLowerCase();
+
+          await upsertProfileRow(user.id, {
+            username,
+            display_name: displayName || username,
+            profile_json: profileJson,
+          });
+
+          try {
+            await pullCloudProfile();
+            onSignedIn?.();
+          } catch (err) {
+            console.warn("Profile sync after signup failed", err);
+          }
+          close();
+          return;
+        }
+
+        setError("Account created. Check your email to confirm, then sign in.");
+        mode = "signin";
+        open("signin");
         return;
       }
-        await signUp(identifier, password, displayName, username);
-        const user = getCurrentUser();
-        if (user) {
-          await upsertProfileRow(user.id, { username, display_name: displayName || username });
-        }
-        setError("Check your email to confirm your account (if confirmation is enabled).");
-      } else {
-        await signIn(identifier, password);
-        close();
-      }
+
+      await signIn(identifier, password);
+      close();
     } catch (err) {
-      setError(err.message || "Authentication failed");
+      const msg = err?.message || "Authentication failed";
+      if (msg.includes("Invalid login credentials")) {
+        setError("Wrong email/username or password.");
+      } else if (msg.includes("Email not confirmed")) {
+        setError("Confirm your email first (check inbox), or disable email confirmation in Supabase for testing.");
+      } else {
+        setError(msg);
+      }
     }
   });
 
