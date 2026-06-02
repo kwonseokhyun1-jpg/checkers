@@ -166,3 +166,4 @@ const bestPress = pressMoves.reduce((best, m) => {
   }
 
   return log;
+}

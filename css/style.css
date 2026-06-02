@@ -1196,15 +1196,34 @@ body {
   color: #f8f4ff;
 }
 
-.hud-gems {
-  display: flex;
+.hud-currency {
+  display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.5rem 0.9rem;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+}
+
+.hud-gems,
+.hud-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.75rem;
+  min-height: 2.25rem;
+  box-sizing: border-box;
   background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(92, 225, 230, 0.35);
   border-radius: 999px;
-  box-shadow: 0 0 20px rgba(92, 225, 230, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.hud-gems {
+  border-color: rgba(92, 225, 230, 0.35);
+  box-shadow: 0 0 16px rgba(92, 225, 230, 0.12);
+}
+
+.hud-stars {
+  border-color: rgba(255, 200, 80, 0.4);
+  box-shadow: 0 0 16px rgba(255, 200, 80, 0.12);
 }
 
 .hud-gems--low {
@@ -1212,25 +1231,54 @@ body {
   box-shadow: 0 0 16px rgba(232, 93, 93, 0.2);
 }
 
+.hud-stars--low {
+  opacity: 0.55;
+}
+
+.hud-gems__icon,
+.hud-stars__icon {
+  font-size: 0.9rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
 .hud-gems__icon {
   color: var(--accent-gem);
-  font-size: 0.85rem;
   filter: drop-shadow(0 0 6px var(--accent-gem));
 }
 
-.hud-gems__value {
-  font-size: 1.25rem;
+.hud-stars__icon {
+  color: var(--accent-gold);
+  filter: drop-shadow(0 0 6px rgba(255, 200, 80, 0.5));
+}
+
+.hud-gems__value,
+.hud-stars__value {
+  font-size: 1.1rem;
   font-weight: 700;
+  line-height: 1;
   color: #fff;
   min-width: 2ch;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
-.hud-gems__label {
-  font-size: 0.72rem;
+.hud-stars__value {
+  color: var(--accent-gold);
+}
+
+.hud-gems__label,
+.hud-stars__label {
+  font-size: 0.65rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--text-muted);
+  line-height: 1;
+}
+
+.hud-stars--pulse {
+  transform: scale(1.06);
+  box-shadow: 0 0 18px rgba(255, 200, 80, 0.55);
 }
 
 .game-nav {
@@ -3573,32 +3621,6 @@ body.chest-open-active {
 }
 
 
-/* ── Header currency (gems + stars) ── */
-.hud-currency {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-}
-.hud-stars {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  background: rgba(255, 200, 80, 0.12);
-  border: 1px solid rgba(255, 200, 80, 0.35);
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--accent-gold);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.hud-stars__icon { font-size: 0.95rem; }
-.hud-stars--low { opacity: 0.55; }
-.hud-stars--pulse {
-  transform: scale(1.08);
-  box-shadow: 0 0 18px rgba(255, 200, 80, 0.55);
-}
 
 /* Star collect fly animation */
 .star-collect-layer {
