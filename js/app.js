@@ -146,6 +146,25 @@ function autoFinishBeginnerDeck() {
 
 const $ = (id) => document.getElementById(id);
 
+function ensureStageModalOnBody() {
+  const modal = document.getElementById("adventure-prebattle");
+  if (modal && modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
+}
+
+function showStageModal() {
+  ensureStageModalOnBody();
+  const modal = document.getElementById("adventure-prebattle");
+  modal?.classList.remove("hidden");
+  document.body.classList.add("adventure-stage-open");
+}
+
+function hideStageModal() {
+  document.getElementById("adventure-prebattle")?.classList.add("hidden");
+  document.body.classList.remove("adventure-stage-open");
+}
+
 function showTab(tab) {
   activeTab = tab;
   document.querySelectorAll(".tab-btn").forEach((b) => {
@@ -733,8 +752,7 @@ function startNewDeck() {
 }
 
 function closeAdventurePrebattle() {
-  $("adventure-prebattle")?.classList.add("hidden");
-  document.body.classList.remove("adventure-stage-open");
+  hideStageModal();
   selectedAdventureLevel = null;
 }
 
@@ -857,30 +875,6 @@ function renderAdventureMap() {
   const points = [];
   const levels = getLevelsForWorld(selectedAdventureWorldId);
 
-  function activateMapPin(levelId) {
-    const live = repairAdventureProgress(profile.adventure);
-    profile.adventure = live;
-    if (!isLevelUnlocked(live, levelId)) {
-      const hintEl = $("adventure-world-hint");
-      if (hintEl) hintEl.textContent = `Locked — beat global stage ${levelId - 1} first, then return here.`;
-      return;
-    }
-    saveProfile(profile);
-    openAdventurePrebattle(levelId);
-  }
-
-  if (!map.dataset.pinsBound) {
-    map.dataset.pinsBound = "1";
-    const onPinActivate = (e) => {
-      const pin = e.target.closest(".adventure-map-pin");
-      if (!pin || pin.disabled) return;
-      e.preventDefault();
-      e.stopPropagation();
-      activateMapPin(Number(pin.dataset.level));
-    };
-    map.addEventListener("click", onPinActivate);
-  }
-
   levels.forEach((level, i) => {
     const pos = MAP_PIN_LAYOUT[i] || MAP_PIN_LAYOUT[MAP_PIN_LAYOUT.length - 1];
     const unlocked = isLevelUnlocked(progress, level.id);
@@ -909,10 +903,15 @@ function renderAdventureMap() {
       <span class="adventure-map-pin__flavor">${level.flavor}</span>
       ${starLine}`;
     if (!unlocked) pin.disabled = true;
+    pin.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openAdventureStage(level.id);
+    };
     pin.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        activateMapPin(level.id);
+        openAdventureStage(level.id);
       }
     });
     pinsLayer?.appendChild(pin);
@@ -932,20 +931,26 @@ function openAdventurePrebattle(levelId) {
   if (!level || !isLevelUnlocked(profile.adventure, levelId)) return;
 
   selectedAdventureLevel = levelId;
-  pendingEnemyDeck = getOrCreateLevelEnemyDeck(profile, levelId);
-  saveProfile(profile);
-
-  const modal = $("adventure-prebattle");
-  modal?.classList.remove("hidden");
-  document.body.classList.add("adventure-stage-open");
+  showStageModal();
 
   const title = $("prebattle-title");
   const flavor = $("prebattle-flavor");
   const opponent = $("prebattle-opponent");
-  const gemHint = $("prebattle-gem-hint");
-  if (title) title.textContent = `${level.name}: ${level.opponent}`;
-  if (flavor) flavor.textContent = level.flavor;
+  if (title) title.textContent = level.name + ": " + level.opponent;
+  if (flavor) flavor.textContent = level.flavor || "";
+  if (opponent) opponent.textContent = "Loading…";
+
+  try {
+    pendingEnemyDeck = getOrCreateLevelEnemyDeck(profile, levelId);
+    saveProfile(profile);
+  } catch (err) {
+    console.error("Enemy deck failed", err);
+    if (opponent) opponent.textContent = "Could not build enemy deck. Try again.";
+    return;
+  }
+
   if (opponent) opponent.textContent = "Review the enemy spell deck below, then choose your grimoire.";
+  const gemHint = $("prebattle-gem-hint");
   if (gemHint) {
     const gems = gemsForLevelClear(profile.adventure, levelId);
     gemHint.textContent = isLevelCleared(profile.adventure, levelId)
@@ -956,17 +961,23 @@ function openAdventurePrebattle(levelId) {
   const preview = $("enemy-deck-preview");
   if (preview) {
     preview.innerHTML = "";
-    for (const { def, count } of getEnemyDeckPreview(pendingEnemyDeck)) {
-      const card = renderSpellCardEl(def, {
-        button: true,
-        small: true,
-        meta: count > 1 ? `×${count} in deck` : undefined,
-        onClick: () =>
-          showCardPreview(def, {
-            meta: count > 1 ? `${count} copies in enemy deck` : "Enemy deck",
-          }),
-      });
-      preview.appendChild(card);
+    try {
+      for (const { def, count } of getEnemyDeckPreview(pendingEnemyDeck)) {
+        if (!def) continue;
+        const card = renderSpellCardEl(def, {
+          button: true,
+          small: true,
+          meta: count > 1 ? `×${count} in deck` : undefined,
+          onClick: () =>
+            showCardPreview(def, {
+              meta: count > 1 ? `${count} copies in enemy deck` : "Enemy deck",
+            }),
+        });
+        preview.appendChild(card);
+      }
+    } catch (err) {
+      console.error("Enemy preview failed", err);
+      preview.innerHTML = "<p class=\"empty-msg\">Enemy deck preview unavailable.</p>";
     }
   }
 
@@ -1054,8 +1065,38 @@ function startAdventureMatch() {
 }
 
 
+function bindAdventureMapCapture() {
+  if (window.__adventureMapCaptureBound) return;
+  window.__adventureMapCaptureBound = true;
+  const handle = (e) => {
+    const pin = e.target.closest?.("#adventure-map .adventure-map-pin");
+    if (!pin || pin.disabled) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const levelId = Number(pin.dataset.level);
+    if (!Number.isFinite(levelId) || levelId < 1) return;
+    openAdventureStage(levelId);
+  };
+  document.addEventListener("click", handle, true);
+  document.addEventListener("touchend", handle, { capture: true, passive: false });
+}
+
+function openAdventureStage(levelId) {
+  const live = repairAdventureProgress(profile.adventure);
+  profile.adventure = live;
+  if (!isLevelUnlocked(live, levelId)) {
+    const hintEl = $("adventure-world-hint");
+    if (hintEl) hintEl.textContent = `Locked — beat global stage ${levelId - 1} first, then return here.`;
+    return;
+  }
+  saveProfile(profile);
+  openAdventurePrebattle(levelId);
+}
+
 function init() {
   bindCardPreviewModal();
+  bindAdventureMapCapture();
+  ensureStageModalOnBody();
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => showTab(btn.dataset.tab));
   });
