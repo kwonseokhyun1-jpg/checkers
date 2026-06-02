@@ -767,7 +767,7 @@ function renderAdventureMap() {
       if (w.id === selectedAdventureWorldId) btn.classList.add("active");
       if (!unlocked) btn.classList.add("adventure-world-shield--locked");
       btn.disabled = !unlocked;
-      btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">Part ${w.id}</span>`;
+      btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">Chapter ${w.id}</span>`;
       btn.title = unlocked ? w.name : `Clear stage ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
       btn.addEventListener("click", () => {
         if (!isWorldUnlocked(progress, w.id)) return;
@@ -889,27 +889,37 @@ function openAdventurePrebattle(levelId) {
     }
   }
 
+  if (repairProfile(profile)) saveProfile(profile);
+
   const sel = $("adventure-deck-select");
   if (!sel) return;
   sel.innerHTML = "";
-  const validDecks = profile.decks.filter((d) => d.cardIds.length === DECK_SIZE);
+  const validDecks = profile.decks.filter((d) => validateDeck(d.cardIds, profile).valid);
   if (!validDecks.length) {
     const opt = document.createElement("option");
+    opt.value = "";
     opt.textContent = "No complete decks — build one in Decks";
     sel.appendChild(opt);
+    sel.disabled = true;
     $("btn-start-adventure").disabled = true;
     requestAnimationFrame(() => {
       $("btn-start-adventure")?.scrollIntoView({ behavior: "smooth", block: "center" });
     });
     return;
   }
+  sel.disabled = false;
+  const preferredId =
+    profile.selectedDeckId && validDecks.some((d) => d.id === profile.selectedDeckId)
+      ? profile.selectedDeckId
+      : validDecks[0].id;
   for (const d of validDecks) {
     const opt = document.createElement("option");
     opt.value = d.id;
     opt.textContent = d.name;
-    if (d.id === profile.selectedDeckId) opt.selected = true;
+    if (d.id === preferredId) opt.selected = true;
     sel.appendChild(opt);
   }
+  profile.selectedDeckId = preferredId;
   $("btn-start-adventure").disabled = false;
   const startBtn = $("btn-start-adventure");
   requestAnimationFrame(() => {
