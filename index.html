@@ -2,12 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+  <meta name="theme-color" content="#121a28" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="format-detection" content="telephone=no" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <title>Arcane Checkers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:opsz,wght@9..144,600;700&family=Sora:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/mobile.css" />
 </head>
 <body>
   <div class="ambient-bg" aria-hidden="true"></div>
@@ -30,25 +39,6 @@
         <span class="hud-gems__label">gems</span>
       </div>
     </header>
-
-    <nav class="game-nav tabs" role="tablist" aria-label="Game menu">
-      <button type="button" class="tab-btn game-nav__btn active" data-tab="deck" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">▣</span>
-        <span>Decks</span>
-      </button>
-      <button type="button" class="tab-btn game-nav__btn" data-tab="profile" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">☺</span>
-        <span>Profile</span>
-      </button>
-      <button type="button" class="tab-btn game-nav__btn" data-tab="chests" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">◇</span>
-        <span>Vault</span>
-      </button>
-      <button type="button" class="tab-btn game-nav__btn" data-tab="play" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">⚔</span>
-        <span>Adventure</span>
-      </button>
-    </nav>
 
     <main class="game-main">
             <div id="view-profile" class="view view-panel hidden"></div>
@@ -201,6 +191,26 @@
 
       <div id="view-match" class="view hidden"></div>
     </main>
+
+
+    <nav class="game-nav tabs game-nav--dock" role="tablist" aria-label="Game menu">
+      <button type="button" class="tab-btn game-nav__btn active" data-tab="deck" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">▣</span>
+        <span>Decks</span>
+      </button>
+      <button type="button" class="tab-btn game-nav__btn" data-tab="profile" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">☺</span>
+        <span>Profile</span>
+      </button>
+      <button type="button" class="tab-btn game-nav__btn" data-tab="chests" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">◇</span>
+        <span>Vault</span>
+      </button>
+      <button type="button" class="tab-btn game-nav__btn" data-tab="play" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">⚔</span>
+        <span>Adventure</span>
+      </button>
+    </nav>
 
     <div id="card-preview-modal" class="card-preview-modal hidden" role="dialog" aria-modal="true" aria-labelledby="card-preview-title">
       <div id="card-preview-backdrop" class="card-preview-backdrop"></div>

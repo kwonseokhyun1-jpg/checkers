@@ -55,3 +55,8 @@ Then visit http://localhost:8080
 - On your turn: play any number of cards (optional), tap **Done playing cards**, then move.
 - Mandatory jumps when available; multi-jump chains when possible.
 - Reach the far row to crown, or use **Royal Decree**.
+
+
+## Mobile & App Store
+
+The UI is optimized for phones (bottom navigation, safe areas, touch targets). See **[MOBILE.md](MOBILE.md)** for wrapping the game with Capacitor and submitting to the Apple App Store and Google Play.

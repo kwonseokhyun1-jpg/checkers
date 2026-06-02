@@ -128,6 +128,11 @@ function autoFinishDeck() {
 
 const $ = (id) => document.getElementById(id);
 
+function setMatchShellActive(active) {
+  document.querySelector(".game-shell")?.classList.toggle("game-shell--in-match", active);
+}
+
+
 function showTab(tab) {
   activeTab = tab;
   document.querySelectorAll(".tab-btn").forEach((b) => {
@@ -820,6 +825,7 @@ function startAdventureMatch() {
 
   const opponentName = level.opponent;
   $("view-play").classList.add("hidden");
+  setMatchShellActive(true);
   $("view-match").classList.remove("hidden");
   const root = $("view-match");
   root.innerHTML = getMatchHtml(opponentName);
@@ -832,6 +838,7 @@ function startAdventureMatch() {
       matchSession = null;
       root.innerHTML = "";
       $("view-match").classList.add("hidden");
+      setMatchShellActive(false);
       showTab("play");
     },
     (stars) => {
