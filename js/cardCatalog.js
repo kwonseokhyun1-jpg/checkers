@@ -121,20 +121,14 @@ export function getCardDef(id) {
 }
 
 export const DECK_SIZE = 30;
-export const MAX_COPIES_COMMON_UNCOMMON = 4;
-export const MAX_COPIES_RARE_PLUS = 3;
+export const MAX_COPIES_PER_CARD = 3;
 
-/** @deprecated Use maxCopiesForCard() */
-export const MAX_COPIES_PER_CARD = MAX_COPIES_COMMON_UNCOMMON;
-
-export function maxCopiesForRarity(rarity) {
-  if (rarity === "common" || rarity === "uncommon") return MAX_COPIES_COMMON_UNCOMMON;
-  return MAX_COPIES_RARE_PLUS;
+export function maxCopiesForRarity(_rarity) {
+  return MAX_COPIES_PER_CARD;
 }
 
 export function maxCopiesForCard(cardOrId) {
-  const def = typeof cardOrId === "string" ? getCardDef(cardOrId) : cardOrId;
-  return maxCopiesForRarity(def?.rarity ?? "rare");
+  return MAX_COPIES_PER_CARD;
 }
 export const START_HAND = 3;
 /** @deprecated No hand cap in match — kept for legacy references */
