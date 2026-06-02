@@ -4359,7 +4359,7 @@ body.chest-open-active {
 .adventure-stage-modal {
   position: fixed;
   inset: 0;
-  z-index: 450;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4420,19 +4420,17 @@ body.adventure-stage-open {
   margin: 0.5rem 0 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--card-border);
-  overflow: hidden;
+  overflow: visible;
   background: #0a1218;
 }
 .adventure-map-canvas {
   position: relative;
   isolation: isolate;
-  min-height: max(580px, min(72vh, 640px));
-  max-height: min(78vh, 720px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  scroll-behavior: smooth;
-  padding-bottom: 2.5rem;
-  -webkit-overflow-scrolling: touch;
+  min-height: min(72vh, 520px);
+  max-height: min(78vh, 560px);
+  overflow: visible;
+  padding-bottom: 0.5rem;
+  touch-action: manipulation;
 }
 
 .adventure-map-scenery-svg {
@@ -4441,13 +4439,17 @@ body.adventure-stage-open {
   width: 100%;
   height: 100%;
   display: block;
+  pointer-events: none !important;
 }
 .adventure-map-scenery {
   position: absolute;
   inset: 0;
-  pointer-events: none;
+  pointer-events: none !important;
   z-index: 0;
   overflow: hidden;
+}
+.adventure-map-canvas__bg * {
+  pointer-events: none !important;
 }
 .adventure-map-scenery--verdant {
   background:
@@ -4512,8 +4514,8 @@ body.adventure-stage-open {
 .adventure-map-pins {
   position: absolute;
   inset: 0;
-  z-index: 5;
-  pointer-events: none;
+  z-index: 20;
+  pointer-events: auto;
 }
 .adventure-map-canvas__bg {
   position: absolute;
@@ -4575,6 +4577,12 @@ body.adventure-stage-open {
   color: var(--text);
   text-align: center;
   pointer-events: auto;
+}
+.adventure-map-pin::before {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
 }
 .adventure-map-pin > * {
   pointer-events: none;
