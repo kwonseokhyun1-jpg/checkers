@@ -16,14 +16,12 @@ export const STARTER_COPIES_PER_CARD = 4;
 export const STARTER_COMMON_IDS = [
   "nudge",
   "retreat",
-  "long_step",
-  "sidestep",
+  "backstep",
   "repel",
   "leapfrog",
-  "venom",
   "anchor",
-  "flank",
   "recall",
+  "barrier",
 ];
 
 export function buildStarterDeckCardIds() {
