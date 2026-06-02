@@ -32,6 +32,8 @@ import {
   getLevelStars,
   MAP_PIN_LAYOUT,
   getNextPlayableLevelId,
+  repairAdventureProgress,
+  getWorldForLevel,
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
@@ -731,6 +733,7 @@ function startNewDeck() {
 }
 
 function showAdventureMap() {
+  profile.adventure = repairAdventureProgress(profile.adventure);
   $("adventure-map-view")?.classList.remove("hidden");
   $("adventure-prebattle")?.classList.add("hidden");
   selectedAdventureLevel = null;
@@ -740,10 +743,16 @@ function showAdventureMap() {
 
 function renderAdventureMap() {
   updateCurrencyHeader();
-  const progress = profile.adventure || defaultAdventureProgress();
-  if (!progress.selectedWorld) progress.selectedWorld = 1;
-  selectedAdventureWorldId = progress.selectedWorld;
+  const progress = repairAdventureProgress(profile.adventure);
+  profile.adventure = progress;
   const nextId = getNextPlayableLevelId(progress);
+  const nextLevel = getLevel(nextId);
+  if (nextLevel) {
+    progress.selectedWorld = nextLevel.worldId;
+    selectedAdventureWorldId = nextLevel.worldId;
+  } else {
+    selectedAdventureWorldId = progress.selectedWorld || 1;
+  }
 
   const tabs = $("adventure-world-tabs");
   if (tabs) {
@@ -806,7 +815,8 @@ function renderAdventureMap() {
     if (!unlocked) pin.classList.add("adventure-map-pin--locked");
     if (cleared) pin.classList.add("adventure-map-pin--cleared");
     if (isNext) pin.classList.add("adventure-map-pin--next");
-    pin.disabled = !unlocked;
+    pin.setAttribute("aria-disabled", unlocked ? "false" : "true");
+    if (!unlocked) pin.title = `Clear global stage ${level.id - 1} to unlock`;
     pin.setAttribute("aria-label", `Stage ${level.stageInWorld}: ${level.opponent}`);
     const starLine = stars > 0 ? `<span class="adventure-map-pin__stars">${formatStars(stars)}</span>` : "";
     pin.innerHTML = `
@@ -815,7 +825,16 @@ function renderAdventureMap() {
       <span class="adventure-map-pin__title">${level.stageInWorld}. ${level.opponent}</span>
       <span class="adventure-map-pin__flavor">${level.flavor}</span>
       ${starLine}`;
-    pin.addEventListener("click", () => openAdventurePrebattle(level.id));
+    pin.addEventListener("click", () => {
+      if (!isLevelUnlocked(progress, level.id)) {
+        const hintEl = $("adventure-world-hint");
+        if (hintEl) {
+          hintEl.textContent = `Locked — beat global stage ${level.id - 1} first, then return here.`;
+        }
+        return;
+      }
+      openAdventurePrebattle(level.id);
+    });
     map.appendChild(pin);
   });
 
