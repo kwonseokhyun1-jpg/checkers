@@ -1,12 +1,13 @@
 import {
+  getCurrentUser,
   initAuth,
   signIn,
   signUp,
   signOut,
   onAuthChange,
-  getCurrentUser,
   isAuthAvailable,
 } from "./auth.js";
+import { upsertProfileRow } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 
 /**
@@ -27,6 +28,14 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
 
   let mode = "signin";
 
+  function syncAuthFields() {
+    form?.querySelectorAll(".auth-field-signup").forEach((el) => {
+      el.classList.toggle("hidden", mode !== "signup");
+    });
+    const idInput = form?.querySelector("#auth-identifier");
+    if (idInput) idInput.placeholder = mode === "signup" ? "you@email.com" : "username or email";
+  }
+
   function setError(msg) {
     if (errorEl) errorEl.textContent = msg || "";
   }
@@ -41,6 +50,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
     if (title) title.textContent = mode === "signup" ? "Create account" : "Sign in";
     if (toggle) toggle.textContent = mode === "signup" ? "Already have an account? Sign in" : "Need an account? Sign up";
     setError("");
+    syncAuthFields();
     modal.classList.remove("hidden");
   }
 
@@ -87,19 +97,28 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
     setError("");
-    const email = form.querySelector("#auth-email")?.value?.trim();
+    const identifier = form.querySelector("#auth-identifier")?.value?.trim();
+    const username = form.querySelector("#auth-username")?.value?.trim();
     const password = form.querySelector("#auth-password")?.value;
     const displayName = form.querySelector("#auth-display-name")?.value?.trim();
-    if (!email || !password) {
-      setError("Email and password required.");
+    if (!identifier || !password) {
+      setError("Username or email and password required.");
       return;
     }
     try {
       if (mode === "signup") {
-        await signUp(email, password, displayName);
+        if (!username || username.length < 3) {
+        setError("Choose a username (3–24 letters, numbers, underscore).");
+        return;
+      }
+        await signUp(identifier, password, displayName, username);
+        const user = getCurrentUser();
+        if (user) {
+          await upsertProfileRow(user.id, { username, display_name: displayName || username });
+        }
         setError("Check your email to confirm your account (if confirmation is enabled).");
       } else {
-        await signIn(email, password);
+        await signIn(identifier, password);
         close();
       }
     } catch (err) {

@@ -25,10 +25,17 @@
         </div>
       </div>
       <div class="game-header__actions">
-        <div class="hud-gems" title="Arcane gems">
-          <span class="hud-gems__icon" aria-hidden="true">◆</span>
-          <span class="hud-gems__value" id="header-gems">0</span>
-          <span class="hud-gems__label">gems</span>
+        <div class="hud-currency">
+          <div class="hud-gems" title="Arcane gems">
+            <span class="hud-gems__icon" aria-hidden="true">◆</span>
+            <span class="hud-gems__value" id="header-gems">0</span>
+            <span class="hud-gems__label">gems</span>
+          </div>
+          <div class="hud-stars" title="Adventure stars">
+            <span class="hud-stars__icon" aria-hidden="true">★</span>
+            <span class="hud-stars__value" id="header-stars">0</span>
+            <span class="hud-stars__label">stars</span>
+          </div>
         </div>
         <button type="button" id="auth-header-btn" class="btn-secondary btn-sm auth-header-btn">Sign in</button>
       </div>
@@ -78,6 +85,10 @@
             <p class="vault-section-desc">Avatars, banners, and piece skins — equip them in Profile.</p>
             <div id="cosmetic-box-list" class="cosmetic-box-list"></div>
             <p id="cosmetic-box-log" class="chest-log" role="status"></p>
+            <h3 class="vault-section-title vault-section-title--mystery">Mystery box</h3>
+            <p class="vault-section-desc">Random spell or cosmetic — same tier odds as reliquaries. Costs <strong>10 ★ stars</strong>.</p>
+            <div id="mystery-box-card" class="mystery-box-card"></div>
+            <p id="mystery-box-log" class="chest-log" role="status"></p>
           </div>
         </section>
       </div>
@@ -87,7 +98,7 @@
           <div class="deck-list-header">
             <header class="panel-head panel-head--inline">
               <h2 class="panel-head__title">Your decks</h2>
-              <p class="panel-head__desc">Tap a deck to inspect spells. Build 30-card lists (commons/uncommons max 4 · rare+ max 3) for adventure battles.</p>
+              <p class="panel-head__desc">Tap a deck to inspect spells. Build 30-card lists (max 3 copies per spell in deck and collection) for adventure battles.</p>
             </header>
             <button type="button" id="btn-new-deck" class="btn-primary">+ New deck</button>
           </div>
@@ -181,13 +192,16 @@
 
       <div id="view-play" class="view view-panel hidden">
         <section id="adventure-map-view" class="panel game-panel adventure-panel">
-          <header class="panel-head">
-            <h2 class="panel-head__title">Adventure map</h2>
-            <p class="panel-head__desc">Five worlds · 10 stages each. Clear <strong>stage 30</strong> to unlock two hidden realms. First win: <strong>50 gems</strong> · repeat: <strong>20 gems</strong>.</p>
+          <header class="panel-head panel-head--compact">
+            <button type="button" id="adventure-map-back" class="btn-text adventure-map-back hidden" aria-label="Back">← Map</button>
+            <h2 class="panel-head__title">Adventure</h2>
+            <p class="panel-head__desc">Scroll the realm path. Earn <strong>★ stars</strong> on victory (more pieces left = more stars). Clear <strong>stage 30</strong> to unlock hidden worlds.</p>
           </header>
-          <nav id="adventure-world-tabs" class="adventure-world-tabs" role="tablist" aria-label="Adventure worlds"></nav>
           <p id="adventure-world-hint" class="adventure-world-hint"></p>
-          <div id="adventure-map" class="adventure-map" role="list"></div>
+          <div class="adventure-map-scene">
+            <div id="adventure-map" class="adventure-map-canvas" role="list" aria-label="Stage map"></div>
+          </div>
+          <nav id="adventure-world-tabs" class="adventure-world-shields" role="tablist" aria-label="World parts"></nav>
         </section>
 
         <section id="adventure-prebattle" class="panel game-panel adventure-prebattle hidden">
@@ -234,10 +248,12 @@
       <button type="button" id="auth-close" class="auth-modal-close" aria-label="Close">×</button>
       <h2 id="auth-modal-title" class="panel-head__title">Sign in</h2>
       <form id="auth-form" class="auth-form">
-        <label class="label-sm" for="auth-display-name">Display name (sign up)</label>
+        <label class="label-sm auth-field-signup" for="auth-username">Username (sign up)</label>
+        <input type="text" id="auth-username" class="input-text auth-field-signup" autocomplete="username" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" />
+        <label class="label-sm auth-field-signup" for="auth-display-name">Display name (sign up)</label>
         <input type="text" id="auth-display-name" class="input-text" autocomplete="nickname" />
-        <label class="label-sm" for="auth-email">Email</label>
-        <input type="email" id="auth-email" class="input-text" required autocomplete="email" />
+        <label class="label-sm" for="auth-identifier">Username or email</label>
+        <input type="text" id="auth-identifier" autocomplete="username" class="input-text" required  />
         <label class="label-sm" for="auth-password">Password</label>
         <input type="password" id="auth-password" class="input-text" required minlength="6" autocomplete="current-password" />
         <p id="auth-error" class="auth-error" role="alert"></p>

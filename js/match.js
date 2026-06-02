@@ -639,7 +639,7 @@ export class MatchSession {
     return false;
   }
 
-  showGameOver(title, text) {
+  async showGameOver(title, text) {
     this.state.gameOver = title;
     const won = title.startsWith("Victory");
     let displayText = text;
@@ -649,12 +649,15 @@ export class MatchSession {
       stars = starsForRemainingPieces(remaining);
       if (!this.winRewarded) {
         this.winRewarded = true;
-        const gemNote = this.onWin?.(stars, remaining);
+        const reward = this.onWin?.(stars, remaining);
+        const gemNote = typeof reward === "string" ? reward : reward?.message;
+        const starsGained = typeof reward === "object" ? reward?.starsGained || 0 : 0;
         const starLine = `${formatStars(stars)} (${remaining} piece${remaining === 1 ? "" : "s"} left)`;
         displayText = gemNote ? `${text}
 ${starLine}
 ${gemNote}` : `${text}
 ${starLine}`;
+        this._pendingStarsGained = starsGained;
       }
     }
     const overlay = this.root.querySelector("#game-over");
@@ -668,7 +671,19 @@ ${starLine}`;
         starsEl.classList.toggle("hidden", !won);
         starsEl.setAttribute("aria-label", won ? `${stars} of 3 stars` : "");
       }
+      const gainEl = this.root.querySelector("#game-over-star-gain");
+      if (gainEl) gainEl.classList.add("hidden");
       overlay.classList.remove("hidden");
+      if (won && this._pendingStarsGained > 0) {
+        const n = this._pendingStarsGained;
+        this._pendingStarsGained = 0;
+        if (gainEl) {
+          gainEl.textContent = `+${n} ★ collected`;
+          gainEl.classList.remove("hidden");
+        }
+        const { playStarCollectAnimation } = await import("./starCollectAnimation.js");
+        await playStarCollectAnimation(n, starsEl);
+      }
     }
     if (this.isPvp && this.state.gameOver) {
       const won = title.startsWith("Victory");

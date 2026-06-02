@@ -40,25 +40,25 @@ export const COSMETIC_BY_ID = Object.fromEntries(COSMETIC_ITEMS.map((c) => [c.id
 
 export const COSMETIC_BOXES = [
   {
-    id: "style_crate",
-    name: "Style Crate",
-    cost: 75,
-    pulls: 2,
-    weights: { common: 45, uncommon: 35, rare: 15, epic: 4, legendary: 1 },
-  },
-  {
-    id: "arcane_vanity",
-    name: "Arcane Vanity",
-    cost: 150,
+    id: "bronze",
+    name: "Bronze Vanity",
+    cost: 25,
     pulls: 3,
-    weights: { common: 20, uncommon: 35, rare: 30, epic: 12, legendary: 3 },
+    weights: { common: 70, uncommon: 25, rare: 5, epic: 0 },
   },
   {
-    id: "legend_relic",
-    name: "Legend Relic",
-    cost: 300,
-    pulls: 4,
-    weights: { common: 5, uncommon: 20, rare: 35, epic: 30, legendary: 10 },
+    id: "silver",
+    name: "Silver Vanity",
+    cost: 50,
+    pulls: 5,
+    weights: { common: 50, uncommon: 35, rare: 12, epic: 3 },
+  },
+  {
+    id: "gold",
+    name: "Gold Vanity",
+    cost: 100,
+    pulls: 8,
+    weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 },
   },
 ];
 
@@ -117,6 +117,25 @@ function poolOfRarity(rarity) {
   return COSMETIC_ITEMS.filter((c) => c.rarity === rarity);
 }
 
+
+export function drawCosmeticItem(profile, weightsOrBox) {
+  const weights = weightsOrBox.weights || weightsOrBox;
+  profile.cosmetics = normalizeCosmetics(profile.cosmetics);
+  for (let attempt = 0; attempt < 40; attempt++) {
+    const rarity = pickRarity(weights);
+    const pool = poolOfRarity(rarity);
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if (!pick) continue;
+    if (!profile.cosmetics.owned[pick.type].includes(pick.id)) {
+      profile.cosmetics.owned[pick.type].push(pick.id);
+      return { ...pick, duplicate: false };
+    }
+    const gemRefund = RARITY_GEM_DUPE[pick.rarity] || 5;
+    return { ...pick, duplicate: true, gemRefund };
+  }
+  return null;
+}
+
 export function openCosmeticBox(profile, boxId) {
   const box = COSMETIC_BOXES.find((b) => b.id === boxId);
   if (!box) return { success: false, message: "Unknown cosmetic box." };
@@ -128,22 +147,10 @@ export function openCosmeticBox(profile, boxId) {
   let bonusGems = 0;
 
   for (let i = 0; i < box.pulls; i++) {
-    let item = null;
-    for (let attempt = 0; attempt < 40; attempt++) {
-      const rarity = pickRarity(box.weights);
-      const pool = poolOfRarity(rarity);
-      const pick = pool[Math.floor(Math.random() * pool.length)];
-      if (!pick) continue;
-      if (!profile.cosmetics.owned[pick.type].includes(pick.id)) {
-        profile.cosmetics.owned[pick.type].push(pick.id);
-        item = { ...pick, duplicate: false };
-        break;
-      }
-      item = { ...pick, duplicate: true };
-      bonusGems += RARITY_GEM_DUPE[pick.rarity] || 5;
-      break;
-    }
-    if (item) pulls.push(item);
+    const item = drawCosmeticItem(profile, box);
+    if (!item) continue;
+    pulls.push(item);
+    if (item.duplicate) bonusGems += item.gemRefund || RARITY_GEM_DUPE[item.rarity] || 5;
   }
 
   if (bonusGems) profile.gems += bonusGems;

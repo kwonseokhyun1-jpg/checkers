@@ -23,7 +23,7 @@ function drawCardOfRarity(rarity) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function drawChestCard(profile, chest) {
+export function drawChestCard(profile, chest) {
   const room = (card) => (profile.collection[card.id] || 0) < maxCopiesForCard(card);
   for (let attempt = 0; attempt < 48; attempt++) {
     const rarity = pickRarity(chest.weights);

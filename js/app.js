@@ -29,12 +29,17 @@ import {
   recordLevelClear,
   formatStars,
   getLevelStars,
+  MAP_PIN_LAYOUT,
+  getNextPlayableLevelId,
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
 import { renderProfileTab, renderCosmeticBoxes } from "./profileUI.js";
+import { openMysteryBox, MYSTERY_BOX_COST } from "./mysteryBox.js";
+import { playStarCollectAnimation } from "./starCollectAnimation.js";
+import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
 import { initPvpUI } from "./pvpUI.js";
 import { getMatchHtml } from "./matchView.js";
@@ -158,10 +163,17 @@ function renderProfile() {
   renderProfileTab(profile, root, { onGemsChange: updateGemHeader });
 }
 
+function updateCurrencyHeader() {
+  const gemsEl = $("header-gems");
+  if (gemsEl) gemsEl.textContent = String(profile.gems ?? 0);
+  const starsEl = $("header-stars");
+  if (starsEl) starsEl.textContent = String(profile.stars ?? 0);
+  document.querySelector(".hud-gems")?.classList.toggle("hud-gems--low", (profile.gems ?? 0) < 50);
+  document.querySelector(".hud-stars")?.classList.toggle("hud-stars--low", (profile.stars ?? 0) < MYSTERY_BOX_COST);
+}
+
 function updateGemHeader() {
-  const el = $("header-gems");
-  if (el) el.textContent = String(profile.gems);
-  document.querySelector(".hud-gems")?.classList.toggle("hud-gems--low", profile.gems < 50);
+  updateCurrencyHeader();
 }
 
 
@@ -206,8 +218,51 @@ function showDeckSubview(sub) {
   if (sub === "view") renderDeckView();
 }
 
+
+function renderMysteryBox() {
+  const root = $("mystery-box-card");
+  if (!root) return;
+  const canAfford = (profile.stars ?? 0) >= MYSTERY_BOX_COST;
+  root.innerHTML = `
+    <article class="mystery-box ${canAfford ? "" : "mystery-box--locked"}">
+      <div class="mystery-box__glow" aria-hidden="true"></div>
+      <div class="mystery-box__icon" aria-hidden="true">?</div>
+      <h3 class="mystery-box__title">Mystery Box</h3>
+      <p class="mystery-box__desc">Random spell reliquary <em>or</em> cosmetic vanity — tier odds match the Vault.</p>
+      <p class="mystery-box__cost"><span aria-hidden="true">★</span> ${MYSTERY_BOX_COST} stars</p>
+      <button type="button" class="btn-primary" id="btn-open-mystery" ${canAfford ? "" : "disabled"}>
+        ${canAfford ? "Open mystery box" : "Need more stars"}
+      </button>
+    </article>`;
+  root.querySelector("#btn-open-mystery")?.addEventListener("click", async () => {
+    const log = $("mystery-box-log");
+    const res = openMysteryBox(profile);
+    if (!res.success) {
+      if (log) log.textContent = res.message;
+      return;
+    }
+    saveProfile(profile);
+    updateCurrencyHeader();
+    if (log) log.textContent = res.message;
+    if (res.kind === "card") {
+      const pullsEl = $("chest-pulls");
+      if (pullsEl) {
+        pullsEl.innerHTML = "";
+        pullsEl.classList.remove("chest-pulls--hidden");
+        for (const card of res.pulls) pullsEl.appendChild(renderSpellCardEl(card, { small: true }));
+      }
+    } else {
+      await playCosmeticOpenAnimation({ boxId: res.tier?.id || "bronze", boxLabel: "Mystery", pulls: res.pulls });
+    }
+    renderMysteryBox();
+    renderChests();
+    renderProfile();
+  });
+}
+
 function renderChests() {
-  updateGemHeader();
+  renderMysteryBox();
+  updateCurrencyHeader();
   const list = $("chest-list");
   const pullsEl = $("chest-pulls");
   if (pullsEl) {
@@ -267,7 +322,7 @@ function renderChests() {
       }
 
       saveProfile(profile);
-      updateGemHeader();
+      updateCurrencyHeader();
       btn.disabled = true;
 
       await playChestOpenAnimation({
@@ -336,7 +391,7 @@ function buyCardFromInventory(cardId, statusEl) {
     statusEl.className = res.success ? "inventory-status inventory-status--ok" : "inventory-status inventory-status--warn";
   }
   if (res.success) {
-    updateGemHeader();
+    updateCurrencyHeader();
     if (deckSubview === "list") renderDeckList();
     if (deckSubview === "edit") renderDeckEditor();
   }
@@ -499,7 +554,7 @@ function openDeckView(deckId) {
 
 function renderDeckList() {
   if (repairProfile(profile)) saveProfile(profile);
-  updateGemHeader();
+  updateCurrencyHeader();
   const list = $("deck-list");
   const invGrid = $("inventory-grid");
   const invStatus = $("inventory-status");
@@ -537,7 +592,7 @@ function renderDeckList() {
 }
 
 function renderDeckView() {
-  updateGemHeader();
+  updateCurrencyHeader();
   const deck = profile.decks.find((d) => d.id === viewingDeckId);
   const title = $("view-deck-title");
   const status = $("view-deck-status");
@@ -568,7 +623,7 @@ function renderDeckView() {
 }
 
 function renderDeckEditor() {
-  updateGemHeader();
+  updateCurrencyHeader();
   const collEl = $("collection-grid");
   const deckEl = $("deck-slots");
   const status = $("deck-status");
@@ -680,10 +735,11 @@ function showAdventureMap() {
 }
 
 function renderAdventureMap() {
-  updateGemHeader();
+  updateCurrencyHeader();
   const progress = profile.adventure || defaultAdventureProgress();
   if (!progress.selectedWorld) progress.selectedWorld = 1;
   selectedAdventureWorldId = progress.selectedWorld;
+  const nextId = getNextPlayableLevelId(progress);
 
   const tabs = $("adventure-world-tabs");
   if (tabs) {
@@ -693,13 +749,13 @@ function renderAdventureMap() {
       const unlocked = isWorldUnlocked(progress, w.id);
       const btn = document.createElement("button");
       btn.type = "button";
-      btn.className = "adventure-world-tab";
+      btn.className = "adventure-world-shield";
       btn.dataset.world = String(w.id);
       if (w.id === selectedAdventureWorldId) btn.classList.add("active");
-      if (!unlocked) btn.classList.add("adventure-world-tab--locked");
+      if (!unlocked) btn.classList.add("adventure-world-shield--locked");
       btn.disabled = !unlocked;
-      btn.textContent = w.name;
-      btn.title = unlocked ? w.tagline : `Clear stage ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
+      btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">Part ${w.id}</span>`;
+      btn.title = unlocked ? w.name : `Clear stage ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
       btn.addEventListener("click", () => {
         if (!isWorldUnlocked(progress, w.id)) return;
         selectedAdventureWorldId = w.id;
@@ -717,34 +773,56 @@ function renderAdventureMap() {
 
   const hint = $("adventure-world-hint");
   const worldMeta = WORLDS.find((w) => w.id === selectedAdventureWorldId);
-  if (hint && worldMeta) hint.textContent = worldMeta.tagline;
+  if (hint && worldMeta) hint.textContent = `${worldMeta.name} — ${worldMeta.tagline}`;
 
   const map = $("adventure-map");
   if (!map) return;
-  map.innerHTML = "";
+  const theme = worldMeta?.theme || "verdant";
+  map.className = `adventure-map-canvas adventure-map-canvas--${theme}`;
+  map.innerHTML = `<div class="adventure-map-canvas__bg" aria-hidden="true"></div><svg class="adventure-map-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>`;
 
-  for (const level of getLevelsForWorld(selectedAdventureWorldId)) {
+  const pathEl = map.querySelector(".adventure-map-path");
+  const points = [];
+  const levels = getLevelsForWorld(selectedAdventureWorldId);
+
+  levels.forEach((level, i) => {
+    const pos = MAP_PIN_LAYOUT[i] || MAP_PIN_LAYOUT[MAP_PIN_LAYOUT.length - 1];
     const unlocked = isLevelUnlocked(progress, level.id);
     const cleared = isLevelCleared(progress, level.id);
-    const node = document.createElement("button");
-    node.type = "button";
-    node.className = "adventure-node";
-    node.dataset.level = String(level.id);
-    if (!unlocked) node.classList.add("adventure-node--locked");
-    if (cleared) node.classList.add("adventure-node--cleared");
-    node.disabled = !unlocked;
+    const isNext = level.id === nextId && unlocked;
     const stars = getLevelStars(progress, level.id);
-    const starBadge = stars > 0 ? `<span class="adventure-node__stars" aria-label="${stars} stars">${formatStars(stars)}</span>` : "";
-    node.innerHTML = `
-      <span class="adventure-node__num">${level.stageInWorld}</span>
-      <span class="adventure-node__name">${level.opponent}</span>
-      <span class="adventure-node__flavor">${level.flavor}</span>
-      ${starBadge}
-    `;
-    node.addEventListener("click", () => openAdventurePrebattle(level.id));
-    map.appendChild(node);
+    points.push(`${pos.left},${pos.top}`);
+
+    const pin = document.createElement("button");
+    pin.type = "button";
+    pin.className = "adventure-map-pin";
+    pin.style.left = `${pos.left}%`;
+    pin.style.top = `${pos.top}%`;
+    pin.dataset.level = String(level.id);
+    if (!unlocked) pin.classList.add("adventure-map-pin--locked");
+    if (cleared) pin.classList.add("adventure-map-pin--cleared");
+    if (isNext) pin.classList.add("adventure-map-pin--next");
+    pin.disabled = !unlocked;
+    pin.setAttribute("aria-label", `Stage ${level.stageInWorld}: ${level.opponent}`);
+    const starLine = stars > 0 ? `<span class="adventure-map-pin__stars">${formatStars(stars)}</span>` : "";
+    pin.innerHTML = `
+      ${isNext ? '<span class="adventure-map-pin__next">NEXT</span>' : ""}
+      <span class="adventure-map-pin__diamond" aria-hidden="true"></span>
+      <span class="adventure-map-pin__title">${level.stageInWorld}. ${level.opponent}</span>
+      <span class="adventure-map-pin__flavor">${level.flavor}</span>
+      ${starLine}`;
+    pin.addEventListener("click", () => openAdventurePrebattle(level.id));
+    map.appendChild(pin);
+  });
+
+  if (pathEl && points.length > 1) {
+    pathEl.innerHTML = `<polyline points="${points.join(" ")}" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.35"/>`;
   }
+
+  const nextPin = map.querySelector(".adventure-map-pin--next");
+  if (nextPin) requestAnimationFrame(() => nextPin.scrollIntoView({ behavior: "smooth", block: "center" }));
 }
+
 
 function openAdventurePrebattle(levelId) {
   const level = getLevel(levelId);
@@ -841,11 +919,14 @@ function startAdventureMatch() {
       showTab("play");
     },
     (stars) => {
-      const { gems, stars: bestStars } = recordLevelClear(profile, levelId, stars);
+      const { gems, stars: bestStars, starsGained } = recordLevelClear(profile, levelId, stars);
       profile.gems += gems;
       saveProfile(profile);
-      updateGemHeader();
-      return `+${gems} gems! · Best: ${formatStars(bestStars)}`;
+      updateCurrencyHeader();
+      return {
+        message: `+${gems} gems! · Best: ${formatStars(bestStars)}`,
+        starsGained,
+      };
     },
     { aiDeckIds: [...pendingEnemyDeck], opponentName, cosmetics: getEquippedCosmetics(profile) }
   );
@@ -963,7 +1044,7 @@ function init() {
     modal: authModal,
     onSignedIn: () => {
       profile = loadProfile();
-      updateGemHeader();
+      updateCurrencyHeader();
       renderDeckList();
       pvpController?.render();
     },
@@ -985,7 +1066,7 @@ function init() {
       }
       repairProfile(profile);
       saveProfile(profile);
-      updateGemHeader();
+      updateCurrencyHeader();
       renderDeckList();
     }
   });
