@@ -4369,11 +4369,114 @@ body.chest-open-active {
 }
 .adventure-map-canvas {
   position: relative;
+  isolation: isolate;
   min-height: max(580px, min(72vh, 640px));
   max-height: min(78vh, 720px);
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  padding-bottom: 2.5rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.adventure-map-scenery-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.adventure-map-scenery {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.adventure-map-scenery--verdant {
+  background:
+    radial-gradient(ellipse 90% 50% at 50% 100%, rgba(34, 80, 48, 0.55), transparent 60%),
+    linear-gradient(180deg, #3a6a8a 0%, #5a9ab8 22%, #7ab89a 38%, #2d5a38 62%, #1a3a28 100%);
+}
+.adventure-map-scenery--verdant::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    /* castle */
+    linear-gradient(180deg, transparent 42%, #1a2438 42%, #1a2438 48%, transparent 48%),
+    linear-gradient(90deg, transparent 44%, #2a3548 44%, #2a3548 56%, transparent 56%),
+    /* keep towers */
+    linear-gradient(180deg, transparent 32%, #252f42 32%, #252f42 48%, transparent 48%),
+    linear-gradient(90deg, transparent 40%, #252f42 40%, #252f42 44%, transparent 44%),
+    linear-gradient(90deg, transparent 56%, #252f42 56%, #252f42 60%, transparent 60%),
+    /* trees left */
+    conic-gradient(from 180deg at 12% 72%, transparent 0 40deg, #0f2818 40deg 140deg, transparent 140deg),
+    conic-gradient(from 200deg at 22% 78%, transparent 0 50deg, #143220 50deg 160deg, transparent 160deg),
+    conic-gradient(from 160deg at 8% 85%, transparent 0 45deg, #0d2214 45deg 150deg, transparent 150deg),
+    /* trees right */
+    conic-gradient(from 200deg at 88% 70%, transparent 0 45deg, #0f2818 45deg 145deg, transparent 145deg),
+    conic-gradient(from 180deg at 78% 82%, transparent 0 50deg, #143220 50deg 155deg, transparent 155deg),
+    conic-gradient(from 220deg at 92% 88%, transparent 0 40deg, #0d2214 40deg 140deg, transparent 140deg);
+  opacity: 0.92;
+}
+.adventure-map-scenery--verdant::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 38%;
+  background:
+    linear-gradient(180deg, transparent, rgba(8, 18, 12, 0.35)),
+    repeating-linear-gradient(90deg, transparent 0 18px, rgba(20, 50, 30, 0.15) 18px 20px);
+  pointer-events: none;
+}
+.adventure-map-scenery--frost::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #4a6a8a 0%, #8ab0d0 30%, #c8dce8 45%, #5a7a9a 100%),
+    linear-gradient(90deg, transparent 42%, #6a8098 42%, #6a8098 58%, transparent 58%),
+    conic-gradient(from 180deg at 15% 75%, transparent 0 50deg, #3a5a6a 50deg 160deg, transparent 160deg),
+    conic-gradient(from 200deg at 85% 78%, transparent 0 45deg, #3a5a6a 45deg 150deg, transparent 150deg);
+  opacity: 0.85;
+}
+.adventure-map-scenery--ember::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #4a2010 0%, #8a4020 35%, #3a1810 100%),
+    linear-gradient(90deg, transparent 40%, #5a3020 40%, #5a3020 60%, transparent 60%),
+    radial-gradient(circle at 50% 45%, rgba(255, 120, 40, 0.35), transparent 35%);
+  opacity: 0.9;
+}
+.adventure-map-scenery--void::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #2a1848 0%, #4a2878 40%, #1a1030 100%),
+    radial-gradient(circle at 50% 38%, rgba(160, 120, 255, 0.35), transparent 40%);
+  opacity: 0.9;
+}
+.adventure-map-scenery--legend::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, #3a3018 0%, #8a7030 35%, #2a2010 100%),
+    linear-gradient(90deg, transparent 38%, #6a5830 38%, #6a5830 62%, transparent 62%),
+    radial-gradient(circle at 50% 40%, rgba(255, 215, 120, 0.25), transparent 38%);
+  opacity: 0.9;
+}
+.adventure-map-pins {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
 }
 .adventure-map-canvas__bg {
   position: absolute;
@@ -4382,11 +4485,7 @@ body.chest-open-active {
   pointer-events: none;
 }
 .adventure-map-canvas--verdant .adventure-map-canvas__bg {
-  background:
-    linear-gradient(180deg, rgba(8, 20, 12, 0.2), rgba(8, 12, 20, 0.85)),
-    radial-gradient(ellipse 120% 80% at 70% 10%, #1a4a3a 0%, transparent 50%),
-    radial-gradient(ellipse 90% 60% at 20% 80%, #2d5a28 0%, transparent 45%),
-    linear-gradient(165deg, #1a3328 0%, #0d1a14 40%, #142238 100%);
+  background: linear-gradient(180deg, rgba(8, 20, 12, 0.15), rgba(8, 12, 20, 0.55));
 }
 .adventure-map-canvas--frost .adventure-map-canvas__bg {
   background:
@@ -4416,26 +4515,35 @@ body.chest-open-active {
   min-height: 560px;
   color: rgba(125, 211, 252, 0.5);
   pointer-events: none;
+  z-index: 1;
 }
 .adventure-map-pin {
   position: absolute;
   transform: translate(-50%, -50%);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  z-index: 2;
+  z-index: 6;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.15rem;
-  max-width: 42%;
-  padding: 0.35rem 0.5rem;
+  max-width: 46%;
+  min-width: 5.5rem;
+  min-height: 3.25rem;
+  padding: 0.65rem 0.5rem;
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 0.5rem;
   font-family: inherit;
   color: var(--text);
   text-align: center;
+  pointer-events: auto;
+}
+.adventure-map-pin > * {
+  pointer-events: none;
+}
+.adventure-map-pin:not(:disabled):active {
+  transform: translate(-50%, -50%) scale(0.97);
 }
 .adventure-map-pin--locked {
   opacity: 0.4;
@@ -4493,6 +4601,8 @@ body.chest-open-active {
   flex-wrap: wrap;
   padding: 0.5rem 0 0.25rem;
   margin-top: 0.25rem;
+  position: relative;
+  z-index: 2;
 }
 .adventure-world-shield {
   display: flex;

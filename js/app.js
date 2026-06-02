@@ -741,6 +741,48 @@ function showAdventureMap() {
   renderAdventureMap();
 }
 
+
+function getMapSceneryMarkup(theme) {
+  if (theme === "verdant") {
+    return `<svg class="adventure-map-scenery-svg" viewBox="0 0 400 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="mapSky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#5a9ec8"/>
+          <stop offset="45%" stop-color="#8ec4a8"/>
+          <stop offset="100%" stop-color="#2d5a38"/>
+        </linearGradient>
+        <linearGradient id="mapHill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3d7a48"/>
+          <stop offset="100%" stop-color="#1a3a24"/>
+        </linearGradient>
+      </defs>
+      <rect width="400" height="700" fill="url(#mapSky)"/>
+      <ellipse cx="200" cy="520" rx="260" ry="120" fill="url(#mapHill)" opacity="0.9"/>
+      <ellipse cx="90" cy="560" rx="100" ry="70" fill="#1e4a2e" opacity="0.85"/>
+      <ellipse cx="320" cy="550" rx="110" ry="75" fill="#1e4a2e" opacity="0.85"/>
+      <!-- castle -->
+      <path fill="#2a3548" d="M155 380 h90 v55 h-90z M170 355 h15 v25 h-15z M215 355 h15 v25 h-15z M185 340 h30 v15 h-30z"/>
+      <path fill="#3a4a5a" d="M160 435 h80 v12 h-80z"/>
+      <rect x="192" y="395" width="16" height="22" rx="2" fill="#1a2430"/>
+      <!-- trees -->
+      <polygon points="55,480 70,420 85,480" fill="#0f2818"/>
+      <rect x="66" y="478" width="8" height="18" fill="#3d2818"/>
+      <polygon points="30,510 48,440 66,510" fill="#143220"/>
+      <rect x="42" y="508" width="10" height="22" fill="#3d2818"/>
+      <polygon points="330,470 348,400 366,470" fill="#0f2818"/>
+      <rect x="341" y="468" width="8" height="20" fill="#3d2818"/>
+      <polygon points="355,500 375,430 395,500" fill="#143220"/>
+      <rect x="368" y="498" width="10" height="24" fill="#3d2818"/>
+      <polygon points="110,520 128,455 146,520" fill="#0f2818"/>
+      <rect x="121" y="518" width="8" height="16" fill="#3d2818"/>
+      <polygon points="250,515 268,450 286,515" fill="#143220"/>
+      <rect x="259" y="513" width="8" height="18" fill="#3d2818"/>
+    </svg>`;
+  }
+  return "";
+}
+
+
 function renderAdventureMap() {
   updateCurrencyHeader();
   const progress = repairAdventureProgress(profile.adventure);
@@ -792,11 +834,31 @@ function renderAdventureMap() {
   if (!map) return;
   const theme = worldMeta?.theme || "verdant";
   map.className = `adventure-map-canvas adventure-map-canvas--${theme}`;
-  map.innerHTML = `<div class="adventure-map-canvas__bg" aria-hidden="true"></div><svg class="adventure-map-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>`;
+  map.setAttribute("role", "group");
+  map.setAttribute("aria-label", "Stage map");
+  map.innerHTML = `
+    <div class="adventure-map-canvas__bg" aria-hidden="true">
+      <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
+    </div>
+    <svg class="adventure-map-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="pointer-events:none"></svg>
+    <div class="adventure-map-pins"></div>`;
 
   const pathEl = map.querySelector(".adventure-map-path");
+  const pinsLayer = map.querySelector(".adventure-map-pins");
   const points = [];
   const levels = getLevelsForWorld(selectedAdventureWorldId);
+
+  function activateMapPin(levelId) {
+    const live = repairAdventureProgress(profile.adventure);
+    profile.adventure = live;
+    if (!isLevelUnlocked(live, levelId)) {
+      const hintEl = $("adventure-world-hint");
+      if (hintEl) hintEl.textContent = `Locked — beat global stage ${levelId - 1} first, then return here.`;
+      return;
+    }
+    saveProfile(profile);
+    openAdventurePrebattle(levelId);
+  }
 
   levels.forEach((level, i) => {
     const pos = MAP_PIN_LAYOUT[i] || MAP_PIN_LAYOUT[MAP_PIN_LAYOUT.length - 1];
@@ -825,17 +887,20 @@ function renderAdventureMap() {
       <span class="adventure-map-pin__title">${level.stageInWorld}. ${level.opponent}</span>
       <span class="adventure-map-pin__flavor">${level.flavor}</span>
       ${starLine}`;
-    pin.addEventListener("click", () => {
-      if (!isLevelUnlocked(progress, level.id)) {
-        const hintEl = $("adventure-world-hint");
-        if (hintEl) {
-          hintEl.textContent = `Locked — beat global stage ${level.id - 1} first, then return here.`;
-        }
-        return;
+    if (!unlocked) pin.disabled = true;
+    const go = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      activateMapPin(level.id);
+    };
+    pin.addEventListener("click", go);
+    pin.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        activateMapPin(level.id);
       }
-      openAdventurePrebattle(level.id);
     });
-    map.appendChild(pin);
+    pinsLayer?.appendChild(pin);
   });
 
   if (pathEl && points.length > 1) {
@@ -857,6 +922,9 @@ function openAdventurePrebattle(levelId) {
 
   $("adventure-map-view")?.classList.add("hidden");
   $("adventure-prebattle")?.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    $("adventure-prebattle")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   const title = $("prebattle-title");
   const flavor = $("prebattle-flavor");
