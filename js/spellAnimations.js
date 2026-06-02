@@ -10,7 +10,7 @@ export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS };
 /** Meta / hand / turn-rule spells — shimmer only, no board shake */
 const META_EFFECTS = new Set([
   "quick_march", "overrun", "trickster", "ricochet", "blind", "confusion", "counterspell", "dominion",
-  "conduct", "mirror_move", "roulette", "rules_lawyer", "mirror_board", "highlight_path",
+  "conduct", "mirror_move", "roulette", "ignore", "mirror_board", "highlight_path",
   "pocket", "possession", "chameleon", "identity_theft", "succession",
   "twin_soul", "last_king", "constitution", "sanctuary_pulse", "parallel", "echo",
 ]);
@@ -29,7 +29,7 @@ const BOARD_SHAKE_EFFECTS = new Set([
   "duel",
   "scatter",
   "vacuum",
-  "blizzard",
+  "blizzard", "column",
   "deep_freeze",
   "gravity_well",
   "shield_bash",
@@ -46,13 +46,13 @@ const KILL_EFFECTS = new Set([
 const MULTI_KILL_EFFECTS = new Set([
   "cross_bolt", "detonate", "fireline", "chain_lightning", "purify", "duel",
   "shield_bash", "spear_thrust", "bulwark", "gravity_well",
-  "earthquake", "blizzard", "sanctuary", "tangle", "scatter", "vacuum",
+  "earthquake", "blizzard", "column", "sanctuary", "tangle", "scatter", "vacuum",
 ]);
 
 const MOVE_EFFECTS = new Set([
   "blink_2", "long_step", "sidestep", "nudge", "chain_pull", "repel", "leapfrog",
   "phase_walk", "corner_hop", "drift", "recall", "flank_3", "warp_gate",
-  "bait_switch", "hostile_swap", "mass_nudge", "butterfly", "iron_will",
+  "bait_switch", "hostile_swap", "mass_nudge", "displacement", "magnet", "call_forward", "butterfly", "iron_will",
 ]);
 
 const SWAP_EFFECTS = new Set([
@@ -61,13 +61,13 @@ const SWAP_EFFECTS = new Set([
 ]);
 
 const TERRAIN_EFFECTS = new Set([
-  "mine", "decoy", "quicksand", "obstacle", "collapse", "sanctified",
+  "landmine", "barrier", "quicksand", "obstacle", "collapse", "sanctified",
 ]);
 
 const BUFF_EFFECTS = new Set([
   "shield_2", "retreat_3", "knight_perm", "crown", "rook_2", "bishop_2", "bishop_3",
   "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "mirror_shield", "phalanx",
-  "last_stand", "ghost_guard", "fortify", "hunters_mark", "promote_zone", "revive",
+  "last_stand", "ghost_guard", "fortify", "vengeance", "stall", "hunters_mark", "promote_zone", "revive",
   "wraith_2", "stone_form", "rally", "fusion",
 ]);
 

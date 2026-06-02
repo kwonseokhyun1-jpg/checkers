@@ -37,9 +37,10 @@ export function createMatchMeta() {
     pocketReturnTurn: 0,
     turnNumber: 0,
     collapsedSquare: null,
+    extraSpellCast: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    pendingPressMove: { [COLORS.RED]: false, [COLORS.BLACK]: false },
   };
 }
-
 
 export const MINE_DURATION_TURNS = 2;
 
@@ -48,17 +49,37 @@ export function getMineOwner(sq) {
   return typeof sq.mine === "object" ? sq.mine.owner : sq.mine;
 }
 
-export function placeMine(sq, owner) {
+export function placeMine(sq, owner, hidden = false) {
+  if (hidden) {
+    sq.hiddenMine = { owner, turnsLeft: MINE_DURATION_TURNS };
+    return;
+  }
   sq.mine = { owner, turnsLeft: MINE_DURATION_TURNS };
+}
+
+export function revealMine(sq) {
+  if (!sq?.hiddenMine) return;
+  sq.mine = { ...sq.hiddenMine };
+  delete sq.hiddenMine;
+}
+
+export function placeHiddenQuicksand(sq, owner) {
+  sq.hiddenQuicksand = { owner };
 }
 
 export function tickMineDurability(state, ownerColor) {
   if (!state?.squares || !ownerColor) return;
   for (const sq of Object.values(state.squares)) {
-    if (!sq?.mine || typeof sq.mine !== "object") continue;
-    if (sq.mine.owner !== ownerColor || sq.mine.turnsLeft == null) continue;
-    sq.mine.turnsLeft -= 1;
-    if (sq.mine.turnsLeft <= 0) delete sq.mine;
+    if (!sq) continue;
+    if (sq.hiddenMine?.owner === ownerColor && sq.hiddenMine.turnsLeft != null) {
+      sq.hiddenMine.turnsLeft -= 1;
+      if (sq.hiddenMine.turnsLeft <= 0) delete sq.hiddenMine;
+    }
+    if (sq?.mine && typeof sq.mine === "object") {
+      if (sq.mine.owner !== ownerColor || sq.mine.turnsLeft == null) continue;
+      sq.mine.turnsLeft -= 1;
+      if (sq.mine.turnsLeft <= 0) delete sq.mine;
+    }
   }
 }
 
@@ -106,6 +127,7 @@ export function startTurnMeta(state, color) {
   state.meta.movementCardPlayed[color] = false;
   state.meta.optionalJumps[color] = false;
   state.meta.dominionTurn[color] = false;
+  state.meta.extraSpellCast[color] = false;
   if (state.meta.mirrorBoardTurns[opp] > 0) state.meta.mirrorBoardTurns[opp]--;
   if (state.meta.highlightTurns[opp] > 0) state.meta.highlightTurns[opp]--;
   if (state.meta.fogTurns[color] > 0) {
@@ -136,7 +158,6 @@ export function tickMeta(state, color) {
   }
 }
 
-/** If caster's spell is trapped by the opponent's armed Counterspell, consume it. */
 export function tryConsumeCounterspell(state, casterColor) {
   const trapOwner = casterColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
   if (!state.meta.counterspell?.[trapOwner]) return null;
@@ -147,7 +168,6 @@ export function tryConsumeCounterspell(state, casterColor) {
 export function hasCounterspellArmed(state, color) {
   return !!state.meta.counterspell?.[color];
 }
-
 
 export function collapsedSquareKey(meta) {
   if (!meta?.collapsedSquare) return null;
@@ -164,4 +184,21 @@ export const COLLAPSE_DURATION_TURNS = 3;
 
 export function setCollapsedSquare(meta, r, c, turnsLeft = COLLAPSE_DURATION_TURNS) {
   meta.collapsedSquare = { square: `${r},${c}`, turnsLeft };
+}
+
+/** Dark squares in darkness aura (center + neighbors) */
+export function isInDarknessZone(state, r, c) {
+  if (!state?.squares) return false;
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      const sq = state.squares[sk(r + dr, c + dc)];
+      if (sq?.darkness > 0) return true;
+    }
+  }
+  return false;
+}
+
+export function isSanctuaryProtected(state, r, c, pieceColor) {
+  const sq = state?.squares?.[sk(r, c)];
+  return sq?.sanctuary === pieceColor && (sq.sanctuaryTurns ?? 0) > 0;
 }

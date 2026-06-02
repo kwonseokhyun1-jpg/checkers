@@ -77,12 +77,27 @@ export function getValidTargets(state, color, card, picks) {
       for (let r = 0; r < SIZE; r++)
         for (let c = 0; c < SIZE; c++) {
           const p = at(state, r, c);
-          if (p && p.color === o) res.push([r, c]);
+          if (p && p.color === o) {
+            if (card.effect === "snipe") {
+              let found = false;
+              for (const fp of piecesOfColor(state.board, color)) {
+                const dr = r - fp.row, dc = c - fp.col;
+                if (Math.abs(dr) === Math.abs(dc) && Math.abs(dr) >= 3) {
+                  const stepR = Math.sign(dr), stepC = Math.sign(dc);
+                  let clear = true;
+                  for (let i = 1; i < Math.abs(dr); i++) {
+                    if (at(state, fp.row + stepR * i, fp.col + stepC * i)) { clear = false; break; }
+                  }
+                  if (clear) { found = true; break; }
+                }
+              }
+              if (found) res.push([r, c]);
+            } else res.push([r, c]);
+          }
         }
       return res;
-    case "empty":
-      for (let r = 0; r < SIZE; r++)
-        for (let c = 0; c < SIZE; c++) if (emptyDark(state, r, c)) res.push([r, c]);
+    case "column":
+      for (let c = 0; c < SIZE; c++) res.push([3, c]);
       return res;
     case "any_square":
       for (let r = 0; r < SIZE; r++)

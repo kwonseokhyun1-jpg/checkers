@@ -1,5 +1,5 @@
 /** Checkers board logic with card-effect modifiers */
-import { getMineOwner, tickMineDurability, collapsedSquareKey } from "./gameMeta.js";
+import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine } from "./gameMeta.js";
 
 function sk(r, c) {
   return `${r},${c}`;
@@ -148,21 +148,28 @@ export function movePiece(board, fromR, fromC, toR, toC) {
   return piece;
 }
 
-function isProtected(piece) {
-  return piece && piece.shieldTurns > 0;
+function isProtected(piece, state = null, r = null, c = null) {
+  if (!piece) return false;
+  if (piece.shieldTurns > 0) return true;
+  if (state != null && r != null && c != null) {
+    if (isSanctuaryProtected(state, r, c, piece.color)) return true;
+    if (isInDarknessZone(state, r, c)) return true;
+  }
+  return false;
 }
 
 function isFrozen(piece) {
   return piece && piece.frozenTurns > 0;
 }
 
-function squareBlocked(state, r, c) {
+function squareBlocked(state, r, c, moverColor = null) {
   if (!inBounds(r, c)) return true;
   const key = sk(r, c);
   if (collapsedSquareKey(state?.meta) === key) return true;
   const sq = state?.squares?.[key];
   if (sq?.obstacle) return true;
   if (sq?.ghostBlock > 0) return true;
+  if (sq?.barrier?.turnsLeft > 0 && moverColor && sq.barrier.owner !== moverColor) return true;
   return false;
 }
 
@@ -173,7 +180,7 @@ export function getKnightMoves(board, piece, state, canCapture = false) {
   const moves = [];
   for (const [dr, dc] of KNIGHT_OFFSETS) {
     const nr = piece.row + dr, nc = piece.col + dc;
-    if (!inBounds(nr, nc) || !isDarkSquare(nr, nc) || squareBlocked(state, nr, nc)) continue;
+    if (!inBounds(nr, nc) || !isDarkSquare(nr, nc) || squareBlocked(state, nr, nc, piece.color)) continue;
     const t = board[nr][nc];
     if (!t) moves.push({ from: [piece.row, piece.col], to: [nr, nc], captures: [], type: "step" });
     else if (canCapture && t.color !== piece.color && !isProtected(t))
@@ -237,7 +244,7 @@ export function getStepMoves(board, piece, color, state = null) {
   const dirs = forwardDirs(piece, dom);
   for (const [dr, dc] of dirs) {
     const nr = piece.row + dr, nc = piece.col + dc;
-    if (!inBounds(nr, nc) || !isDarkSquare(nr, nc) || squareBlocked(state, nr, nc)) continue;
+    if (!inBounds(nr, nc) || !isDarkSquare(nr, nc) || squareBlocked(state, nr, nc, piece.color)) continue;
     if (!board[nr][nc]) {
       moves.push({ from: [piece.row, piece.col], to: [nr, nc], captures: [], type: "step" });
     } else if (piece.wraithTurns > 0) {
@@ -248,7 +255,7 @@ export function getStepMoves(board, piece, color, state = null) {
   if (piece.superMan > 0) {
     for (const [dr, dc] of dirs) {
       const nr = piece.row + dr * 2, nc = piece.col + dc * 2;
-      if (inBounds(nr, nc) && isDarkSquare(nr, nc) && !board[nr][nc] && !squareBlocked(state, nr, nc))
+      if (inBounds(nr, nc) && isDarkSquare(nr, nc) && !board[nr][nc] && !squareBlocked(state, nr, nc, piece.color))
         moves.push({ from: [piece.row, piece.col], to: [nr, nc], captures: [], type: "step" });
     }
   }
@@ -258,6 +265,7 @@ export function getStepMoves(board, piece, color, state = null) {
 export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
   if (piece.revivedNoCapture) return moves;
+  if (piece.reverseOnlyTurns > 0 || piece.noCaptureTurns > 0) return moves;
   if (isFrozen(piece) || piece.rooted > 0 || piece.fortifyTurns > 0) return moves;
   if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
   if (hasKnightSigil(piece) && piece.knightCapture)
@@ -282,10 +290,10 @@ export function getJumpMoves(board, piece, color, state = null) {
   for (const [dr, dc] of dirs) {
     const mr = piece.row + dr, mc = piece.col + dc;
     const lr = piece.row + dr * 2, lc = piece.col + dc * 2;
-    if (!inBounds(lr, lc) || !isDarkSquare(lr, lc) || squareBlocked(state, lr, lc)) continue;
+    if (!inBounds(lr, lc) || !isDarkSquare(lr, lc) || squareBlocked(state, lr, lc, piece.color)) continue;
     const mid = getPiece(board, mr, mc);
     if (!mid || mid.color === piece.color) continue;
-    if (isProtected(mid)) continue;
+    if (isProtected(mid, state, mr, mc)) continue;
     if (piece.stoneTurns > 0) continue;
     if (board[lr][lc]) continue;
     moves.push({ from: [piece.row, piece.col], to: [lr, lc], captures: [[mr, mc]], type: "jump" });
@@ -336,35 +344,70 @@ export function applyMove(board, move, state = null) {
   const piece = movePiece(board, fr, fc, tr, tc);
   for (const [cr, cc] of move.captures) {
     const cap = board[cr][cc];
-    if (cap && state) {
-      if (!state.captured[cap.color]) state.captured[cap.color] = [];
-      state.captured[cap.color].push({ king: cap.king });
-      if (cap.succession) {
-        const mates = piecesOfColor(board, cap.color).filter((p) => !p.king);
-        if (mates.length) mates[0].king = true;
+    if (cap) {
+      if (cap.vengeanceTurns > 0 && piece) {
+        removePiece(board, piece.row, piece.col);
+        piece = null;
       }
+      if (cap && state) {
+        if (!state.captured[cap.color]) state.captured[cap.color] = [];
+        state.captured[cap.color].push({ king: cap.king });
+        if (cap.succession) {
+          const mates = piecesOfColor(board, cap.color).filter((p) => !p.king);
+          if (mates.length) mates[0].king = true;
+        }
+      }
+      removePiece(board, cr, cc);
     }
-    removePiece(board, cr, cc);
   }
-  if (!piece.king && !piece.rusted) {
+  if (!piece.king && !(piece.rustedTurns > 0)) {
     if (piece.color === COLORS.RED && tr === 0) piece.king = true;
     if (piece.color === COLORS.BLACK && tr === SIZE - 1) piece.king = true;
   }
   const sq = state ? getSq(state, tr, tc) : null;
   if (sq?.sanctified === piece.color && !piece.king) piece.king = true;
-  if (sq?.quicksand) { piece.frozenTurns = Math.max(piece.frozenTurns, 1); sq.quicksand = false; }
-  const mineOwner = getMineOwner(sq);
-  if (mineOwner && mineOwner !== piece.color) {
-    removePiece(board, tr, tc);
-    sq.mine = null;
+  if (sq?.hiddenQuicksand) {
+    sq.quicksand = true;
+    delete sq.hiddenQuicksand;
+    if (piece) piece.frozenTurns = Math.max(piece.frozenTurns, 1);
+  } else if (sq?.quicksand && piece) {
+    piece.frozenTurns = Math.max(piece.frozenTurns, 1);
+    sq.quicksand = false;
   }
-  if (piece.bombArmed) {
+  if (sq?.hiddenMine) {
+    revealMine(sq);
+    const mineOwner = getMineOwner(sq);
+    if (mineOwner && mineOwner !== piece.color && piece) {
+      removePiece(board, tr, tc);
+      sq.mine = null;
+      return null;
+    }
+  } else {
+    const mineOwner = getMineOwner(sq);
+    if (mineOwner && mineOwner !== piece.color && piece) {
+      removePiece(board, tr, tc);
+      sq.mine = null;
+      return null;
+    }
+  }
+  if (piece && piece.bombArmed) {
     piece.bombArmed = false;
     explodeBombAt(board, state, tr, tc);
     if (state) state.lastExplosion = [tr, tc];
     return null;
   }
   return piece;
+}
+
+
+export function findPressExtraPiece(board, color) {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = board[r][c];
+      if (p && p.color === color && p.pressExtraMove) return p;
+    }
+  }
+  return null;
 }
 
 export function countPieces(board, color) {
@@ -383,15 +426,21 @@ export function tickEffects(board, color, state = null) {
       dec("shieldTurns"); dec("frozenTurns"); dec("paralyzedTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
       dec("stoneTurns"); dec("rooted"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
-      dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns");
+      dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("vengeanceTurns"); dec("rustedTurns"); dec("noCaptureTurns");
       if (p.venom > 0) {
         p.venom--;
         if (p.venom <= 0) removePiece(board, r, c);
       }
       if (p.panicTurn) { p.panicTurn = false; }
-      if (p.pawnZeal) p.pawnZeal = false;
       if (p.promoteZone) p.promoteZone = false;
       if (p.revivedNoCapture) p.revivedNoCapture = false;
+      if (p.rustedTurns > 0) {
+        p.rustedTurns--;
+        if (p.rustedTurns <= 0) {
+          const promo = p.color === COLORS.RED ? 0 : SIZE - 1;
+          if (p.row === promo) p.king = true;
+        }
+      }
     }
   }
   if (state?.squares) {
@@ -401,6 +450,7 @@ export function tickEffects(board, color, state = null) {
       if (sq.ghostBlock > 0) sq.ghostBlock--;
       if (sq.sanctuaryTurns > 0) { sq.sanctuaryTurns--; if (sq.sanctuaryTurns <= 0) delete sq.sanctuary; }
       if (sq.darkness > 0) sq.darkness--;
+      if (sq.barrier?.turnsLeft > 0) { sq.barrier.turnsLeft--; if (sq.barrier.turnsLeft <= 0) delete sq.barrier; }
     }
   }
 }
