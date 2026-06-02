@@ -41,30 +41,80 @@ export async function signUp(email, password, displayName, username) {
   const sb = getSupabase();
   if (!sb) throw new Error("Supabase is not configured. Add your anon key to js/supabaseConfig.js");
 
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  if (!normalizedEmail.includes("@")) {
+    throw new Error("Sign up requires a valid email address.");
+  }
+
   const { data, error } = await sb.auth.signUp({
-    email,
+    email: normalizedEmail,
     password,
     options: {
       data: {
-        display_name: displayName || email.split("@")[0],
-        username: username || displayName || email.split("@")[0],
+        display_name: displayName || normalizedEmail.split("@")[0],
+        username: username || displayName || normalizedEmail.split("@")[0],
       },
     },
   });
   if (error) throw error;
+
+  if (data.session?.user) {
+    currentUser = data.session.user;
+    notify();
+  }
+
   return data;
+}
+
+function isMissingRpcError(error) {
+  const code = error?.code || error?.details?.code;
+  const msg = String(error?.message || "");
+  return code === "PGRST202" || msg.includes("email_for_login") || msg.includes("Could not find the function");
+}
+
+/** @param {Record<string, unknown> | null | undefined} profileJson */
+function loginEmailFromProfileJson(profileJson) {
+  if (!profileJson || typeof profileJson !== "object") return null;
+  const email = profileJson.loginEmail || profileJson.login_email;
+  return typeof email === "string" && email.includes("@") ? email.trim().toLowerCase() : null;
+}
+
+async function resolveLoginEmailFromProfile(username) {
+  const sb = getSupabase();
+  if (!sb) return null;
+
+  const { data, error } = await sb
+    .from("profiles")
+    .select("profile_json")
+    .ilike("username", username)
+    .maybeSingle();
+
+  if (error) throw error;
+  return loginEmailFromProfileJson(data?.profile_json);
 }
 
 export async function resolveLoginEmail(identifier) {
   const trimmed = String(identifier || "").trim();
   if (!trimmed) throw new Error("Enter your username or email.");
-  if (trimmed.includes("@")) return trimmed;
+  if (trimmed.includes("@")) return trimmed.toLowerCase();
+
   const sb = getSupabase();
   if (!sb) throw new Error("Supabase is not configured.");
+
   const { data, error } = await sb.rpc("email_for_login", { identifier: trimmed });
-  if (error) throw error;
-  if (!data) throw new Error("Unknown username or email.");
-  return data;
+  if (!error && data) return String(data).toLowerCase();
+  if (error && !isMissingRpcError(error)) throw error;
+
+  const fromProfile = await resolveLoginEmailFromProfile(trimmed);
+  if (fromProfile) return fromProfile;
+
+  if (error && isMissingRpcError(error)) {
+    throw new Error(
+      "Unknown username. Sign in with your email once, or ask the host to run supabase/schema.sql in the Supabase SQL Editor."
+    );
+  }
+
+  throw new Error("Unknown username or email.");
 }
 
 export async function signIn(identifier, password) {
@@ -74,7 +124,30 @@ export async function signIn(identifier, password) {
   const email = await resolveLoginEmail(identifier);
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) throw error;
+
+  if (data.session?.user) {
+    currentUser = data.session.user;
+    notify();
+    await backfillLoginEmail(data.session.user.id, email);
+  }
+
   return data;
+}
+
+async function backfillLoginEmail(userId, email) {
+  const sb = getSupabase();
+  if (!sb || !userId || !email) return;
+
+  try {
+    const row = await fetchProfileRow(userId);
+    const json = row?.profile_json && typeof row.profile_json === "object" ? { ...row.profile_json } : {};
+    if (loginEmailFromProfileJson(json) === email.toLowerCase()) return;
+
+    json.loginEmail = email.toLowerCase();
+    await upsertProfileRow(userId, { profile_json: json });
+  } catch (e) {
+    console.warn("Could not backfill login email on profile", e);
+  }
 }
 
 export async function signOut() {
