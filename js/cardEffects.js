@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget, getBackstepTarget } from "./board.js";
 import { sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -102,6 +102,7 @@ export function getValidTargets(state, color, card, picks) {
           [pr, pc - 1],
           [pr, pc + 1],
         ].filter(([r, c]) => emptyDark(state, r, c));
+      if (card.effect === "backstep") return getBackstepTarget(state.board, p);
       return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
     }
     case "f_f":

@@ -57,6 +57,7 @@ export const REMOVED_CARD_IDS = new Set([
   "echo",
   "chameleon",
   "time_slip",
+  "bridge",
   "exile_king",
 ]);
 

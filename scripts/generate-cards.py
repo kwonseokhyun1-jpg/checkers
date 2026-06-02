@@ -23,6 +23,7 @@ SPELLS = [
     ("leapfrog", "Leapfrog", "Jump your piece over a friendly piece to land on the empty square beyond.", "uncommon", 4, "f_empty", "leapfrog"),
     ("phase_walk", "Phase Walk", "Move through one friendly piece to land on the empty square beyond it.", "rare", 3, "f_empty", "phase_walk"),
     ("corner_hop", "Corner Hop", "Teleport to any empty dark square in the opposite corner quadrant of the board.", "rare", 3, "f_empty", "corner_hop"),
+    ("backstep", "Backstep", "Move one of your pieces 1 square straight backward onto an empty dark square.", "common", 6, "f_empty", "backstep"),
     ("anchor", "Anchor", "Your piece cannot be moved by enemy cards for 2 turns (still moves on your turn).", "uncommon", 4, "friendly", "anchor_2"),
     ("drift", "Drift", "Slide a piece any number of empty squares along one diagonal until blocked.", "epic", 2, "f_empty", "drift"),
     ("recall", "Recall", "Return one of your pieces to any empty dark square in its starting row.", "uncommon", 4, "f_empty", "recall"),
@@ -81,7 +82,6 @@ SPELLS = [
     ("stone_form", "Stone Form", "Piece becomes a king immediately but cannot capture for 2 turns.", "uncommon", 4, "friendly", "stone_form"),
     # === BOARD ===
     ("obstacle", "Obstacle", "Mark a light square as permanently impassable.", "uncommon", 4, "any_square", "obstacle"),
-    ("bridge", "Bridge", "Link two empty dark squares; either can be entered from the other.", "rare", 3, "empty_empty", "bridge"),
     ("quicksand", "Quicksand", "Empty dark square freezes the next piece that ends a turn there.", "uncommon", 4, "empty", "quicksand"),
     ("sanctified_tile", "Sanctified Tile", "Friendly pieces entering this dark square are crowned.", "rare", 3, "empty", "sanctified"),
     ("warp_gate", "Warp Gate", "Link two empty dark squares for instant travel between them.", "rare", 3, "empty_empty", "warp_gate"),
@@ -111,7 +111,6 @@ SPELLS = [
     ("identity_theft", "Identity Theft", "Your piece copies an enemy's movement tags for 3 turns.", "rare", 3, "f_e", "identity_theft"),
     ("bait_switch", "Bait and Switch", "Swap an enemy with an empty square up to 2 steps away.", "rare", 3, "e_empty", "bait_switch"),
     ("mirror_move", "Mirror Move", "After opponent moves, copy their move pattern with your piece if legal.", "rare", 3, "instant", "mirror_move"),
-    ("time_slip", "Time Slip", "Undo your last checkers move (once per game).", "epic", 1, "instant", "time_slip"),
     ("parallel", "Parallel", "Play one additional card this turn.", "rare", 3, "instant", "parallel"),
     ("counterspell", "Counterspell", "Set a hidden trap: the next enemy spell is auto-cancelled when they cast it.", "uncommon", 5, "instant", "counterspell"),
     ("echo", "Echo", "Repeat the last card you played.", "rare", 3, "instant", "echo"),

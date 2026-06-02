@@ -422,23 +422,30 @@ export function getBoltTarget(board, piece) {
   return targets;
 }
 
-/** First enemy on each forward diagonal (includes shielded — for Fireblast). */
+/** First enemy directly ahead (same file; includes shielded — for Fireblast). */
 export function getFireblastTarget(board, piece) {
   const dir = piece.color === COLORS.RED ? -1 : 1;
   const targets = [];
-  for (const dc of [-1, 1]) {
-    let r = piece.row + dir, c = piece.col + dc;
-    while (inBounds(r, c) && isDarkSquare(r, c)) {
-      const cell = board[r][c];
-      if (cell) {
-        if (cell.color !== piece.color) targets.push([r, c]);
-        break;
-      }
-      r += dir;
-      c += dc;
+  let r = piece.row + dir;
+  const c = piece.col;
+  while (inBounds(r, c) && isDarkSquare(r, c)) {
+    const cell = board[r][c];
+    if (cell) {
+      if (cell.color !== piece.color) targets.push([r, c]);
+      break;
     }
+    r += dir;
   }
   return targets;
+}
+
+/** One empty square straight behind your piece (Backstep). */
+export function getBackstepTarget(board, piece) {
+  const dir = piece.color === COLORS.RED ? 1 : -1;
+  const r = piece.row + dir;
+  const c = piece.col;
+  if (inBounds(r, c) && isDarkSquare(r, c) && !board[r][c]) return [[r, c]];
+  return [];
 }
 
 export function getAdjacentEmpty(board, piece) {

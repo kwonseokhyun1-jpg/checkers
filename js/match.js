@@ -1085,8 +1085,14 @@ ${starLine}`;
         const piece = s.board[row][col];
         if (piece) {
           const el = document.createElement("span");
-          const skin = this.cosmetics?.equipped?.pieceSkin || "skin_classic";
-          el.className = `piece ${piece.color}${piece.king ? " king" : ""} piece-skin-${skin.replace("skin_", "")}`;
+          let skinClass = "";
+          if (piece.color === COLORS.RED && this.cosmetics?.equipped?.pieceSkin) {
+            const skinId = this.cosmetics.equipped.pieceSkin;
+            if (skinId && skinId !== "skin_classic") {
+              skinClass = ` piece-skin-${skinId.replace("skin_", "")}`;
+            }
+          }
+          el.className = `piece ${piece.color}${piece.king ? " king" : ""}${skinClass}`;
           if (piece.shieldTurns > 0) el.classList.add("shielded");
           if (piece.frozenTurns > 0) el.classList.add("frozen");
           if (piece.paralyzedTurns > 0) el.classList.add("paralyzed-mark");
