@@ -104,7 +104,15 @@ export function cleansePiece(piece) {
   piece.stoneTurns = 0;
   piece.anchored = 0;
   piece.rusted = false;
+  piece.rustedTurns = 0;
   piece.hunterMark = false;
+  piece.vengeanceTurns = 0;
+  piece.noCaptureTurns = 0;
+  piece.pressExtraMove = false;
+  piece.bishopTurns = 0;
+  piece.rookTurns = 0;
+  piece.queenTurns = 0;
+  piece.retreatTurns = 0;
   piece.panicTurn = false;
   piece.revivedNoCapture = false;
 }

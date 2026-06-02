@@ -1,4 +1,4 @@
-import { COLORS, getAllMovesForColor, applyMove, countPieces, squareName } from "./board.js";
+import { COLORS, getAllMovesForColor, applyMove, countPieces, squareName, findPressExtraPiece } from "./board.js";
 import { tryAutoPlay, canAiPlay } from "./cardEffects.js";
 
 function scoreBoard(board, aiColor) {
@@ -120,7 +120,7 @@ export function runAiTurn(state, opponentName = "Opponent") {
     if (state.meta.pendingDouble.black && move.type === "step") {
       state.meta.pendingDouble.black = false;
       const extra = getAllMovesForColor(state.board, color, state).filter(
-        (m) => m.from[0] === move.to[0] && m.from[1] === move.to[1] && m.type === "step"
+        (m) => m.from[0] === move.to[0] && m.from[1] === move.to[1] && (m.type === "step" || m.type === "jump")
       );
       if (extra.length) {
         const ex = extra[0];
@@ -139,5 +139,30 @@ export function runAiTurn(state, opponentName = "Opponent") {
     log.push({ type: "message", text: `${opponentName} had no legal move.` });
   }
 
+
+  const pressed = findPressExtraPiece(state.board, color);
+  if (pressed) {
+    pressed.pressExtraMove = false;
+    const pressMoves = getAllMovesForColor(state.board, color, state).filter(
+      (m) => m.from[0] === pressed.row && m.from[1] === pressed.col
+    );
+    if (pressMoves.length) {
+const bestPress = pressMoves.reduce((best, m) => {
+        const copy = state.board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+        applyMove(copy, m, state);
+        const sc = scoreBoard(copy, color) + (m.captures?.length || 0) * 8;
+        return sc > best.score ? { move: m, score: sc } : best;
+      }, { move: pressMoves[0], score: -Infinity }).move;
+      applyMove(state.board, bestPress, state);
+      log.push({
+        type: "move",
+        from: [...bestPress.from],
+        to: [...bestPress.to],
+        captures: bestPress.captures ? bestPress.captures.map((c) => [...c]) : [],
+        moveKind: bestPress.type,
+        text: `Press — extra move ${squareName(bestPress.from[0], bestPress.from[1])} → ${squareName(bestPress.to[0], bestPress.to[1])}`,
+      });
+    }
+  }
+
   return log;
-}

@@ -10,6 +10,7 @@ import {
   applyMove,
   countPieces,
   tickEffects,
+  findPressExtraPiece,
 } from "./board.js";
 import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed } from "./gameMeta.js";
 import {
@@ -180,8 +181,8 @@ export class MatchSession {
       s.turn === this.localColor &&
       s.phase === PHASE.CARDS &&
       !s.gameOver &&
-      !s.spellPlayed.red &&
-      !s.meta.shatterSilenced?.red &&
+      !s.spellPlayed[this.localColor] &&
+      !s.meta.shatterSilenced?.[this.localColor] &&
       !this.actionBusy &&
       !this.cardPlay
     );
@@ -278,7 +279,8 @@ export class MatchSession {
 
   finishCardPlay(msg) {
     if (this.cardPlay?.card) this.removeCardFromHand(this.cardPlay.card);
-    this.state.spellPlayed.red = true;
+    if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
+    else this.state.meta.extraSpellCast[this.localColor] = false;
     this.cardPlay = null;
     this.validTargets = [];
     this.selectedSquare = null;
@@ -299,7 +301,7 @@ export class MatchSession {
   }
 
   startCardPlay(card) {
-    if (this.state.spellPlayed.red) {
+    if (this.state.spellPlayed[this.localColor]) {
       this.setMessage("You already played a spell this turn.");
       return false;
     }
@@ -453,7 +455,7 @@ export class MatchSession {
           ? "Spells skipped — select a piece to move"
           : s.meta.shatterSilenced?.red
             ? "Shatter backlash — no spells this turn"
-            : s.spellPlayed.red
+            : s.spellPlayed[this.localColor]
               ? "Already cast a spell this turn"
               : !hasTargets
                 ? "No valid targets for this spell"
@@ -559,7 +561,7 @@ export class MatchSession {
       if (s.meta.pendingDouble.red && move.type === "step") {
         s.meta.pendingDouble.red = false;
         const extras = getAllMovesForColor(s.board, this.localColor, s).filter(
-          (m) => m.from[0] === landR && m.from[1] === landC && m.type === "step"
+          (m) => m.from[0] === landR && m.from[1] === landC && (m.type === "step" || m.type === "jump")
         );
         if (extras.length) {
           this.validMoves = extras;
@@ -569,6 +571,7 @@ export class MatchSession {
           return;
         }
       }
+      if (this.tryPressExtraMove(s, this.localColor)) return;
       this.endHumanTurn();
     };
 
@@ -586,6 +589,22 @@ export class MatchSession {
     }
 
     finish();
+  }
+
+  tryPressExtraMove(s, color) {
+    const pressed = findPressExtraPiece(s.board, color);
+    if (!pressed) return false;
+    pressed.pressExtraMove = false;
+    const moves = getAllMovesForColor(s.board, color, s).filter(
+      (m) => m.from[0] === pressed.row && m.from[1] === pressed.col
+    );
+    if (!moves.length) return false;
+    s.phase = PHASE.MOVE;
+    this.validMoves = moves;
+    this.selectedSquare = [pressed.row, pressed.col];
+    this.setMessage("Press — that piece must move again!");
+    this.render();
+    return true;
   }
 
   endHumanTurn() {
@@ -795,7 +814,7 @@ ${starLine}`;
   }
 
   async castInstantSpell(card) {
-    if (this.actionBusy || this.state.spellPlayed.red) return;
+    if (this.actionBusy || this.state.spellPlayed[this.localColor]) return;
     if (!this.canPlaySpells()) return;
     this.actionBusy = true;
     this.cancelCardPlay();
@@ -806,7 +825,8 @@ ${starLine}`;
         return;
       }
       this.removeCardFromHand(card);
-      this.state.spellPlayed.red = true;
+      if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
+    else this.state.meta.extraSpellCast[this.localColor] = false;
       if (card.effect === "counterspell") {
         this.setMessage("Counterspell armed. They won't know until they cast.");
       } else {
@@ -1059,8 +1079,8 @@ ${starLine}`;
         const key = `${row},${col}`;
         const terrain = s.squares[key];
         let cls = `square ${isDarkSquare(row, col) ? "dark" : "light"}`;
-        if (terrain?.mine) cls += " has-mine";
-        if (terrain?.quicksand) cls += " has-quicksand";
+        if (terrain?.mine && !terrain?.hiddenMine) cls += " has-mine";
+        if (terrain?.quicksand && !terrain?.hiddenQuicksand) cls += " has-quicksand";
         if (isSquareCollapsed(s.meta, row, col)) cls += " square--collapsed";
         sq.className = cls;
 
@@ -1156,7 +1176,7 @@ ${starLine}`;
       else if (s.turn === this.localColor) {
         const spellNote = s.meta.shatterSilenced?.red
           ? "No spells (Shatter backlash) · "
-          : s.spellPlayed.red
+          : s.spellPlayed[this.localColor]
             ? "Spell used · "
             : "1 spell available · ";
         if (this.cardPlay) {
