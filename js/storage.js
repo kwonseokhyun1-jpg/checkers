@@ -1,5 +1,5 @@
 import { isKnightCard, isRemovedCard, getCardDef, getPlayableCards, maxCopiesForCard, DECK_SIZE } from "./cardCatalog.js";
-import { defaultAdventureProgress, migrateAdventureDecks } from "./adventure.js";
+import { defaultAdventureProgress, migrateAdventureDecks, repairAdventureProgress } from "./adventure.js";
 import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
@@ -110,6 +110,10 @@ export function repairProfile(profile) {
 
   let changed = false;
 
+  const prevAdv = JSON.stringify(profile.adventure || {});
+  profile.adventure = repairAdventureProgress(profile.adventure);
+  if (JSON.stringify(profile.adventure) !== prevAdv) changed = true;
+
   for (const id of STARTER_COMMON_IDS) {
     const n = profile.collection[id] || 0;
     if (n < STARTER_COPIES_PER_CARD) {
@@ -213,7 +217,7 @@ function stripKnightCards(profile) {
 }
 
 function normalizeLoadedProfile(parsed) {
-  const adv = { ...defaultAdventureProgress(), ...(parsed.adventure || {}) };
+  const adv = repairAdventureProgress(parsed.adventure);
   const stub = { adventure: adv };
   migrateAdventureDecks(stub);
 

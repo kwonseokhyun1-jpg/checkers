@@ -308,6 +308,24 @@ export function getOrCreateLevelEnemyDeck(profile, levelId) {
   return profile.adventure.levelDecks[key];
 }
 
+
+export function repairAdventureProgress(progress) {
+  const base = defaultAdventureProgress();
+  if (!progress || typeof progress !== "object") return { ...base };
+  const repaired = { ...base, ...progress };
+  let hi = Number(repaired.highestUnlocked);
+  if (!Number.isFinite(hi) || hi < 1) hi = 1;
+  if (hi > ADVENTURE_LEVEL_COUNT) hi = ADVENTURE_LEVEL_COUNT;
+  repaired.highestUnlocked = hi;
+  if (!repaired.cleared || typeof repaired.cleared !== "object") repaired.cleared = {};
+  if (!repaired.stars || typeof repaired.stars !== "object") repaired.stars = {};
+  let sw = Number(repaired.selectedWorld);
+  if (!Number.isFinite(sw) || sw < 1 || sw > WORLDS.length) sw = 1;
+  if (!isWorldUnlocked(repaired, sw)) sw = getWorldForLevel(hi).id;
+  repaired.selectedWorld = sw;
+  return repaired;
+}
+
 export function defaultAdventureProgress() {
   return { highestUnlocked: 1, cleared: {}, stars: {}, selectedWorld: 1 };
 }
