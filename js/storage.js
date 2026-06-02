@@ -40,11 +40,6 @@ export function buildStarterDeckCardIds() {
   return ids.slice(0, DECK_SIZE);
 }
 
-/**
- * Beginner fill: 3 copies of each owned common (catalog order) until deck is 30.
- * @param {Record<string, number>} collection
- */
-
 function starterDeckNeedsRepair(deck) {
   if (!deck?.cardIds || deck.cardIds.length !== DECK_SIZE) return true;
   const sorted = [...deck.cardIds].sort().join(",");
@@ -52,22 +47,6 @@ function starterDeckNeedsRepair(deck) {
   return sorted !== target;
 }
 
-export function buildBeginnerDeckCardIds(collection = {}) {
-  const commons = getPlayableCards()
-    .filter((c) => c.rarity === "common")
-    .sort((a, b) => a.name.localeCompare(b.name));
-  const ids = [];
-  for (const def of commons) {
-    const owned = collection[def.id] || 0;
-    if (owned < 1) continue;
-    const copies = Math.min(owned, STARTER_COPIES_PER_CARD, maxCopiesForCard(def));
-    for (let i = 0; i < copies; i++) {
-      if (ids.length >= DECK_SIZE) return ids;
-      ids.push(def.id);
-    }
-  }
-  return ids;
-}
 
 function defaultProfile() {
   const collection = {};
