@@ -5,7 +5,7 @@
 const BUFF_RULES = [
   { key: "shieldTurns", label: "Shield", turns: true },
   { key: "fortifyTurns", label: "Fortify", turns: true },
-  { key: "retreatTurns", label: "Retreat Ward", turns: true },
+  { key: "retreatTurns", label: "Retreat", turns: true },
   { key: "knightTurns", label: "Knight Sigil", turns: true },
   { key: "rookTurns", label: "Rook's Mark", turns: true },
   { key: "bishopTurns", label: "Bishop's Mark", turns: true },

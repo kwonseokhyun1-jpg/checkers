@@ -57,7 +57,7 @@
 - **Rally** — All pieces adjacent to a friendly piece gain retreat for 1 turn.
 - **Recall** — Return one of your pieces to any empty dark square in its starting row.
 - **Repel** — Push an adjacent enemy piece 1 square away if the landing square is empty.
-- **Retreat Ward** — Grant a piece backward movement for 3 turns.
+- **Retreat** — Grant a piece backward movement for 3 turns.
 - **Root** — Enemy cannot jump or capture for 2 turns (can still step).
 - **Rules Lawyer** — Jumps are optional for you this turn (not mandatory).
 - **Rust** — Target enemy cannot be crowned for the rest of the game.

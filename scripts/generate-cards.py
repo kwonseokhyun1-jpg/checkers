@@ -9,7 +9,7 @@ SPELLS = [
     ("aegis", "Aegis", "Shield a piece — it cannot be captured for 2 turns.", "common", 7, "friendly", "shield_2"),
     ("bolt", "Forward Bolt", "Eliminate the first enemy piece directly ahead along your piece's forward diagonal.", "uncommon", 6, "diagonal", "forward_bolt"),
     ("frost", "Frost Bind", "Freeze an enemy piece — it cannot move on its owner's next turn.", "uncommon", 6, "enemy", "freeze_1"),
-    ("retreat", "Retreat Ward", "Grant a piece backward movement for 3 turns.", "uncommon", 6, "friendly", "retreat_3"),    ("crown", "Royal Decree", "Instantly crown one of your pieces (king movement).", "rare", 4, "friendly", "crown"),
+    ("retreat", "Retreat", "Grant a piece backward movement for 3 turns.", "uncommon", 6, "friendly", "retreat_3"),    ("crown", "Royal Decree", "Instantly crown one of your pieces (king movement).", "rare", 4, "friendly", "crown"),
     ("swap", "Shadow Swap", "Swap positions of two of your pieces.", "uncommon", 5, "f_f", "swap_friendly"),
     ("double", "Quick March", "After your normal move, move the same piece again (non-capture step).", "rare", 3, "instant", "quick_march"),
     ("gem_cache", "Gem Cache", "Gain 20 gems immediately.", "common", 7, "instant", "gems_20"),

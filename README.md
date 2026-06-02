@@ -40,7 +40,7 @@ Then visit http://localhost:8080
 | **Aegis** | Shield a piece from capture for 2 turns |
 | **Forward Bolt** | Destroy the first enemy along your piece's forward diagonal |
 | **Frost Bind** | Freeze an enemy — it skips its next move |
-| **Retreat Ward** | Piece can move (and jump) backward for 3 turns |
+| **Retreat** | Piece can move (and jump) backward for 3 turns |
 | **Knight's Sigil** | Piece moves like a chess knight permanently |
 | **Royal Decree** | Instantly crown a piece |
 | **Shadow Swap** | Swap two of your pieces |
