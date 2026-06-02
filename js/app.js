@@ -181,17 +181,17 @@ function syncCollectionFilterControls() {
   document.querySelectorAll(".collection-owned-only-toggle").forEach((el) => {
     el.checked = collectionOwnedOnly;
   });
-  const searchIds = ["collection-search", "inventory-search"];
+  const searchIds = ["collection-search"];
   for (const id of searchIds) {
     const el = $(id);
     if (el) el.value = collectionFilter;
   }
-  const rarityIds = ["collection-rarity", "inventory-rarity"];
+  const rarityIds = ["collection-rarity"];
   for (const id of rarityIds) {
     const el = $(id);
     if (el) el.value = collectionRarity;
   }
-  const sortIds = ["collection-sort", "inventory-sort"];
+  const sortIds = ["collection-sort"];
   for (const id of sortIds) {
     const el = $(id);
     if (el) el.value = collectionSort;
@@ -556,9 +556,6 @@ function renderDeckList() {
   if (repairProfile(profile)) saveProfile(profile);
   updateCurrencyHeader();
   const list = $("deck-list");
-  const invGrid = $("inventory-grid");
-  const invStatus = $("inventory-status");
-  if (invGrid) renderInventoryGrid(invGrid, { deckEdit: false, statusEl: invStatus });
   if (!list) return;
   list.innerHTML = "";
 
@@ -989,38 +986,14 @@ function init() {
 
   $("collection-search")?.addEventListener("input", (e) => {
     collectionFilter = e.target.value;
-    const inv = $("inventory-search");
-    if (inv && inv.value !== collectionFilter) inv.value = collectionFilter;
-    syncCollectionFilter();
-  });
-  $("inventory-search")?.addEventListener("input", (e) => {
-    collectionFilter = e.target.value;
-    const coll = $("collection-search");
-    if (coll && coll.value !== collectionFilter) coll.value = collectionFilter;
     syncCollectionFilter();
   });
   $("collection-rarity")?.addEventListener("change", (e) => {
     collectionRarity = e.target.value;
-    const inv = $("inventory-rarity");
-    if (inv) inv.value = collectionRarity;
-    syncCollectionFilter();
-  });
-  $("inventory-rarity")?.addEventListener("change", (e) => {
-    collectionRarity = e.target.value;
-    const coll = $("collection-rarity");
-    if (coll) coll.value = collectionRarity;
     syncCollectionFilter();
   });
   $("collection-sort")?.addEventListener("change", (e) => {
     collectionSort = e.target.value;
-    const inv = $("inventory-sort");
-    if (inv) inv.value = collectionSort;
-    syncCollectionFilter();
-  });
-  $("inventory-sort")?.addEventListener("change", (e) => {
-    collectionSort = e.target.value;
-    const coll = $("collection-sort");
-    if (coll) coll.value = collectionSort;
     syncCollectionFilter();
   });
 
