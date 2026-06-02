@@ -1046,26 +1046,41 @@ function openAdventurePrebattle(levelId) {
 }
 
 function startAdventureMatch() {
-  closeAdventurePrebattle();
   const deckId = $("adventure-deck-select")?.value;
   const deck = profile.decks.find((d) => d.id === deckId);
-  const level = selectedAdventureLevel ? getLevel(selectedAdventureLevel) : null;
-  if (!deck || deck.cardIds.length !== DECK_SIZE || !level || !pendingEnemyDeck) return;
+  const levelId = selectedAdventureLevel;
+  const level = levelId ? getLevel(levelId) : null;
+  const enemyDeck = pendingEnemyDeck ? [...pendingEnemyDeck] : null;
+
+  if (!deck || deck.cardIds.length !== DECK_SIZE || !level || !enemyDeck?.length) {
+    const opponent = $("prebattle-opponent");
+    if (opponent) {
+      if (!deck || deck.cardIds.length !== DECK_SIZE) {
+        opponent.textContent = "Build a complete 30-card deck in the Decks tab, then try again.";
+      } else {
+        opponent.textContent = "Could not start battle — close and pick the stage again.";
+      }
+    }
+    return;
+  }
 
   const opponentName = level.opponent;
-  $("view-play").classList.add("hidden");
-  $("view-match").classList.remove("hidden");
+  closeAdventurePrebattle();
+  pendingEnemyDeck = null;
+
+  document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
+  $("view-match")?.classList.remove("hidden");
   const root = $("view-match");
+  if (!root) return;
   root.innerHTML = getMatchHtml(opponentName);
 
-  const levelId = selectedAdventureLevel;
   matchSession = new MatchSession(
     deck.cardIds,
     root,
     () => {
       matchSession = null;
       root.innerHTML = "";
-      $("view-match").classList.add("hidden");
+      $("view-match")?.classList.add("hidden");
       showTab("play");
     },
     (stars) => {
@@ -1078,7 +1093,7 @@ function startAdventureMatch() {
         starsGained,
       };
     },
-    { aiDeckIds: [...pendingEnemyDeck], opponentName, cosmetics: getEquippedCosmetics(profile) }
+    { aiDeckIds: enemyDeck, opponentName, cosmetics: getEquippedCosmetics(profile) }
   );
 
   matchSession.setMessage("Drag a spell onto the board or tap a card, then pick highlighted squares.");
