@@ -199,7 +199,13 @@ function showTab(tab) {
 
 function renderProfile() {
   const root = $("view-profile");
-  renderProfileTab(profile, root, { onGemsChange: updateGemHeader });
+  renderProfileTab(profile, root, {
+    onGemsChange: updateGemHeader,
+    onUsernameChanged: (name) => {
+      const authBtn = document.getElementById("auth-header-btn");
+      if (authBtn && name) authBtn.textContent = name;
+    },
+  });
 }
 
 function updateCurrencyHeader() {
