@@ -120,7 +120,21 @@ function specialPickCombos(state, card, limit = 64) {
     for (const [r, c] of DARK) {
       const p = at(state, r, c);
       if (!p || p.color !== COLOR) continue;
-      for (const dest of getBackstepTarget(state.board, p)) combos.push([[r, c], dest]);
+      for (const dest of getBackstepTarget(state.board, p, state)) combos.push([[r, c], dest]);
+    }
+    return combos.slice(0, limit);
+  }
+  if (card.id === "fusion") {
+    const combos = [];
+    for (const [r, c] of DARK) {
+      const p = at(state, r, c);
+      if (!p || p.color !== COLOR || p.king) continue;
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        if (!dr && !dc) continue;
+        const nr = r + dr, nc = c + dc;
+        const q = at(state, nr, nc);
+        if (q && q.color === COLOR && !q.king) combos.push([[r, c], [nr, nc]]);
+      }
     }
     return combos.slice(0, limit);
   }

@@ -122,7 +122,7 @@ export function getValidTargets(state, color, card, picks) {
           [pr, pc - 1],
           [pr, pc + 1],
         ].filter(([r, c]) => emptyDark(state, r, c));
-      if (card.effect === "backstep") return getBackstepTarget(state.board, p);
+      if (card.effect === "backstep") return getBackstepTarget(state.board, p, state);
       if (card.effect === "leapfrog" || card.effect === "phase_walk") {
         return getLeapfrogTargets(state.board, p, color).filter(([r, c]) => emptyDark(state, r, c));
       }
