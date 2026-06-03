@@ -29,8 +29,8 @@ const ID_TO_CATEGORY = {
   call_forward: "movement",
   chain_lightning: "attack",
   clone: "special",
-  coin_flip: "special",
-  collapse: "trap",
+  coin_flip: "attack",
+  collapse: "special",
   confusion: "control",
   constitution: "special",
   counterspell: "trap",
@@ -45,7 +45,7 @@ const ID_TO_CATEGORY = {
   dominion: "special",
   double: "special",
   duel: "attack",
-  earthquake: "movement",
+  earthquake: "special",
   execution: "attack",
   fireblast: "attack",
   fog: "defense",
@@ -66,7 +66,7 @@ const ID_TO_CATEGORY = {
   offering: "special",
   overrun: "movement",
   panic: "control",
-  poison: "control",
+  poison: "attack",
   possession: "special",
   press: "control",
   promote_zone: "movement",
@@ -108,7 +108,7 @@ export function getCardCategory(def) {
   if (mapped) return mapped;
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
-  if (/trap|mine|quicksand|counterspell|darkness|collapse/.test(blob)) return "trap";
+  if (/trap|mine|quicksand|counterspell|darkness/.test(blob)) return "trap";
   if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|vengeance|hibernation|fog|rally/.test(blob)) {
     return "defense";
   }
