@@ -3749,6 +3749,15 @@ body.chest-open-active {
   padding-bottom: 1.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
+.profile-change-username-btn {
+  margin-bottom: 0.25rem;
+}
+.profile-username-editor {
+  margin-top: 0.5rem;
+}
+.profile-username-editor .profile-section-title {
+  margin-top: 0;
+}
 .profile-account__email {
   margin: 0 0 0.75rem;
   font-size: 0.9rem;

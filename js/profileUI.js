@@ -142,25 +142,30 @@ function accountSectionHtml({ signedIn, username, email }) {
   }
   return `
     <div class="profile-account">
-      <h3 class="profile-section-title">Account</h3>
-      <p class="profile-account__email muted">${escapeHtml(email)}</p>
-      <label class="label-sm" for="profile-username">Username</label>
-      <div class="profile-username-row">
-        <input
-          type="text"
-          id="profile-username"
-          class="input-text"
-          autocomplete="username"
-          minlength="3"
-          maxlength="24"
-          pattern="[A-Za-z0-9_]{3,24}"
-          value="${escapeHtml(username)}"
-          placeholder="Your in-game name"
-        />
-        <button type="button" class="btn-primary" id="profile-username-save">Save</button>
+      <button type="button" class="btn-secondary profile-change-username-btn" id="profile-change-username-btn">
+        Change username
+      </button>
+      <div id="profile-username-editor" class="profile-username-editor hidden" hidden>
+        <h3 class="profile-section-title">Account</h3>
+        <p class="profile-account__email muted">${escapeHtml(email)}</p>
+        <label class="label-sm" for="profile-username">Username</label>
+        <div class="profile-username-row">
+          <input
+            type="text"
+            id="profile-username"
+            class="input-text"
+            autocomplete="username"
+            minlength="3"
+            maxlength="24"
+            pattern="[A-Za-z0-9_]{3,24}"
+            value="${escapeHtml(username)}"
+            placeholder="Your in-game name"
+          />
+          <button type="button" class="btn-primary" id="profile-username-save">Save</button>
+        </div>
+        <p id="profile-username-hint" class="auth-username-hint" aria-live="polite"></p>
+        <p id="profile-username-status" class="profile-username-status" role="status"></p>
       </div>
-      <p id="profile-username-hint" class="auth-username-hint" aria-live="polite"></p>
-      <p id="profile-username-status" class="profile-username-status" role="status"></p>
     </div>`;
 }
 
@@ -255,6 +260,17 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   renderGrid();
 
   if (!signedIn) return;
+
+  const changeUsernameBtn = root.querySelector("#profile-change-username-btn");
+  const usernameEditor = root.querySelector("#profile-username-editor");
+  changeUsernameBtn?.addEventListener("click", () => {
+    if (!usernameEditor) return;
+    usernameEditor.classList.remove("hidden");
+    usernameEditor.hidden = false;
+    changeUsernameBtn.classList.add("hidden");
+    changeUsernameBtn.hidden = true;
+    root.querySelector("#profile-username")?.focus();
+  });
 
   const usernameInput = root.querySelector("#profile-username");
   const usernameHint = root.querySelector("#profile-username-hint");
