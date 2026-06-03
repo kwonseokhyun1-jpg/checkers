@@ -101,6 +101,43 @@ export class PvpService {
     throw new Error("Could not create room — try again");
   }
 
+  async listOpenRooms() {
+    const sb = getSupabase();
+    const user = getCurrentUser();
+    if (!sb || !user) return [];
+
+    const { data, error } = await sb
+      .from("pvp_matches")
+      .select("id, host_id, host_display_name, created_at, status, guest_id")
+      .eq("status", "waiting")
+      .is("guest_id", null)
+      .order("created_at", { ascending: false })
+      .limit(30);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async joinRoomById(matchId, guestDeckIds, displayName) {
+    const sb = getSupabase();
+    const user = getCurrentUser();
+    if (!sb || !user) throw new Error("Sign in to play PvP");
+
+    const { data: row, error: findErr } = await sb
+      .from("pvp_matches")
+      .select("*")
+      .eq("id", matchId)
+      .eq("status", "waiting")
+      .is("guest_id", null)
+      .maybeSingle();
+
+    if (findErr) throw findErr;
+    if (!row) throw new Error("That room is no longer available.");
+    if (row.host_id === user.id) throw new Error("You cannot join your own room");
+
+    return this.joinWaitingRow(row, guestDeckIds, displayName);
+  }
+
   async joinRoom(code, guestDeckIds, displayName) {
     const sb = getSupabase();
     const user = getCurrentUser();
@@ -157,6 +194,56 @@ export class PvpService {
       data = updated;
     }
 
+    return this.finalizeGuestJoin(data, guestDeckIds);
+  }
+
+  async joinWaitingRow(row, guestDeckIds, displayName) {
+    const sb = getSupabase();
+    const user = getCurrentUser();
+    if (!sb || !user) throw new Error("Sign in to play PvP");
+
+    if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
+      throw new Error("Select a valid 30-card deck first");
+    }
+
+    const rpc = await sb.rpc("pvp_join_by_code", {
+      room_code: row.code,
+      guest_deck_ids: guestDeckIds,
+      guest_display_name: displayName,
+      state_json: null,
+    });
+
+    let data = null;
+    if (!rpc.error && rpc.data) {
+      data = rpc.data;
+    } else if (rpc.error && !isMissingRpc(rpc.error)) {
+      throw rpc.error;
+    } else {
+      const { data: updated, error } = await sb
+        .from("pvp_matches")
+        .update({
+          guest_id: user.id,
+          guest_deck_ids: guestDeckIds,
+          guest_display_name: displayName,
+          status: "active",
+          turn: COLORS.RED,
+          version: 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id)
+        .eq("status", "waiting")
+        .select()
+        .single();
+
+      if (error) throw error;
+      data = updated;
+    }
+
+    return this.finalizeGuestJoin(data, guestDeckIds);
+  }
+
+  async finalizeGuestJoin(data, guestDeckIds) {
+    const sb = getSupabase();
     const state = createMatchState(data.host_deck_ids, guestDeckIds);
     state.turn = COLORS.RED;
     const stateJson = serializeMatchState(state);
@@ -181,30 +268,6 @@ export class PvpService {
     this.localColor = COLORS.BLACK;
     this.subscribe(data.id);
     return data;
-  }
-
-  async findQuickMatch(deckIds, displayName) {
-    const sb = getSupabase();
-    const user = getCurrentUser();
-    if (!sb || !user) throw new Error("Sign in to play PvP");
-
-    const rpcOpen = await sb.rpc("pvp_find_waiting_room");
-    if (!rpcOpen.error && rpcOpen.data) {
-      return this.joinRoom(rpcOpen.data, deckIds, displayName);
-    }
-
-    const { data: open } = await sb
-      .from("pvp_matches")
-      .select("*")
-      .eq("status", "waiting")
-      .is("guest_id", null)
-      .neq("host_id", user.id)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-
-    if (open) return this.joinRoom(open.code, deckIds, displayName);
-    return this.createRoom(deckIds, displayName);
   }
 
   subscribe(matchId) {
@@ -302,6 +365,25 @@ export class PvpService {
     await sb.from("pvp_matches").delete().eq("id", this.matchId).eq("host_id", user.id).eq("status", "waiting");
     this.dispose();
   }
+}
+
+/** Live updates for the open-rooms list in the PvP lobby. */
+export function subscribeOpenRooms(onChange) {
+  const sb = getSupabase();
+  if (!sb) return () => {};
+
+  const channel = sb
+    .channel("pvp-open-rooms")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "pvp_matches" },
+      () => onChange?.()
+    )
+    .subscribe();
+
+  return () => {
+    sb.removeChannel(channel);
+  };
 }
 
 export async function probePvpBackend() {
