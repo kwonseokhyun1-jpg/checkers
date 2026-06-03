@@ -19,9 +19,9 @@
   --shadow-glow: none;
   --radius: 8px;
   --radius-sm: 6px;
-  --font-display: "DM Sans", system-ui, sans-serif;
-  --font-heading: "DM Sans", system-ui, sans-serif;
-  --font-body: "DM Sans", system-ui, sans-serif;
+  --font-display: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 body {
@@ -349,4 +349,131 @@ body {
 
 .auth-modal-dialog {
   border: 1px solid #4a4845;
+}
+
+.ambient-bg {
+  background: var(--bg-deep);
+}
+
+.game-panel {
+  box-shadow: none;
+}
+
+.tab-btn.active {
+  box-shadow: none;
+}
+
+.tab-btn__icon {
+  display: none;
+}
+
+.game-nav__btn {
+  font-weight: 600;
+}
+
+.deck-list-item:hover {
+  background: #403d39;
+  transform: none;
+}
+
+.spell-card__frame {
+  background: var(--bg-panel-elevated);
+  box-shadow: none;
+}
+
+.spell-card:not(.disabled):hover .spell-card__frame {
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  transform: none;
+}
+
+.spell-card__art {
+  background: #302e2b;
+}
+
+.spell-card__art-shine {
+  display: none;
+}
+
+.spell-card__meta {
+  color: var(--text-muted);
+}
+
+.chest-card {
+  box-shadow: none;
+}
+
+.chest-card__aura {
+  display: none;
+}
+
+.chest-card:hover:not(.chest-card--locked) {
+  transform: none;
+  box-shadow: inset 0 0 0 1px rgba(129, 182, 76, 0.35);
+}
+
+.chest-card__btn,
+.chest-card--gold .chest-card__btn:not(:disabled) {
+  background: var(--accent-primary);
+  box-shadow: none;
+}
+
+.vault-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.vault-tab.active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #4a4845;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.mystery-box__glow {
+  display: none;
+}
+
+.mystery-box {
+  box-shadow: none;
+}
+
+.input-text:focus,
+.select-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(129, 182, 76, 0.25);
+  outline: none;
+}
+
+.auth-modal-dialog {
+  background: var(--bg-panel);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.view-panel {
+  animation: none;
+}
+
+.hud-gems__value,
+.hud-stars__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.hud-gems__label,
+.hud-stars__label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.logo-mark__spark {
+  display: none;
+}
+
+.game-header__title {
+  letter-spacing: -0.02em;
 }

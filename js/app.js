@@ -1292,9 +1292,13 @@ function init() {
     modal: authModal,
     onSignedIn: () => {
       profile = loadProfile();
+      repairProfile(profile);
       updateCurrencyHeader();
       renderDeckList();
+      renderMysteryBox();
+      renderProfile();
       pvpController?.render();
+      showTab(activeTab);
     },
   });
 
@@ -1310,12 +1314,13 @@ function init() {
         const cloud = await pullCloudProfile();
         if (cloud) profile = cloud;
       } catch (e) {
-        console.warn(e);
+        console.warn("Cloud sync on load failed", e);
       }
       repairProfile(profile);
-      saveProfile(profile);
       updateCurrencyHeader();
       renderDeckList();
+      renderMysteryBox();
+      pvpController?.render();
     }
   });
 
