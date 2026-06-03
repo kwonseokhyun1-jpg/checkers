@@ -17,11 +17,12 @@ begin
   fallback_username := 'player_' || left(replace(new.id::text, '-', ''), 8);
 
   begin
-    insert into public.profiles (id, display_name, username)
+    insert into public.profiles (id, display_name, username, profile_json)
     values (
       new.id,
       coalesce(desired_display, split_part(coalesce(new.email, ''), '@', 1)),
-      coalesce(desired_username, fallback_username)
+      coalesce(desired_username, fallback_username),
+      jsonb_build_object('loginEmail', lower(coalesce(new.email, '')))
     );
   exception
     when unique_violation then

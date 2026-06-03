@@ -2,6 +2,7 @@ import { getSupabase, isSupabaseConfigured } from "./supabaseClient.js";
 
 /** @type {import('@supabase/supabase-js').User | null} */
 let currentUser = null;
+let authListenerBound = false;
 const listeners = new Set();
 
 export function isAuthAvailable() {
@@ -29,10 +30,13 @@ export async function initAuth() {
   currentUser = data.session?.user ?? null;
   notify();
 
-  sb.auth.onAuthStateChange((_event, session) => {
-    currentUser = session?.user ?? null;
-    notify();
-  });
+  if (!authListenerBound) {
+    authListenerBound = true;
+    sb.auth.onAuthStateChange((_event, session) => {
+      currentUser = session?.user ?? null;
+      notify();
+    });
+  }
 
   return currentUser;
 }
@@ -142,9 +146,20 @@ export async function resolveLoginEmail(identifier) {
   const fromProfile = await resolveLoginEmailFromProfile(trimmed);
   if (fromProfile) return fromProfile;
 
+  const { data: knownUser } = await sb
+    .from("profiles")
+    .select("id")
+    .ilike("username", trimmed)
+    .maybeSingle();
+  if (knownUser?.id) {
+    throw new Error(
+      "That username exists — sign in with your email address once. After that, username sign-in will work."
+    );
+  }
+
   if (error && isMissingRpcError(error)) {
     throw new Error(
-      "Unknown username. Sign in with your email once, or ask the host to run supabase/schema.sql in the Supabase SQL Editor."
+      "Unknown username. Sign in with your email address, or ask the host to run supabase/backfill_login_emails.sql in Supabase."
     );
   }
 

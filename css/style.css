@@ -4209,7 +4209,7 @@ body.chest-open-active {
 .auth-modal {
   position: fixed;
   inset: 0;
-  z-index: 400;
+  z-index: 500;
   display: flex;
   align-items: center;
   justify-content: center;

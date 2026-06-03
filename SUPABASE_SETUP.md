@@ -10,6 +10,8 @@ Dashboard: https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/
 
 This creates `profiles` and `pvp_matches` tables, RLS policies, and enables Realtime on `pvp_matches`.
 
+Run `supabase/backfill_login_emails.sql` once so username sign-in works for existing accounts.
+
 If sign-up shows **"Database error saving new user"**, run `supabase/fix_signup_trigger.sql` in the same SQL Editor (updates the auth trigger and username check RPC).
 
 ## 2. Enable Email auth
