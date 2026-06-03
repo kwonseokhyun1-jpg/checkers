@@ -1,0 +1,428 @@
+/* Deck editor — mobile-first: sticky deck summary + scrollable collection */
+
+.deck-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.deck-editor__top {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background: var(--bg-deep);
+  border-bottom: 1px solid #4a4845;
+  padding-bottom: 0.5rem;
+  margin: 0 -0.25rem;
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
+}
+
+.deck-editor__toolbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+}
+
+.deck-editor__back {
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.deck-editor__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.deck-editor__name {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.deck-editor__count {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  background: #302e2b;
+  border: 1px solid #4a4845;
+  color: var(--text-muted);
+}
+
+.deck-editor__count--ready {
+  color: var(--accent-primary);
+  border-color: rgba(129, 182, 76, 0.45);
+  background: rgba(129, 182, 76, 0.12);
+}
+
+.deck-editor__save {
+  min-height: 2.5rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.deck-editor__status {
+  padding: 0 0 0.35rem;
+}
+
+.deck-editor__status .deck-progress-bar {
+  height: 4px;
+  margin-bottom: 0.25rem;
+}
+
+.deck-editor__status .deck-progress-fill {
+  background: var(--accent-primary);
+}
+
+.deck-editor__status .deck-status {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.deck-editor__deck-zone {
+  padding-top: 0.15rem;
+}
+
+.deck-editor__deck-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.deck-editor__deck-label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.deck-editor__deck-tools {
+  display: flex;
+  gap: 0.65rem;
+}
+
+.deck-editor__tool {
+  margin: 0;
+  padding: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.deck-editor__tool--danger {
+  color: #e85d5d;
+}
+
+.deck-editor__strip {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.15rem 0 0.35rem;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+
+.deck-editor__strip-empty {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  background: var(--bg-panel);
+  border: 1px dashed #4a4845;
+  border-radius: 8px;
+  width: 100%;
+  text-align: center;
+}
+
+.deck-slot-wrap--strip {
+  position: relative;
+  flex: 0 0 108px;
+  scroll-snap-align: start;
+}
+
+.deck-slot-wrap--strip .spell-card {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.deck-slot-wrap--strip .spell-card__frame {
+  box-shadow: none;
+}
+
+.deck-slot-wrap--strip .spell-card__art {
+  height: 64px;
+}
+
+.deck-slot-wrap--strip .spell-card__name {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  -webkit-line-clamp: 2;
+}
+
+.deck-slot-wrap--strip .spell-card__desc {
+  display: none;
+}
+
+.deck-slot-wrap--strip .spell-card__meta {
+  font-size: 0.65rem;
+  margin: 0;
+}
+
+.deck-slot-remove--visible {
+  opacity: 1;
+  top: 4px;
+  right: 4px;
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.95rem;
+  background: rgba(30, 28, 26, 0.92);
+  border: 1px solid #4a4845;
+  color: #e85d5d;
+}
+
+/* Collection area — main scroll content */
+.deck-editor__collection {
+  flex: 1;
+  padding-top: 0.75rem;
+}
+
+.deck-editor__collection-head {
+  margin-bottom: 0.65rem;
+}
+
+.deck-editor__collection-title {
+  margin: 0 0 0.2rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.deck-editor__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.deck-editor__hint strong {
+  color: var(--accent-primary);
+  font-weight: 600;
+}
+
+.deck-editor__filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.65rem;
+}
+
+.deck-editor__search {
+  flex: 1;
+  min-height: 2.5rem;
+  font-size: 0.9rem;
+}
+
+.deck-editor__filter-toggle {
+  flex-shrink: 0;
+  min-height: 2.5rem;
+  padding: 0 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.deck-editor__filter-toggle--active {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.deck-editor__filters-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem;
+  background: var(--bg-panel);
+  border: 1px solid #4a4845;
+  border-radius: 8px;
+}
+
+.deck-editor__filters-panel .filter-check {
+  grid-column: 1 / -1;
+}
+
+.deck-editor__filters-panel .filter-reset-btn {
+  grid-column: 1 / -1;
+  min-height: 2.25rem;
+}
+
+.deck-editor__grid.collection-grid,
+.deck-editor__grid .collection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+  max-height: none;
+  overflow: visible;
+}
+
+.deck-editor__grid.collection-categories,
+.deck-editor__grid .collection-categories {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.deck-editor__grid .collection-category-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-primary);
+}
+
+/* Collection card — readable 2-col tiles */
+.collection-card-wrap--edit {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  border: 1px solid #4a4845;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.collection-card-wrap--edit .spell-card {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  box-shadow: none;
+}
+
+.collection-card-wrap--edit .spell-card__frame {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.collection-card-wrap--edit .spell-card__art {
+  height: 72px;
+}
+
+.collection-card-wrap--edit .spell-card__name {
+  font-size: 0.78rem;
+}
+
+.collection-card-wrap--edit .spell-card__desc {
+  font-size: 0.68rem;
+  -webkit-line-clamp: 2;
+}
+
+.collection-card-wrap--edit .collection-owned-count {
+  top: 6px;
+  left: 6px;
+  font-size: 0.7rem;
+}
+
+.collection-card-wrap--edit .collection-buy-cost,
+.collection-card-wrap--edit .collection-buy-cost--btn {
+  bottom: 2.75rem;
+  right: 6px;
+  font-size: 0.65rem;
+}
+
+.btn-add-to-deck--bar {
+  position: static;
+  width: 100%;
+  height: auto;
+  min-height: 2.1rem;
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  border-top: 1px solid #4a4845;
+  background: rgba(129, 182, 76, 0.15);
+  color: var(--accent-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.btn-add-to-deck--bar:disabled {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+}
+
+.collection-card-wrap--edit .spell-card--deck-blocked {
+  opacity: 0.55;
+}
+
+/* Desktop — side by side */
+@media (min-width: 900px) {
+  .deck-editor {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    align-items: start;
+  }
+
+  .deck-editor__top {
+    position: sticky;
+    top: 0.5rem;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: start;
+    margin: 0;
+    padding: 1rem;
+    border: 1px solid #4a4845;
+    border-radius: 8px;
+    background: var(--bg-panel);
+  }
+
+  .deck-editor__strip {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+
+  .deck-slot-wrap--strip {
+    flex: 0 0 calc(50% - 0.25rem);
+  }
+
+  .deck-editor__collection {
+    grid-column: 2;
+    padding-top: 0;
+    border: 1px solid #4a4845;
+    border-radius: 8px;
+    background: var(--bg-panel);
+    padding: 1rem;
+  }
+
+  .deck-editor__grid .collection-grid,
+  .deck-editor__grid.collection-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+}
