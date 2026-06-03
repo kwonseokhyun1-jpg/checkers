@@ -243,6 +243,8 @@ function showDeckSubview(sub) {
     collectionCategory = "all";
     collectionOwnedOnly = true;
     syncCollectionFilterControls();
+    $("collection-filters-panel")?.classList.add("hidden");
+    $("btn-toggle-collection-filters")?.setAttribute("aria-expanded", "false");
   }
 
   if (sub === "list") renderDeckList();
@@ -536,11 +538,12 @@ function appendCollectionCard(parent, def, opts = {}) {
   }
 
   if (deckEdit) {
+    wrap.classList.add("collection-card-wrap--edit");
     const addBtn = document.createElement("button");
     addBtn.type = "button";
-    addBtn.className = "btn-add-to-deck";
+    addBtn.className = "btn-add-to-deck btn-add-to-deck--bar";
     addBtn.title = addCheck.ok ? "Add to deck" : addCheck.reason;
-    addBtn.textContent = "+";
+    addBtn.textContent = addCheck.ok ? "+ Add" : "Deck full";
     addBtn.disabled = !addCheck.ok;
     addBtn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -560,7 +563,7 @@ function renderInventoryGrid(container, opts = {}) {
 
   const cards = getFilteredCollection();
   if (!cards.length) {
-    container.className = "collection-grid";
+    container.className = "deck-editor__grid collection-grid";
     const empty = document.createElement("p");
     empty.className = "collection-grid-empty muted";
     empty.textContent = deckEdit
@@ -574,7 +577,7 @@ function renderInventoryGrid(container, opts = {}) {
   const cardOpts = { deckEdit, statusEl };
 
   if (collectionCategory === "all") {
-    container.className = "collection-categories";
+    container.className = "deck-editor__grid collection-categories";
     const byCategory = Object.fromEntries(CARD_CATEGORY_ORDER.map((cat) => [cat, []]));
     for (const def of cards) {
       byCategory[getCardCategory(def)].push(def);
@@ -593,7 +596,7 @@ function renderInventoryGrid(container, opts = {}) {
       section.appendChild(heading);
 
       const grid = document.createElement("div");
-      grid.className = "collection-grid";
+      grid.className = "collection-grid deck-editor__grid-cards";
       for (const def of group) {
         try {
           appendCollectionCard(grid, def, cardOpts);
@@ -606,7 +609,7 @@ function renderInventoryGrid(container, opts = {}) {
       container.appendChild(section);
     }
   } else {
-    container.className = "collection-grid";
+    container.className = "deck-editor__grid collection-grid";
     for (const def of cards) {
       try {
         appendCollectionCard(container, def, cardOpts);
@@ -618,7 +621,7 @@ function renderInventoryGrid(container, opts = {}) {
   }
 
   if (cards.length > 0 && rendered === 0) {
-    container.className = "collection-grid";
+    container.className = "deck-editor__grid collection-grid";
     const fail = document.createElement("p");
     fail.className = "collection-grid-empty collection-grid-empty--error";
     fail.textContent = "Spells failed to display. Hard refresh the page (Ctrl+Shift+R).";
@@ -704,65 +707,71 @@ function renderDeckEditor() {
   const deckEl = $("deck-slots");
   const status = $("deck-status");
   const heading = $("edit-deck-heading");
+  const countBadge = $("deck-count-badge");
+  const progressBar = $("deck-progress-bar");
   if (!collEl || !deckEl) return;
 
   if (heading) {
-    heading.textContent = editingDeckId === "new" ? "New deck" : "Edit deck";
+    heading.textContent = editingDeckId === "new" ? "New deck" : "In your deck";
   }
 
   const val = validateDeck(workingDeck, profile);
+  const countLabel = `${workingDeck.length}/${DECK_SIZE}`;
+  if (countBadge) {
+    countBadge.textContent = countLabel;
+    countBadge.classList.toggle("deck-editor__count--ready", val.valid);
+  }
   if (status) {
     status.textContent = val.valid
-      ? `Ready — ${workingDeck.length}/${DECK_SIZE} cards`
-      : val.errors[0] || `${workingDeck.length}/${DECK_SIZE} cards`;
+      ? `Ready to play — ${countLabel} cards`
+      : val.errors[0] || `${countLabel} — keep adding spells`;
     status.className = val.valid ? "deck-status ok" : "deck-status warn";
   }
 
   const progressFill = $("deck-progress-fill");
   const pct = Math.min(100, (workingDeck.length / DECK_SIZE) * 100);
   if (progressFill) progressFill.style.width = `${pct}%`;
+  if (progressBar) {
+    progressBar.setAttribute("aria-valuenow", String(workingDeck.length));
+    progressBar.setAttribute("aria-valuemax", String(DECK_SIZE));
+  }
 
   renderInventoryGrid(collEl, { deckEdit: true, statusEl: status });
 
   deckEl.innerHTML = "";
-  for (const { def, count } of getDeckStacks(workingDeck)) {
+  const stacks = getDeckStacks(workingDeck);
+  if (!stacks.length) {
+    const empty = document.createElement("p");
+    empty.className = "deck-editor__strip-empty";
+    empty.textContent = "No cards yet — add spells below";
+    deckEl.appendChild(empty);
+  }
+  for (const { def, count } of stacks) {
     const slot = document.createElement("div");
-    slot.className = "deck-slot-wrap";
+    slot.className = "deck-slot-wrap deck-slot-wrap--strip";
     const card = renderSpellCardEl(def, {
       button: true,
-      small: true,
+      compact: true,
+      meta: count > 1 ? `×${count}` : undefined,
       onClick: () => {
         showCardPreview(def, {
-          meta: count > 1 ? `×${count} in your deck` : "In your deck",
+          meta: count > 1 ? `${count} copies in deck` : "In your deck",
           onRemove: () => removeOneFromDeck(def.id),
         });
       },
     });
     slot.appendChild(card);
-    if (count > 1) {
-      const badge = document.createElement("span");
-      badge.className = "deck-stack-count";
-      badge.textContent = `×${count}`;
-      slot.appendChild(badge);
-    }
     const rem = document.createElement("button");
     rem.type = "button";
-    rem.className = "deck-slot-remove";
-    rem.setAttribute("aria-label", "Remove one copy from deck");
-    rem.textContent = "×";
+    rem.className = "deck-slot-remove deck-slot-remove--visible";
+    rem.setAttribute("aria-label", `Remove one ${def.name} from deck`);
+    rem.textContent = "−";
     rem.addEventListener("click", (e) => {
       e.stopPropagation();
       removeOneFromDeck(def.id);
     });
     slot.appendChild(rem);
     deckEl.appendChild(slot);
-  }
-  const openSlots = DECK_SIZE - workingDeck.length;
-  if (openSlots > 0) {
-    const hint = document.createElement("p");
-    hint.className = "deck-slots-open";
-    hint.textContent = openSlots === 1 ? "1 open slot" : `${openSlots} open slots`;
-    deckEl.appendChild(hint);
   }
 }
 
@@ -1274,6 +1283,14 @@ function init() {
     renderDeckEditor();
   });
   $("btn-auto-finish-deck")?.addEventListener("click", autoFinishDeck);
+  $("btn-toggle-collection-filters")?.addEventListener("click", () => {
+    const panel = $("collection-filters-panel");
+    const btn = $("btn-toggle-collection-filters");
+    const open = panel?.classList.toggle("hidden") === false;
+    btn?.setAttribute("aria-expanded", open ? "true" : "false");
+    btn?.classList.toggle("deck-editor__filter-toggle--active", open);
+  });
+
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
   $("btn-back-adventure")?.addEventListener("click", closeAdventurePrebattle);
   $("adventure-stage-backdrop")?.addEventListener("click", closeAdventurePrebattle);
