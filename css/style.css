@@ -4448,6 +4448,79 @@ body.chest-open-active {
   letter-spacing: 0.2em;
   color: var(--accent-gold);
 }
+.pvp-open-rooms {
+  margin-top: 1.25rem;
+}
+.pvp-open-rooms__title {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.pvp-open-rooms__hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted, #9aa3b2);
+}
+.pvp-open-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+.pvp-open-empty {
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--card-border);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--text-muted, #9aa3b2);
+}
+.pvp-open-empty--error { color: var(--accent-red); }
+.pvp-open-item--mine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--accent-gold);
+  border-radius: var(--radius-sm);
+  background: rgba(212, 175, 55, 0.08);
+}
+.pvp-open-item__label { font-weight: 600; }
+.pvp-open-item__meta {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--text-muted, #9aa3b2);
+}
+.pvp-open-join {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--card-bg, #1a2030);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pvp-open-join:hover {
+  border-color: var(--accent-gem);
+  background: rgba(80, 200, 180, 0.08);
+}
+.pvp-open-join__name { font-weight: 600; }
+.pvp-open-join__action {
+  font-size: 0.85rem;
+  color: var(--accent-gem);
+}
+.pvp-wait-hint strong { color: var(--accent-gold); }
 
 
 

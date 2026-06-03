@@ -43,7 +43,7 @@ In [Database → Publications](https://supabase.com/dashboard/project/xhoskftcrg
 |---------|-------------|
 | **Sign up / Sign in** | Header button; profile saved to `profiles.profile_json` |
 | **Cloud save** | Local profile syncs to Supabase when signed in |
-| **PvP tab** | Quick match, create room (6-letter code), or join by code |
+| **PvP tab** | Host an open room or join any room listed under Open rooms |
 | **1v1** | Host plays red, guest plays black; state synced via Realtime |
 
 ## GitHub Pages deploy
