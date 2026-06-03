@@ -24,8 +24,6 @@ export function createMatchMeta() {
     dominionTurn: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     prospectPending: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     constitutionTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
-    possessionId: null,
-    possessionController: null,
     mindControlId: null,
     mindControlController: null,
     forcedCapturePieceId: null,

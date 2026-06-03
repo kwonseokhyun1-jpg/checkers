@@ -665,25 +665,18 @@ export class MatchSession {
     const piece = s.board[row][col];
     if (piece) this.showPieceInfo(piece, row, col);
 
-    const possessed =
-      piece &&
-      s.meta.possessionId === piece.id &&
-      s.meta.possessionController === this.localColor &&
-      s.turn === this.localColor;
     const mindControlled =
       piece &&
       s.meta.mindControlId === piece.id &&
       s.meta.mindControlController === this.localColor &&
       s.turn === this.localColor;
-    if (piece && (piece.color === this.localColor || possessed || mindControlled)) {
+    if (piece && (piece.color === this.localColor || mindControlled)) {
       this.selectedSquare = [row, col];
-      if (mindControlled) {
-        this.validMoves = getMovesForMindControl(s.board, piece, this.localColor, s);
-      } else {
-        this.validMoves = getAllMovesForColor(s.board, piece.color, s).filter(
-          (m) => m.from[0] === row && m.from[1] === col
-        );
-      }
+      this.validMoves = mindControlled
+        ? getMovesForMindControl(s.board, piece, this.localColor, s)
+        : getAllMovesForColor(s.board, this.localColor, s).filter(
+            (m) => m.from[0] === row && m.from[1] === col
+          );
       if (!this.validMoves.length) {
         this.setMessage(
           piece.paralyzedTurns > 0
@@ -831,10 +824,6 @@ export class MatchSession {
     if (this.checkWin()) return;
     tickEndTurnEffects(this.state.board, this.localColor, this.state);
     tickMeta(this.state, this.localColor);
-    if (this.state.meta.possessionController === this.localColor) {
-      this.state.meta.possessionId = null;
-      this.state.meta.possessionController = null;
-    }
     if (this.state.meta.mindControlController === this.localColor) {
       this.state.meta.mindControlId = null;
       this.state.meta.mindControlController = null;
