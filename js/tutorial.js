@@ -3,15 +3,15 @@ const TUTORIAL_KEY = "arcane_checkers_tutorial_v1";
 const STEPS = [
   {
     title: "Welcome to Arcane Checkers",
-    body: "Build decks, cast spells, and capture every enemy piece. This quick tour covers cards and the Vault.",
+    body: "Build decks, cast spells, and capture every enemy piece. This quick tour covers cards and the shop.",
   },
   {
     title: "Playing spells in battle",
     body: "On your turn, drag a spell from your hand onto the board or tap highlighted squares. One spell per turn — then move a piece. Tap End spell phase to skip casting.",
   },
   {
-    title: "Opening the Vault",
-    body: "Earn gems from adventure wins. Open the Vault tab to buy spell chests with gems. New cards go to your collection for deck building.",
+    title: "Shop for cards",
+    body: "Earn gems from adventure wins. Open the Shop tab to buy spell chests with gems. New cards go to your collection for deck building.",
   },
   {
     title: "Save your progress",

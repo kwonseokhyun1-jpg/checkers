@@ -97,7 +97,7 @@ const WORLD_FLAVOR = {
   ],
   2: [
     "Frozen bridge", "Ice cathedral", "Glacier pass", "Snowfield duel", "Frost mine",
-    "Permafrost gate", "Blizzard span", "Shiver keep", "Hoarfrost vault", "Aurora cliff",
+    "Permafrost gate", "Blizzard span", "Shiver keep", "Hoarfrost gate", "Aurora cliff",
   ],
   3: [
     "Volcanic flats", "Magma shrine", "Ash citadel", "Cinder quarry", "Ember hall",
@@ -109,7 +109,7 @@ const WORLD_FLAVOR = {
   ],
   5: [
     "Epic crucible I", "Epic crucible II", "Legend approach", "Legend gauntlet", "Sovereign path",
-    "Mythic stair", "Crown bridge", "Final reliquary", "Sundered apex", "Legend's End",
+    "Mythic stair", "Crown bridge", "Final stage", "Sundered apex", "Legend's End",
   ],
 };
 

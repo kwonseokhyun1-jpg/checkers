@@ -262,7 +262,7 @@ function renderMysteryBox() {
       <div class="mystery-box__glow" aria-hidden="true"></div>
       <div class="mystery-box__icon" aria-hidden="true">?</div>
       <h3 class="mystery-box__title">Mystery Box</h3>
-      <p class="mystery-box__desc">Random spell reliquary <em>or</em> cosmetic vanity — tier odds match the Vault.</p>
+      <p class="mystery-box__desc">Random spell cards or cosmetics — same tier odds as the shop chests.</p>
       <p class="mystery-box__cost"><span aria-hidden="true">★</span> ${MYSTERY_BOX_COST} stars</p>
       <button type="button" class="btn-primary" id="btn-open-mystery" ${canAfford ? "" : "disabled"}>
         ${canAfford ? "Open mystery box" : "Need more stars"}
@@ -317,8 +317,8 @@ function renderChests() {
       chest.id === "gold"
         ? "Epic & rare focus"
         : chest.id === "silver"
-          ? "Balanced arcane haul"
-          : "Starter spell tide";
+          ? "Balanced card mix"
+          : "Mostly common cards";
 
     card.innerHTML = `
       <div class="chest-card__aura" aria-hidden="true"></div>
@@ -337,7 +337,7 @@ function renderChests() {
         </p>
       </div>
       <button type="button" class="btn-primary chest-open chest-card__btn" data-id="${chest.id}">
-        ${canAfford ? "Unseal" : "Need more gems"}
+        ${canAfford ? "Open" : "Need more gems"}
       </button>
     `;
 
@@ -366,14 +366,14 @@ function renderChests() {
       });
 
       if (log) {
-        log.textContent = `The ${tier.label} yields ${res.pulls.length} new spells!`;
+        log.textContent = `Got ${res.pulls.length} new cards from ${chest.name}.`;
         log.classList.remove("chest-log--error");
       }
 
       if (pullsEl) {
         pullsEl.classList.remove("chest-pulls--hidden");
         pullsEl.classList.add("chest-pulls--reveal");
-        pullsEl.innerHTML = `<p class="chest-pulls__label">Reliquary opened</p><div class="chest-pulls__grid"></div>`;
+        pullsEl.innerHTML = `<p class="chest-pulls__label">Chest opened</p><div class="chest-pulls__grid"></div>`;
         const grid = pullsEl.querySelector(".chest-pulls__grid");
         res.pulls.forEach((def, i) => {
           const pulled = renderSpellCardEl(def, {
@@ -568,7 +568,7 @@ function renderInventoryGrid(container, opts = {}) {
     empty.className = "collection-grid-empty muted";
     empty.textContent = deckEdit
       ? "No spells match your filters. Try “All categories”, clear search, or uncheck Owned only."
-      : "No cards match your filters. Open chests in the Vault to discover spells.";
+      : "No cards match your filters. Open chests in the Shop to get more spells.";
     container.appendChild(empty);
     return;
   }

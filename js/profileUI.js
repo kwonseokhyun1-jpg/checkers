@@ -81,7 +81,7 @@ export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOp
         </p>
       </div>
       <button type="button" class="btn-primary btn-open-cosmetic chest-card__btn" data-box="${box.id}">
-        ${canAfford ? "Unseal" : "Need more gems"}
+        ${canAfford ? "Open" : "Need more gems"}
       </button>`;
 
     const btn = el.querySelector(".btn-open-cosmetic");
@@ -122,8 +122,8 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
   root.innerHTML = `
     <section class="panel game-panel profile-panel">
       <header class="panel-head">
-        <h2 class="panel-head__title">Arcane Profile</h2>
-        <p class="panel-head__desc">Equip avatars, portrait frames, banners, and piece skins from your Vault unlocks.</p>
+        <h2 class="panel-head__title">Profile</h2>
+        <p class="panel-head__desc">Equip avatars, portrait frames, banners, and piece skins from the shop.</p>
       </header>
       <div class="profile-showcase">
         <div class="profile-showcase__banner" id="profile-banner-preview" style="background:${bannerStyleFor(cos.equipped.banner)}"></div>
@@ -184,7 +184,7 @@ export function renderProfileTab(profile, root, { onGemsChange } = {}) {
       grid.appendChild(card);
     }
     if (!owned.length) {
-      grid.innerHTML = '<p class="muted">Open cosmetic boxes in the Vault (Cards tab) to unlock items.</p>';
+      grid.innerHTML = '<p class="muted">Open cosmetic boxes in the Shop to unlock items.</p>';
     }
   };
 

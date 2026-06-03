@@ -54,12 +54,12 @@ export function playChestOpenAnimation({ tier, tierLabel, pulls }) {
           </div>
           <div class="chest-open-particles" aria-hidden="true"></div>
         </div>
-        <p class="chest-open-status">Unsealing…</p>
+        <p class="chest-open-status">Opening…</p>
         <div class="chest-open-cards" hidden>
-          <p class="chest-open-cards__title">Spells acquired</p>
+          <p class="chest-open-cards__title">You got</p>
           <div class="chest-open-cards__grid"></div>
         </div>
-        <button type="button" class="btn-primary chest-open-collect" disabled>Collect spells</button>
+        <button type="button" class="btn-primary chest-open-collect" disabled>Done</button>
       </div>
     `;
 
@@ -92,14 +92,14 @@ export function playChestOpenAnimation({ tier, tierLabel, pulls }) {
     (async () => {
       await delay(350);
       stage.dataset.phase = "rumble";
-      if (status) status.textContent = "The lock trembles…";
+      if (status) status.textContent = "Opening…";
       await delay(900);
 
       stage.dataset.phase = "open";
       overlay.classList.add("chest-open-overlay--burst");
       glow?.classList.add("chest-open-glow--on");
       spawnParticles(particleHost, tier);
-      if (status) status.textContent = "It bursts open!";
+      if (status) status.textContent = "Opened!";
       await delay(750);
 
       if (status) status.textContent = "";

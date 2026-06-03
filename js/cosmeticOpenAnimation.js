@@ -1,5 +1,5 @@
 /**
- * Fullscreen cosmetic box opening — same beats as spell reliquaries
+ * Fullscreen cosmetic box opening — same beats as spell chests
  */
 import { COSMETIC_BOX_TIERS, cosmeticBoxStageSvg, renderCosmeticRevealEl } from "./cosmeticArt.js";
 
@@ -52,12 +52,12 @@ export function playCosmeticOpenAnimation({ boxId, boxLabel, pulls }) {
           </div>
           <div class="chest-open-particles" aria-hidden="true"></div>
         </div>
-        <p class="chest-open-status">Unsealing…</p>
+        <p class="chest-open-status">Opening…</p>
         <div class="chest-open-cards cosmetic-open-reveals" hidden>
-          <p class="chest-open-cards__title">Cosmetics acquired</p>
+          <p class="chest-open-cards__title">You got</p>
           <div class="chest-open-cards__grid cosmetic-open-reveals__grid"></div>
         </div>
-        <button type="button" class="btn-primary chest-open-collect">Collect cosmetics</button>
+        <button type="button" class="btn-primary chest-open-collect">Done</button>
       </div>
     `;
 
@@ -90,14 +90,14 @@ export function playCosmeticOpenAnimation({ boxId, boxLabel, pulls }) {
     (async () => {
       await delay(350);
       stage.dataset.phase = "rumble";
-      if (status) status.textContent = "The vanity lock trembles…";
+      if (status) status.textContent = "Opening…";
       await delay(900);
 
       stage.dataset.phase = "open";
       overlay.classList.add("chest-open-overlay--burst");
       glow?.classList.add("chest-open-glow--on");
       spawnParticles(particleHost, visual);
-      if (status) status.textContent = "Styles burst forth!";
+      if (status) status.textContent = "Opened!";
       await delay(750);
 
       if (status) status.textContent = "";
