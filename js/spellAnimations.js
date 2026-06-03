@@ -62,14 +62,14 @@ const SWAP_EFFECTS = new Set([
 ]);
 
 const TERRAIN_EFFECTS = new Set([
-  "landmine", "barrier", "quicksand", "obstacle", "collapse", "sanctified",
+  "landmine", "barrier", "quicksand", "create_foe", "obstacle", "collapse", "sanctified",
 ]);
 
 const BUFF_EFFECTS = new Set([
   "shield_1", "shield_2", "retreat_3", "knight_perm", "crown", "rook_2", "bishop_2", "bishop_3",
   "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "mirror_shield", "phalanx",
   "last_stand", "ghost_guard", "fortify", "vengeance", "hibernation", "stall", "hunters_mark", "promote_zone", "revive",
-  "wraith_2", "stone_form", "rally", "fusion",
+  "wraith_2", "stone_form", "rally", "fusion", "create_foe",
 ]);
 
 const DEBUFF_EFFECTS = new Set([

@@ -29,13 +29,13 @@ export function boardFrameHtml() {
     `<button type="button" class="board-file-btn" data-col="${i}" aria-label="File ${f}" disabled>${f}</button>`;
   const fileLabelsTop = [...FILES].map((f) => `<span class="board-label">${f}</span>`).join("");
   const fileLabelsBottom = [...FILES].map((f, i) => fileBtn(f, i)).join("");
-  const rankLabels = Array.from({ length: SIZE }, (_, row) =>
-    `<span class="board-label">${SIZE - row}</span>`
-  ).join("");
+  const rankBtn = (row) =>
+    `<button type="button" class="board-rank-btn" data-row="${row}" aria-label="Rank ${SIZE - row}" disabled>${SIZE - row}</button>`;
+  const rankLabels = Array.from({ length: SIZE }, (_, row) => rankBtn(row)).join("");
   return `
     <div class="board-frame" id="board-frame">
       <div class="board-files board-files--top" aria-hidden="true">${fileLabelsTop}</div>
-      <div class="board-ranks" aria-hidden="true">${rankLabels}</div>
+      <div class="board-ranks" id="board-ranks-left">${rankLabels}</div>
       <div id="board" class="board" role="grid" aria-label="Checker board"></div>
       <div class="board-files board-files--bottom" id="board-files-bottom">${fileLabelsBottom}</div>
     </div>`;

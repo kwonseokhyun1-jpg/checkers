@@ -37,6 +37,7 @@ export function getCardHint(card) {
     any_piece: "Click any piece, then a second piece to copy.",
     any_square: "Click a square on the board.",
     column: "Tap a file letter (a–h) below the board.",
+    row: "Tap a rank number (1–8) beside the board.",
     e_e: "Click two enemy pieces to link their fate.",
     empty_empty: "Click two empty dark squares.",
     discard_pick: "Choose a card from your hand to discard.",
@@ -56,6 +57,43 @@ function emptyDark(state, r, c) {
   if (collapsedSquareKey(state.meta) === k) return false;
   if (state.squares[k]?.obstacle) return false;
   return isDarkSquare(r, c) && !at(state, r, c);
+}
+
+
+function fEmptyFirstPickTargets(state, color, card) {
+  const friends = getValidTargets(state, color, { mode: "friendly" }, []);
+  const filter = (hasDest) => friends.filter(([r, c]) => {
+    const piece = at(state, r, c);
+    return piece && hasDest(piece, r, c);
+  });
+  if (card.effect === "backstep") {
+    return filter((piece) => getBackstepTarget(state.board, piece, state).length > 0);
+  }
+  if (card.effect === "leapfrog" || card.effect === "phase_walk") {
+    return filter((piece) =>
+      getLeapfrogTargets(state.board, piece, color).some(([r, c]) => emptyDark(state, r, c))
+    );
+  }
+  if (card.effect === "recall") {
+    const rows = color === COLORS.RED ? [5, 6, 7] : [0, 1, 2];
+    const hasBackSpot = rows.some((r) => {
+      for (let c = 0; c < SIZE; c++) if (emptyDark(state, r, c)) return true;
+      return false;
+    });
+    return hasBackSpot ? friends : [];
+  }
+  if (card.effect === "long_step") {
+    return filter((piece, r, c) =>
+      [[r + 2, c + 2], [r + 2, c - 2], [r - 2, c + 2], [r - 2, c - 2]].some(([tr, tc]) => emptyDark(state, tr, tc))
+    );
+  }
+  if (card.effect === "blink_2" || card.effect === "teleport") {
+    return filter((piece) => getTeleportTargets(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
+  }
+  if (card.effect === "nudge" || card.effect === "sidestep") {
+    return filter((piece) => getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
+  }
+  return friends;
 }
 
 export function getValidTargets(state, color, card, picks) {
@@ -103,12 +141,15 @@ export function getValidTargets(state, color, card, picks) {
     case "column":
       for (let c = 0; c < SIZE; c++) res.push([3, c]);
       return res;
+    case "row":
+      for (let r = 0; r < SIZE; r++) res.push([r, 3]);
+      return res;
     case "any_square":
       for (let r = 0; r < SIZE; r++)
         for (let c = 0; c < SIZE; c++) if (inBounds(r, c)) res.push([r, c]);
       return res;
     case "f_empty": {
-      if (picks.length === 0) return getValidTargets(state, color, { mode: "friendly" }, []);
+      if (picks.length === 0) return fEmptyFirstPickTargets(state, color, card);
       const [pr, pc] = picks[0];
       const p = at(state, pr, pc);
       if (!p || p.color !== color) return [];
@@ -225,7 +266,7 @@ function* pickSequences(state, color, card, max = 24) {
     yield [];
     return;
   }
-  if (card.mode === "column") {
+  if (card.mode === "column" || card.mode === "row") {
     for (const p of t0.slice(0, max)) yield [p];
     return;
   }

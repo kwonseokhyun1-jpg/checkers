@@ -137,6 +137,7 @@ export class MatchSession {
     this.spellAnimation = null;
     this.boardFx = null;
     this.selectedColumn = null;
+    this.selectedRow = null;
     this.actionBusy = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.bindEls();
@@ -156,6 +157,14 @@ export class MatchSession {
       const col = Number(btn.dataset.col);
       if (Number.isNaN(col)) return;
       this.onColumnClick(col);
+    });
+    const ranks = this.root.querySelector("#board-ranks-left");
+    ranks?.addEventListener("click", (e) => {
+      const btn = e.target.closest(".board-rank-btn");
+      if (!btn || btn.disabled) return;
+      const row = Number(btn.dataset.row);
+      if (Number.isNaN(row)) return;
+      this.onRowClick(row);
     });
   }
 
@@ -297,7 +306,7 @@ export class MatchSession {
       hint.textContent =
         picks.length >= need
           ? base
-          : card.mode === "column"
+          : card.mode === "column" || card.mode === "row"
           ? `${base}`
           : `${base} (${step}/${need} — click a highlighted square or drop the card on it)`;
     }
@@ -311,6 +320,7 @@ export class MatchSession {
     this.validTargets = [];
     this.selectedSquare = null;
     this.selectedColumn = null;
+    this.selectedRow = null;
     this.endDrag();
     this.updateSpellCastUI();
     this.setMessage(msg || "Spell played (1 per turn).");
@@ -322,6 +332,7 @@ export class MatchSession {
     this.validTargets = [];
     this.selectedSquare = null;
     this.selectedColumn = null;
+    this.selectedRow = null;
     this.endDrag();
     this.updateSpellCastUI();
     this.setMessage("Spell cancelled.");
@@ -353,13 +364,16 @@ export class MatchSession {
     }
 
     this.selectedColumn = null;
+    this.selectedRow = null;
     this.cardPlay = { card, picks: [] };
     this.validTargets = targets;
     this.updateSpellCastUI();
     this.setMessage(
       card.mode === "column"
         ? `${card.name} — tap a file letter (a–h) below the board.`
-        : `${card.name} — drag to the board or tap highlighted squares.`
+        : card.mode === "row"
+          ? `${card.name} — tap a rank number (1–8) beside the board.`
+          : `${card.name} — drag to the board or tap highlighted squares.`
     );
     this.render();
   }
@@ -368,6 +382,27 @@ export class MatchSession {
     if (!this.cardPlay || this.cardPlay.card.mode !== "column") return;
     this.selectedColumn = col;
     this.onCardTargetClick(3, col);
+  }
+
+
+  onRowClick(row) {
+    if (!this.cardPlay || this.cardPlay.card.mode !== "row") return;
+    this.selectedRow = row;
+    this.onCardTargetClick(row, 3);
+  }
+
+  updateRowPickUI() {
+    const frame = this.root.querySelector("#board-frame");
+    const ranks = this.root.querySelector("#board-ranks-left");
+    const castingRow = this.cardPlay?.card?.mode === "row";
+    frame?.classList.toggle("row-pick", !!castingRow);
+    if (!ranks) return;
+    ranks.querySelectorAll(".board-rank-btn").forEach((btn) => {
+      const row = Number(btn.dataset.row);
+      btn.disabled = !castingRow;
+      btn.classList.toggle("is-target", !!castingRow);
+      btn.classList.toggle("is-active", castingRow && this.selectedRow === row);
+    });
   }
 
   updateColumnPickUI() {
@@ -623,6 +658,7 @@ export class MatchSession {
     setTimeout(() => {
       this.boardFx = null;
     this.selectedColumn = null;
+    this.selectedRow = null;
       frame?.classList.remove(`board-frame--fx-${kind}`, "board-frame--spell-impact");
       this.$("board")?.classList.remove("board--spell-shake");
       if (this.checkWin()) return;
@@ -835,6 +871,7 @@ ${starLine}`;
     this.spellAnimation = null;
     this.boardFx = null;
     this.selectedColumn = null;
+    this.selectedRow = null;
     removeSpellOverlay(overlay);
     board?.classList.remove("board--spell-shake");
     frame?.classList.remove("board-frame--spell-impact");
@@ -853,6 +890,7 @@ ${starLine}`;
     this.spellAnimation = null;
     this.boardFx = null;
     this.selectedColumn = null;
+    this.selectedRow = null;
     if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
   }
 
@@ -1159,6 +1197,7 @@ ${starLine}`;
     this.spellAnimation = null;
     this.boardFx = null;
     this.selectedColumn = null;
+    this.selectedRow = null;
     this.actionBusy = false;
         this.render();
       } else if (entry.type === "message") {
@@ -1278,8 +1317,26 @@ ${starLine}`;
         let cls = `square ${isDarkSquare(row, col) ? "dark" : "light"}`;
         if (terrain?.mine && !terrain?.hiddenMine) cls += " has-mine";
         if (terrain?.quicksand && !terrain?.hiddenQuicksand) cls += " has-quicksand";
+        if (terrain?.barrier?.turnsLeft > 0) cls += " has-barrier";
         if (isSquareCollapsed(s.meta, row, col)) cls += " square--collapsed";
         sq.className = cls;
+
+        if (terrain?.barrier?.turnsLeft > 0) {
+          const barrierEl = document.createElement("div");
+          barrierEl.className = "barrier-indicator";
+          barrierEl.setAttribute("aria-label", `Barrier — ${terrain.barrier.turnsLeft} turn${terrain.barrier.turnsLeft === 1 ? "" : "s"} left`);
+          const mark = document.createElement("span");
+          mark.className = "barrier-indicator__mark";
+          mark.textContent = "▮";
+          mark.setAttribute("aria-hidden", "true");
+          const turns = document.createElement("span");
+          turns.className = "barrier-indicator__turns";
+          turns.textContent = String(terrain.barrier.turnsLeft);
+          barrierEl.appendChild(mark);
+          barrierEl.appendChild(turns);
+          sq.appendChild(barrierEl);
+        }
+
 
         if (this.aiHighlight?.from?.[0] === row && this.aiHighlight?.from?.[1] === col) {
           sq.classList.add("ai-from");
@@ -1298,6 +1355,9 @@ ${starLine}`;
         if (this.selectedSquare?.[0] === row && this.selectedSquare?.[1] === col) sq.classList.add("selected");
         if (this.cardPlay?.card?.mode === "column" && this.selectedColumn === col) {
           sq.classList.add("column-highlight");
+        }
+        if (this.cardPlay?.card?.mode === "row" && this.selectedRow === row) {
+          sq.classList.add("row-highlight");
         }
         if (this.validTargets.some(([r, c]) => r === row && c === col)) {
           sq.classList.add("playable", "target", "spell-target");
@@ -1452,6 +1512,7 @@ ${starLine}`;
     if (endBtn) endBtn.disabled = s.turn !== this.localColor || s.phase !== PHASE.CARDS || !!s.gameOver;
     this.updateSpellCastUI();
     this.updateColumnPickUI();
+    this.updateRowPickUI();
     this.renderHand();
     this.renderBoard();
   }

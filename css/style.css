@@ -2581,7 +2581,6 @@ body.chest-open-active {
   grid-template-rows: repeat(8, 1fr);
   align-items: center;
   justify-items: center;
-  pointer-events: none;
   user-select: none;
 }
 
