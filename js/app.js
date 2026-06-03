@@ -248,53 +248,98 @@ function showDeckSubview(sub) {
 }
 
 
+async function handleOpenMysteryBox() {
+  const log = $("mystery-box-log");
+  const btn = $("btn-open-mystery");
+  const canAfford = (profile.stars ?? 0) >= MYSTERY_BOX_COST;
+  if (!canAfford) {
+    if (log) {
+      log.textContent = `Need ${MYSTERY_BOX_COST} ★ stars. Clear Adventure stages to earn stars.`;
+      log.classList.add("chest-log--error");
+    }
+    return;
+  }
+  if (btn?.disabled) return;
+
+  const res = openMysteryBox(profile);
+  if (!res.success) {
+    if (log) {
+      log.textContent = res.message;
+      log.classList.add("chest-log--error");
+    }
+    return;
+  }
+
+  saveProfile(profile);
+  updateCurrencyHeader();
+  if (btn) btn.disabled = true;
+  if (log) log.classList.remove("chest-log--error");
+
+  try {
+    if (res.kind === "card") {
+      await playChestOpenAnimation({
+        tier: res.tier.id,
+        tierLabel: `Mystery — ${res.tier.name}`,
+        pulls: res.pulls,
+      });
+      if (log) log.textContent = `Got ${res.pulls.length} spells from ${res.tier.name}.`;
+    } else {
+      await playCosmeticOpenAnimation({
+        boxId: res.tier?.id || "bronze",
+        boxLabel: "Mystery Box",
+        pulls: res.pulls,
+      });
+      if (log) {
+        log.textContent = res.message + (res.bonusGems ? ` (+${res.bonusGems} gem refund)` : "");
+      }
+    }
+  } catch (err) {
+    console.error("Mystery box animation failed:", err);
+    if (log) log.textContent = res.message;
+  }
+
+  renderChests({ clearPulls: false });
+  renderProfile();
+}
+
 function renderMysteryBox() {
   const root = $("mystery-box-card");
   if (!root) return;
   const canAfford = (profile.stars ?? 0) >= MYSTERY_BOX_COST;
   root.innerHTML = `
-    <article class="mystery-box ${canAfford ? "" : "mystery-box--locked"}">
+    <article class="mystery-box ${canAfford ? "mystery-box--ready" : "mystery-box--locked"}" role="button" tabindex="0" aria-label="Open mystery box for ${MYSTERY_BOX_COST} stars">
       <div class="mystery-box__glow" aria-hidden="true"></div>
       <div class="mystery-box__icon" aria-hidden="true">?</div>
       <h3 class="mystery-box__title">Mystery Box</h3>
       <p class="mystery-box__desc">Random spell cards or cosmetics — same tier odds as the shop chests.</p>
       <p class="mystery-box__cost"><span aria-hidden="true">★</span> ${MYSTERY_BOX_COST} stars</p>
-      <button type="button" class="btn-primary" id="btn-open-mystery" ${canAfford ? "" : "disabled"}>
+      <button type="button" class="btn-primary mystery-box__btn" id="btn-open-mystery" ${canAfford ? "" : "disabled"}>
         ${canAfford ? "Open mystery box" : "Need more stars"}
       </button>
     </article>`;
-  root.querySelector("#btn-open-mystery")?.addEventListener("click", async () => {
-    const log = $("mystery-box-log");
-    const res = openMysteryBox(profile);
-    if (!res.success) {
-      if (log) log.textContent = res.message;
-      return;
+
+  const open = () => handleOpenMysteryBox();
+  root.querySelector("#btn-open-mystery")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    open();
+  });
+  const card = root.querySelector(".mystery-box");
+  card?.addEventListener("click", open);
+  card?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      open();
     }
-    saveProfile(profile);
-    updateCurrencyHeader();
-    if (log) log.textContent = res.message;
-    if (res.kind === "card") {
-      const pullsEl = $("chest-pulls");
-      if (pullsEl) {
-        pullsEl.innerHTML = "";
-        pullsEl.classList.remove("chest-pulls--hidden");
-        for (const card of res.pulls) pullsEl.appendChild(renderSpellCardEl(card, { small: true }));
-      }
-    } else {
-      await playCosmeticOpenAnimation({ boxId: res.tier?.id || "bronze", boxLabel: "Mystery", pulls: res.pulls });
-    }
-    renderMysteryBox();
-    renderChests();
-    renderProfile();
   });
 }
 
-function renderChests() {
+function renderChests(options = {}) {
+  const { clearPulls = true } = options;
   renderMysteryBox();
   updateCurrencyHeader();
   const list = $("chest-list");
   const pullsEl = $("chest-pulls");
-  if (pullsEl) {
+  if (pullsEl && clearPulls) {
     pullsEl.innerHTML = "";
     pullsEl.classList.add("chest-pulls--hidden");
     pullsEl.classList.remove("chest-pulls--reveal");
@@ -705,7 +750,7 @@ function renderDeckList() {
       <div class="deck-row-info">
         <h3 class="deck-row-name">${deck.name}</h3>
         <p class="deck-status ${statusClass}">${deck.cardIds.length}/${DECK_SIZE} cards${val.valid ? " · Ready to play" : " · Incomplete"}</p>
-        <p class="deck-row-hint">Tap to edit</p>
+        <p class="deck-row-hint">Tap to view & edit</p>
       </div>
       <span class="deck-row-chevron" aria-hidden="true">›</span>
     `;
