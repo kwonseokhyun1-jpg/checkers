@@ -155,6 +155,7 @@ export const EFFECT_ILLUSTRATIONS = {
   last_king: () => wrap(`${piece(32, 36, 7)} ${crown(32, 20)} ${shield(32, 34, 0.65)}`),
   revive: () => wrap(`${ghost(32, 40)} ${arrow(32, 44, 32, 34)} ${piece(32, 28, 5, 0.7)}<path d="M24 48 H40" stroke="currentColor" stroke-width="1.5" opacity="0.35"/>`),
   possession: () => wrap(`${piece(18, 40, 4)} ${enemy(44, 28, 6)}<path d="M18 36 C28 30 38 28 44 28" stroke="currentColor" stroke-width="1.4" fill="none" stroke-dasharray="3 2"/>`),
+  mind_control: () => wrap(`${enemy(44, 30, 6)}<circle cx="32" cy="32" r="9" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.7"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.85"/><path d="M32 20 V26 M32 38 V44 M20 32 H26 M38 32 H44" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`),
   link_fate: () => wrap(`${enemy(22, 32, 5)} ${enemy(42, 32, 5)}<path d="M28 32 H36" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.6"/>`),
   hunters_mark: () => wrap(`${enemy(40, 26, 5)}<circle cx="40" cy="26" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M40 14 V18 M40 34 V38 M28 26 H32 M48 26 H52" stroke="currentColor" stroke-width="1.5"/>`),
   bishop_2: () => wrap(`${piece(32, 48, 5)}<path d="M32 44 L14 26 M32 44 L50 26" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/>`),

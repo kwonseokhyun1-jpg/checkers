@@ -417,7 +417,27 @@ const EFFECTS = {
   hand_expand(state, color, picks) { state.meta.handMax[color]=8; return ok(); },
   mulligan(state, color, picks) { const h=state.hands[color]; const n=h.length; h.length=0; for(let i=0;i<n;i++) h.push(createCardInstance(drawRandomCard())); return ok(); },
   hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
-  possession(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||p.king) return fail(); state.meta.possessionId=p.id; state.meta.possessionController=color; return ok('Possession — control that piece when you move this turn.'); },
+  possession(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color === color || p.king) return fail();
+    state.meta.mindControlId = null;
+    state.meta.mindControlController = null;
+    state.meta.possessionId = p.id;
+    state.meta.possessionController = color;
+    return ok("Possession — control that piece when you move this turn.");
+  },
+  mind_control(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color === color || p.king) return fail();
+    if (!enemyCardCanMove(p)) return fail("Anchored");
+    state.meta.possessionId = null;
+    state.meta.possessionController = null;
+    state.meta.mindControlId = p.id;
+    state.meta.mindControlController = color;
+    return ok("Mind Control — move and capture with that piece this turn.");
+  },
   identity_theft(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=3; return ok(); },
   call_forward(state, color, picks) {
     if (picks.length < 2) return fail();

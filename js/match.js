@@ -7,6 +7,7 @@ import {
   isDarkSquare,
   createInitialBoard,
   getAllMovesForColor,
+  getMovesForMindControl,
   applyMove,
   countPieces,
   tickEffects,
@@ -669,11 +670,20 @@ export class MatchSession {
       s.meta.possessionId === piece.id &&
       s.meta.possessionController === this.localColor &&
       s.turn === this.localColor;
-    if (piece && (piece.color === this.localColor || possessed)) {
+    const mindControlled =
+      piece &&
+      s.meta.mindControlId === piece.id &&
+      s.meta.mindControlController === this.localColor &&
+      s.turn === this.localColor;
+    if (piece && (piece.color === this.localColor || possessed || mindControlled)) {
       this.selectedSquare = [row, col];
-      this.validMoves = getAllMovesForColor(s.board, piece.color, s).filter(
-        (m) => m.from[0] === row && m.from[1] === col
-      );
+      if (mindControlled) {
+        this.validMoves = getMovesForMindControl(s.board, piece, this.localColor, s);
+      } else {
+        this.validMoves = getAllMovesForColor(s.board, piece.color, s).filter(
+          (m) => m.from[0] === row && m.from[1] === col
+        );
+      }
       if (!this.validMoves.length) {
         this.setMessage(
           piece.paralyzedTurns > 0
@@ -700,7 +710,16 @@ export class MatchSession {
   }
 
   continueMultiJump(fromR, fromC) {
-    const jumps = getAllMovesForColor(this.state.board, this.localColor, this.state).filter(
+    const s = this.state;
+    const piece = s.board[fromR]?.[fromC];
+    const mindControlled =
+      piece &&
+      s.meta.mindControlId === piece.id &&
+      s.meta.mindControlController === this.localColor;
+    const movePool = mindControlled
+      ? getMovesForMindControl(s.board, piece, this.localColor, s)
+      : getAllMovesForColor(s.board, this.localColor, s);
+    const jumps = movePool.filter(
       (m) => m.type === "jump" && m.from[0] === fromR && m.from[1] === fromC && m.captures?.length
     );
     if (!jumps.length) return false;
@@ -815,6 +834,10 @@ export class MatchSession {
     if (this.state.meta.possessionController === this.localColor) {
       this.state.meta.possessionId = null;
       this.state.meta.possessionController = null;
+    }
+    if (this.state.meta.mindControlController === this.localColor) {
+      this.state.meta.mindControlId = null;
+      this.state.meta.mindControlController = null;
     }
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
