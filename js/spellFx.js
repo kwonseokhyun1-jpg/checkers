@@ -306,6 +306,41 @@ export function revealCoinFlipResult(overlay, result = {}) {
   }
 }
 
+
+/** Animate coin from board center down onto a target square. */
+export function animateCoinDropToSquare(overlay, boardEl, row, col) {
+  return new Promise((resolve) => {
+    const stage = overlay?.querySelector(".spell-coin-stage");
+    const sq = boardEl?.querySelector(`.square[data-row="${row}"][data-col="${col}"]`);
+    if (!stage || !sq || !boardEl) {
+      resolve();
+      return;
+    }
+    const boardRect = boardEl.getBoundingClientRect();
+    const sqRect = sq.getBoundingClientRect();
+    const boardCx = boardRect.left + boardRect.width / 2;
+    const boardCy = boardRect.top + boardRect.height / 2;
+    const sqCx = sqRect.left + sqRect.width / 2;
+    const sqCy = sqRect.top + sqRect.height / 2;
+    stage.style.setProperty("--coin-drop-x", `${sqCx - boardCx}px`);
+    stage.style.setProperty("--coin-drop-y", `${sqCy - boardCy}px`);
+    const finish = () => {
+      stage.classList.remove("spell-coin-stage--dropping");
+      resolve();
+    };
+    const timer = setTimeout(finish, 750);
+    stage.addEventListener(
+      "transitionend",
+      () => {
+        clearTimeout(timer);
+        finish();
+      },
+      { once: true }
+    );
+    requestAnimationFrame(() => stage.classList.add("spell-coin-stage--dropping"));
+  });
+}
+
 export function removeSpellOverlay(el) {
   el?.remove();
 }

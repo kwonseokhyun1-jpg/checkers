@@ -412,7 +412,21 @@ const EFFECTS = {
   constitution(state, color, picks) { state.meta.constitutionTurns[color]=5; return ok(); },
   last_king(state, color, picks) { const ps=fri(state,color); if(ps.length!==1) return fail('Need exactly 1 piece'); const p=ps[0]; p.king=true; p.shieldTurns=2; return ok(); },
   succession(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); p.succession=true; return ok(); },
-  coin_flip(state, color, picks) { const pool=fri(state,color).concat(en(state,color)); if(!pool.length) return fail(); const t=pool[Math.floor(Math.random()*pool.length)]; const victimColor=t.color; kill(state,t.row,t.col,color); return ok("Coin flip!", { victimSquare: [t.row, t.col], victimColor }); },
+  coin_flip(state, color, picks) {
+    let t = null;
+    if (state.meta?.pendingCoinFlipSquare) {
+      const [r, c] = state.meta.pendingCoinFlipSquare;
+      state.meta.pendingCoinFlipSquare = null;
+      t = at(state, r, c);
+    }
+    if (!t) {
+      t = pickCoinFlipVictim(state, color);
+    }
+    if (!t) return fail();
+    const victimColor = t.color;
+    kill(state, t.row, t.col, color);
+    return ok("Coin flip!", { victimSquare: [t.row, t.col], victimColor });
+  },
   butterfly(state, color, picks) { const cells=[[3,2],[3,4],[4,3],[4,5]]; const pieces=cells.map(([r,c])=>at(state,r,c)).filter(Boolean); const spots=cells.filter(([r,c])=>!at(state,r,c)); let i=0; for(const p of pieces){ if(i>=spots.length) break; const [r,c]=spots[i++]; movePiece(state.board,p.row,p.col,r,c);} return ok(); },
   ignore(state, color, picks) { state.meta.optionalJumps[color]=true; return ok(); },
   pocket(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); state.meta.pocket={piece:p,r,c}; state.meta.pocketReturnTurn=state.meta.turnNumber+2; return ok(); },
@@ -425,6 +439,12 @@ const EFFECTS = {
   shield_bash(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||p.shieldTurns<=0) return fail(); if(!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r2+dr,c2+dc); if(t&&t.color!==color) kill(state,r2+dr,c2+dc,color);} return ok(); },
   gem_knight(state, color, picks) { if(state.gems[color]<5) return fail('Need 5 gems'); const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||!(p.knightTurns > 0 || p.isKnight)) return fail(); state.gems[color]-=5; p.shieldTurns=Math.max(p.shieldTurns,1); return ok(); },
 };
+
+export function pickCoinFlipVictim(state, color) {
+  const pool = fri(state, color).concat(en(state, color));
+  if (!pool.length) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 export function applyEffect(state, color, effect, picks) {
   const fn = EFFECTS[effect];
