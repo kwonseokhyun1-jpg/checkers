@@ -54,7 +54,7 @@ import { getMatchHtml } from "./matchView.js";
 import { initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
-import { renderSpellCardEl } from "./cardArt.js";
+import { renderSpellCardEl, escapeHtml } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardPreview.js";
 import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
 import { playChestOpenAnimation } from "./chestOpenAnimation.js";
@@ -433,17 +433,35 @@ function buyCardFromInventory(cardId, statusEl) {
   return res;
 }
 
+function buyAndAddCardToWorkingDeck(cardId, statusEl) {
+  const res = tryBuyCardCopy(profile, cardId);
+  if (!res.success) {
+    if (statusEl) {
+      statusEl.hidden = false;
+      statusEl.textContent = res.message;
+      statusEl.className = "deck-editor__error deck-status warn";
+    }
+    return false;
+  }
+  saveProfile(profile);
+  updateCurrencyHeader();
+  workingDeck.push(cardId);
+  renderDeckEditor();
+  if (statusEl) {
+    statusEl.hidden = false;
+    statusEl.textContent = "Bought and added to deck.";
+    statusEl.className = "deck-editor__error deck-status ok";
+  }
+  return true;
+}
+
 /**
  * @param {HTMLElement|null} container
  * @param {{ deckEdit?: boolean, statusEl?: HTMLElement|null }} opts
  */
 function addCardToWorkingDeck(cardId) {
   const addCheck = canAddCardToDeck(workingDeck, cardId, profile);
-  if (!addCheck.ok) {
-    const deckStatus = $("deck-status");
-    if (deckStatus) deckStatus.textContent = addCheck.reason;
-    return false;
-  }
+  if (!addCheck.ok) return false;
   workingDeck.push(cardId);
   renderDeckEditor();
   return true;
@@ -457,13 +475,17 @@ function appendCollectionCard(parent, def, opts = {}) {
   const cost = getBuyCost(def.rarity);
   const canAfford = profile.gems >= cost && !atMaxCopies;
   const addCheck = deckEdit ? canAddCardToDeck(workingDeck, def.id, profile) : { ok: false };
-  const wrap = document.createElement("div");
-  wrap.className = "collection-card-wrap" + (owned < 1 ? " collection-card-wrap--unowned" : "");
+  const inDeck = deckEdit ? countById(workingDeck)[def.id] || 0 : 0;
+  const deckHasRoom = workingDeck.length < DECK_SIZE;
+  const belowDeckCap = inDeck < cap;
+  const allOwnedInDeck = owned >= 1 && owned <= inDeck;
+  const canBuyMore = owned >= 1 && !atMaxCopies;
+  const showBuyAdd =
+    deckEdit && !addCheck.ok && deckHasRoom && belowDeckCap && allOwnedInDeck && canBuyMore;
 
   const buyOne = () => buyCardFromInventory(def.id, statusEl);
 
   const openInspect = () => {
-    const inDeck = deckEdit ? countById(workingDeck)[def.id] || 0 : 0;
     showCardPreview(def, {
       meta: deckEdit
         ? `Owned ${owned}/${cap} · In deck ${inDeck}/${cap} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
@@ -483,32 +505,77 @@ function appendCollectionCard(parent, def, opts = {}) {
     });
   };
 
+  if (deckEdit) {
+    const wrap = document.createElement("div");
+    wrap.className = "deck-collection-row";
+
+    const art = document.createElement("div");
+    art.className = "deck-collection-row__art";
+    const thumb = renderSpellCardEl(def, { static: true, compact: true });
+    thumb.classList.add("deck-collection-row__thumb");
+    thumb.addEventListener("click", () => openInspect());
+    art.appendChild(thumb);
+
+    const info = document.createElement("div");
+    info.className = "deck-collection-row__info";
+    info.innerHTML = `
+      <strong class="deck-collection-row__name">${escapeHtml(def.name)}</strong>
+      <span class="deck-collection-row__meta">Owned ${owned}/${cap} · In deck ${inDeck}/${cap}</span>`;
+    info.addEventListener("click", () => openInspect());
+
+    const action = document.createElement("button");
+    action.type = "button";
+    action.className = "deck-collection-row__action";
+
+    if (addCheck.ok) {
+      action.classList.add("deck-collection-row__action--add");
+      action.textContent = "+ Add";
+      action.addEventListener("click", (e) => {
+        e.stopPropagation();
+        addCardToWorkingDeck(def.id);
+      });
+    } else if (showBuyAdd) {
+      action.classList.add("deck-collection-row__action--buy");
+      action.textContent = `Buy · ${cost} gems`;
+      action.disabled = !canAfford;
+      if (!canAfford) action.textContent = `Need ${cost} gems`;
+      action.addEventListener("click", (e) => {
+        e.stopPropagation();
+        buyAndAddCardToWorkingDeck(def.id, statusEl);
+      });
+    } else {
+      action.classList.add("deck-collection-row__action--disabled");
+      action.disabled = true;
+      if (workingDeck.length >= DECK_SIZE) action.textContent = "Deck full";
+      else if (inDeck >= cap) action.textContent = "Max copies";
+      else if (owned < 1) action.textContent = "Not owned";
+      else action.textContent = "Can't add";
+    }
+
+    wrap.append(art, info, action);
+    parent.appendChild(wrap);
+    return;
+  }
+
+  const wrap = document.createElement("div");
+  wrap.className = "collection-card-wrap" + (owned < 1 ? " collection-card-wrap--unowned" : "");
+
   const card = renderSpellCardEl(def, {
     button: true,
-    compact: !deckEdit,
-    tiny: deckEdit,
-    disabled: !deckEdit && (owned < 1 || atMaxCopies),
+    compact: true,
+    disabled: owned < 1 || atMaxCopies,
     onClick: (e) => {
       if (e.shiftKey) {
         openInspect();
-        return;
-      }
-      if (deckEdit) {
-        if (addCheck.ok) addCardToWorkingDeck(def.id);
-        else if ($("deck-status")) $("deck-status").textContent = addCheck.reason;
         return;
       }
       if (owned < 1 || atMaxCopies) return;
       buyOne();
     },
   });
-  card.title = deckEdit
-    ? addCheck.ok
-      ? `${def.name} — tap to add to deck. Shift+click to inspect.`
-      : `${def.name} — ${addCheck.reason}. Shift+click to inspect.`
-    : atMaxCopies
-      ? `${def.name} — max ${cap} copies owned. Shift+click to inspect.`
-      : `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
+  card.title = atMaxCopies
+    ? `${def.name} — max ${cap} copies owned. Shift+click to inspect.`
+    : `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
   wrap.appendChild(card);
 
   const ownedBadge = document.createElement("span");
@@ -516,45 +583,15 @@ function appendCollectionCard(parent, def, opts = {}) {
   ownedBadge.textContent = owned > 0 ? `×${owned}` : "—";
   wrap.appendChild(ownedBadge);
 
-  if (!deckEdit) {
-    const costBadge = document.createElement("span");
-    costBadge.className = "collection-buy-cost";
-    costBadge.textContent = atMaxCopies ? "MAX" : `${cost} ◆`;
-    if (!canAfford || atMaxCopies) costBadge.classList.add("collection-buy-cost--cant");
-    wrap.appendChild(costBadge);
-  } else if (owned >= 1 && !atMaxCopies) {
-    const costBadge = document.createElement("button");
-    costBadge.type = "button";
-    costBadge.className = "collection-buy-cost collection-buy-cost--btn";
-    costBadge.textContent = `${cost} ◆`;
-    costBadge.title = `Buy another copy (${cost} gems)`;
-    costBadge.disabled = !canAfford;
-    if (!canAfford) costBadge.classList.add("collection-buy-cost--cant");
-    costBadge.addEventListener("click", (e) => {
-      e.stopPropagation();
-      buyOne();
-    });
-    wrap.appendChild(costBadge);
-  }
+  const costBadge = document.createElement("span");
+  costBadge.className = "collection-buy-cost";
+  costBadge.textContent = atMaxCopies ? "MAX" : `${cost} ◆`;
+  if (!canAfford || atMaxCopies) costBadge.classList.add("collection-buy-cost--cant");
+  wrap.appendChild(costBadge);
 
-  if (deckEdit) {
-    wrap.classList.add("collection-card-wrap--edit");
-    const addBtn = document.createElement("button");
-    addBtn.type = "button";
-    addBtn.className = "btn-add-to-deck btn-add-to-deck--bar";
-    addBtn.title = addCheck.ok ? "Add to deck" : addCheck.reason;
-    addBtn.textContent = addCheck.ok ? "+ Add" : "Deck full";
-    addBtn.disabled = !addCheck.ok;
-    addBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      addCardToWorkingDeck(def.id);
-    });
-    wrap.appendChild(addBtn);
-  }
-
-  if (deckEdit && !addCheck.ok) card.classList.add("spell-card--deck-blocked");
   parent.appendChild(wrap);
 }
+
 
 function renderInventoryGrid(container, opts = {}) {
   if (!container) return;
@@ -748,7 +785,7 @@ function renderDeckEditor() {
   if (!stacks.length) {
     const empty = document.createElement("p");
     empty.className = "deck-editor__strip-empty";
-    empty.textContent = "Empty — tap + Add on cards below";
+    empty.textContent = "Empty — use + Add or Buy on cards below";
     deckEl.appendChild(empty);
   }
   for (const { def, count } of stacks) {
