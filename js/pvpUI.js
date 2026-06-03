@@ -93,6 +93,11 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
           el.textContent = probe.reason;
           el.classList.add("pvp-status--error");
         }
+        return;
+      }
+      if (probe.hint) {
+        const el = root.querySelector("#pvp-status");
+        if (el && !el.textContent) el.textContent = probe.hint;
       }
     });
   }

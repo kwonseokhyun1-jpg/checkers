@@ -145,8 +145,11 @@ export function setPiece(board, row, col, piece) {
   board[row][col] = piece;
 }
 
-export function removePiece(board, row, col) {
+export function removePiece(board, row, col, { force = false } = {}) {
+  const p = board[row][col];
+  if (p?.cloneNoCaptureThisTurn && !force) return false;
   board[row][col] = null;
+  return true;
 }
 
 export function movePiece(board, fromR, fromC, toR, toC) {
@@ -159,6 +162,7 @@ export function movePiece(board, fromR, fromC, toR, toC) {
 
 function isProtected(piece, state = null, r = null, c = null) {
   if (!piece) return false;
+  if (piece.cloneNoCaptureThisTurn) return true;
   if (piece.shieldTurns > 0) return true;
   if (state != null && r != null && c != null) {
     if (isSanctuaryProtected(state, r, c, piece.color)) return true;
@@ -451,6 +455,7 @@ export function tickEndTurnEffects(board, color, state = null) {
       const p = board[r][c];
       if (!p || p.color !== color) continue;
       if (p.rooted > 0) p.rooted--;
+      if (p.cloneNoCaptureThisTurn) p.cloneNoCaptureThisTurn = false;
     }
   }
   if (state?.squares) {
