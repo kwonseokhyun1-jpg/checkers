@@ -422,21 +422,50 @@ export function getBoltTarget(board, piece) {
   return targets;
 }
 
-/** First enemy directly ahead (same file; includes shielded — for Fireblast). */
-export function getFireblastTarget(board, piece) {
-  const dir = piece.color === COLORS.RED ? -1 : 1;
-  const targets = [];
-  let r = piece.row + dir;
-  const c = piece.col;
-  while (inBounds(r, c) && isDarkSquare(r, c)) {
-    const cell = board[r][c];
-    if (cell) {
-      if (cell.color !== piece.color) targets.push([r, c]);
-      break;
+/** First dark square on your back edge of a file (fireball origin). */
+export function getFireblastColumnOrigin(color, col) {
+  const dir = color === COLORS.RED ? -1 : 1;
+  let r = color === COLORS.RED ? SIZE - 1 : 0;
+  while (inBounds(r, col)) {
+    if (isDarkSquare(r, col)) return [r, col];
+    r += dir;
+  }
+  return [color === COLORS.RED ? SIZE - 1 : 0, col];
+}
+
+/** First enemy in a file scanning from your side forward (includes shielded). */
+export function getFireblastColumnTarget(board, color, col) {
+  const dir = color === COLORS.RED ? -1 : 1;
+  let r = color === COLORS.RED ? SIZE - 1 : 0;
+  while (inBounds(r, col)) {
+    if (isDarkSquare(r, col)) {
+      const cell = board[r][col];
+      if (cell && cell.color !== color) return [r, col];
     }
     r += dir;
   }
-  return targets;
+  return null;
+}
+
+/** Animation endpoints for a column pick. */
+export function getFireblastAnimExtra(board, color, picks) {
+  if (!picks?.length) return null;
+  const col = picks[0][1];
+  const to = getFireblastColumnTarget(board, color, col);
+  if (!to) return null;
+  return { fireblastFrom: getFireblastColumnOrigin(color, col), fireblastTo: to };
+}
+
+/** Highlight squares in files where Fireblast can hit an enemy. */
+export function getFireblastColumnValidSquares(board, color) {
+  const squares = [];
+  for (let c = 0; c < SIZE; c++) {
+    if (!getFireblastColumnTarget(board, color, c)) continue;
+    for (let r = 0; r < SIZE; r++) {
+      if (isDarkSquare(r, c)) squares.push([r, c]);
+    }
+  }
+  return squares;
 }
 
 /** One empty square straight behind your piece (Backstep). */

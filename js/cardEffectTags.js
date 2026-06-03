@@ -6,7 +6,7 @@ const TAGS = {
   trickster: ["Swap 4 random pieces on the board"],
   purify: ["Removes all shields and curses board-wide"],
   chain_lightning: ["Strike adjacent enemies only", "Up to 2 kills if enemies touch each other", "Your piece is paralyzed 2 turns"],
-  fireblast: ["Your piece, then first enemy directly ahead — burns through shields"],
+  fireblast: ["Choose a column — first enemy in that file is destroyed", "Burns through shields"],
   freeze_1: ["Enemy cannot move on their next turn"],
   freeze_2: ["Enemy cannot move on their next turn"],
   deep_freeze: ["Freeze all enemies on one diagonal through your piece for 2 turns"],
@@ -38,6 +38,7 @@ const MODE_TAGS = {
   f_e: ["Your piece, then enemy"],
   f_e_adj: ["Your piece, then adjacent enemy"],
   diagonal: ["Your piece, then diagonal strike"],
+  column: ["Choose a column on the board"],
   discard_pick: ["Choose a card to discard"],
 };
 

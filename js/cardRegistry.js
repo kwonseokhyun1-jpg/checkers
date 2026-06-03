@@ -17,6 +17,7 @@ export const CARD_PLAY_MODES = {
   ANY_SQUARE: "any_square",
   EMPTY_EMPTY: "empty_empty",
   DISCARD_PICK: "discard_pick",
+  COLUMN: "column",
 };
 
 export const CARD_REGISTRY = [
@@ -28,7 +29,7 @@ export const CARD_REGISTRY = [
   { id: "swap", name: "Shadow Swap", desc: "Swap positions of two of your pieces.", rarity: "uncommon", weight: 5, mode: "f_f", effect: "swap_friendly" },
   { id: "double", name: "Quick March", desc: "After your normal move, move the same piece again (non-capture step).", rarity: "epic", weight: 2, mode: "instant", effect: "quick_march" },
   { id: "shatter", name: "Shatter", desc: "Destroy any unshielded enemy. You cannot cast spells on your next turn.", rarity: "legendary", weight: 1, mode: "enemy", effect: "destroy_unshielded" },
-  { id: "fireblast", name: "Fireblast", desc: "Your piece hurls a fireball straight ahead; the first enemy in its path is destroyed (shields burn away).", rarity: "legendary", weight: 1, mode: "diagonal", effect: "fireblast" },
+  { id: "fireblast", name: "Fireblast", desc: "Choose a column; a fireball strikes the first enemy in that file from your side (shields burn away).", rarity: "legendary", weight: 1, mode: "column", effect: "fireblast" },
   { id: "teleport", name: "Blink", desc: "Teleport your piece to any empty dark square within 2 steps (Chebyshev).", rarity: "uncommon", weight: 4, mode: "f_empty", effect: "blink_2" },
   { id: "long_step", name: "Long Step", desc: "Move one of your pieces 2 squares diagonally if the path is clear (no capture).", rarity: "common", weight: 6, mode: "f_empty", effect: "long_step" },
   { id: "sidestep", name: "Sidestep", desc: "Move a piece 1 square horizontally onto an adjacent dark square.", rarity: "common", weight: 5, mode: "f_empty", effect: "sidestep" },

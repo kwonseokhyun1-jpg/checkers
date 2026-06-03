@@ -157,16 +157,18 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
-  if (effect === "fireblast" && p.length >= 2) {
-    const lineSquares = squaresBetween(p[0], p[1]);
+  if (effect === "fireblast" && extra.fireblastFrom && extra.fireblastTo) {
+    const from = extra.fireblastFrom;
+    const to = extra.fireblastTo;
+    const lineSquares = squaresBetween(from, to);
     return withSpec({
       type: "kill",
       visual: "fire",
       duration: Math.max(MIN_SPELL_ANIM_MS, 1300),
       label,
-      squares: [p[1]],
-      from: p[0],
-      to: p[1],
+      squares: [to],
+      from,
+      to,
       lineSquares,
     }, effect);
   }

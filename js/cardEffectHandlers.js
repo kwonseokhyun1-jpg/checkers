@@ -3,7 +3,7 @@
  */
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget, getBackstepTarget, piecesOfColor, enemyPieces,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastColumnTarget, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine } from "./gameMeta.js";
@@ -142,12 +142,11 @@ const EFFECTS = {
   shield_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=2; return ok(); },
   forward_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!kill(state,r2,c2,color)) return fail(); return ok(); },
   fireblast(state, color, picks) {
-    if (picks.length < 2) return fail();
-    const [r1, c1] = p0(picks), [r2, c2] = p1(picks);
-    const p = at(state, r1, c1);
-    if (!p || p.color !== color) return fail();
-    const line = getFireblastTarget(state.board, p);
-    if (!line.some(([r, c]) => r === r2 && c === c2)) return fail("No enemy in the fireball path");
+    if (!picks.length) return fail();
+    const col = p0(picks)[1];
+    const hit = getFireblastColumnTarget(state.board, color, col);
+    if (!hit) return fail("No enemy in that column");
+    const [r2, c2] = hit;
     const t = at(state, r2, c2);
     if (!t || t.color === color) return fail();
     if (t.shieldTurns > 0) t.shieldTurns = 0;

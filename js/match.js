@@ -10,6 +10,7 @@ import {
   applyMove,
   countPieces,
   tickEffects,
+  getFireblastAnimExtra,
 } from "./board.js";
 import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed } from "./gameMeta.js";
 import {
@@ -789,6 +790,9 @@ ${starLine}`;
       const [pr, pc] = picks[0];
       extra.chainSquares = getChainLightningAnimSquares(s, pr, pc, this.localColor);
     }
+    if (card.effect === "fireblast" && picks.length) {
+      Object.assign(extra, getFireblastAnimExtra(s.board, this.localColor, picks) || {});
+    }
     const spec = buildAnimSpec(card, picks, this.localColor, extra);
     await this.runSpellAnimation(spec);
     return applyCard(this.state, this.localColor, card, picks);
@@ -906,14 +910,17 @@ ${starLine}`;
           const [cr, cc] = entry.cullTarget;
           await this.playCullAnimation(cr, cc, entry.cullVictim || null);
         } else {
+          const aiPicks = entry.picks || [];
+          const animExtra = entry.fireblastAnim || {};
           const spec = buildAnimSpec(
             {
               effect: entry.cardEffect,
               mode: entry.cardMode || def?.mode || "instant",
               name: cardName,
             },
-            entry.picks || [],
-            COLORS.BLACK
+            aiPicks,
+            COLORS.BLACK,
+            animExtra
           );
           await this.runSpellAnimation(spec);
         }

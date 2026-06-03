@@ -88,6 +88,7 @@ export function runAiTurn(state, opponentName = "Opponent") {
             picks: res.picks || [],
             text: res.message || `Cast ${card.name}`,
             ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
+            ...(res.fireblastAnim ? { fireblastAnim: res.fireblastAnim } : {}),
           });
         }
       }
