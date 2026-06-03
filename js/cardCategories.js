@@ -67,7 +67,6 @@ const ID_TO_CATEGORY = {
   offering: "special",
   panic: "control",
   poison: "attack",
-  possession: "special",
   mind_control: "special",
   press: "control",
   promote_zone: "movement",

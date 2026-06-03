@@ -140,7 +140,7 @@
 - **Hostile Swap** — Swap one of your pieces with an enemy (both unshielded).
 - **Last King** — If you have only 1 piece, it becomes a king with shield for 2 turns.
 - **Mirror Shield** — Next enemy spell on this piece reflects to a random enemy.
-- **Possession** — Control an enemy piece for its owner's next move only.
+- **Mind Control** — Control an enemy man this turn; it captures enemies as your piece.
 - **Queen's Crown** — Piece has king + knight movement for 2 turns.
 - **Revive** — Return a captured man to any empty square in your back 3 rows.
 - **Roulette** — Random card effect hits a random valid target.
