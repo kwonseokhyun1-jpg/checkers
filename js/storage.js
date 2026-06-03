@@ -71,6 +71,30 @@ function defaultProfile() {
   };
 }
 
+export function hasStoredProfile() {
+  return Boolean(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY));
+}
+
+function profileSignature(profile) {
+  const decks = (profile?.decks || []).map((d) => ({
+    id: d.id,
+    cardIds: [...(d.cardIds || [])].sort(),
+  }));
+  return JSON.stringify({
+    decks,
+    collection: profile?.collection || {},
+    gems: profile?.gems,
+    stars: profile?.stars,
+    cleared: profile?.adventure?.cleared?.length || 0,
+  });
+}
+
+export function isDefaultProfile(profile) {
+  if (!profile) return true;
+  const def = finalizeProfile(defaultProfile());
+  return profileSignature(profile) === profileSignature(def);
+}
+
 function totalOwnedCards(profile) {
   return Object.values(profile.collection || {}).reduce((sum, n) => sum + (Number(n) || 0), 0);
 }
@@ -237,21 +261,19 @@ function finalizeProfile(profile) {
   return p;
 }
 
+export function readProfileFromStorage() {
+  let raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) raw = localStorage.getItem(LEGACY_STORAGE_KEY);
+  if (!raw) return finalizeProfile(defaultProfile());
+  return finalizeProfile(normalizeLoadedProfile(JSON.parse(raw)));
+}
+
 export function loadProfile() {
   try {
-    let raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      raw = localStorage.getItem(LEGACY_STORAGE_KEY);
-    }
-
-    let profile;
-    if (!raw) {
-      profile = finalizeProfile(defaultProfile());
-    } else {
-      profile = finalizeProfile(normalizeLoadedProfile(JSON.parse(raw)));
-    }
-
-    saveProfile(profile);
+    const hadStored = hasStoredProfile();
+    const profile = readProfileFromStorage();
+    const changed = repairProfile(profile);
+    if (changed || !hadStored) saveProfile(profile);
     return profile;
   } catch (err) {
     console.error("Profile load failed, resetting:", err);
@@ -263,8 +285,9 @@ export function loadProfile() {
   }
 }
 
-export function saveProfile(profile) {
-  profile.savedAt = Date.now();
+export function saveProfile(profile, { bumpTimestamp = true } = {}) {
+  if (bumpTimestamp) profile.savedAt = Date.now();
+  else if (typeof profile.savedAt !== "number") profile.savedAt = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
   void import("./cloudProfile.js").then(({ scheduleCloudSave }) => scheduleCloudSave(profile)).catch(() => {});
 }

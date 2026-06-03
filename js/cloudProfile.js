@@ -1,25 +1,51 @@
 import { getCurrentUser, fetchProfileRow, upsertProfileRow, isAuthAvailable } from "./auth.js";
-import { loadProfile, saveProfile, repairProfile } from "./storage.js";
+import { readProfileFromStorage, saveProfile, repairProfile, isDefaultProfile } from "./storage.js";
 
 let cloudSaveTimer = null;
+
+function isEmptyRemoteProfile(json) {
+  if (!json || typeof json !== "object") return true;
+  const keys = Object.keys(json);
+  if (keys.length === 0) return true;
+  if (keys.every((k) => k === "loginEmail" || k === "login_email" || k === "savedAt")) return true;
+  const hasCollection = json.collection && Object.keys(json.collection).length > 0;
+  const hasDecks = Array.isArray(json.decks) && json.decks.length > 0;
+  const hasProgress = (json.adventure?.cleared?.length || 0) > 0;
+  const hasCurrency = typeof json.gems === "number" || typeof json.stars === "number";
+  return !(hasCollection || hasDecks || hasProgress || hasCurrency);
+}
+
+function applyRemoteProfile(remote) {
+  repairProfile(remote);
+  saveProfile(remote, { bumpTimestamp: false });
+  return remote;
+}
 
 export async function pullCloudProfile() {
   const user = getCurrentUser();
   if (!user || !isAuthAvailable()) return null;
 
   const row = await fetchProfileRow(user.id);
-  if (!row?.profile_json || typeof row.profile_json !== "object") return null;
+  const local = readProfileFromStorage();
+  const remote = row?.profile_json;
 
-  const local = loadProfile();
-  const remote = row.profile_json;
+  if (!remote || typeof remote !== "object" || isEmptyRemoteProfile(remote)) {
+    if (!isDefaultProfile(local)) applyRemoteProfile(local);
+    return local;
+  }
+
+  if (isDefaultProfile(local)) {
+    return applyRemoteProfile({ ...remote });
+  }
+
   const remoteTime = remote.savedAt || 0;
   const localTime = local.savedAt || 0;
 
   if (remoteTime >= localTime) {
-    repairProfile(remote);
-    saveProfile(remote);
-    return remote;
+    return applyRemoteProfile({ ...remote });
   }
+
+  saveProfile(local);
   return local;
 }
 
@@ -27,7 +53,6 @@ export function scheduleCloudSave(profile) {
   const user = getCurrentUser();
   if (!user || !isAuthAvailable()) return;
 
-  profile.savedAt = Date.now();
   clearTimeout(cloudSaveTimer);
   cloudSaveTimer = setTimeout(async () => {
     try {
