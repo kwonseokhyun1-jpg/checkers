@@ -3744,6 +3744,37 @@ body.chest-open-active {
 
 /* ── Profile tab ── */
 .profile-panel { max-width: 52rem; margin: 0 auto; }
+.profile-account {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.profile-account__email {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+}
+.profile-username-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.profile-username-row .input-text {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+.profile-username-status {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+  color: var(--accent-green, #6ee7a0);
+}
+.profile-username-status--error {
+  color: var(--accent-red, #f87171);
+}
+.profile-account .auth-username-hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+}
 .profile-showcase {
   position: relative;
   border-radius: 14px;

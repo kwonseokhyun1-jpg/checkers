@@ -41,14 +41,32 @@ export async function initAuth() {
   return currentUser;
 }
 
+export const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,24}$/;
+
+export function validateUsernameFormat(username) {
+  const name = String(username || "").trim();
+  if (!USERNAME_PATTERN.test(name)) {
+    return "Username must be 3–24 letters, numbers, or underscore.";
+  }
+  return null;
+}
+
 export async function isUsernameAvailable(username) {
+  return isUsernameAvailableForUser(username, null);
+}
+
+/** @param {string | null} exceptUserId — current user may keep their own name */
+export async function isUsernameAvailableForUser(username, exceptUserId) {
   const sb = getSupabase();
   if (!sb) return true;
   const name = String(username || "").trim();
   if (!name) return false;
 
   const { data, error } = await sb.rpc("username_is_available", { name });
-  if (!error && typeof data === "boolean") return data;
+  if (!error && typeof data === "boolean") {
+    if (data) return true;
+    if (!exceptUserId) return false;
+  }
 
   const { data: row, error: qErr } = await sb
     .from("profiles")
@@ -56,7 +74,27 @@ export async function isUsernameAvailable(username) {
     .ilike("username", name)
     .maybeSingle();
   if (qErr) throw qErr;
-  return !row;
+  if (!row) return true;
+  return exceptUserId != null && row.id === exceptUserId;
+}
+
+export async function updateUsername(newUsername) {
+  const user = getCurrentUser();
+  if (!user) throw new Error("Sign in to change your username.");
+
+  const name = String(newUsername || "").trim();
+  const formatErr = validateUsernameFormat(name);
+  if (formatErr) throw new Error(formatErr);
+
+  if (!(await isUsernameAvailableForUser(name, user.id))) {
+    throw new Error("That username is already taken.");
+  }
+
+  await upsertProfileRow(user.id, {
+    username: name,
+    display_name: name,
+  });
+  return name;
 }
 
 
