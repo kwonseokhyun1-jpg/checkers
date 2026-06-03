@@ -794,11 +794,20 @@ function saveWorkingDeck() {
   showDeckSubview("list");
 }
 
+function nextDefaultDeckName(decks = []) {
+  const base = "New Deck";
+  const names = new Set(decks.map((d) => d.name?.trim()).filter(Boolean));
+  if (!names.has(base)) return base;
+  let n = 2;
+  while (names.has(`${base} ${n}`)) n++;
+  return `${base} ${n}`;
+}
+
 function startNewDeck() {
   editingDeckId = "new";
   workingDeck = [];
   const nameInput = $("deck-name-input");
-  if (nameInput) nameInput.value = "New Deck";
+  if (nameInput) nameInput.value = nextDefaultDeckName(profile.decks);
   showDeckSubview("edit");
 }
 
