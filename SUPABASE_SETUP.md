@@ -14,6 +14,8 @@ Run `supabase/backfill_login_emails.sql` once so username sign-in works for exis
 
 If sign-up shows **"Database error saving new user"**, run `supabase/fix_signup_trigger.sql` in the same SQL Editor (updates the auth trigger and username check RPC).
 
+If PvP join or quick match fails with **"Room not found"**, run `supabase/fix_pvp_rls.sql` in the same SQL Editor (fixes RLS for open waiting rooms and adds join RPCs).
+
 ## 2. Enable Email auth
 
 1. [Authentication → Providers](https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/auth/providers)
