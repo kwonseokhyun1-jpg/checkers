@@ -244,6 +244,7 @@ body.deck-editing .game-nav.tabs {
 
 .deck-slot-wrap--strip .spell-card__body {
   padding: 0.2rem 0.15rem 0.25rem;
+  text-align: center;
 }
 
 .deck-slot-wrap--strip .spell-card__name {
@@ -254,6 +255,7 @@ body.deck-editing .game-nav.tabs {
   -webkit-box-orient: vertical;
   overflow: hidden;
   margin: 0;
+  text-align: center;
 }
 
 .deck-slot-wrap--strip .spell-card__desc,

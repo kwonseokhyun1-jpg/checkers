@@ -547,28 +547,21 @@ export function getAdjacentForwardBoltTarget(board, piece) {
 
 export function getFireblastRay(board, piece) {
   const dir = piece.color === COLORS.RED ? -1 : 1;
-  let best = null;
-  for (const dc of [-1, 1]) {
-    let r = piece.row + dir;
-    let c = piece.col + dc;
-    const line = [[piece.row, piece.col]];
-    let dist = 1;
-    while (inBounds(r, c) && isDarkSquare(r, c)) {
-      line.push([r, c]);
+  const c = piece.col;
+  const line = [[piece.row, piece.col]];
+  let r = piece.row + dir;
+  while (inBounds(r, c)) {
+    line.push([r, c]);
+    if (isDarkSquare(r, c)) {
       const cell = board[r][c];
       if (cell) {
-        if (cell.color !== piece.color && (!best || dist < best.dist)) {
-          best = { target: [r, c], lineSquares: line, dist };
-        }
+        if (cell.color !== piece.color) return { target: [r, c], lineSquares: line };
         break;
       }
-      r += dir;
-      c += dc;
-      dist += 1;
     }
+    r += dir;
   }
-  if (!best) return null;
-  return { target: best.target, lineSquares: best.lineSquares };
+  return null;
 }
 
 export function getFireblastTarget(board, piece) {

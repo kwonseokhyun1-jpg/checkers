@@ -12,6 +12,7 @@ import {
   tickEffects,
   tickEndTurnEffects,
   findPressExtraPiece,
+  getFireblastRay,
 } from "./board.js";
 import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed } from "./gameMeta.js";
 import {
@@ -378,7 +379,7 @@ export class MatchSession {
         : card.mode === "row"
           ? `${card.name} — tap a rank number (1–8) beside the board.`
           : card.effect === "fireblast"
-            ? `${card.name} — tap one of your highlighted pieces to fire.`
+            ? `${card.name} — tap your piece; fire shoots straight ahead on that file.`
             : card.effect === "sanctuary" || card.effect === "darkness"
               ? `${card.name} — tap a square; highlighted area shows the zone.`
               : card.effect === "clone"

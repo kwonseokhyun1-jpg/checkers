@@ -226,16 +226,28 @@ for (const card of cards) {
   console.log("Clone spawn test: OK");
 }
 
-// Fireblast diagonal ray test
+// Fireblast forward file ray — skips light squares, hits enemy on dark square ahead
 {
   const s = baseState();
-  place(s, COLOR, 5, 0);
-  place(s, OPP, 3, 2); // forward diagonal from 5,0
+  place(s, COLOR, 5, 2);
+  place(s, OPP, 3, 2); // same file; (4,2) is light, (3,2) is dark
   const fb = cards.find((c) => c.id === "fireblast");
-  const res = applyCard(s, COLOR, fb, [[5, 0]]);
+  const res = applyCard(s, COLOR, fb, [[5, 2]]);
   if (!res.success) throw new Error("Fireblast failed: " + res.message);
-  if (at(s, 3, 2)) throw new Error("Fireblast should destroy diagonal enemy");
-  console.log("Fireblast diagonal test: OK");
+  if (at(s, 3, 2)) throw new Error("Fireblast should destroy enemy straight ahead");
+  console.log("Fireblast forward file test: OK");
+}
+
+// Fireblast passes empty dark squares before hitting
+{
+  const s = baseState();
+  place(s, COLOR, 7, 4);
+  place(s, OPP, 3, 4);
+  const fb = cards.find((c) => c.id === "fireblast");
+  const res = applyCard(s, COLOR, fb, [[7, 4]]);
+  if (!res.success) throw new Error("Fireblast long ray failed: " + res.message);
+  if (at(s, 3, 4)) throw new Error("Fireblast should hit enemy several squares ahead");
+  console.log("Fireblast long ray test: OK");
 }
 
 // Fusion behavior check
