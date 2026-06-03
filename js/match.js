@@ -39,7 +39,8 @@ import {
 import { applySquareSpellFx, mountSpellOverlay, removeSpellOverlay, revealCoinFlipResult, animateCoinDropToSquare } from "./spellFx.js";
 import { pickCoinFlipVictim } from "./cardEffectHandlers.js";
 import { boardFxDuration } from "./boardFx.js";
-import { planTrickster, getChainLightningAnimSquares } from "./cardEffectHandlers.js";
+import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells } from "./cardEffectHandlers.js";
+import { isInDarknessZone } from "./gameMeta.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -375,7 +376,11 @@ export class MatchSession {
           ? `${card.name} — tap a rank number (1–8) beside the board.`
           : card.effect === "fireblast"
             ? `${card.name} — tap one of your highlighted pieces to fire.`
-            : `${card.name} — drag to the board or tap highlighted squares.`
+            : card.effect === "sanctuary" || card.effect === "darkness"
+              ? `${card.name} — tap a square; highlighted area shows the zone.`
+              : card.effect === "clone"
+                ? `${card.name} — tap your man, then pick where the copy spawns.`
+                : `${card.name} — drag to the board or tap highlighted squares.`
     );
     this.render();
   }
@@ -1027,6 +1032,12 @@ ${starLine}`;
         }
       }
     }
+    if (card.effect === "sanctuary" && picks.length) {
+      extra.sanctuaryCells = getSanctuaryCells(picks[0][0], picks[0][1]);
+    }
+    if (card.effect === "darkness" && picks.length) {
+      extra.darknessCells = getDarknessZoneCells(picks[0][0], picks[0][1]);
+    }
     if (card.effect === "coin_flip") {
       const victim = pickCoinFlipVictim(s, this.localColor);
       if (!victim) return { success: false, message: "No valid targets" };
@@ -1288,6 +1299,23 @@ ${starLine}`;
     this.render();
   }
 
+
+  getZonePreviewSets() {
+    const sanctuary = new Set();
+    const darkness = new Set();
+    if (!this.cardPlay || this.cardPlay.picks.length > 0) return { sanctuary, darkness };
+    const { card } = this.cardPlay;
+    for (const [r, c] of this.validTargets) {
+      if (card.effect === "sanctuary") {
+        for (const [zr, zc] of getSanctuaryCells(r, c)) sanctuary.add(`${zr},${zc}`);
+      }
+      if (card.effect === "darkness") {
+        for (const [zr, zc] of getDarknessZoneCells(r, c)) darkness.add(`${zr},${zc}`);
+      }
+    }
+    return { sanctuary, darkness };
+  }
+
   renderHand() {
     const handEl = this.$("hand-red");
     const countLabel = this.$("hand-count-label");
@@ -1333,6 +1361,7 @@ ${starLine}`;
     if (!boardEl) return;
     boardEl.innerHTML = "";
     const s = this.state;
+    const zonePreview = this.getZonePreviewSets();
 
     for (let row = 0; row < SIZE; row++) {
       for (let col = 0; col < SIZE; col++) {
@@ -1346,6 +1375,11 @@ ${starLine}`;
         if (terrain?.mine && !terrain?.hiddenMine) cls += " has-mine";
         if (terrain?.quicksand && !terrain?.hiddenQuicksand) cls += " has-quicksand";
         if (terrain?.barrier?.turnsLeft > 0) cls += " has-barrier";
+        if (terrain?.sanctuary && terrain?.sanctuaryTurns > 0) cls += " has-sanctuary";
+        if (terrain?.darkness > 0) cls += " has-darkness-core";
+        else if (isInDarknessZone(s, row, col)) cls += " has-darkness-zone";
+        if (zonePreview.sanctuary.has(key)) cls += " sanctuary-zone-preview";
+        if (zonePreview.darkness.has(key)) cls += " darkness-zone-preview";
         if (isSquareCollapsed(s.meta, row, col)) cls += " square--collapsed";
         sq.className = cls;
 
@@ -1363,6 +1397,30 @@ ${starLine}`;
           barrierEl.appendChild(mark);
           barrierEl.appendChild(turns);
           sq.appendChild(barrierEl);
+        }
+
+
+        if (terrain?.sanctuary && terrain?.sanctuaryTurns > 0) {
+          const sanctuaryEl = document.createElement("div");
+          sanctuaryEl.className = "sanctuary-indicator";
+          sanctuaryEl.setAttribute("aria-label", `Sanctuary — ${terrain.sanctuaryTurns} turn${terrain.sanctuaryTurns === 1 ? "" : "s"} left`);
+          const mark = document.createElement("span");
+          mark.className = "sanctuary-indicator__mark";
+          mark.textContent = "✦";
+          mark.setAttribute("aria-hidden", "true");
+          const turns = document.createElement("span");
+          turns.className = "sanctuary-indicator__turns";
+          turns.textContent = String(terrain.sanctuaryTurns);
+          sanctuaryEl.appendChild(mark);
+          sanctuaryEl.appendChild(turns);
+          sq.appendChild(sanctuaryEl);
+        }
+
+        if (terrain?.darkness > 0 || isInDarknessZone(s, row, col)) {
+          const darkEl = document.createElement("div");
+          darkEl.className = "darkness-indicator";
+          darkEl.setAttribute("aria-hidden", "true");
+          sq.appendChild(darkEl);
         }
 
 

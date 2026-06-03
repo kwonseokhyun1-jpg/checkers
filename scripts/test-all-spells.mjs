@@ -202,6 +202,30 @@ for (const card of cards) {
 
 
 
+
+// Trickster excludes back-rank pieces
+{
+  const s = baseState();
+  place(s, COLOR, 7, 1);
+  place(s, COLOR, 5, 3);
+  place(s, OPP, 0, 2);
+  place(s, OPP, 2, 4);
+  const plan = (await import("../js/cardEffectHandlers.js")).planTrickster(s);
+  if (!plan) throw new Error("Trickster plan failed");
+  if (plan.from.some(([r]) => r === 7 || r === 0)) throw new Error("Trickster must not pick back-rank pieces");
+  console.log("Trickster back rank test: OK");
+}
+
+// Clone spawn pick
+{
+  const s = baseState();
+  place(s, COLOR, 5, 2);
+  const clone = cards.find((c) => c.id === "clone");
+  const res = applyCard(s, COLOR, clone, [[5, 2], [4, 3]]);
+  if (!res.success || !at(s, 4, 3) || !at(s, 5, 2)) throw new Error("Clone spawn pick failed");
+  console.log("Clone spawn test: OK");
+}
+
 // Fireblast diagonal ray test
 {
   const s = baseState();
