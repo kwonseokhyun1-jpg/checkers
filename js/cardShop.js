@@ -21,7 +21,7 @@ export function getBuyCost(rarity) {
 export function tryBuyCardCopy(profile, cardId) {
   const owned = collectionCount(profile, cardId);
   if (owned < 1) {
-    return { success: false, message: "Unseal this spell from a chest first." };
+    return { success: false, message: "Get this spell from a chest first." };
   }
 
   const def = getCardDef(cardId);

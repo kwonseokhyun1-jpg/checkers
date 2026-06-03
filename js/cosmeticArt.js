@@ -2,22 +2,22 @@
 
 export const COSMETIC_BOX_TIERS = {
   bronze: {
-    label: "Bronze Vanity",
-    tagline: "Same odds as Bronze Reliquary",
+    label: "Bronze",
+    tagline: "Same odds as Bronze Chest",
     visual: "bronze",
     accent: "#c77dff",
     glow: "rgba(199, 125, 255, 0.45)",
   },
   silver: {
-    label: "Silver Vanity",
-    tagline: "Same odds as Silver Reliquary",
+    label: "Silver",
+    tagline: "Same odds as Silver Chest",
     visual: "silver",
     accent: "#7dd3fc",
     glow: "rgba(125, 211, 252, 0.5)",
   },
   gold: {
-    label: "Gold Vanity",
-    tagline: "Same odds as Gold Reliquary",
+    label: "Gold",
+    tagline: "Same odds as Gold Chest",
     visual: "gold",
     accent: "#ffd87a",
     glow: "rgba(255, 216, 122, 0.55)",

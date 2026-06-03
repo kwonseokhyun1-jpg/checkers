@@ -2,20 +2,20 @@
 
 export const CHEST_TIERS = {
   bronze: {
-    label: "Ember Cache",
-    tagline: "Warm sparks · common finds",
+    label: "Bronze",
+    tagline: "Mostly common cards",
     accent: "#cd7f32",
     glow: "rgba(205, 127, 50, 0.45)",
   },
   silver: {
-    label: "Crystal Coffer",
-    tagline: "Frost glass · rare glimmers",
+    label: "Silver",
+    tagline: "Balanced card mix",
     accent: "#a8b8d8",
     glow: "rgba(168, 184, 216, 0.5)",
   },
   gold: {
-    label: "Sovereign Vault",
-    tagline: "Royal seal · epic whispers",
+    label: "Gold",
+    tagline: "Higher rare & epic odds",
     accent: "#e8c547",
     glow: "rgba(232, 197, 71, 0.55)",
   },

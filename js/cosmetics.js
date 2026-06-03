@@ -10,29 +10,29 @@ const RARITY_GEM_DUPE = { common: 5, uncommon: 10, rare: 20, epic: 40, legendary
 
 /** @type {{ id: string, type: string, name: string, rarity: string, desc: string }[]} */
 export const COSMETIC_ITEMS = [
-  { id: "avatar_default", type: "avatar", name: "Initiate", rarity: "common", desc: "Default profile portrait." },
-  { id: "avatar_mystic", type: "avatar", name: "Mystic Seer", rarity: "uncommon", desc: "Arcane violet gaze." },
-  { id: "avatar_shadow", type: "avatar", name: "Shadow Duelist", rarity: "rare", desc: "Cloaked checker champion." },
-  { id: "avatar_sun", type: "avatar", name: "Solar Crown", rarity: "epic", desc: "Radiant gold sigil." },
-  { id: "avatar_void", type: "avatar", name: "Void Walker", rarity: "legendary", desc: "Starfield anomaly portrait." },
+  { id: "avatar_default", type: "avatar", name: "Default", rarity: "common", desc: "Standard portrait." },
+  { id: "avatar_mystic", type: "avatar", name: "Purple Portrait", rarity: "uncommon", desc: "Purple portrait." },
+  { id: "avatar_shadow", type: "avatar", name: "Shadow Profile", rarity: "rare", desc: "Dark purple portrait." },
+  { id: "avatar_sun", type: "avatar", name: "Gold Crown", rarity: "epic", desc: "Gold crown portrait." },
+  { id: "avatar_void", type: "avatar", name: "Starfield", rarity: "legendary", desc: "Dark starfield portrait." },
 
 
-  { id: "frame_default", type: "frame", name: "Iron Ring", rarity: "common", desc: "Simple steel portrait ring." },
-  { id: "frame_bronze", type: "frame", name: "Bronze Filigree", rarity: "uncommon", desc: "Wrought bronze knotwork." },
-  { id: "frame_silver", type: "frame", name: "Silver Sigil", rarity: "rare", desc: "Arcane silver halo." },
-  { id: "frame_gold", type: "frame", name: "Gilded Crown", rarity: "epic", desc: "Radiant gold coronet frame." },
-  { id: "frame_legend", type: "frame", name: "Astral Halo", rarity: "legendary", desc: "Prismatic starlit border." },
+  { id: "frame_default", type: "frame", name: "Simple Frame", rarity: "common", desc: "Plain border." },
+  { id: "frame_bronze", type: "frame", name: "Bronze Frame", rarity: "uncommon", desc: "Bronze border." },
+  { id: "frame_silver", type: "frame", name: "Silver Frame", rarity: "rare", desc: "Silver frame." },
+  { id: "frame_gold", type: "frame", name: "Gold Frame", rarity: "epic", desc: "Gold border." },
+  { id: "frame_legend", type: "frame", name: "Star Frame", rarity: "legendary", desc: "Colorful star border." },
 
-  { id: "banner_default", type: "banner", name: "Classic Board", rarity: "common", desc: "Standard arcane banner." },
-  { id: "banner_nebula", type: "banner", name: "Nebula Veil", rarity: "uncommon", desc: "Cosmic purple drift." },
-  { id: "banner_crimson", type: "banner", name: "Crimson War", rarity: "rare", desc: "Battle-worn red standard." },
-  { id: "banner_storm", type: "banner", name: "Storm Sigil", rarity: "epic", desc: "Lightning-framed colors." },
-  { id: "banner_aurora", type: "banner", name: "Aurora Gate", rarity: "legendary", desc: "Prismatic legendary frame." },
+  { id: "banner_default", type: "banner", name: "Classic Board", rarity: "common", desc: "Classic checkerboard colors." },
+  { id: "banner_nebula", type: "banner", name: "Nebula", rarity: "uncommon", desc: "Purple gradient banner." },
+  { id: "banner_crimson", type: "banner", name: "Crimson", rarity: "rare", desc: "Red gradient banner." },
+  { id: "banner_storm", type: "banner", name: "Storm", rarity: "epic", desc: "Blue lightning banner." },
+  { id: "banner_aurora", type: "banner", name: "Aurora", rarity: "legendary", desc: "Rainbow gradient banner." },
 
   { id: "skin_classic", type: "pieceSkin", name: "Classic Disc", rarity: "common", desc: "Traditional checker pieces." },
   { id: "skin_ember", type: "pieceSkin", name: "Ember Core", rarity: "uncommon", desc: "Glowing coal gradients." },
   { id: "skin_frost", type: "pieceSkin", name: "Frost Shard", rarity: "rare", desc: "Icy crystal pieces." },
-  { id: "skin_arcane", type: "pieceSkin", name: "Arcane Rune", rarity: "epic", desc: "Floating rune crowns." },
+  { id: "skin_arcane", type: "pieceSkin", name: "Rune Glow", rarity: "epic", desc: "Glowing piece style." },
   { id: "skin_void", type: "pieceSkin", name: "Void Marble", rarity: "legendary", desc: "Dark starlit marbles." },
 ];
 
@@ -41,21 +41,21 @@ export const COSMETIC_BY_ID = Object.fromEntries(COSMETIC_ITEMS.map((c) => [c.id
 export const COSMETIC_BOXES = [
   {
     id: "bronze",
-    name: "Bronze Vanity",
+    name: "Bronze Cosmetic Box",
     cost: 25,
     pulls: 3,
     weights: { common: 70, uncommon: 25, rare: 5, epic: 0 },
   },
   {
     id: "silver",
-    name: "Silver Vanity",
+    name: "Silver Cosmetic Box",
     cost: 50,
     pulls: 5,
     weights: { common: 50, uncommon: 35, rare: 12, epic: 3 },
   },
   {
     id: "gold",
-    name: "Gold Vanity",
+    name: "Gold Cosmetic Box",
     cost: 100,
     pulls: 8,
     weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 },

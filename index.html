@@ -29,7 +29,7 @@
       </div>
       <div class="game-header__actions">
         <div class="hud-currency">
-          <div class="hud-gems" title="Arcane gems">
+          <div class="hud-gems" title="Gems">
             <span class="hud-gems__icon" aria-hidden="true">◆</span>
             <span class="hud-gems__value" id="header-gems">0</span>
             <span class="hud-gems__label">gems</span>
@@ -51,7 +51,7 @@
       </button>
       <button type="button" class="tab-btn game-nav__btn" data-tab="chests" role="tab">
         <span class="tab-btn__icon" aria-hidden="true">◇</span>
-        <span>Vault</span>
+        <span>Shop</span>
       </button>
       <button type="button" class="tab-btn game-nav__btn game-nav__btn--play" data-tab="play" role="tab">
         <span class="tab-btn__icon" aria-hidden="true">⚔</span>
@@ -73,14 +73,14 @@
       <div id="view-chests" class="view view-panel hidden">
         <section class="panel game-panel vault-panel">
           <header class="panel-head">
-            <h2 class="panel-head__title">Arcane Vault</h2>
-            <p class="panel-head__desc">Spend gems on spell reliquaries and cosmetic boxes. Equip unlocks in Profile.</p>
+            <h2 class="panel-head__title">Shop</h2>
+            <p class="panel-head__desc">Spend gems on spell chests and cosmetic boxes. Equip unlocks in Profile.</p>
           </header>
-          <nav class="vault-tabs" role="tablist" aria-label="Vault categories">
+          <nav class="vault-tabs" role="tablist" aria-label="Shop categories">
             <button type="button" class="vault-tab active" data-vault-tab="cards" role="tab" aria-selected="true">Cards</button>
           </nav>
           <div id="vault-tab-cards" class="vault-tab-panel" role="tabpanel">
-            <h3 class="vault-section-title">Spell reliquaries</h3>
+            <h3 class="vault-section-title">Spell chests</h3>
             <div id="chest-list" class="chest-list"></div>
             <div id="chest-pulls" class="chest-pulls chest-pulls--hidden" aria-live="polite"></div>
             <p id="chest-log" class="chest-log" role="status"></p>
@@ -89,7 +89,7 @@
             <div id="cosmetic-box-list" class="cosmetic-box-list"></div>
             <p id="cosmetic-box-log" class="chest-log" role="status"></p>
             <h3 class="vault-section-title vault-section-title--mystery">Mystery box</h3>
-            <p class="vault-section-desc">Random spell or cosmetic — same tier odds as reliquaries. Costs <strong>10 ★ stars</strong>.</p>
+            <p class="vault-section-desc">Random spell or cosmetic — same tier odds as chests. Costs <strong>10 ★ stars</strong>.</p>
             <div id="mystery-box-card" class="mystery-box-card"></div>
             <p id="mystery-box-log" class="chest-log" role="status"></p>
           </div>
