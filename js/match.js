@@ -35,7 +35,7 @@ import {
   buildAnimSpec,
   MIN_SPELL_ANIM_MS,
 } from "./spellAnimations.js";
-import { applySquareSpellFx, mountSpellOverlay, removeSpellOverlay } from "./spellFx.js";
+import { applySquareSpellFx, mountSpellOverlay, removeSpellOverlay, revealCoinFlipResult } from "./spellFx.js";
 import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares } from "./cardEffectHandlers.js";
 
@@ -903,9 +903,24 @@ ${starLine}`;
     }
     if (card.effect === "coin_flip") {
       const spec = buildAnimSpec(card, [], this.localColor, extra);
-      await this.runSpellAnimation(spec);
+      const frame = this.$("board")?.closest(".board-frame");
+      let coinOverlay = null;
+      if (spec.overlay) coinOverlay = mountSpellOverlay(frame, spec.overlay);
+      this.spellAnimation = spec;
+      if (spec.visual) frame?.classList.add(`board-frame--fx-${spec.visual}`);
+      frame?.classList.add("board-frame--spell-instant");
+      const banner = this.$("turn-banner");
+      if (banner) {
+        banner.textContent = `${card.name}…`;
+        banner.className = "turn-banner spell-anim-instant";
+      }
+      this.render();
+      await delay(1600);
       const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success && res.victimSquare) {
+        const friendly = res.victimColor === this.localColor;
+        revealCoinFlipResult(coinOverlay, { friendly });
+        await delay(700);
         await this.runVictimSquareFlash({
           type: "kill",
           visual: "coin",
@@ -915,6 +930,11 @@ ${starLine}`;
           to: res.victimSquare,
         });
       }
+      removeSpellOverlay(coinOverlay);
+      this.spellAnimation = null;
+      if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
+      frame?.classList.remove("board-frame--spell-instant");
+      if (banner) banner.className = "turn-banner";
       return res;
     }
 

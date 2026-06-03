@@ -3,7 +3,7 @@
  */
 import { SIZE, inBounds, isDarkSquare } from "./board.js";
 import { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS } from "./cullAnimation.js";
-import { visualForEffect } from "./spellFx.js";
+import { visualForEffect, metaOverlayForEffect, durationForVisual } from "./spellFx.js";
 
 export const MIN_SPELL_ANIM_MS = 1000;
 export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS };
@@ -91,28 +91,9 @@ function withSpec(base, effect) {
   return { ...base, shake: animShake(effect, base.type) };
 }
 
-const VISUAL_DURATION_MS = {
-  coin: 1400,
-  duel: 1500,
-  stab: 1200,
-  snipe: 1300,
-  backstab: 1200,
-  sacrifice: 1600,
-  execution: 1400,
-  shadow: 2000,
-  cryo: 1300,
-  shatter: 1400,
-  lightning: 1400,
-  fire: 1300,
-  vengeance: 1100,
-  hibernation: 1200,
-  bomb_arm: 1000,
-  landmine_arm: 1000,
-};
-
 function animDurationForEffect(effect, fallback = MIN_SPELL_ANIM_MS) {
   const visual = visualForEffect(effect);
-  const ms = visual ? VISUAL_DURATION_MS[visual] : fallback;
+  const ms = visual ? durationForVisual(visual, fallback) : fallback;
   return Math.max(MIN_SPELL_ANIM_MS, ms ?? fallback);
 }
 
@@ -120,6 +101,19 @@ function withVisual(base, effect) {
   const visual = visualForEffect(effect);
   if (!visual) return withSpec(base, effect);
   return withSpec({ ...base, visual }, effect);
+}
+
+function finishSpec(base, effect) {
+  if (base.visual || base.overlay) return withSpec(base, effect);
+  const metaOverlay = !base.squares?.length ? metaOverlayForEffect(effect) : null;
+  if (metaOverlay) {
+    const duration = Math.max(base.duration ?? MIN_SPELL_ANIM_MS, durationForVisual("meta", MIN_SPELL_ANIM_MS));
+    return withSpec({ ...base, duration, overlay: metaOverlay }, effect);
+  }
+  const visual = visualForEffect(effect);
+  if (!visual) return withSpec(base, effect);
+  const duration = Math.max(base.duration ?? MIN_SPELL_ANIM_MS, animDurationForEffect(effect, base.duration));
+  return withSpec({ ...base, visual, duration }, effect);
 }
 
 
@@ -179,7 +173,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
 
 
   if (effect === "trickster" && extra.tricksterSquares?.length) {
-    return withSpec({
+    return finishSpec({
       type: "swap",
       visual: "trickster",
       duration: Math.max(MIN_SPELL_ANIM_MS, 1400),
@@ -192,7 +186,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
 
   if (effect === "fireblast" && p.length >= 2) {
     const lineSquares = squaresBetween(p[0], p[1]);
-    return withSpec({
+    return finishSpec({
       type: "kill",
       visual: "fire",
       duration: Math.max(MIN_SPELL_ANIM_MS, 1300),
@@ -206,7 +200,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
 
   if (effect === "chain_lightning" && extra.chainSquares?.length) {
     const sq = extra.chainSquares;
-    return withSpec({
+    return finishSpec({
       type: "multi",
       visual: "lightning",
       duration: Math.max(MIN_SPELL_ANIM_MS, 1400),
@@ -233,7 +227,9 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
   }
 
   if (META_EFFECTS.has(effect) && !p.length) {
-    return withSpec({ type: "instant", duration: MIN_SPELL_ANIM_MS, label, squares: [] }, effect);
+    const overlay = metaOverlayForEffect(effect);
+    const duration = overlay ? Math.max(MIN_SPELL_ANIM_MS, durationForVisual("meta", MIN_SPELL_ANIM_MS)) : MIN_SPELL_ANIM_MS;
+    return finishSpec({ type: "instant", duration, label, squares: [], overlay: overlay || undefined }, effect);
   }
 
   if (KILL_EFFECTS.has(effect) && p.length) {
@@ -289,7 +285,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
 
   if ((MOVE_EFFECTS.has(effect) || (p.length >= 2 && mode !== "empty_empty")) && p.length >= 2) {
     const lineSquares = squaresBetween(p[0], p[1]);
-    return withSpec({
+    return finishSpec({
       type: "move",
       duration: MIN_SPELL_ANIM_MS,
       label,
@@ -321,7 +317,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
   }
 
   if (SWAP_EFFECTS.has(effect) && p.length >= 2) {
-    return withSpec({
+    return finishSpec({
       type: "swap",
       duration: MIN_SPELL_ANIM_MS,
       label,
@@ -352,24 +348,24 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
   }
 
   if (TERRAIN_EFFECTS.has(effect) && p.length) {
-    return withSpec({ type: "terrain", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
+    return finishSpec({ type: "terrain", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
   }
 
   if (p.length === 1) {
     if (mode === "enemy" || DEBUFF_EFFECTS.has(effect)) {
-      return withSpec({ type: "debuff", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
+      return finishSpec({ type: "debuff", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
     }
     if (mode === "friendly" || BUFF_EFFECTS.has(effect)) {
-      return withSpec({ type: "buff", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
+      return finishSpec({ type: "buff", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
     }
     if (mode === "empty" || mode === "any_square") {
-      return withSpec({ type: "terrain", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
+      return finishSpec({ type: "terrain", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
     }
-    return withSpec({ type: "generic", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
+    return finishSpec({ type: "generic", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
   }
 
   if (p.length >= 2) {
-    return withSpec({
+    return finishSpec({
       type: "generic",
       duration: MIN_SPELL_ANIM_MS,
       label,
@@ -380,7 +376,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
-  return withSpec({ type: "instant", duration: MIN_SPELL_ANIM_MS, label, squares: [] }, effect);
+  return finishSpec({ type: "instant", duration: MIN_SPELL_ANIM_MS, label, squares: [] }, effect);
 }
 
 export function needsBoardAnimation(card) {
