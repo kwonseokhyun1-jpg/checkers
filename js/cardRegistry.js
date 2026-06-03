@@ -100,9 +100,9 @@ export const CARD_REGISTRY = [
   { id: "earthquake", name: "Earthquake", desc: "All pieces shift 1 square toward board center if possible.", rarity: "legendary", weight: 1, mode: "instant", effect: "earthquake" },
   { id: "hostile_swap", name: "Hostile Swap", desc: "Swap one of your pieces with an unshielded enemy.", rarity: "epic", weight: 2, mode: "f_e", effect: "hostile_swap" },
   { id: "purify", name: "Purify", desc: "Remove all shields, debuffs, and buffs from every piece.", rarity: "epic", weight: 2, mode: "instant", effect: "purify" },
-  { id: "trickster", name: "Trickster", desc: "Swap the positions of 6 random pieces.", rarity: "epic", weight: 2, mode: "instant", effect: "trickster" },
+  { id: "trickster", name: "Trickster", desc: "Swap up to 6 random pieces (pieces on back ranks are unaffected).", rarity: "epic", weight: 2, mode: "instant", effect: "trickster" },
   { id: "link_fate", name: "Link Fate", desc: "Link two enemy pieces — when either is destroyed, the other dies too.", rarity: "epic", weight: 2, mode: "e_e", effect: "link_fate" },
-  { id: "clone", name: "Clone", desc: "Duplicate one of your men on an adjacent empty square (original stays).", rarity: "epic", weight: 2, mode: "friendly", effect: "clone" },
+  { id: "clone", name: "Clone", desc: "Duplicate one of your men on an adjacent empty square you choose (original stays).", rarity: "epic", weight: 2, mode: "f_empty", effect: "clone" },
   { id: "constitution", name: "Constitution", desc: "Your kings cannot be destroyed by non-capture effects for 5 turns.", rarity: "epic", weight: 2, mode: "instant", effect: "constitution" },
   { id: "dominion", name: "Dominion", desc: "All your men may move backward this turn.", rarity: "uncommon", weight: 4, mode: "instant", effect: "dominion" },
 ];

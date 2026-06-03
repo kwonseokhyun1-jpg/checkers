@@ -172,6 +172,31 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
   const label = card.name || "Spell";
 
 
+
+  if (effect === "sanctuary" && extra.sanctuaryCells?.length) {
+    return finishSpec({
+      type: "buff",
+      visual: "aura",
+      duration: Math.max(MIN_SPELL_ANIM_MS, 1200),
+      label,
+      squares: extra.sanctuaryCells,
+      from: p[0],
+      to: p[0],
+    }, effect);
+  }
+
+  if (effect === "darkness" && extra.darknessCells?.length) {
+    return finishSpec({
+      type: "debuff",
+      visual: "aura",
+      duration: Math.max(MIN_SPELL_ANIM_MS, 1200),
+      label,
+      squares: extra.darknessCells,
+      from: p[0],
+      to: p[0],
+    }, effect);
+  }
+
   if (effect === "trickster" && extra.tricksterSquares?.length) {
     return finishSpec({
       type: "swap",

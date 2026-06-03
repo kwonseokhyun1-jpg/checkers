@@ -66,6 +66,9 @@ function fEmptyFirstPickTargets(state, color, card) {
     const piece = at(state, r, c);
     return piece && hasDest(piece, r, c);
   });
+  if (card.effect === "clone") {
+    return filter((piece) => !piece.king && getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
+  }
   if (card.effect === "backstep") {
     return filter((piece) => getBackstepTarget(state.board, piece, state).length > 0);
   }
@@ -163,6 +166,7 @@ export function getValidTargets(state, color, card, picks) {
           [pr, pc - 1],
           [pr, pc + 1],
         ].filter(([r, c]) => emptyDark(state, r, c));
+      if (card.effect === "clone") return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
       if (card.effect === "backstep") return getBackstepTarget(state.board, p, state);
       if (card.effect === "leapfrog" || card.effect === "phase_walk") {
         return getLeapfrogTargets(state.board, p, color).filter(([r, c]) => emptyDark(state, r, c));

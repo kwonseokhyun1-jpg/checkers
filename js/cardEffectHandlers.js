@@ -116,6 +116,32 @@ function enemySquaresAdjacentTo(state, r, c, color) {
   });
 }
 
+
+export function getSanctuaryCells(r, c, max = 6) {
+  const cells = [];
+  for (let dr = -2; dr <= 2; dr++)
+    for (let dc = -2; dc <= 2; dc++) {
+      const nr = r + dr, nc = c + dc;
+      if (inBounds(nr, nc) && isDarkSquare(nr, nc)) cells.push([nr, nc]);
+    }
+  return cells.slice(0, max);
+}
+
+export function getDarknessZoneCells(r, c) {
+  const cells = [];
+  for (let dr = -1; dr <= 1; dr++)
+    for (let dc = -1; dc <= 1; dc++) {
+      const nr = r + dr, nc = c + dc;
+      if (inBounds(nr, nc) && isDarkSquare(nr, nc)) cells.push([nr, nc]);
+    }
+  return cells;
+}
+
+function isFurthestBackRow(piece) {
+  if (!piece) return false;
+  return piece.color === COLORS.RED ? piece.row === SIZE - 1 : piece.row === 0;
+}
+
 function shufflePick(arr, n) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -129,7 +155,7 @@ export function planTrickster(state) {
   for (let r = 0; r < SIZE; r++)
     for (let c = 0; c < SIZE; c++) {
       const p = at(state, r, c);
-      if (p) all.push({ r, c, p });
+      if (p && !isFurthestBackRow(p)) all.push({ r, c, p });
     }
   if (all.length < 2) return null;
   const n = Math.min(6, all.length);
@@ -248,17 +274,15 @@ const EFFECTS = {
   mirror_shield(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.mirrorShield=true; return ok(); },
   phalanx(state, color, picks) { if(picks.length<2) return fail(); const a=at(state,...p0(picks)),b=at(state,...p1(picks)); if(!a||!b||a.color!==color||b.color!==color) return fail(); const gid=Date.now(); a.phalanxId=gid; b.phalanxId=gid; return ok(); },
   sanctuary(state, color, picks) {
-    const [r,c]=p0(picks);
-    const cells=[];
-    for(let dr=-2;dr<=2;dr++) for(let dc=-2;dc<=2;dc++){
-      const nr=r+dr,nc=c+dc;
-      if(inBounds(nr,nc)&&isDarkSquare(nr,nc)) cells.push([nr,nc]);
+    const [r, c] = p0(picks);
+    const cells = getSanctuaryCells(r, c);
+    if (!cells.length) return fail();
+    for (const [nr, nc] of cells) {
+      const sq = getSq(state, nr, nc);
+      sq.sanctuary = color;
+      sq.sanctuaryTurns = 1;
     }
-    let n=0;
-    for(const [nr,nc] of cells.slice(0,6)){
-      const sq=getSq(state,nr,nc); sq.sanctuary=color; sq.sanctuaryTurns=1; n++;
-    }
-    return n?ok():fail();
+    return ok("Sanctuary — protected zone placed.", { sanctuaryCells: cells });
   },
   last_stand(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.lastStand=true; return ok(); },
   magnet(state, color, picks) {
@@ -320,7 +344,19 @@ const EFFECTS = {
     b.linkedFateId = a.id;
     return ok("Link Fate — when one falls, the other follows.");
   },
-  clone(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); const adj=getAdjacentEmpty(state.board,p); if(!adj.length) return fail(); const [tr,tc]=adj[0]; const copy=createPiece(color,tr,tc,p.king); copy.bearAwakened=p.bearAwakened; return ok('Clone — duplicate on an adjacent square.'); },
+  clone(state, color, picks) {
+    if (picks.length < 2) return fail();
+    const [r1, c1] = p0(picks), [r2, c2] = p1(picks);
+    const p = at(state, r1, c1);
+    if (!p || p.color !== color || p.king) return fail("Only men can be cloned");
+    if (!getAdjacentEmpty(state.board, p).some(([r, c]) => r === r2 && c === c2) || !emptyDark(state, r2, c2)) {
+      return fail("Pick an adjacent empty square");
+    }
+    const copy = createPiece(color, r2, c2, false);
+    copy.bearAwakened = p.bearAwakened;
+    state.board[r2][c2] = copy;
+    return ok("Clone — duplicate placed.");
+  },
   twin_soul(state, color, picks) { return EFFECTS.clone(state, color, picks); },
   fusion(state, color, picks) { if(picks.length<2) return fail(); const a=at(state,...p0(picks)),b=at(state,...p1(picks)); if(!a||!b||a.color!==color||b.color!==color) return fail(); if(a.king||b.king) return fail("Only men can fuse"); if(Math.max(Math.abs(a.row-b.row),Math.abs(a.col-b.col))!==1) return fail("Pick adjacent pieces"); removePiece(state.board,b.row,b.col); a.superMan=3; return ok("Fusion — super-man can leap 2 squares forward."); },
   chameleon(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=2; return ok(); },
@@ -332,7 +368,11 @@ const EFFECTS = {
   warp_gate(state, color, picks) { if(picks.length<2) return fail(); const k1=sk(...p0(picks)),k2=sk(...p1(picks)); state.squares[k1]={...state.squares[k1],warp:k2}; state.squares[k2]={...state.squares[k2],warp:k1}; return ok(); },
   collapse(state, color, picks) { const [r,c]=p0(picks); if(!isDarkSquare(r,c)) return fail(); setCollapsedSquare(state.meta, r, c); const p=at(state,r,c); if(p){ removePiece(state.board,r,c); for(let r2=0;r2<SIZE;r2++) for(let c2=0;c2<SIZE;c2++) if(emptyDark(state,r2,c2)){ state.board[r2][c2]=p; p.row=r2; p.col=c2; break;}} return ok(); },
   mirror_board(state, color, picks) { state.meta.mirrorBoardTurns[opp(color)]=2; return ok(); },
-  darkness(state, color, picks) { const [r,c]=p0(picks); getSq(state,r,c).darkness=2; return ok(); },
+  darkness(state, color, picks) {
+    const [r, c] = p0(picks);
+    getSq(state, r, c).darkness = 2;
+    return ok("Darkness — zone cloaked.", { darknessCells: getDarknessZoneCells(r, c) });
+  },
   highlight_path(state, color, picks) { state.meta.highlightTurns[opp(color)]=2; return ok(); },
   earthquake(state, color, picks) { const cr=3.5,cc=3.5; const all=fri(state,color).concat(en(state,color)); for(const p of all){ const dr=p.row<cr?1:p.row>cr?-1:0, dc=p.col<cc?1:p.col>cc?-1:0; const nr=p.row+dr,nc=p.col+dc; if(emptyDark(state,nr,nc)) movePiece(state.board,p.row,p.col,nr,nc);} return ok(); },
   prospect(state, color, picks) { state.gems[color]+=10; state.meta.prospectPending[color]=10; return ok(); },

@@ -4,7 +4,7 @@ const TAGS = {
   shield_1: ["Shield 1 turn — blocks one capture or spell hit"],
   shield_2: ["Shield 2 turns — cannot be captured"],
   forward_bolt: ["Destroy first enemy on forward diagonal (Stab)"],
-  trickster: ["Swap 6 random pieces on the board"],
+  trickster: ["Swap up to 6 random pieces (not on back ranks)"],
   purify: ["Removes all shields, buffs, and debuffs board-wide"],
   chain_lightning: ["Strike adjacent enemies only", "Up to 2 kills if enemies touch each other", "Your piece is paralyzed 2 turns"],
   fireblast: ["Your piece — fireball auto-hits the first enemy straight ahead on a forward diagonal"],
@@ -33,7 +33,7 @@ const TAGS = {
   silence_3: ["Suppress special movement 3 turns"],
   poison_3: ["Enemy dies in 6 turns — 6-turn poison bar"],
   deflect_1: ["Next hit reflects to random enemy"],
-  clone: ["Duplicate your man on an adjacent square"],
+  clone: ["Your man, then pick an adjacent empty square for the copy"],
   link_fate: ["Link two enemies — when one is destroyed, the other dies too"],
 };
 
