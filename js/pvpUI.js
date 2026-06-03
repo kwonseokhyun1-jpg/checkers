@@ -5,7 +5,7 @@ import { MatchSession } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
-import { PvpService } from "./pvp.js";
+import { PvpService, probePvpBackend } from "./pvp.js";
 
 /**
  * @param {object} opts
@@ -86,6 +86,15 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     root.querySelector("#pvp-quick")?.addEventListener("click", () => startMatch("quick"));
     root.querySelector("#pvp-create")?.addEventListener("click", () => startMatch("create"));
     root.querySelector("#pvp-join")?.addEventListener("click", () => startMatch("join"));
+    void probePvpBackend().then((probe) => {
+      if (!probe.ok && probe.reason) {
+        const el = root.querySelector("#pvp-status");
+        if (el && !el.textContent) {
+          el.textContent = probe.reason;
+          el.classList.add("pvp-status--error");
+        }
+      }
+    });
   }
 
   function getSelectedDeck() {
@@ -124,23 +133,28 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     if (row.status === "waiting" && pvpService?.role === "host") {
       setStatus("Waiting for opponent…");
       showWaiting(row.code);
+      pvpService.startPolling();
       return;
     }
 
     if (matchSession && row.status === "active" && row.state_json) {
       if (row.version <= (pvpService?._lastVersion ?? -1)) return;
       pvpService._lastVersion = row.version;
+      if (matchSession.actionBusy || matchSession._syncBusy) return;
       const isMyTurn = row.turn === pvpService.localColor;
+      const opponentName =
+        pvpService.localColor === COLORS.RED
+          ? row.guest_display_name || "Opponent"
+          : row.host_display_name || "Opponent";
       matchSession.importState(row.state_json);
       matchSession.setMessage(
-        isMyTurn
-          ? "Your turn — cast a spell or move."
-          : `${row.guest_display_name || row.host_display_name || "Opponent"} is acting…`
+        isMyTurn ? "Your turn — cast a spell or move." : `${opponentName} is acting…`
       );
       return;
     }
 
     if (row.status === "active" && row.state_json && !matchSession) {
+      pvpService?.stopPolling();
       launchMatch(row);
     }
   }
