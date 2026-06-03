@@ -276,7 +276,7 @@ const EFFECTS = {
   press(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.pressExtraMove=true; return ok(); },
   vengeance(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.vengeanceTurns=2; return ok(); },
   hibernation(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(p.hibernationTurns>0) return fail("Already hibernating."); p.hibernationTurns=2; p.bearAwakened=false; return ok("Hibernation — wakes as a king in 2 turns."); },
-  barrier(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); sq.barrier={owner:color,turnsLeft:1}; return ok(); },
+  barrier(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); sq.barrier={owner:color,turnsLeft:2}; return ok(); },
   iron_will(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.frozenTurns=0; p.rooted=0; return ok(); },
   revive(state, color, picks) { const [r,c]=p0(picks); const cap=state.captured[color]; if(!cap?.length) return fail('Revive requires a captured piece'); if(!emptyDark(state,r,c)) return fail(); const data=cap.pop(); const p=createPiece(color,r,c,data.king); p.revivedNoCapture=true; state.board[r][c]=p; return ok('Piece revived — it cannot capture this turn.'); },
   ghost_guard(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.ghostGuard=true; return ok(); },
@@ -360,14 +360,21 @@ const EFFECTS = {
   echo(state, color, picks) { const last=state.meta.lastCard[color]; if(!last) return fail('No previous card'); return applyEffect(state,color,last.effect,[]); },
   roulette(state, color, picks) { const card=drawRandomCard(); return applyEffect(state,color,card.effect,[]); },
   blizzard(state, color, picks) {
-    const col = p0(picks)[1];
+    const row = p0(picks)[0];
     let n = 0;
-    for (let r = 0; r < SIZE; r++) {
-      if (!isDarkSquare(r, col)) continue;
-      const t = at(state, r, col);
+    for (let c = 0; c < SIZE; c++) {
+      if (!isDarkSquare(row, c)) continue;
+      const t = at(state, row, c);
       if (t && t.color !== color && !t.king) { t.frozenTurns = Math.max(t.frozenTurns || 0, 1); n++; }
     }
-    return n ? ok() : fail("No enemies in that column");
+    return n ? ok() : fail("No enemies in that row");
+  },
+  create_foe(state, color, picks) {
+    const [r, c] = p0(picks);
+    if (!emptyDark(state, r, c)) return fail();
+    const foe = opp(color);
+    state.board[r][c] = createPiece(foe, r, c, false);
+    return ok("Create Foe — enemy spawned!");
   },
   fireline(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?-1:1; for(const dc of [-1,1]){ let rr=p.row+dir,cc=p.col+dc; while(inBounds(rr,cc)&&isDarkSquare(rr,cc)){ const t=at(state,rr,cc); if(t){ if(t.color!==color) kill(state,rr,cc,color); break;} rr+=dir; cc+=dc;}} return ok(); },
   sanctuary_pulse(state, color, picks) { const rows=backRow(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&rows.includes(r)) p.shieldTurns=Math.max(p.shieldTurns,1);} return ok(); },

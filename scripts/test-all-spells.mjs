@@ -145,7 +145,7 @@ function uiPickCombos(state, card, limit = 64) {
   const combos = [];
   const t0 = getValidTargets(state, COLOR, card, []);
   if (card.mode === "instant" || card.mode === "discard_pick") return [[]];
-  if (["friendly", "enemy", "empty", "any_square", "column"].includes(card.mode)) {
+  if (["friendly", "enemy", "empty", "any_square", "column", "row"].includes(card.mode)) {
     for (const p of t0.slice(0, limit)) combos.push([p]);
     return combos;
   }
@@ -193,11 +193,53 @@ for (const card of cards) {
     row.status = "warn";
     row.notes.push("Works with correct picks but UI/AI targeting cannot find a valid play");
   }
-  if (card.mode === "column" || card.mode === "f_e_adj") {
+  if (card.mode === "column" || card.mode === "row", "row" || card.mode === "f_e_adj") {
     const autoWorks = setups.some((mk) => { try { return tryAutoPlay(mk(), card).success; } catch { return false; } });
     if (!autoWorks) row.notes.push(`tryAutoPlay omits ${card.mode} targeting`);
   }
   rows.push(row);
+}
+
+
+
+// Fireblast diagonal ray test
+{
+  const s = baseState();
+  place(s, COLOR, 5, 0);
+  place(s, OPP, 3, 2); // forward diagonal from 5,0
+  const fb = cards.find((c) => c.id === "fireblast");
+  const res = applyCard(s, COLOR, fb, [[5, 0]]);
+  if (!res.success) throw new Error("Fireblast failed: " + res.message);
+  if (at(s, 3, 2)) throw new Error("Fireblast should destroy diagonal enemy");
+  console.log("Fireblast diagonal test: OK");
+}
+
+// Fusion behavior check
+{
+  const s = baseState();
+  place(s, COLOR, 5, 0);
+  place(s, COLOR, 4, 1);
+  const fusionCard = cards.find((c) => c.id === "fusion");
+  const res = applyCard(s, COLOR, fusionCard, [[5, 0], [4, 1]]);
+  if (!res.success) throw new Error("Fusion manual test failed: " + res.message);
+  const survivor = at(s, 5, 0);
+  if (!survivor || survivor.superMan !== 3) throw new Error("Fusion should leave superMan=3 on survivor");
+  if (at(s, 4, 1)) throw new Error("Fusion should remove second piece");
+  console.log("Fusion test: OK (superMan=3, second piece removed)");
+}
+
+// Backstep UI targeting check
+{
+  const s = baseState();
+  place(s, COLOR, 5, 0);
+  const backstep = cards.find((c) => c.id === "backstep");
+  const t0 = getValidTargets(s, COLOR, backstep, []);
+  if (!t0.some(([r, c]) => r === 5 && c === 0)) throw new Error("Backstep should highlight piece with valid backstep");
+  const s2 = baseState();
+  place(s2, COLOR, 7, 0);
+  const t0b = getValidTargets(s2, COLOR, backstep, []);
+  if (t0b.some(([r, c]) => r === 7 && c === 0)) throw new Error("Backstep should not highlight piece with no backstep dest");
+  console.log("Backstep UI targeting test: OK");
 }
 
 const summary = { total: rows.length, pass: rows.filter((r) => r.status === "pass").length, warn: rows.filter((r) => r.status === "warn").length, error: rows.filter((r) => r.status === "error").length };

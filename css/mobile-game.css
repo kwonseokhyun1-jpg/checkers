@@ -68,6 +68,18 @@ body {
   box-shadow: 0 0 0 3px rgba(232, 197, 71, 0.2);
 }
 
+
+/* Spell hand — allow vertical scroll without starting a cast */
+.hand.spell-hand {
+  touch-action: pan-x;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hand.spell-hand .spell-card--draggable {
+  touch-action: pan-x;
+}
+
 /* Game shell — phone frame */
 .game-shell {
   max-width: 480px;

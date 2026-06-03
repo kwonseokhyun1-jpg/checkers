@@ -60,6 +60,7 @@ export const EFFECT_VISUAL = {
   sanctuary: "aura",
   darkness: "aura",
   barrier: "barrier",
+  create_foe: "summon",
 
   poison_3: "poison",
   hunters_mark: "poison",
@@ -123,6 +124,7 @@ export const VISUAL_DURATION_MS = {
   revive: 1300,
   aura: 1200,
   barrier: 1100,
+  create_foe: 900,
   poison: 1200,
   curse: 1100,
   root: 1100,
