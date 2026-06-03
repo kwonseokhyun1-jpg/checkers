@@ -358,10 +358,6 @@ body.deck-editing #view-deck:not(.hidden) {
   padding: 0 0.2rem;
 }
 
-.collection-card-wrap--edit .collection-buy-cost--btn {
-  display: none;
-}
-
 .btn-add-to-deck--bar {
   position: static;
   width: 100%;
@@ -381,6 +377,15 @@ body.deck-editing #view-deck:not(.hidden) {
 .btn-add-to-deck--bar:disabled {
   color: var(--text-muted);
   background: rgba(255, 255, 255, 0.03);
+}
+
+.btn-add-to-deck--buy:not(:disabled) {
+  color: #c8e6a0;
+  background: rgba(129, 182, 76, 0.18);
+}
+
+.btn-add-to-deck--buy:not(:disabled):active {
+  background: rgba(129, 182, 76, 0.28);
 }
 
 /* Kill mobile-game chunky styles inside deck editor */
