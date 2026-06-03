@@ -243,8 +243,6 @@ function showDeckSubview(sub) {
     collectionCategory = "all";
     collectionOwnedOnly = true;
     syncCollectionFilterControls();
-    $("collection-filters-panel")?.classList.add("hidden");
-    $("btn-toggle-collection-filters")?.setAttribute("aria-expanded", "false");
   }
 
   if (sub === "list") renderDeckList();
@@ -486,7 +484,8 @@ function appendCollectionCard(parent, def, opts = {}) {
 
   const card = renderSpellCardEl(def, {
     button: true,
-    compact: true,
+    compact: !deckEdit,
+    tiny: deckEdit,
     disabled: !deckEdit && (owned < 1 || atMaxCopies),
     onClick: (e) => {
       if (e.shiftKey) {
@@ -576,7 +575,17 @@ function renderInventoryGrid(container, opts = {}) {
   let rendered = 0;
   const cardOpts = { deckEdit, statusEl };
 
-  if (collectionCategory === "all") {
+  if (deckEdit || collectionCategory !== "all") {
+    container.className = "deck-editor__grid collection-grid";
+    for (const def of cards) {
+      try {
+        appendCollectionCard(container, def, cardOpts);
+        rendered += 1;
+      } catch (err) {
+        console.error("Failed to render card:", def?.id, err);
+      }
+    }
+  } else {
     container.className = "deck-editor__grid collection-categories";
     const byCategory = Object.fromEntries(CARD_CATEGORY_ORDER.map((cat) => [cat, []]));
     for (const def of cards) {
@@ -607,16 +616,6 @@ function renderInventoryGrid(container, opts = {}) {
       }
       section.appendChild(grid);
       container.appendChild(section);
-    }
-  } else {
-    container.className = "deck-editor__grid collection-grid";
-    for (const def of cards) {
-      try {
-        appendCollectionCard(container, def, cardOpts);
-        rendered += 1;
-      } catch (err) {
-        console.error("Failed to render card:", def?.id, err);
-      }
     }
   }
 
@@ -722,10 +721,13 @@ function renderDeckEditor() {
     countBadge.classList.toggle("deck-editor__count--ready", val.valid);
   }
   if (status) {
-    status.textContent = val.valid
-      ? `Ready to play — ${countLabel} cards`
-      : val.errors[0] || `${countLabel} — keep adding spells`;
-    status.className = val.valid ? "deck-status ok" : "deck-status warn";
+    if (val.valid) {
+      status.textContent = "";
+      status.className = "deck-status ok deck-status--hidden";
+    } else {
+      status.textContent = val.errors[0] || `${countLabel} — keep adding spells`;
+      status.className = "deck-status warn";
+    }
   }
 
   const progressFill = $("deck-progress-fill");
@@ -1283,14 +1285,6 @@ function init() {
     renderDeckEditor();
   });
   $("btn-auto-finish-deck")?.addEventListener("click", autoFinishDeck);
-  $("btn-toggle-collection-filters")?.addEventListener("click", () => {
-    const panel = $("collection-filters-panel");
-    const btn = $("btn-toggle-collection-filters");
-    const open = panel?.classList.toggle("hidden") === false;
-    btn?.setAttribute("aria-expanded", open ? "true" : "false");
-    btn?.classList.toggle("deck-editor__filter-toggle--active", open);
-  });
-
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
   $("btn-back-adventure")?.addEventListener("click", closeAdventurePrebattle);
   $("adventure-stage-backdrop")?.addEventListener("click", closeAdventurePrebattle);
