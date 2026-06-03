@@ -53,6 +53,14 @@ import { initAuthUI } from "./authUI.js";
 import { dismissTutorial, initTutorial } from "./tutorial.js";
 import { initPvpUI } from "./pvpUI.js";
 import { getMatchHtml } from "./matchView.js";
+import {
+  bindMatchVisibilityHandlers,
+  enterMatchMode,
+  exitMatchMode,
+  isMatchActive,
+  readMatchCheckpoint,
+  saveMatchCheckpoint,
+} from "./matchLifecycle.js";
 import { initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
@@ -169,6 +177,7 @@ function hideStageModal() {
 }
 
 function showTab(tab) {
+  if (isMatchActive()) return;
   dismissTutorial({ persist: true, profile, saveProfile });
   activeTab = tab;
   document.querySelectorAll(".tab-btn").forEach((b) => {
@@ -1220,6 +1229,80 @@ function openAdventurePrebattle(levelId) {
   });
 }
 
+
+function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = null, winRewarded = false) {
+  const opponentName = level.opponent;
+  closeAdventurePrebattle();
+  pendingEnemyDeck = null;
+
+  document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
+  $("view-match")?.classList.remove("hidden");
+  const root = $("view-match");
+  if (!root) return;
+  root.innerHTML = getMatchHtml(opponentName);
+
+  enterMatchMode({
+    kind: "adventure",
+    deckId: deck.id,
+    deckCardIds: deck.cardIds,
+    aiDeckIds: enemyDeck,
+    opponentName,
+    levelId,
+  });
+
+  const sessionOpts = {
+    aiDeckIds: enemyDeck,
+    opponentName,
+    cosmetics: getEquippedCosmetics(profile),
+  };
+  if (resumeState) {
+    sessionOpts.initialState = resumeState;
+  }
+
+  matchSession = new MatchSession(
+    deck.cardIds,
+    root,
+    () => {
+      matchSession = null;
+      exitMatchMode();
+      root.innerHTML = "";
+      $("view-match")?.classList.add("hidden");
+      showTab("play");
+    },
+    (stars) => {
+      const { gems, stars: bestStars, starsGained } = recordLevelClear(profile, levelId, stars);
+      profile.gems += gems;
+      saveProfile(profile);
+      updateCurrencyHeader();
+      return {
+        message: `+${gems} gems! · Best: ${formatStars(bestStars)}`,
+        starsGained,
+      };
+    },
+    sessionOpts
+  );
+  if (winRewarded) matchSession.winRewarded = true;
+  saveMatchCheckpoint(matchSession);
+  matchSession.setMessage("Drag a spell onto the board or tap a card, then pick highlighted squares.");
+  matchSession.render();
+}
+
+function tryResumeSavedMatch() {
+  const cp = readMatchCheckpoint();
+  if (!cp) return false;
+  const deck = profile.decks.find((d) => d.id === cp.deckId) || profile.decks.find((d) => d.cardIds?.length === DECK_SIZE);
+  const level = cp.levelId ? getLevel(cp.levelId) : null;
+  if (!deck || deck.cardIds.length !== DECK_SIZE || !level || !cp.aiDeckIds?.length) {
+    exitMatchMode();
+    return false;
+  }
+  selectedAdventureLevel = cp.levelId;
+  launchAdventureMatch(deck, level, cp.aiDeckIds, cp.levelId, cp.state, cp.winRewarded);
+  matchSession?.setMessage("Match resumed — pick up where you left off.");
+  return true;
+}
+
+
 function startAdventureMatch() {
   const deckId = $("adventure-deck-select")?.value;
   const deck = profile.decks.find((d) => d.id === deckId);
@@ -1239,40 +1322,7 @@ function startAdventureMatch() {
     return;
   }
 
-  const opponentName = level.opponent;
-  closeAdventurePrebattle();
-  pendingEnemyDeck = null;
-
-  document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
-  $("view-match")?.classList.remove("hidden");
-  const root = $("view-match");
-  if (!root) return;
-  root.innerHTML = getMatchHtml(opponentName);
-
-  matchSession = new MatchSession(
-    deck.cardIds,
-    root,
-    () => {
-      matchSession = null;
-      root.innerHTML = "";
-      $("view-match")?.classList.add("hidden");
-      showTab("play");
-    },
-    (stars) => {
-      const { gems, stars: bestStars, starsGained } = recordLevelClear(profile, levelId, stars);
-      profile.gems += gems;
-      saveProfile(profile);
-      updateCurrencyHeader();
-      return {
-        message: `+${gems} gems! · Best: ${formatStars(bestStars)}`,
-        starsGained,
-      };
-    },
-    { aiDeckIds: enemyDeck, opponentName, cosmetics: getEquippedCosmetics(profile) }
-  );
-
-  matchSession.setMessage("Drag a spell onto the board or tap a card, then pick highlighted squares.");
-  matchSession.render();
+  launchAdventureMatch(deck, level, enemyDeck, levelId);
 }
 
 
@@ -1312,7 +1362,10 @@ function init() {
     if (e.key === "Escape") closeAdventurePrebattle();
   });
   document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => showTab(btn.dataset.tab));
+    btn.addEventListener("click", () => {
+      if (isMatchActive()) return;
+      showTab(btn.dataset.tab);
+    });
   });
 
   $("btn-new-deck")?.addEventListener("click", startNewDeck);
@@ -1439,9 +1492,10 @@ function init() {
     }
   });
 
+  bindMatchVisibilityHandlers(() => matchSession);
   repairProfile(profile);
   syncCollectionFilterControls();
-  showTab("deck");
+  if (!tryResumeSavedMatch()) showTab("deck");
 }
 
 init();

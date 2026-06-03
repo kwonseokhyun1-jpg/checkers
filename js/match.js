@@ -140,6 +140,7 @@ export class MatchSession {
     this.selectedColumn = null;
     this.selectedRow = null;
     this.actionBusy = false;
+    this._aiTurnPending = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.bindEls();
     this.beginPlayerTurn();
@@ -173,7 +174,9 @@ export class MatchSession {
     this.bindBoardFrame();
     this.root.querySelector("#btn-end-cards")?.addEventListener("click", () => this.beginMovePhase());
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
-    this.root.querySelector("#btn-leave-match")?.addEventListener("click", () => this.onExit?.());
+    this.root.querySelector("#btn-leave-match")?.addEventListener("click", () => {
+      if (window.confirm("Leave this match? Your progress is saved — you can resume when you return.")) this.onExit?.();
+    });
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
     this._onDocPointerMove = (e) => this.onDragMove(e);
     this._onDocPointerUp = (e) => this.onDragEnd(e);
@@ -789,7 +792,13 @@ export class MatchSession {
       });
       return;
     }
-    setTimeout(() => this.runOpponentTurn(), AI_PACE.beforeTurn);
+    setTimeout(() => {
+      if (document.hidden) {
+        this._aiTurnPending = true;
+        return;
+      }
+      this.runOpponentTurn();
+    }, AI_PACE.beforeTurn);
   }
 
   checkWin() {
@@ -1251,8 +1260,27 @@ ${starLine}`;
     if (aiLog) aiLog.scrollTop = aiLog.scrollHeight;
   }
 
+  pauseForBackground() {
+    this._aiTurnPending = true;
+  }
+
+  resumeFromBackground() {
+    if (!this._aiTurnPending || this.isPvp) return;
+    if (this.state.gameOver || this.state.turn === this.localColor) {
+      this._aiTurnPending = false;
+      return;
+    }
+    this._aiTurnPending = false;
+    this.runOpponentTurn();
+  }
+
   async runOpponentTurn() {
     if (this.isPvp) return;
+    if (document.hidden) {
+      this._aiTurnPending = true;
+      return;
+    }
+    this._aiTurnPending = false;
     const s = this.state;
     if (s.gameOver) return;
     this.setMessage(`${this.opponentName} is acting…`);
