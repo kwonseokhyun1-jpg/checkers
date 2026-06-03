@@ -31,6 +31,9 @@ const TAGS = {
   hibernation: ["Sleep 2 turns (immobile)", "Wake as king + Awoken Bear", "Extra move every turn after"],
   root_2: ["Enemy cannot jump/capture next turn"],
   silence_3: ["Suppress special movement 3 turns"],
+  poison_3: ["Enemy dies in 3 turns"],
+  deflect_1: ["Next hit reflects to random enemy"],
+  clone: ["Duplicate your man on an adjacent square"],
 };
 
 const MODE_TAGS = {
@@ -60,6 +63,3 @@ export function getCardEffectTags(def) {
 export function formatEffectTooltip(def) {
   return getCardEffectTags(def).join(" · ");
 }
-
-  poison_3: ["Enemy dies in 3 turns"],
-  deflect_1: ["Next hit reflects to random enemy"],
