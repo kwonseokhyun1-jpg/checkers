@@ -15,6 +15,8 @@ import {
   upsertDeck,
   deleteDeck,
   collectionCount,
+  isCardNew,
+  clearCardNew,
 } from "./storage.js";
 import {
   getAdventureLevels,
@@ -80,6 +82,7 @@ let collectionRarity = "all";
 let collectionSort = "rarity-desc";
 let collectionCategory = "all";
 let collectionOwnedOnly = true;
+let collectionNewOnly = false;
 
 const RARITY_RANK = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
 
@@ -208,6 +211,9 @@ function syncCollectionFilterControls() {
   document.querySelectorAll(".collection-owned-only-toggle").forEach((el) => {
     el.checked = collectionOwnedOnly;
   });
+  document.querySelectorAll(".collection-new-only-toggle").forEach((el) => {
+    el.checked = collectionNewOnly;
+  });
   const searchIds = ["collection-search"];
   for (const id of searchIds) {
     const el = $(id);
@@ -239,7 +245,8 @@ function showDeckSubview(sub) {
     collectionRarity = "all";
     collectionFilter = "";
     collectionCategory = "all";
-    collectionOwnedOnly = false;
+    collectionOwnedOnly = true;
+    collectionNewOnly = false;
     syncCollectionFilterControls();
   }
 
@@ -454,6 +461,7 @@ function getFilteredCollection() {
       if (!c.name.toLowerCase().includes(q) && !c.desc.toLowerCase().includes(q)) return false;
     }
     if (collectionOwnedOnly && collectionCount(profile, c.id) <= 0) return false;
+    if (collectionNewOnly && !isCardNew(profile, c.id)) return false;
     return true;
   });
   return sortCollectionCards(filtered);
@@ -487,6 +495,8 @@ function buyAndAddCardToWorkingDeck(cardId, statusEl) {
   saveProfile(profile);
   updateCurrencyHeader();
   workingDeck.push(cardId);
+  clearCardNew(profile, cardId);
+  saveProfile(profile);
   renderDeckEditor();
   if (statusEl) {
     statusEl.hidden = false;
@@ -504,6 +514,8 @@ function addCardToWorkingDeck(cardId) {
   const addCheck = canAddCardToDeck(workingDeck, cardId, profile);
   if (!addCheck.ok) return false;
   workingDeck.push(cardId);
+  clearCardNew(profile, cardId);
+  saveProfile(profile);
   renderDeckEditor();
   return true;
 }
@@ -548,7 +560,7 @@ function appendCollectionCard(parent, def, opts = {}) {
 
   if (deckEdit) {
     const wrap = document.createElement("div");
-    wrap.className = "deck-collection-row";
+    wrap.className = "deck-collection-row" + (isCardNew(profile, def.id) ? " deck-collection-row--new" : "");
 
     const main = document.createElement("div");
     main.className = "deck-collection-row__main";
@@ -564,7 +576,7 @@ function appendCollectionCard(parent, def, opts = {}) {
     info.className = "deck-collection-row__info";
     const ownedLabel = owned > 0 ? `Owned ${owned}/${cap}` : "Not in collection";
     info.innerHTML = `
-      <strong class="deck-collection-row__name">${escapeHtml(def.name)}</strong>
+      <strong class="deck-collection-row__name">${escapeHtml(def.name)}${isCardNew(profile, def.id) ? '<span class="deck-collection-row__new">New</span>' : ""}</strong>
       <span class="deck-collection-row__meta">${ownedLabel} · In deck ${inDeck}/${cap}</span>`;
     info.addEventListener("click", () => openInspect());
 
@@ -829,8 +841,7 @@ function renderDeckEditor() {
     slot.className = "deck-slot-wrap deck-slot-wrap--strip";
     const card = renderSpellCardEl(def, {
       button: true,
-      compact: true,
-      meta: count > 1 ? `×${count}` : undefined,
+      tiny: true,
       onClick: () => {
         showCardPreview(def, {
           meta: count > 1 ? `${count} copies in deck` : "In your deck",
@@ -839,6 +850,12 @@ function renderDeckEditor() {
       },
     });
     slot.appendChild(card);
+    if (count > 1) {
+      const stack = document.createElement("span");
+      stack.className = "deck-stack-count";
+      stack.textContent = `×${count}`;
+      slot.appendChild(stack);
+    }
     const rem = document.createElement("button");
     rem.type = "button";
     rem.className = "deck-slot-remove deck-slot-remove--visible";
@@ -1322,12 +1339,21 @@ function init() {
     });
   });
 
+  document.querySelectorAll(".collection-new-only-toggle").forEach((el) => {
+    el.addEventListener("change", (e) => {
+      collectionNewOnly = e.target.checked;
+      syncCollectionFilterControls();
+      syncCollectionFilter();
+    });
+  });
+
   document.querySelectorAll(".btn-reset-collection-filters").forEach((btn) => {
     btn.addEventListener("click", () => {
       collectionRarity = "all";
       collectionFilter = "";
       collectionCategory = "all";
       collectionOwnedOnly = true;
+      collectionNewOnly = false;
       syncCollectionFilterControls();
       syncCollectionFilter();
     });

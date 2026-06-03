@@ -110,8 +110,11 @@ export function repairProfile(profile) {
   if (!profile) return false;
   if (!profile.collection || typeof profile.collection !== "object") profile.collection = {};
   if (!Array.isArray(profile.decks)) profile.decks = [];
-
   let changed = false;
+  if (!profile.newCardIds || typeof profile.newCardIds !== "object") {
+    profile.newCardIds = {};
+    changed = true;
+  }
 
   const prevAdv = JSON.stringify(profile.adventure || {});
   profile.adventure = repairAdventureProgress(profile.adventure);
@@ -297,11 +300,26 @@ export function collectionRoom(profile, cardId) {
 }
 
 /** @returns {number} copies actually added (capped by rarity) */
+export function markCardNew(profile, cardId) {
+  if (!profile.newCardIds || typeof profile.newCardIds !== "object") profile.newCardIds = {};
+  profile.newCardIds[cardId] = Date.now();
+}
+
+export function isCardNew(profile, cardId) {
+  return Boolean(profile.newCardIds?.[cardId]);
+}
+
+export function clearCardNew(profile, cardId) {
+  if (!profile.newCardIds) return;
+  delete profile.newCardIds[cardId];
+}
+
 export function addToCollection(profile, cardId, count = 1) {
   const room = collectionRoom(profile, cardId);
   const added = Math.min(count, room);
   if (added > 0) {
     profile.collection[cardId] = collectionCount(profile, cardId) + added;
+    markCardNew(profile, cardId);
     saveProfile(profile);
   }
   return added;
