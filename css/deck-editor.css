@@ -1,14 +1,48 @@
 /**
- * Deck editor — mobile-first, easy-to-tap collection list
+ * Deck editor — full-screen mobile layout, one obvious action per card
  */
 
+:root {
+  --deck-editor-nav-space: calc(var(--nav-height, 4.25rem) + var(--game-safe-bottom, 0px) + 0.75rem);
+}
+
+/* ── Full-screen edit mode ── */
 body.deck-editing {
   overflow: hidden;
 }
 
-body.deck-editing .app-shell {
+body.deck-editing .game-header {
+  display: none;
+}
+
+body.deck-editing .game-shell {
+  display: flex;
+  flex-direction: column;
   height: 100dvh;
   max-height: 100dvh;
+  overflow: hidden;
+  padding-top: calc(0.35rem + var(--game-safe-top, 0px));
+  padding-bottom: 0;
+  max-width: none;
+}
+
+body.deck-editing .game-shell::before {
+  display: none;
+}
+
+body.deck-editing .game-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+body.deck-editing #view-deck {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
@@ -18,19 +52,32 @@ body.deck-editing .game-nav.tabs {
   left: 0;
   right: 0;
   z-index: 40;
+  margin: 0 auto;
+  max-width: 480px;
+}
+
+#deck-subview-edit:not(.hidden) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .deck-editor {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  min-height: 0;
   flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
+/* ── Sticky toolbar ── */
 .deck-editor__top {
   flex-shrink: 0;
-  padding: 0.35rem 0.5rem 0;
+  padding: 0.35rem 0.5rem 0.25rem;
+  border-bottom: 1px solid #4a4845;
+  background: var(--bg-deep, #262421);
 }
 
 .deck-editor__toolbar {
@@ -41,8 +88,11 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-editor__back {
-  padding: 0.25rem 0.35rem;
-  font-size: 1.1rem;
+  margin: 0;
+  padding: 0.35rem 0.45rem;
+  font-size: 1.2rem;
+  line-height: 1;
+  min-height: unset;
 }
 
 .deck-editor__title-row {
@@ -55,13 +105,14 @@ body.deck-editing .game-nav.tabs {
 .deck-editor__name {
   flex: 1;
   min-width: 0;
+  min-height: 2.25rem;
   font-size: 0.85rem;
   padding: 0.35rem 0.5rem;
 }
 
 .deck-editor__count {
   flex-shrink: 0;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   padding: 0.2rem 0.45rem;
   border-radius: 999px;
@@ -71,12 +122,15 @@ body.deck-editing .game-nav.tabs {
 
 .deck-editor__count--ready {
   background: rgba(129, 182, 76, 0.2);
-  color: var(--accent-primary);
+  color: var(--accent-primary, #81b64c);
 }
 
 .deck-editor__save {
-  padding: 0.4rem 0.65rem;
-  font-size: 0.78rem;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.75rem;
+  min-height: 2.25rem;
+  margin-top: 0;
+  width: auto;
 }
 
 .deck-editor__error {
@@ -92,7 +146,7 @@ body.deck-editing .game-nav.tabs {
 
 .deck-editor__progress {
   height: 3px;
-  margin: 0 0 0.2rem;
+  margin: 0.15rem 0 0;
 }
 
 .deck-editor__progress[hidden] {
@@ -100,72 +154,99 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-editor__progress .deck-progress-fill {
-  background: var(--accent-primary);
+  background: var(--accent-primary, #81b64c);
 }
 
+/* ── Deck strip (compact) ── */
 .deck-editor__deck-zone {
   flex-shrink: 0;
   padding: 0 0.5rem;
 }
 
 .deck-editor__deck-head {
-  display: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+}
+
+.deck-editor__deck-tools {
+  display: flex;
+  gap: 0.35rem;
+  margin-left: auto;
+}
+
+.deck-editor__tool {
+  margin: 0;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.68rem;
 }
 
 .deck-editor__strip {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.3rem;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0.25rem 0 0.35rem;
+  padding: 0.15rem 0 0.3rem;
   -webkit-overflow-scrolling: touch;
-  min-height: 4.5rem;
+  min-height: 3.25rem;
+  max-height: 3.75rem;
 }
 
 .deck-editor__strip-empty {
   margin: 0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: var(--text-muted);
   align-self: center;
+  white-space: nowrap;
 }
 
 .deck-slot-wrap--strip {
-  flex: 0 0 3.5rem;
+  flex: 0 0 2.65rem;
   position: relative;
 }
 
 .deck-slot-wrap--strip .spell-card {
-  width: 3.5rem;
+  width: 2.65rem;
 }
 
 .deck-slot-remove--visible {
   display: flex;
+  width: 1.1rem;
+  height: 1.1rem;
+  font-size: 0.75rem;
+  top: 0;
+  right: 0;
+  opacity: 1;
 }
 
+/* ── Collection area fills remaining height ── */
 .deck-editor__collection {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 0 0.5rem 0.35rem;
+  padding: 0.25rem 0.5rem 0;
   overflow: hidden;
 }
 
 .deck-editor__filters {
   flex-shrink: 0;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
 }
 
 .deck-editor__search {
   width: 100%;
-  margin-bottom: 0.3rem;
-  padding: 0.4rem 0.55rem;
-  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.82rem;
+  min-height: 2.25rem;
 }
 
 .deck-editor__filter-row {
   display: flex;
-  gap: 0.3rem;
+  gap: 0.25rem;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 0.1rem;
@@ -177,56 +258,73 @@ body.deck-editing .game-nav.tabs {
 
 .deck-editor__select {
   flex: 0 0 auto;
-  min-width: 5.5rem;
-  padding: 0.35rem 0.45rem;
-  font-size: 0.72rem;
+  min-width: 5rem;
+  padding: 0.3rem 0.4rem;
+  font-size: 0.68rem;
+  min-height: 2rem;
 }
 
 .deck-editor__owned {
   flex: 0 0 auto;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   white-space: nowrap;
   align-self: center;
 }
 
-/* Collection = simple scrollable list */
-.deck-editor__grid {
+/* Kill global collection-grid caps inside deck editor */
+#deck-subview-edit .deck-editor__grid,
+#deck-subview-edit .deck-editor__grid.collection-grid,
+#deck-subview-edit .deck-editor__grid .collection-grid,
+#deck-subview-edit .deck-editor__grid-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  max-height: none !important;
   overflow-x: hidden;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  display: flex;
-  flex-direction: column;
-  gap: 0.45rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: var(--deck-editor-nav-space);
 }
 
-.deck-editor__grid.collection-grid,
-.deck-editor__grid .collection-grid,
-.deck-editor__grid-cards {
+#deck-subview-edit .collection-category-section {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.35rem;
 }
 
-/* One row per card — big tap target on the right */
+#deck-subview-edit .collection-category-title {
+  margin: 0.25rem 0 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Card row: info on top, full-width action button below ── */
 .deck-collection-row {
-  display: grid;
-  grid-template-columns: 3.75rem 1fr minmax(6.5rem, 7.5rem);
-  gap: 0.5rem;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
   padding: 0.45rem;
-  background: var(--bg-panel);
+  background: var(--bg-panel, #302e2b);
   border: 1px solid #4a4845;
-  border-radius: 8px;
-  min-height: 4.25rem;
+  border-radius: 10px;
+}
+
+.deck-collection-row__main {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
 }
 
 .deck-collection-row__art {
-  width: 3.75rem;
-  height: 4.75rem;
+  width: 2.75rem;
+  height: 3.5rem;
   flex-shrink: 0;
   overflow: hidden;
   border-radius: 6px;
@@ -245,16 +343,16 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-collection-row__thumb .spell-card__art {
-  height: 2.5rem;
+  height: 2rem;
 }
 
 .deck-collection-row__thumb .spell-card__body {
-  padding: 0.2rem;
+  padding: 0.15rem;
 }
 
 .deck-collection-row__thumb .spell-card__name {
-  font-size: 0.55rem;
-  line-height: 1.1;
+  font-size: 0.5rem;
+  line-height: 1.05;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -269,22 +367,26 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-collection-row__info {
+  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.15rem;
   cursor: pointer;
 }
 
 .deck-collection-row__name {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 700;
   line-height: 1.15;
   color: var(--text-primary, #f0ead6);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .deck-collection-row__meta {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: var(--text-muted);
   line-height: 1.2;
 }
@@ -293,17 +395,20 @@ body.deck-editing .game-nav.tabs {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 2.75rem;
-  height: 100%;
-  padding: 0.45rem 0.5rem;
+  width: 100%;
+  min-height: 2.85rem;
+  padding: 0.5rem 0.75rem;
   border: none;
-  border-radius: 8px;
-  font-size: 0.82rem;
+  border-radius: 10px;
+  font-size: 0.88rem;
   font-weight: 700;
   line-height: 1.15;
   text-align: center;
   cursor: pointer;
   box-shadow: none;
+  margin-top: 0;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .deck-collection-row__action--add {
@@ -311,18 +416,18 @@ body.deck-editing .game-nav.tabs {
   color: #1a1a18;
 }
 
-.deck-collection-row__action--add:active {
+.deck-collection-row__action--add:active:not(:disabled) {
   filter: brightness(0.92);
 }
 
 .deck-collection-row__action--buy {
-  background: rgba(129, 182, 76, 0.22);
-  color: #c8e6a0;
-  border: 1px solid rgba(129, 182, 76, 0.45);
+  background: linear-gradient(180deg, #ffe566 0%, #c9a227 100%);
+  color: #1a1208;
+  border: 2px solid rgba(255, 255, 255, 0.25);
 }
 
 .deck-collection-row__action--buy:not(:disabled):active {
-  background: rgba(129, 182, 76, 0.35);
+  filter: brightness(0.95);
 }
 
 .deck-collection-row__action--disabled,
@@ -331,6 +436,18 @@ body.deck-editing .game-nav.tabs {
   color: var(--text-muted);
   cursor: not-allowed;
   border: 1px solid #3a3835;
+}
+
+.deck-editor__hint {
+  flex-shrink: 0;
+  margin: 0 0 0.35rem;
+  padding: 0.4rem 0.55rem;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+  background: rgba(129, 182, 76, 0.08);
+  border: 1px solid rgba(129, 182, 76, 0.2);
+  border-radius: 8px;
 }
 
 .deck-editor .input-text,
@@ -350,7 +467,27 @@ body.deck-editing .game-nav.tabs {
   border: none;
 }
 
+.deck-editor .btn-text {
+  margin-bottom: 0;
+}
+
 @media (min-width: 900px) {
+  body.deck-editing .game-header {
+    display: flex;
+  }
+
+  body.deck-editing .game-shell {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-bottom: 2rem;
+    max-width: 1100px;
+  }
+
+  body.deck-editing .game-shell::before {
+    display: block;
+  }
+
   body.deck-editing .game-nav.tabs {
     position: static;
   }
@@ -359,6 +496,8 @@ body.deck-editing .game-nav.tabs {
     display: grid;
     grid-template-columns: 260px 1fr;
     gap: 0.75rem;
+    max-width: 1100px;
+    margin: 0 auto;
   }
 
   .deck-editor__top {
@@ -367,10 +506,6 @@ body.deck-editing .game-nav.tabs {
     border: 1px solid #4a4845;
     border-radius: 8px;
     background: var(--bg-panel);
-  }
-
-  .deck-editor__deck-head {
-    display: flex;
   }
 
   .deck-editor__strip {
@@ -394,5 +529,35 @@ body.deck-editing .game-nav.tabs {
   .deck-editor__filter-row {
     flex-wrap: wrap;
     overflow: visible;
+  }
+
+  .deck-collection-row {
+    display: grid;
+    grid-template-columns: 3rem 1fr minmax(7rem, 8.5rem);
+    grid-template-rows: auto;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .deck-collection-row__main {
+    display: contents;
+  }
+
+  .deck-collection-row__action {
+    width: auto;
+    height: 100%;
+    min-height: 2.75rem;
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .deck-collection-row__art {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .deck-collection-row__info {
+    grid-column: 2;
+    grid-row: 1;
   }
 }
