@@ -1575,6 +1575,7 @@ ${starLine}`;
           if (piece.vengeanceTurns > 0) el.classList.add("vengeance-mark");
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
+          if (piece.isClone) el.classList.add("clone-mark");
           if (piece.venom > 0) el.classList.add("poisoned");
           if (piece.blazeTurns > 0) el.classList.add("burning");
           if (

@@ -15,6 +15,10 @@ import {
   isDarkSquare,
   SIZE,
   getBackstepTarget,
+  getJumpMoves,
+  applyFreezeToPiece,
+  applyVenomToPiece,
+  applyBurnToPiece,
 } from "../js/board.js";
 import { createMatchMeta } from "../js/gameMeta.js";
 import { initCardState } from "../js/cardEffects.js";
@@ -223,7 +227,40 @@ for (const card of cards) {
   const clone = cards.find((c) => c.id === "clone");
   const res = applyCard(s, COLOR, clone, [[5, 2], [4, 3]]);
   if (!res.success || !at(s, 4, 3) || !at(s, 5, 2)) throw new Error("Clone spawn pick failed");
+  const copy = at(s, 4, 3);
+  if (!copy.isClone || !copy.cloneNoCaptureThisTurn) throw new Error("Clone copy should be marked as clone");
   console.log("Clone spawn test: OK");
+}
+
+// Clone cannot capture the turn it spawns
+{
+  const s = baseState();
+  const copy = createPiece(COLOR, 5, 2, false);
+  copy.isClone = true;
+  copy.cloneNoCaptureThisTurn = true;
+  setPiece(s.board, 5, 2, copy);
+  place(s, OPP, 4, 3);
+  const jumps = getJumpMoves(s.board, copy, COLOR, s);
+  if (jumps.length) throw new Error("Clone should not be able to capture on spawn turn");
+  console.log("Clone no-capture turn test: OK");
+}
+
+// Clone dies instantly to freeze / poison / burn
+{
+  const s = baseState();
+  const copy = createPiece(OPP, 3, 2, false);
+  copy.isClone = true;
+  setPiece(s.board, 3, 2, copy);
+  if (!applyFreezeToPiece(s.board, s, 3, 2, 1) || at(s, 3, 2)) throw new Error("Freeze should destroy clone");
+  const copy2 = createPiece(OPP, 3, 4, false);
+  copy2.isClone = true;
+  setPiece(s.board, 3, 4, copy2);
+  if (!applyVenomToPiece(s.board, s, 3, 4, 6) || at(s, 3, 4)) throw new Error("Poison should destroy clone");
+  const copy3 = createPiece(OPP, 4, 1, false);
+  copy3.isClone = true;
+  setPiece(s.board, 4, 1, copy3);
+  if (!applyBurnToPiece(s.board, s, 4, 1, 2) || at(s, 4, 1)) throw new Error("Burn should destroy clone");
+  console.log("Clone debuff fragility test: OK");
 }
 
 // Pyromancy — burn enemy + tile

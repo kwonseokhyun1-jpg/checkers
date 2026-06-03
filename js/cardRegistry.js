@@ -102,7 +102,7 @@ export const CARD_REGISTRY = [
   { id: "purify", name: "Purify", desc: "Remove all shields, debuffs, and buffs from every piece.", rarity: "epic", weight: 2, mode: "instant", effect: "purify" },
   { id: "trickster", name: "Trickster", desc: "Swap up to 6 random pieces (pieces on back ranks are unaffected).", rarity: "epic", weight: 2, mode: "instant", effect: "trickster" },
   { id: "link_fate", name: "Link Fate", desc: "Link two enemy pieces — when either is destroyed, the other dies too.", rarity: "epic", weight: 2, mode: "e_e", effect: "link_fate" },
-  { id: "clone", name: "Clone", desc: "Duplicate one of your men on an adjacent empty square (original stays). The copy cannot be captured or sacrificed until your next turn.", rarity: "epic", weight: 2, mode: "f_empty", effect: "clone" },
+  { id: "clone", name: "Clone", desc: "Duplicate one of your men on an adjacent empty square (original stays). The copy cannot capture, be captured, or be sacrificed until your next turn. Clones are destroyed instantly by freeze, poison, or burn.", rarity: "epic", weight: 2, mode: "f_empty", effect: "clone" },
   { id: "constitution", name: "Constitution", desc: "Your kings cannot be destroyed by non-capture effects for 5 turns.", rarity: "epic", weight: 2, mode: "instant", effect: "constitution" },
   { id: "dominion", name: "Dominion", desc: "All your men may move backward this turn.", rarity: "uncommon", weight: 4, mode: "instant", effect: "dominion" },
 ];

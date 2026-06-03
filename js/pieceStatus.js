@@ -40,6 +40,7 @@ const CURSE_RULES = [
   { key: "hunterMark", label: "Hunter's Mark", bool: true },
   { key: "panicTurn", label: "Panic", bool: true },
   { key: "revivedNoCapture", label: "Revived (no capture)", bool: true },
+  { key: "isClone", label: "Clone (fragile)", bool: true },
 ];
 
 function lineForRule(piece, rule) {

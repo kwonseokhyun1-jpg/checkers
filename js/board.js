@@ -120,7 +120,45 @@ export function createPiece(color, row, col, king = false) {
     bearAwakened: false,
     linkedFateId: null,
     pressExtraMove: false,
+    isClone: false,
+    cloneNoCaptureThisTurn: false,
   };
+}
+
+/** Clones are destroyed instantly by freeze, poison, or burn instead of receiving the debuff. */
+export function destroyPieceIfClone(board, state, row, col) {
+  const p = board[row][col];
+  if (!p?.isClone) return false;
+  if (state) {
+    if (!state.captured[p.color]) state.captured[p.color] = [];
+    state.captured[p.color].push({ king: p.king });
+  }
+  removePiece(board, row, col, { force: true });
+  return true;
+}
+
+export function applyFreezeToPiece(board, state, row, col, turns) {
+  if (destroyPieceIfClone(board, state, row, col)) return true;
+  const piece = board[row][col];
+  if (!piece) return false;
+  piece.frozenTurns = Math.max(piece.frozenTurns || 0, turns);
+  return true;
+}
+
+export function applyVenomToPiece(board, state, row, col, amount) {
+  if (destroyPieceIfClone(board, state, row, col)) return true;
+  const piece = board[row][col];
+  if (!piece) return false;
+  piece.venom = amount;
+  return true;
+}
+
+export function applyBurnToPiece(board, state, row, col, turns) {
+  if (destroyPieceIfClone(board, state, row, col)) return true;
+  const piece = board[row][col];
+  if (!piece) return false;
+  piece.blazeTurns = turns;
+  return true;
 }
 
 export function createInitialBoard() {
@@ -197,7 +235,7 @@ function squareBlocked(state, r, c, moverColor = null) {
 const KNIGHT_OFFSETS = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
 
 export function getKnightMoves(board, piece, state, canCapture = false) {
-  if (piece.revivedNoCapture) canCapture = false;
+  if (piece.revivedNoCapture || piece.cloneNoCaptureThisTurn) canCapture = false;
   const moves = [];
   for (const [dr, dc] of KNIGHT_OFFSETS) {
     const nr = piece.row + dr, nc = piece.col + dc;
@@ -285,7 +323,7 @@ export function getStepMoves(board, piece, color, state = null) {
 
 export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
-  if (piece.revivedNoCapture) return moves;
+  if (piece.revivedNoCapture || piece.cloneNoCaptureThisTurn) return moves;
   if (piece.reverseOnlyTurns > 0 || piece.noCaptureTurns > 0) return moves;
   if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.rooted > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
   if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
@@ -406,9 +444,9 @@ export function applyMove(board, move, state = null) {
   if (sq?.hiddenQuicksand) {
     sq.quicksand = true;
     delete sq.hiddenQuicksand;
-    if (piece) piece.frozenTurns = Math.max(piece.frozenTurns, 1);
+    if (piece) applyFreezeToPiece(board, state, tr, tc, 1);
   } else if (sq?.quicksand && piece) {
-    piece.frozenTurns = Math.max(piece.frozenTurns, 1);
+    applyFreezeToPiece(board, state, tr, tc, 1);
     sq.quicksand = false;
   }
   if (sq?.hiddenMine) {
@@ -497,11 +535,11 @@ export function tickEffects(board, color, state = null) {
       dec("deflectTurns");
       if (p.venom > 0) {
         p.venom--;
-        if (p.venom <= 0) removePiece(board, r, c);
+        if (p.venom <= 0) removePiece(board, r, c, { force: p.isClone });
       }
       if (p.blazeTurns > 0) {
         p.blazeTurns--;
-        if (p.blazeTurns <= 0) removePiece(board, r, c);
+        if (p.blazeTurns <= 0) removePiece(board, r, c, { force: p.isClone });
       }
       if (p.panicTurn) { p.panicTurn = false; }
       if (p.promoteZone) p.promoteZone = false;

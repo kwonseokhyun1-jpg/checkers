@@ -5,6 +5,7 @@ import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
+  applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
@@ -220,13 +221,13 @@ const EFFECTS = {
     const enemy = at(state, er, ec);
     if (!enemy || enemy.color === color) return fail("First target must be an enemy piece");
     if (!emptyDark(state, tr, tc)) return fail("Second target must be an empty dark square");
-    enemy.blazeTurns = 2;
+    applyBurnToPiece(state.board, state, er, ec, 2);
     const sq = getSq(state, tr, tc);
     sq.fireTurns = 2;
     sq.fireOwner = color;
     return ok("Pyromancy — burns for 2 turns!", { pyromancySquares: [[er, ec], [tr, tc]] });
   },
-  freeze_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.frozenTurns=1; return ok(); },
+  freeze_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); applyFreezeToPiece(state.board, state, r, c, 1); return ok(); },
   retreat_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.retreatTurns=3; return ok(); },
   knight_perm(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.knightTurns=2; p.isKnight=false; return ok(); },
   crown(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.king=true; return ok(); },
@@ -266,7 +267,15 @@ const EFFECTS = {
     return ok("The weakest enemy is culled.", { cullTarget, cullVictim });
   },
   hunters_mark(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.hunterMark=true; return ok(); },
-  venom(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.venom=(p.venom||0)+1; if(p.venom>=2) kill(state,r,c,color); return ok(); },
+  venom(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color === color) return fail();
+    if (destroyPieceIfClone(state.board, state, r, c)) return ok();
+    p.venom = (p.venom || 0) + 1;
+    if (p.venom >= 2) kill(state, r, c, color);
+    return ok();
+  },
   gravity_well(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); for(const t of en(state,color)){ const dr=Math.sign(r-t.row),dc=Math.sign(c-t.col); const nr=t.row+dr,nc=t.col+dc; if((nr!==r||nc!==c)&&emptyDark(state,nr,nc)) movePiece(state.board,t.row,t.col,nr,nc);} return ok(); },
   spear_thrust(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const dr=r1===r2?0:Math.sign(r2-r1), dc=c1===c2?0:Math.sign(c2-c1); if(dr&&dc) return fail(); let r=r1+dr,c=c1+dc; while(inBounds(r,c)){ const t=at(state,r,c); if(t){ if(t.color!==color) kill(state,r,c,color); break;} r+=dr; c+=dc;} markMove(state,color); return ok(); },
   backstab(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?1:-1; for(const dc of [-1,1]){ const t=at(state,r+dir,c+dc); if(t&&t.color!==color){ kill(state,r+dir,c+dc,color); return ok();}} return fail(); },
@@ -307,8 +316,18 @@ const EFFECTS = {
   ghost_guard(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.ghostGuard=true; return ok(); },
   fortify(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.fortifyTurns=2; return ok(); },
   reverse_only_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.reverseOnlyTurns=2; p.noCaptureTurns=2; return ok(); },
-  freeze_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.frozenTurns=1; return ok(); },
-  deep_freeze(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); let n=0; for(let i=-SIZE+1;i<SIZE;i++){ const t=at(state,r+i,c+i); if(t&&t.color!==color){ t.frozenTurns=Math.max(t.frozenTurns||0,2); n++; }} return n?ok():fail("No enemies on that diagonal"); },
+  freeze_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); applyFreezeToPiece(state.board, state, r, c, 1); return ok(); },
+  deep_freeze(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color !== color) return fail();
+    let n = 0;
+    for (let i = -SIZE + 1; i < SIZE; i++) {
+      const t = at(state, r + i, c + i);
+      if (t && t.color !== color && applyFreezeToPiece(state.board, state, r + i, c + i, 2)) n++;
+    }
+    return n ? ok() : fail("No enemies on that diagonal");
+  },
   root_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.rooted=1; return ok(); },
   slow_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.slowed=2; return ok(); },
   blind(state, color, picks) { state.meta.blindNext[opp(color)]=true; return ok(); },
@@ -316,7 +335,14 @@ const EFFECTS = {
   silence_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.silenced=3; return ok(); },
   rust(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.rustedTurns=3; p.rusted=false; return ok(); },
   hex_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.hexed=3; return ok(); },
-  tangle(state, color, picks) { if(picks.length<2) return fail(); swapAt(state,...p0(picks),...p1(picks)); const a=at(state,...p0(picks)),b=at(state,...p1(picks)); if(a) a.frozenTurns=1; if(b) b.frozenTurns=1; return ok(); },
+  tangle(state, color, picks) {
+    if (picks.length < 2) return fail();
+    const [r1, c1] = p0(picks), [r2, c2] = p1(picks);
+    swapAt(state, r1, c1, r2, c2);
+    applyFreezeToPiece(state.board, state, r1, c1, 1);
+    applyFreezeToPiece(state.board, state, r2, c2, 1);
+    return ok();
+  },
   fog_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); state.meta.fogPieceId[color]=p.id; state.meta.fogTurns[color]=2; return ok(); },
   panic(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||p.king) return fail(); p.panicTurn=true; return ok(); },
   bribery_15(state, color, picks) { const o=opp(color); const n=Math.min(15,state.gems[o]); state.gems[o]-=n; state.gems[color]+=n; return ok(); },
@@ -355,9 +381,10 @@ const EFFECTS = {
     }
     const copy = createPiece(color, r2, c2, false);
     copy.bearAwakened = p.bearAwakened;
+    copy.isClone = true;
     copy.cloneNoCaptureThisTurn = true;
     state.board[r2][c2] = copy;
-    return ok("Clone — duplicate placed (cannot be captured this turn).");
+    return ok("Clone — copy placed (cannot capture or be taken this turn; dies to freeze, poison, or burn).");
   },
   twin_soul(state, color, picks) { return EFFECTS.clone(state, color, picks); },
   fusion(state, color, picks) { if(picks.length<2) return fail(); const a=at(state,...p0(picks)),b=at(state,...p1(picks)); if(!a||!b||a.color!==color||b.color!==color) return fail(); if(a.king||b.king) return fail("Only men can fuse"); if(Math.max(Math.abs(a.row-b.row),Math.abs(a.col-b.col))!==1) return fail("Pick adjacent pieces"); removePiece(state.board,b.row,b.col); a.superMan=3; return ok("Fusion — super-man can leap 2 squares forward."); },
@@ -407,7 +434,7 @@ const EFFECTS = {
     for (let c = 0; c < SIZE; c++) {
       if (!isDarkSquare(row, c)) continue;
       const t = at(state, row, c);
-      if (t && t.color !== color && !t.king) { t.frozenTurns = Math.max(t.frozenTurns || 0, 1); n++; }
+      if (t && t.color !== color && !t.king && applyFreezeToPiece(state.board, state, row, c, 1)) n++;
     }
     return n ? ok() : fail("No enemies in that row");
   },
@@ -437,7 +464,14 @@ const EFFECTS = {
     }
     return fail("No valid targets");
   },
-  poison_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.venom=6; return ok('Poison — dies in 6 turns.'); },
+  poison_3(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color === color) return fail();
+    const wasClone = p.isClone;
+    applyVenomToPiece(state.board, state, r, c, 6);
+    return ok(wasClone ? "Poison — clone destroyed." : "Poison — dies in 6 turns.");
+  },
   deflect_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.deflectTurns=1; return ok('Deflect — next hit reflects to a random enemy.'); },
   trickster(state, color, picks) {
     let plan = state.meta.pendingTrickster;
