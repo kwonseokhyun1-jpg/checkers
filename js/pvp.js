@@ -11,6 +11,9 @@ function isMissingRpc(error) {
   return code === "PGRST202" || msg.includes("Could not find the function");
 }
 
+/** Bumped when the client should run a one-time global waiting-room reset. */
+export const PVP_WAITING_RESET_KEY = "pvp_waiting_reset_v3";
+
 function randomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let s = "";
@@ -358,12 +361,51 @@ export class PvpService {
       .eq("id", this.matchId);
   }
 
-  async cancelWaitingRoom() {
+  async cancelRoom(matchId) {
     const sb = getSupabase();
     const user = getCurrentUser();
-    if (!sb || !this.matchId || !user) return;
-    await sb.from("pvp_matches").delete().eq("id", this.matchId).eq("host_id", user.id).eq("status", "waiting");
-    this.dispose();
+    const id = matchId || this.matchId;
+    if (!sb || !user || !id) return;
+
+    const rpc = await sb.rpc("pvp_cancel_room", { p_match_id: id });
+    if (rpc.error && !isMissingRpc(rpc.error)) throw rpc.error;
+
+    if (rpc.error && isMissingRpc(rpc.error)) {
+      const { error } = await sb
+        .from("pvp_matches")
+        .delete()
+        .eq("id", id)
+        .eq("host_id", user.id)
+        .eq("status", "waiting");
+      if (error) throw error;
+    }
+
+    if (this.matchId === id) this.dispose();
+  }
+
+  async cancelWaitingRoom() {
+    return this.cancelRoom(this.matchId);
+  }
+}
+
+/** Delete every waiting room once per browser (after deploy / reset token bump). */
+export async function clearAllWaitingRoomsOnce() {
+  try {
+    if (sessionStorage.getItem(PVP_WAITING_RESET_KEY)) return;
+  } catch {
+    return;
+  }
+
+  const sb = getSupabase();
+  if (!sb) return;
+
+  const { error } = await sb.rpc("pvp_clear_all_waiting_rooms");
+  if (!error || isMissingRpc(error)) {
+    try {
+      sessionStorage.setItem(PVP_WAITING_RESET_KEY, "1");
+    } catch {
+      /* private mode */
+    }
   }
 }
 

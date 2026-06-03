@@ -5,7 +5,12 @@ import { MatchSession } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
-import { PvpService, probePvpBackend, subscribeOpenRooms } from "./pvp.js";
+import {
+  PvpService,
+  probePvpBackend,
+  subscribeOpenRooms,
+  clearAllWaitingRoomsOnce,
+} from "./pvp.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -40,7 +45,10 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
 
   function startOpenRoomsSync() {
     stopOpenRoomsSync();
-    void refreshOpenRooms();
+    void (async () => {
+      await clearAllWaitingRoomsOnce();
+      await refreshOpenRooms();
+    })();
     openRoomsPollId = setInterval(() => void refreshOpenRooms(), 4000);
     unsubscribeOpenRooms = subscribeOpenRooms(() => void refreshOpenRooms());
   }
@@ -102,11 +110,18 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         <div class="pvp-actions">
           <button type="button" class="btn-primary btn-lg" id="pvp-host">Host a room</button>
         </div>
-        <div class="pvp-open-rooms">
-          <h3 class="pvp-open-rooms__title">Open rooms</h3>
-          <p class="pvp-open-rooms__hint">Anyone can join — both players enter the match automatically.</p>
+        <div class="pvp-room-section pvp-your-rooms">
+          <h3 class="pvp-room-section__title">Your rooms</h3>
+          <p class="pvp-room-section__hint">Rooms you are hosting. Cancel anytime before someone joins.</p>
+          <ul id="pvp-your-list" class="pvp-open-list" aria-live="polite">
+            <li class="pvp-open-empty">Loading…</li>
+          </ul>
+        </div>
+        <div class="pvp-room-section pvp-open-rooms">
+          <h3 class="pvp-room-section__title">Open rooms</h3>
+          <p class="pvp-room-section__hint">Rooms hosted by other players — tap to join.</p>
           <ul id="pvp-open-list" class="pvp-open-list" aria-live="polite">
-            <li class="pvp-open-empty">Loading rooms…</li>
+            <li class="pvp-open-empty">Loading…</li>
           </ul>
         </div>
         <p id="pvp-status" class="pvp-status${isError ? " pvp-status--error" : ""}" role="status">${escapeHtml(message)}</p>
@@ -133,57 +148,71 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
   }
 
   async function refreshOpenRooms() {
-    const list = root.querySelector("#pvp-open-list");
+    const yourList = root.querySelector("#pvp-your-list");
+    const openList = root.querySelector("#pvp-open-list");
     const user = getCurrentUser();
-    if (!list || !user || matchSession) return;
+    if (!yourList || !openList || !user || matchSession) return;
 
     try {
       const svc = pvpService ?? new PvpService();
       const rooms = await svc.listOpenRooms();
-      renderOpenRoomsList(rooms, user.id);
+      renderRoomLists(rooms, user.id);
     } catch (e) {
-      list.innerHTML = `<li class="pvp-open-empty pvp-open-empty--error">${escapeHtml(e.message || "Could not load rooms")}</li>`;
+      const err = `<li class="pvp-open-empty pvp-open-empty--error">${escapeHtml(e.message || "Could not load rooms")}</li>`;
+      yourList.innerHTML = err;
+      openList.innerHTML = err;
     }
   }
 
-  function renderOpenRoomsList(rooms, userId) {
-    const list = root.querySelector("#pvp-open-list");
-    if (!list) return;
+  function renderRoomLists(rooms, userId) {
+    const yourList = root.querySelector("#pvp-your-list");
+    const openList = root.querySelector("#pvp-open-list");
+    if (!yourList || !openList) return;
 
-    if (!rooms.length) {
-      list.innerHTML = `<li class="pvp-open-empty">No open rooms — host one above.</li>`;
-      return;
+    const mine = rooms.filter((r) => r.host_id === userId);
+    const others = rooms.filter((r) => r.host_id !== userId);
+
+    if (!mine.length) {
+      yourList.innerHTML = `<li class="pvp-open-empty">No rooms yet — host one above.</li>`;
+    } else {
+      yourList.innerHTML = mine
+        .map(
+          (room) => `<li class="pvp-open-item pvp-open-item--mine">
+            <span class="pvp-open-item__label">${escapeHtml(room.host_display_name || "Your room")}</span>
+            <span class="pvp-open-item__meta">Waiting for opponent…</span>
+            <button type="button" class="btn-secondary pvp-open-cancel" data-cancel-room="${room.id}">Cancel</button>
+          </li>`
+        )
+        .join("");
     }
 
-    list.innerHTML = rooms
-      .map((room) => {
-        const name = escapeHtml(room.host_display_name || "Player");
-        const isMine = room.host_id === userId;
-        if (isMine) {
-          return `<li class="pvp-open-item pvp-open-item--mine">
-            <span class="pvp-open-item__label">Your room</span>
-            <span class="pvp-open-item__meta">Waiting for opponent…</span>
-            <button type="button" class="btn-text pvp-open-cancel" data-cancel-room="${room.id}">Cancel</button>
-          </li>`;
-        }
-        return `<li class="pvp-open-item">
-          <button type="button" class="pvp-open-join" data-join-room="${room.id}">
-            <span class="pvp-open-join__name">${name}</span>
-            <span class="pvp-open-join__action">Join match</span>
-          </button>
-        </li>`;
-      })
-      .join("");
+    if (!others.length) {
+      openList.innerHTML = `<li class="pvp-open-empty">No open rooms from other players.</li>`;
+    } else {
+      openList.innerHTML = others
+        .map(
+          (room) => `<li class="pvp-open-item">
+            <button type="button" class="pvp-open-join" data-join-room="${room.id}">
+              <span class="pvp-open-join__name">${escapeHtml(room.host_display_name || "Player")}</span>
+              <span class="pvp-open-join__action">Join match</span>
+            </button>
+          </li>`
+        )
+        .join("");
+    }
 
-    list.querySelectorAll("[data-join-room]").forEach((btn) => {
+    openList.querySelectorAll("[data-join-room]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.getAttribute("data-join-room");
         if (id) void joinOpenRoom(id);
       });
     });
 
-    list.querySelectorAll("[data-cancel-room]").forEach((btn) => {
-      btn.addEventListener("click", () => void cancelHostedRoom());
+    yourList.querySelectorAll("[data-cancel-room]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.getAttribute("data-cancel-room");
+        if (id) void cancelHostedRoom(id);
+      });
     });
   }
 
@@ -212,10 +241,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     const box = root.querySelector("#pvp-waiting");
     if (!box) return;
     box.classList.remove("hidden");
-    box.innerHTML = `
-      <p class="pvp-wait-hint">Your room is listed under <strong>Open rooms</strong>. Waiting for someone to join…</p>
-      <button type="button" class="btn-text" id="pvp-cancel">Cancel room</button>`;
-    box.querySelector("#pvp-cancel")?.addEventListener("click", () => void cancelHostedRoom());
+    box.innerHTML = `<p class="pvp-wait-hint">Your room is listed under <strong>Your rooms</strong>. Waiting for someone to join…</p>`;
   }
 
   function hideHosting() {
@@ -348,11 +374,6 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       return;
     }
 
-    if (pvpService?.matchId && pvpService.role === "host") {
-      setStatus("You already have an open room.", true);
-      return;
-    }
-
     pvpService?.dispose();
     pvpService = null;
 
@@ -398,13 +419,24 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     }
   }
 
-  async function cancelHostedRoom() {
-    await pvpService?.cancelWaitingRoom();
-    pvpService?.dispose();
-    pvpService = null;
-    hideHosting();
-    setStatus("");
-    void refreshOpenRooms();
+  async function cancelHostedRoom(matchId) {
+    if (!matchId && pvpService?.matchId) matchId = pvpService.matchId;
+    if (!matchId) return;
+
+    try {
+      setStatus("Cancelling room…");
+      const svc = pvpService ?? new PvpService();
+      await svc.cancelRoom(matchId);
+      if (pvpService?.matchId === matchId) {
+        pvpService.dispose();
+        pvpService = null;
+      }
+      hideHosting();
+      setStatus("");
+      void refreshOpenRooms();
+    } catch (e) {
+      setStatus(e.message || "Could not cancel room", true);
+    }
   }
 
   renderLobby();

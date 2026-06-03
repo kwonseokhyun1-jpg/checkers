@@ -86,3 +86,46 @@ end;
 $$;
 
 grant execute on function public.pvp_join_by_code(text, jsonb, text, jsonb) to authenticated;
+
+-- Cancel a waiting room you host (works even if DELETE policy is misconfigured)
+create or replace function public.pvp_cancel_room(p_match_id uuid)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Sign in to cancel a room';
+  end if;
+
+  delete from public.pvp_matches
+  where id = p_match_id
+    and host_id = auth.uid()
+    and status = 'waiting'
+    and guest_id is null;
+
+  if not found then
+    raise exception 'Room not found or cannot be cancelled';
+  end if;
+end;
+$$;
+
+grant execute on function public.pvp_cancel_room(uuid) to authenticated;
+
+-- One-time maintenance: remove all open waiting rooms (run in SQL Editor or via app RPC)
+create or replace function public.pvp_clear_all_waiting_rooms()
+returns integer
+language sql
+security definer
+set search_path = public
+as $$
+  with deleted as (
+    delete from public.pvp_matches
+    where status = 'waiting' and guest_id is null
+    returning id
+  )
+  select count(*)::integer from deleted;
+$$;
+
+grant execute on function public.pvp_clear_all_waiting_rooms() to authenticated;
