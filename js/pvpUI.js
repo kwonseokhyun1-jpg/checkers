@@ -5,12 +5,7 @@ import { MatchSession } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
-import {
-  PvpService,
-  probePvpBackend,
-  subscribeOpenRooms,
-  clearAllWaitingRoomsOnce,
-} from "./pvp.js";
+import { PvpService, probePvpBackend, subscribeOpenRooms } from "./pvp.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -45,10 +40,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
 
   function startOpenRoomsSync() {
     stopOpenRoomsSync();
-    void (async () => {
-      await clearAllWaitingRoomsOnce();
-      await refreshOpenRooms();
-    })();
+    void refreshOpenRooms();
     openRoomsPollId = setInterval(() => void refreshOpenRooms(), 4000);
     unsubscribeOpenRooms = subscribeOpenRooms(() => void refreshOpenRooms());
   }
@@ -140,14 +132,11 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         }
         return;
       }
-      if (probe.hint) {
-        const el = root.querySelector("#pvp-status");
-        if (el && !el.textContent) el.textContent = probe.hint;
-      }
+      if (probe.hint) console.info("[PvP]", probe.hint);
     });
   }
 
-  async function refreshOpenRooms() {
+  async function refreshOpenRooms(pendingHostRow = null) {
     const yourList = root.querySelector("#pvp-your-list");
     const openList = root.querySelector("#pvp-open-list");
     const user = getCurrentUser();
@@ -155,8 +144,15 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
 
     try {
       const svc = pvpService ?? new PvpService();
-      const rooms = await svc.listOpenRooms();
-      renderRoomLists(rooms, user.id);
+      const [mine, others] = await Promise.all([
+        svc.listMyWaitingRooms(),
+        svc.listOthersWaitingRooms(),
+      ]);
+      let mergedMine = mine;
+      if (pendingHostRow && !mine.some((r) => r.id === pendingHostRow.id)) {
+        mergedMine = [pendingHostRow, ...mine];
+      }
+      renderRoomLists(mergedMine, others);
     } catch (e) {
       const err = `<li class="pvp-open-empty pvp-open-empty--error">${escapeHtml(e.message || "Could not load rooms")}</li>`;
       yourList.innerHTML = err;
@@ -164,13 +160,10 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     }
   }
 
-  function renderRoomLists(rooms, userId) {
+  function renderRoomLists(mine, others) {
     const yourList = root.querySelector("#pvp-your-list");
     const openList = root.querySelector("#pvp-open-list");
     if (!yourList || !openList) return;
-
-    const mine = rooms.filter((r) => r.host_id === userId);
-    const others = rooms.filter((r) => r.host_id !== userId);
 
     if (!mine.length) {
       yourList.innerHTML = `<li class="pvp-open-empty">No rooms yet — host one above.</li>`;
@@ -187,7 +180,10 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     }
 
     if (!others.length) {
-      openList.innerHTML = `<li class="pvp-open-empty">No open rooms from other players.</li>`;
+      const hint = mine.length
+        ? "No open rooms from other players. Yours is listed above under <strong>Your rooms</strong>."
+        : "No open rooms from other players.";
+      openList.innerHTML = `<li class="pvp-open-empty">${hint}</li>`;
     } else {
       openList.innerHTML = others
         .map(
@@ -381,8 +377,10 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       setStatus("Opening your room…");
       const svc = ensurePvpService();
       const row = await svc.createRoom(deck.cardIds, getDisplayName());
+      renderRoomLists([row], [], getCurrentUser().id);
+      setStatus("Room open — waiting under Your rooms.");
       onMatchRow(row);
-      void refreshOpenRooms();
+      void refreshOpenRooms(row);
     } catch (e) {
       setStatus(e.message || "Could not host a room", true);
       pvpService?.dispose();

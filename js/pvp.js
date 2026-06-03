@@ -104,7 +104,25 @@ export class PvpService {
     throw new Error("Could not create room — try again");
   }
 
-  async listOpenRooms() {
+  async listMyWaitingRooms() {
+    const sb = getSupabase();
+    const user = getCurrentUser();
+    if (!sb || !user) return [];
+
+    const { data, error } = await sb
+      .from("pvp_matches")
+      .select("id, host_id, host_display_name, created_at, status, guest_id")
+      .eq("host_id", user.id)
+      .eq("status", "waiting")
+      .is("guest_id", null)
+      .order("created_at", { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+    return data || [];
+  }
+
+  async listOthersWaitingRooms() {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) return [];
@@ -114,11 +132,21 @@ export class PvpService {
       .select("id, host_id, host_display_name, created_at, status, guest_id")
       .eq("status", "waiting")
       .is("guest_id", null)
+      .neq("host_id", user.id)
       .order("created_at", { ascending: false })
       .limit(30);
 
     if (error) throw error;
     return data || [];
+  }
+
+  /** @deprecated use listMyWaitingRooms + listOthersWaitingRooms */
+  async listOpenRooms() {
+    const [mine, others] = await Promise.all([
+      this.listMyWaitingRooms(),
+      this.listOthersWaitingRooms(),
+    ]);
+    return [...mine, ...others];
   }
 
   async joinRoomById(matchId, guestDeckIds, displayName) {
