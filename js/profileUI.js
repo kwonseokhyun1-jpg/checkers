@@ -70,7 +70,7 @@ function loadoutHtml(cos) {
     </ul>`;
 }
 
-/** Cosmetic boxes — rendered in Vault → Cards tab */
+/** Cosmetic boxes — rendered in Shop → Cosmetics tab */
 export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened } = {}) {
   if (!listEl) return;
   listEl.innerHTML = "";

@@ -4268,6 +4268,9 @@ body.chest-open-active {
   color: var(--accent-gem, #5ce1e6);
   background: rgba(92, 225, 230, 0.12);
 }
+.vault-tab-panel.hidden {
+  display: none;
+}
 .vault-section-title {
   font-family: var(--font-display, "Fraunces", serif);
   font-size: 1.05rem;

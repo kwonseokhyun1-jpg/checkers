@@ -77,14 +77,17 @@
             <p class="panel-head__desc">Spend gems on spell chests and cosmetic boxes. Equip unlocks in Profile.</p>
           </header>
           <nav class="vault-tabs" role="tablist" aria-label="Shop categories">
-            <button type="button" class="vault-tab active" data-vault-tab="cards" role="tab" aria-selected="true">Cards</button>
+            <button type="button" class="vault-tab active" data-vault-tab="cards" role="tab" aria-selected="true" aria-controls="vault-tab-cards">Cards</button>
+            <button type="button" class="vault-tab" data-vault-tab="cosmetics" role="tab" aria-selected="false" aria-controls="vault-tab-cosmetics">Cosmetics</button>
           </nav>
           <div id="vault-tab-cards" class="vault-tab-panel" role="tabpanel">
             <h3 class="vault-section-title">Spell chests</h3>
             <div id="chest-list" class="chest-list"></div>
             <div id="chest-pulls" class="chest-pulls chest-pulls--hidden" aria-live="polite"></div>
             <p id="chest-log" class="chest-log" role="status"></p>
-            <h3 class="vault-section-title vault-section-title--cosmetics">Cosmetic boxes</h3>
+          </div>
+          <div id="vault-tab-cosmetics" class="vault-tab-panel hidden" role="tabpanel" hidden>
+            <h3 class="vault-section-title">Cosmetic boxes</h3>
             <p class="vault-section-desc">Avatars, banners, and piece skins — equip them in Profile.</p>
             <div id="cosmetic-box-list" class="cosmetic-box-list"></div>
             <p id="cosmetic-box-log" class="chest-log" role="status"></p>

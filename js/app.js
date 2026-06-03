@@ -80,6 +80,8 @@ try {
   profile = loadProfile();
 }
 let activeTab = "deck";
+/** @type {'cards'|'cosmetics'} */
+let activeVaultTab = "cards";
 /** @type {'list'|'edit'|'view'} */
 let deckSubview = "list";
 /** @type {string|null} null | 'new' | deck id */
@@ -186,7 +188,10 @@ function showTab(tab) {
   document.querySelectorAll(".view").forEach((v) => {
     v.classList.toggle("hidden", v.id !== `view-${tab}`);
   });
-  if (tab === "chests") renderChests();
+  if (tab === "chests") {
+    showVaultTab(activeVaultTab);
+    renderChests();
+  }
   if (tab === "deck") {
     deckSubview = "list";
     editingDeckId = null;
@@ -355,10 +360,35 @@ function renderMysteryBox() {
   });
 }
 
+function showVaultTab(tab) {
+  activeVaultTab = tab;
+  document.querySelectorAll(".vault-tab").forEach((btn) => {
+    const on = btn.dataset.vaultTab === tab;
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  document.querySelectorAll(".vault-tab-panel").forEach((panel) => {
+    const on = panel.id === `vault-tab-${tab}`;
+    panel.classList.toggle("hidden", !on);
+    panel.hidden = !on;
+  });
+}
+
+function renderCosmeticsShop() {
+  renderMysteryBox();
+  renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
+    logEl: $("cosmetic-box-log"),
+    onGemsChange: updateGemHeader,
+    onOpened: () => {
+      if (activeTab === "profile") renderProfile();
+    },
+  });
+}
+
 function renderChests(options = {}) {
   const { clearPulls = true } = options;
-  renderMysteryBox();
   updateCurrencyHeader();
+  renderCosmeticsShop();
   const list = $("chest-list");
   const pullsEl = $("chest-pulls");
   if (pullsEl && clearPulls) {
@@ -456,14 +486,6 @@ function renderChests(options = {}) {
     });
     list.appendChild(card);
   }
-
-  renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
-    logEl: $("cosmetic-box-log"),
-    onGemsChange: updateGemHeader,
-    onOpened: () => {
-      if (activeTab === "profile") renderProfile();
-    },
-  });
 }
 
 function getFilteredCollection() {
@@ -1371,6 +1393,13 @@ function init() {
     btn.addEventListener("click", () => {
       if (isMatchActive()) return;
       showTab(btn.dataset.tab);
+    });
+  });
+
+  document.querySelectorAll(".vault-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (isMatchActive()) return;
+      showVaultTab(btn.dataset.vaultTab);
     });
   });
 
