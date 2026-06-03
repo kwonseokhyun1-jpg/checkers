@@ -145,7 +145,15 @@
               <h2 class="panel-head__title">Spell collection</h2>
               <div class="filter-row">
                 <input type="search" id="collection-search" class="input-text" placeholder="Search cards…" />
-                                <select id="collection-sort" class="select-input">
+                                <select id="collection-category" class="select-input" aria-label="Spell category">
+                  <option value="all">All categories</option>
+                  <option value="attack">Attack</option>
+                  <option value="defense">Defense</option>
+                  <option value="movement">Movement</option>
+                  <option value="trap">Trap</option>
+                  <option value="special">Special</option>
+                </select>
+                <select id="collection-sort" class="select-input">
                   <option value="rarity-desc">Rarity: high → low</option>
                   <option value="rarity-asc">Rarity: low → high</option>
                 </select>
