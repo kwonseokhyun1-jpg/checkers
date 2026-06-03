@@ -37,7 +37,7 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
         </section>
         <aside class="panel panel-player">
           <div class="player-badge you"><span class="piece-icon red"></span> You</div>
-          <div class="hand-label">Your hand <span id="deck-pile-count" class="deck-pile-count"></span></div>
+          <p id="hand-count-label" class="hand-count-label">0 cards in hand</p>
           <div id="hand-red" class="hand spell-hand"></div>
           <button type="button" id="btn-end-cards" class="btn-secondary">End spell phase</button>
         </aside>

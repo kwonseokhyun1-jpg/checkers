@@ -179,6 +179,13 @@ body {
   margin-bottom: 0.5rem;
 }
 
+.hand-count-label {
+  margin: 0 0 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
 .hand-count {
   color: var(--accent-gold);
 }
@@ -1003,11 +1010,14 @@ body {
 .deck-subview.hidden { display: none; }
 .hand.spell-hand {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-height: 420px;
-  overflow-y: auto;
-  touch-action: pan-y;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0.45rem;
+  max-height: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.15rem;
+  touch-action: pan-x;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
@@ -1037,9 +1047,8 @@ body {
 .spell-cast-preview { flex-shrink: 0; }
 .spell-cast-preview .spell-card { pointer-events: none; }
 
-/* Full description — in-match hand & casting preview */
+/* Full description — casting preview only */
 .spell-card--full-desc .spell-card__desc,
-.hand.spell-hand .spell-card .spell-card__desc,
 .spell-cast-preview .spell-card .spell-card__desc {
   display: block;
   overflow: visible;
@@ -1049,11 +1058,34 @@ body {
 }
 
 .hand.spell-hand .spell-card {
-  width: 100%;
+  flex: 0 0 5.5rem;
+  width: 5.5rem;
+  max-width: 5.5rem;
+  padding: 0.25rem;
 }
 
 .hand.spell-hand .spell-card__body {
-  padding-bottom: 0.65rem;
+  padding: 0.2rem 0.15rem 0.25rem;
+}
+
+.hand.spell-hand .spell-card__desc,
+.hand.spell-hand .spell-card__meta,
+.hand.spell-hand .spell-card__rarity {
+  display: none !important;
+}
+
+.hand.spell-hand .spell-card__name {
+  font-size: 0.52rem;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.hand.spell-hand .spell-card__art {
+  height: 3.25rem;
 }
 
 .spell-cast-bar {
@@ -1101,6 +1133,7 @@ body {
 .square.spell-drop-hover {
   box-shadow: inset 0 0 0 4px var(--accent-gold);
 }
+.hand.spell-hand .spell-card--draggable { cursor: grab; touch-action: pan-x; }
 .spell-card--draggable { cursor: grab; touch-action: none; }
 .spell-card--draggable:active { cursor: grabbing; }
 .spell-card--dragging { opacity: 0.45; }

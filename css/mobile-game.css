@@ -71,13 +71,13 @@ body {
 
 /* Spell hand — allow vertical scroll without starting a cast */
 .hand.spell-hand {
-  touch-action: pan-y;
+  touch-action: pan-x;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 }
 
 .hand.spell-hand .spell-card--draggable {
-  touch-action: pan-y;
+  touch-action: pan-x;
 }
 
 /* Game shell — phone frame */

@@ -1290,13 +1290,14 @@ ${starLine}`;
 
   renderHand() {
     const handEl = this.$("hand-red");
-    const countEl = this.$("hand-count");
+    const countLabel = this.$("hand-count-label");
     if (!handEl) return;
     handEl.innerHTML = "";
     const s = this.state;
-    if (countEl) countEl.textContent = String(s.hands.red.length);
-    const pileEl = this.$("pile-count");
-    if (pileEl) pileEl.textContent = String(pileRemaining(s, this.localColor));
+    const n = s.hands.red.length;
+    if (countLabel) {
+      countLabel.textContent = n === 1 ? "1 card in hand" : `${n} cards in hand`;
+    }
 
     const canPlay = this.canPlaySpells();
     const castingId = this.cardPlay?.card?.instanceId;
@@ -1308,7 +1309,6 @@ ${starLine}`;
       const el = renderSpellCardEl(card, {
         button: true,
         compact: true,
-        fullDesc: true,
         selected: castingId === card.instanceId,
         disabled: !playable,
       });
