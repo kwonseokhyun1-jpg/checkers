@@ -1,16 +1,44 @@
-/* Deck editor — fixed viewport height, deck strip on top, scrollable card grid */
+/* Deck editor — viewport-locked, compact header, scrollable card grid only */
 
-:root {
-  --deck-editor-chrome: calc(
-    3.75rem + var(--nav-height, 4.25rem) + 1.5rem +
-    var(--game-safe-top, 0px) + var(--game-safe-bottom, 0px)
-  );
+body.deck-editing {
+  overflow: hidden;
+}
+
+body.deck-editing .game-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  padding-bottom: calc(var(--nav-height, 4.25rem) + 0.35rem + var(--game-safe-bottom, 0px));
+}
+
+body.deck-editing .game-header {
+  flex-shrink: 0;
+  margin-bottom: 0.45rem;
+  padding: 0.5rem 0.75rem;
+}
+
+body.deck-editing .game-main {
+  overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+
+body.deck-editing #view-deck:not(.hidden) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 #deck-subview-edit:not(.hidden) {
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .deck-editor {
@@ -18,33 +46,33 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  height: calc(100dvh - var(--deck-editor-chrome));
-  max-height: calc(100dvh - var(--deck-editor-chrome));
+  height: 100%;
+  max-height: 100%;
   max-width: 1100px;
   margin: 0 auto;
   overflow: hidden;
 }
 
-/* ── Compact sticky header + deck strip ── */
+/* ── Compact top: toolbar + thin progress + deck strip ── */
 .deck-editor__top {
   flex-shrink: 0;
   background: var(--bg-deep);
   border-bottom: 1px solid #4a4845;
-  padding-bottom: 0.35rem;
+  padding-bottom: 0.25rem;
 }
 
 .deck-editor__toolbar {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.2rem 0;
+  gap: 0.35rem;
+  padding: 0.15rem 0;
 }
 
 .deck-editor__back {
   margin: 0;
-  padding: 0.25rem 0.45rem;
-  font-size: 1.15rem;
+  padding: 0.2rem 0.4rem;
+  font-size: 1.1rem;
   line-height: 1;
   color: var(--text-muted);
 }
@@ -52,16 +80,17 @@
 .deck-editor__title-row {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
   min-width: 0;
 }
 
 .deck-editor__name {
   flex: 1;
   min-width: 0;
-  min-height: 2.1rem;
-  padding: 0.35rem 0.55rem;
-  font-size: 0.9rem;
+  min-height: 2rem !important;
+  height: 2rem;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.88rem;
   font-weight: 600;
 }
 
@@ -69,9 +98,9 @@
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
   font-weight: 700;
-  font-size: 0.78rem;
-  padding: 0.2rem 0.45rem;
-  border-radius: 6px;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 5px;
   background: #302e2b;
   border: 1px solid #4a4845;
   color: var(--text-muted);
@@ -84,66 +113,57 @@
 }
 
 .deck-editor__save {
-  min-height: 2.1rem;
-  padding: 0.35rem 0.75rem;
-  font-size: 0.82rem;
+  min-height: 2rem !important;
+  height: 2rem;
+  padding: 0 0.65rem;
+  font-size: 0.8rem;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.deck-editor__status {
-  padding: 0 0 0.2rem;
+.deck-editor__error {
+  margin: 0;
+  padding: 0.15rem 0;
+  font-size: 0.72rem;
+  line-height: 1.2;
 }
 
-.deck-editor__status .deck-progress-bar {
+.deck-editor__error[hidden] {
+  display: none !important;
+}
+
+.deck-editor__progress {
   height: 3px;
-  margin-bottom: 0;
+  margin: 0 0 0.2rem;
 }
 
-.deck-editor__status .deck-progress-fill {
+.deck-editor__progress[hidden] {
+  display: none !important;
+}
+
+.deck-editor__progress .deck-progress-fill {
   background: var(--accent-primary);
 }
 
-.deck-editor__status .deck-status {
-  margin: 0.15rem 0 0;
-  font-size: 0.75rem;
-  line-height: 1.25;
-}
-
-.deck-editor__status .deck-status--hidden {
-  display: none;
-}
-
 .deck-editor__deck-zone {
-  padding-top: 0.1rem;
+  padding-top: 0;
 }
 
 .deck-editor__deck-head {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.4rem;
-  margin-bottom: 0.2rem;
-}
-
-.deck-editor__deck-label {
-  margin: 0;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
+  justify-content: flex-end;
+  margin-bottom: 0.1rem;
 }
 
 .deck-editor__deck-tools {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .deck-editor__tool {
   margin: 0;
   padding: 0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -154,56 +174,48 @@
 
 .deck-editor__strip {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.35rem;
   overflow-x: auto;
   overflow-y: hidden;
-  max-height: 92px;
-  padding: 0.1rem 0 0.25rem;
+  max-height: 78px;
+  min-height: 36px;
+  padding: 0 0 0.2rem;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
 }
 
 .deck-editor__strip-empty {
   margin: 0;
-  padding: 0.45rem 0.6rem;
-  font-size: 0.78rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
-  background: var(--bg-panel);
-  border: 1px dashed #4a4845;
-  border-radius: 6px;
   width: 100%;
   text-align: center;
 }
 
 .deck-slot-wrap--strip {
   position: relative;
-  flex: 0 0 76px;
+  flex: 0 0 68px;
   scroll-snap-align: start;
 }
 
 .deck-slot-wrap--strip .spell-card {
   width: 100%;
-  max-width: none;
   padding: 0;
   box-shadow: none;
 }
 
-.deck-slot-wrap--strip .spell-card__frame {
-  box-shadow: none;
-}
-
 .deck-slot-wrap--strip .spell-card__art {
-  height: 48px;
+  height: 42px;
 }
 
 .deck-slot-wrap--strip .spell-card__body {
-  padding: 0.25rem 0.3rem 0.35rem;
+  padding: 0.2rem 0.25rem 0.25rem;
 }
 
 .deck-slot-wrap--strip .spell-card__name {
-  font-size: 0.62rem;
-  line-height: 1.15;
+  font-size: 0.58rem;
+  line-height: 1.1;
   -webkit-line-clamp: 2;
 }
 
@@ -212,56 +224,50 @@
   display: none;
 }
 
-.deck-slot-wrap--strip .spell-card__meta {
-  font-size: 0.58rem;
-  margin: 0;
-}
-
 .deck-slot-remove--visible {
   opacity: 1;
-  top: 2px;
-  right: 2px;
-  width: 1.25rem;
-  height: 1.25rem;
-  font-size: 0.85rem;
+  top: 1px;
+  right: 1px;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 0.8rem;
   background: rgba(30, 28, 26, 0.92);
   border: 1px solid #4a4845;
   color: #e85d5d;
 }
 
-/* ── Collection: filters + scrollable grid ── */
+/* ── Filters: one search row + horizontal chip row ── */
 .deck-editor__collection {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding-top: 0.4rem;
+  padding-top: 0.35rem;
 }
 
 .deck-editor__filters {
   flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
 }
 
 .deck-editor__search {
   width: 100%;
-  min-height: 2rem;
+  min-height: 2rem !important;
   height: 2rem;
-  padding: 0.3rem 0.55rem;
-  font-size: 0.85rem;
+  margin-bottom: 0.3rem;
+  padding: 0.28rem 0.5rem;
+  font-size: 0.82rem;
 }
 
 .deck-editor__filter-row {
   display: flex;
-  gap: 0.35rem;
+  flex-wrap: nowrap;
+  gap: 0.3rem;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding-bottom: 1px;
+  align-items: center;
 }
 
 .deck-editor__filter-row::-webkit-scrollbar {
@@ -270,26 +276,24 @@
 
 .deck-editor__select {
   flex: 0 0 auto;
-  min-width: 5.5rem;
-  min-height: 2rem;
-  height: 2rem;
-  padding: 0.25rem 0.45rem;
-  font-size: 0.75rem;
+  width: auto;
+  max-width: 7rem;
+  min-height: 1.85rem !important;
+  height: 1.85rem;
+  padding: 0.15rem 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.2;
 }
 
 .deck-editor__owned {
   flex: 0 0 auto;
   margin: 0;
-  padding: 0 0.35rem;
-  font-size: 0.75rem;
+  padding: 0 0.25rem;
+  font-size: 0.72rem;
   white-space: nowrap;
-  align-self: center;
 }
 
-.deck-editor__owned input {
-  margin: 0;
-}
-
+/* ── Scrollable card grid ── */
 .deck-editor__grid {
   flex: 1;
   min-height: 0;
@@ -304,28 +308,10 @@
 .deck-editor__grid-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
-  max-height: none;
-  overflow: visible;
+  gap: 0.4rem;
 }
 
-.deck-editor__grid.collection-categories,
-.deck-editor__grid .collection-categories {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.deck-editor__grid .collection-category-title {
-  margin: 0 0 0.3rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--accent-primary);
-}
-
-/* Collection tiles — compact */
+/* Compact collection tiles */
 .collection-card-wrap--edit {
   display: flex;
   flex-direction: column;
@@ -337,138 +323,114 @@
 
 .collection-card-wrap--edit .spell-card {
   width: 100%;
-  max-width: none;
   padding: 0;
   box-shadow: none;
 }
 
 .collection-card-wrap--edit .spell-card__frame {
-  border-radius: 0;
   border: none;
   box-shadow: none;
 }
 
 .collection-card-wrap--edit .spell-card__art {
-  height: 52px;
-}
-
-.collection-card-wrap--edit .spell-card--tiny .spell-card__art {
-  height: 44px;
+  height: 40px;
 }
 
 .collection-card-wrap--edit .spell-card__body {
-  padding: 0.25rem 0.35rem 0.3rem;
+  padding: 0.2rem 0.28rem 0.25rem;
 }
 
 .collection-card-wrap--edit .spell-card__name {
-  font-size: 0.68rem;
-  line-height: 1.15;
+  font-size: 0.64rem;
+  line-height: 1.1;
 }
 
 .collection-card-wrap--edit .spell-card__desc,
-.collection-card-wrap--edit .spell-card__rarity {
+.collection-card-wrap--edit .spell-card__rarity,
+.collection-card-wrap--edit .spell-card__meta {
   display: none;
 }
 
 .collection-card-wrap--edit .collection-owned-count {
-  top: 4px;
-  left: 4px;
-  font-size: 0.62rem;
-  padding: 0.05rem 0.25rem;
+  top: 3px;
+  left: 3px;
+  font-size: 0.58rem;
+  padding: 0 0.2rem;
 }
 
-.collection-card-wrap--edit .collection-buy-cost,
 .collection-card-wrap--edit .collection-buy-cost--btn {
-  bottom: 1.85rem;
-  right: 4px;
-  font-size: 0.58rem;
-  padding: 0.05rem 0.25rem;
+  display: none;
 }
 
 .btn-add-to-deck--bar {
   position: static;
   width: 100%;
-  height: auto;
-  min-height: 1.65rem;
-  margin: 0;
-  border-radius: 0;
+  min-height: 1.5rem !important;
+  height: 1.5rem;
+  padding: 0;
   border: none;
   border-top: 1px solid #4a4845;
-  background: rgba(129, 182, 76, 0.12);
+  background: rgba(129, 182, 76, 0.1);
   color: var(--accent-primary);
-  font-size: 0.68rem;
+  font-size: 0.62rem;
   font-weight: 700;
+  border-radius: 0;
   box-shadow: none;
 }
 
 .btn-add-to-deck--bar:disabled {
-  background: rgba(255, 255, 255, 0.04);
   color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.03);
 }
 
-.collection-card-wrap--edit .spell-card--deck-blocked {
-  opacity: 0.5;
-}
-
-/* Override mobile-game chunky inputs inside deck editor */
+/* Kill mobile-game chunky styles inside deck editor */
 .deck-editor .input-text,
-.deck-editor .select-input,
-.deck-editor .btn-primary,
-.deck-editor .btn-secondary {
+.deck-editor .select-input {
   min-height: unset;
   border-radius: 6px;
   text-transform: none;
   letter-spacing: 0;
+  box-shadow: none;
 }
 
 .deck-editor .btn-primary {
+  min-height: unset;
+  text-transform: none;
+  letter-spacing: 0;
   box-shadow: none;
   border: none;
 }
 
-@media (min-width: 480px) {
+@media (min-width: 400px) {
   .deck-editor__grid.collection-grid,
-  .deck-editor__grid .collection-grid,
-  .deck-editor__grid-cards {
+  .deck-editor__grid .collection-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 900px) {
-  :root {
-    --deck-editor-chrome: calc(5rem + 2rem + var(--game-safe-top, 0px));
+  body.deck-editing .game-nav.tabs {
+    position: static;
   }
 
   .deck-editor {
     display: grid;
-    grid-template-columns: minmax(240px, 300px) 1fr;
-    grid-template-rows: 1fr;
+    grid-template-columns: 260px 1fr;
     gap: 0.75rem;
-    height: calc(100dvh - var(--deck-editor-chrome));
-    max-height: calc(100dvh - var(--deck-editor-chrome));
   }
 
   .deck-editor__top {
     grid-column: 1;
-    grid-row: 1;
-    align-self: stretch;
-    display: flex;
-    flex-direction: column;
-    margin: 0;
-    padding: 0.75rem;
+    padding: 0.65rem;
     border: 1px solid #4a4845;
     border-radius: 8px;
     background: var(--bg-panel);
-    overflow: hidden;
   }
 
   .deck-editor__strip {
-    flex: 1;
     flex-wrap: wrap;
-    align-content: flex-start;
-    overflow-x: hidden;
-    overflow-y: auto;
     max-height: none;
+    overflow-y: auto;
   }
 
   .deck-slot-wrap--strip {
@@ -477,11 +439,10 @@
 
   .deck-editor__collection {
     grid-column: 2;
-    padding-top: 0;
+    padding: 0.65rem;
     border: 1px solid #4a4845;
     border-radius: 8px;
     background: var(--bg-panel);
-    padding: 0.75rem;
   }
 
   .deck-editor__filter-row {
@@ -490,19 +451,7 @@
   }
 
   .deck-editor__grid.collection-grid,
-  .deck-editor__grid .collection-grid,
-  .deck-editor__grid-cards {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  .deck-editor__grid .collection-grid {
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
   }
-}
-
-.game-main:has(#deck-subview-edit:not(.hidden)) {
-  overflow: hidden;
-}
-
-#view-deck:not(.hidden) {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
 }

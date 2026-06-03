@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/mobile-game.css" />
   <link rel="stylesheet" href="css/spell-visuals.css" />
   <link rel="stylesheet" href="css/chess-theme.css" />
-  <link rel="stylesheet" href="css/deck-editor.css" />
+  <link rel="stylesheet" href="css/deck-editor.css?v=2" />
 </head>
 <body>
   <div class="ambient-bg" aria-hidden="true"></div>
@@ -134,17 +134,13 @@
               </div>
               <button type="button" id="btn-save-deck" class="deck-editor__save btn-primary">Save</button>
             </header>
-
-            <div class="deck-editor__status">
-              <div id="deck-progress-bar" class="deck-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0">
-                <div id="deck-progress-fill" class="deck-progress-fill"></div>
-              </div>
-              <p id="deck-status" class="deck-status warn">Tap spells below to build your deck</p>
+            <p id="deck-status" class="deck-editor__error deck-status warn" role="status"></p>
+            <div id="deck-progress-bar" class="deck-progress-bar deck-editor__progress" role="progressbar" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" hidden>
+              <div id="deck-progress-fill" class="deck-progress-fill"></div>
             </div>
-
             <div class="deck-editor__deck-zone">
               <div class="deck-editor__deck-head">
-                <h2 id="edit-deck-heading" class="deck-editor__deck-label">In your deck</h2>
+                <h2 id="edit-deck-heading" class="visually-hidden">Edit deck</h2>
                 <div class="deck-editor__deck-tools">
                   <button type="button" id="btn-auto-finish-deck" class="btn-text deck-editor__tool" title="Fill with your rarest owned cards">Auto fill</button>
                   <button type="button" id="btn-clear-deck" class="btn-text deck-editor__tool deck-editor__tool--danger">Clear</button>
