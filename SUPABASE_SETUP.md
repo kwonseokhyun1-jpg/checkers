@@ -53,4 +53,6 @@ Commit `js/supabaseConfig.js` with your anon key, or inject it in CI from a repo
 
 ## PvP rooms not working
 
-Run `supabase/fix_pvp_rls.sql` in the [SQL Editor](https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/sql/new). This fixes row-level security so players can find/join waiting rooms and adds join RPCs.
+Run `supabase/fix_pvp_rls.sql` in the [SQL Editor](https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/sql/new). This fixes row-level security so players can find/join waiting rooms and adds join/cancel/clear RPCs.
+
+To delete every open waiting room immediately, run `supabase/clear_waiting_pvp_rooms.sql` in the same editor.

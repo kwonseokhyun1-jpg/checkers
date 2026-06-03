@@ -4448,18 +4448,21 @@ body.chest-open-active {
   letter-spacing: 0.2em;
   color: var(--accent-gold);
 }
-.pvp-open-rooms {
+.pvp-room-section {
   margin-top: 1.25rem;
 }
-.pvp-open-rooms__title {
+.pvp-room-section__title {
   margin: 0 0 0.25rem;
   font-size: 1rem;
   font-weight: 600;
 }
-.pvp-open-rooms__hint {
+.pvp-room-section__hint {
   margin: 0 0 0.75rem;
   font-size: 0.85rem;
   color: var(--text-muted, #9aa3b2);
+}
+.pvp-open-cancel {
+  flex-shrink: 0;
 }
 .pvp-open-list {
   list-style: none;
