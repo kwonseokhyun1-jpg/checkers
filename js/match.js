@@ -41,6 +41,7 @@ import { pickCoinFlipVictim } from "./cardEffectHandlers.js";
 import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells } from "./cardEffectHandlers.js";
 import { isInDarknessZone } from "./gameMeta.js";
+import { saveMatchCheckpoint, clearMatchCheckpoint } from "./matchLifecycle.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -175,7 +176,10 @@ export class MatchSession {
     this.root.querySelector("#btn-end-cards")?.addEventListener("click", () => this.beginMovePhase());
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
     this.root.querySelector("#btn-leave-match")?.addEventListener("click", () => {
-      if (window.confirm("Leave this match? Your progress is saved — you can resume when you return.")) this.onExit?.();
+      if (window.confirm("Leave this match? Your progress is saved — you can resume when you return.")) {
+        saveMatchCheckpoint(this);
+        this.onExit?.();
+      }
     });
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
     this._onDocPointerMove = (e) => this.onDragMove(e);
@@ -782,6 +786,7 @@ export class MatchSession {
     }
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
+    if (!this.isPvp) saveMatchCheckpoint(this);
     this.beginAiTurn();
     this.render();
     if (this.isPvp) {
@@ -816,6 +821,7 @@ export class MatchSession {
 
   async showGameOver(title, text) {
     this.state.gameOver = title;
+    if (!this.isPvp) clearMatchCheckpoint();
     const won = title.startsWith("Victory");
     let displayText = text;
     let stars = 0;
@@ -1307,6 +1313,7 @@ ${starLine}`;
 
     s.turn = this.localColor;
     s.phase = PHASE.CARDS;
+    saveMatchCheckpoint(this);
     this.beginPlayerTurn();
     this.setMessage("Your turn — cast a spell or select a piece to move.");
     this.render();
