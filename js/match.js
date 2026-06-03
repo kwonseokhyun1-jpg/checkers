@@ -1366,6 +1366,21 @@ ${starLine}`;
             el.classList.add("piece--spell-kill-victim");
           }
           sq.appendChild(el);
+          if (piece.shieldTurns > 0) {
+            const shield = document.createElement("div");
+            shield.className = "shield-indicator";
+            shield.setAttribute("aria-label", `Shield — ${piece.shieldTurns} turn${piece.shieldTurns === 1 ? "" : "s"} left`);
+            const mark = document.createElement("span");
+            mark.className = "shield-indicator__mark";
+            mark.textContent = "🛡";
+            mark.setAttribute("aria-hidden", "true");
+            const turns = document.createElement("span");
+            turns.className = "shield-indicator__turns";
+            turns.textContent = String(piece.shieldTurns);
+            shield.appendChild(mark);
+            shield.appendChild(turns);
+            sq.appendChild(shield);
+          }
           if (piece.venom > 0) {
             const poison = document.createElement("div");
             poison.className = "poison-indicator";

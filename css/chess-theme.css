@@ -316,6 +316,40 @@ body {
   box-shadow: 0 0 3px rgba(124, 252, 0, 0.65);
 }
 
+
+.shield-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.shield-indicator__mark {
+  font-size: clamp(0.5rem, 2.6vw, 0.68rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 3px rgba(92, 225, 230, 0.9));
+}
+
+.shield-indicator__turns {
+  font-size: clamp(0.42rem, 2vw, 0.55rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #5ce1e6;
+  text-shadow: 0 0 4px rgba(92, 225, 230, 0.85);
+}
+
+.piece.shielded {
+  box-shadow:
+    0 0 0 2px #5ce1e6,
+    0 0 10px rgba(92, 225, 230, 0.55),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
 .turn-banner {
   background: var(--bg-panel);
   border: 1px solid #4a4845;
