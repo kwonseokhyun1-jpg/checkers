@@ -569,13 +569,19 @@ export function getFireblastTarget(board, piece) {
   return ray ? [ray.target] : [];
 }
 
-/** One empty square straight behind your piece (Backstep). */
-export function getBackstepTarget(board, piece) {
-  const dir = piece.color === COLORS.RED ? 1 : -1;
-  const r = piece.row + dir;
-  const c = piece.col;
-  if (inBounds(r, c) && isDarkSquare(r, c) && !board[r][c]) return [[r, c]];
-  return [];
+/** One empty square backward-diagonal behind your piece (Backstep). */
+export function getBackstepTarget(board, piece, state = null) {
+  const forward =
+    piece.color === COLORS.RED ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]];
+  const targets = [];
+  for (const [dr, dc] of forward) {
+    const r = piece.row - dr;
+    const c = piece.col - dc;
+    if (!inBounds(r, c) || !isDarkSquare(r, c) || board[r][c]) continue;
+    if (state && squareBlocked(state, r, c, piece.color)) continue;
+    targets.push([r, c]);
+  }
+  return targets;
 }
 
 export function getAdjacentEmpty(board, piece) {
