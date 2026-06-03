@@ -49,3 +49,8 @@ In [Database → Publications](https://supabase.com/dashboard/project/xhoskftcrg
 ## GitHub Pages deploy
 
 Commit `js/supabaseConfig.js` with your anon key, or inject it in CI from a repository secret before deploy.
+
+
+## PvP rooms not working
+
+Run `supabase/fix_pvp_rls.sql` in the [SQL Editor](https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/sql/new). This fixes row-level security so players can find/join waiting rooms and adds join RPCs.

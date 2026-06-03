@@ -143,7 +143,9 @@ export class MatchSession {
     this._aiTurnPending = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.bindEls();
-    this.beginPlayerTurn();
+    if (!(options.initialState && this.isPvp)) {
+      this.beginPlayerTurn();
+    }
     this.render();
   }
 
@@ -282,6 +284,29 @@ export class MatchSession {
     this.beginTurn(this.opponentColor);
   }
 
+  /** Apply authoritative state from PvP sync (opponent moved). */
+  importState(nextState) {
+    if (!nextState || this.actionBusy || this._syncBusy) return;
+    this.state = nextState;
+    this.cardPlay = null;
+    this.validTargets = [];
+    this.validMoves = [];
+    this.selectedSquare = null;
+    this.selectedColumn = null;
+    this.selectedRow = null;
+    this.endDrag();
+    this.updateSpellCastUI();
+    this.render();
+  }
+
+  pushPvpState() {
+    if (!this.isPvp || !this.onStateSync || this._syncBusy) return;
+    this._syncBusy = true;
+    Promise.resolve(this.onStateSync(this.state)).finally(() => {
+      this._syncBusy = false;
+    });
+  }
+
   removeCardFromHand(card) {
     const hand = this.state.hands[this.localColor];
     const i = hand.findIndex((c) => c.instanceId === card.instanceId);
@@ -329,6 +354,7 @@ export class MatchSession {
     this.updateSpellCastUI();
     this.setMessage(msg || "Spell played (1 per turn).");
     this.render();
+    this.pushPvpState();
   }
 
   cancelCardPlay() {
@@ -786,10 +812,7 @@ export class MatchSession {
     this.render();
     if (this.isPvp) {
       this.setMessage("Waiting for opponent…");
-      this._syncBusy = true;
-      Promise.resolve(this.onStateSync?.(this.state)).finally(() => {
-        this._syncBusy = false;
-      });
+      this.pushPvpState();
       return;
     }
     setTimeout(() => {
@@ -1119,6 +1142,7 @@ ${starLine}`;
       }
       if (this.checkWin()) return;
       this.render();
+      this.pushPvpState();
     } finally {
       this.actionBusy = false;
     }
