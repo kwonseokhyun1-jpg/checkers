@@ -10,7 +10,7 @@ export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS };
 
 /** Meta / hand / turn-rule spells — shimmer only, no board shake */
 const META_EFFECTS = new Set([
-  "quick_march", "overrun", "trickster", "ricochet", "blind", "confusion", "counterspell", "dominion",
+  "quick_march", "trickster", "ricochet", "blind", "confusion", "counterspell", "dominion",
   "conduct", "mirror_move", "roulette", "ignore", "mirror_board", "highlight_path",
   "pocket", "possession", "chameleon", "identity_theft", "succession",
   "twin_soul", "last_king", "constitution", "sanctuary_pulse", "parallel", "echo",

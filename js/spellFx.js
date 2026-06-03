@@ -91,7 +91,6 @@ export const META_SPELL_OVERLAY = {
   counterspell: "counter",
   ignore: "ignore",
   quick_march: "march",
-  overrun: "march",
   possession: "possess",
   constitution: "constitution",
   dominion: "dominion",

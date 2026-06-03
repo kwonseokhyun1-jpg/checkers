@@ -64,7 +64,6 @@ const ID_TO_CATEGORY = {
   magnet: "movement",
   nudge: "movement",
   offering: "special",
-  overrun: "movement",
   panic: "control",
   poison: "attack",
   possession: "special",
