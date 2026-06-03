@@ -65,6 +65,7 @@ const TWO_PICK_MODES = new Set([
   "f_e",
   "f_e_adj",
   "e_empty",
+  "e_e",
   "e_e_adj",
   "f_f_adj",
   "diagonal",
@@ -133,6 +134,7 @@ export class MatchSession {
     this.cullAnimation = null;
     this.spellAnimation = null;
     this.boardFx = null;
+    this.selectedColumn = null;
     this.actionBusy = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.bindEls();
@@ -144,7 +146,19 @@ export class MatchSession {
     return this.root.querySelector(`#${id}`);
   }
 
+  bindBoardFrame() {
+    const bottom = this.root.querySelector("#board-files-bottom");
+    bottom?.addEventListener("click", (e) => {
+      const btn = e.target.closest(".board-file-btn");
+      if (!btn || btn.disabled) return;
+      const col = Number(btn.dataset.col);
+      if (Number.isNaN(col)) return;
+      this.onColumnClick(col);
+    });
+  }
+
   bindEls() {
+    this.bindBoardFrame();
     this.root.querySelector("#btn-end-cards")?.addEventListener("click", () => this.beginMovePhase());
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
     this.root.querySelector("#btn-leave-match")?.addEventListener("click", () => this.onExit?.());
@@ -281,6 +295,8 @@ export class MatchSession {
       hint.textContent =
         picks.length >= need
           ? base
+          : card.mode === "column"
+          ? `${base}`
           : `${base} (${step}/${need} — click a highlighted square or drop the card on it)`;
     }
   }
@@ -292,6 +308,7 @@ export class MatchSession {
     this.cardPlay = null;
     this.validTargets = [];
     this.selectedSquare = null;
+    this.selectedColumn = null;
     this.endDrag();
     this.updateSpellCastUI();
     this.setMessage(msg || "Spell played (1 per turn).");
@@ -302,6 +319,7 @@ export class MatchSession {
     this.cardPlay = null;
     this.validTargets = [];
     this.selectedSquare = null;
+    this.selectedColumn = null;
     this.endDrag();
     this.updateSpellCastUI();
     this.setMessage("Spell cancelled.");
@@ -332,11 +350,36 @@ export class MatchSession {
       return true;
     }
 
+    this.selectedColumn = null;
     this.cardPlay = { card, picks: [] };
     this.validTargets = targets;
     this.updateSpellCastUI();
-    this.setMessage(`${card.name} — drag to the board or tap highlighted squares.`);
+    this.setMessage(
+      card.mode === "column"
+        ? `${card.name} — tap a file letter (a–h) below the board.`
+        : `${card.name} — drag to the board or tap highlighted squares.`
+    );
     this.render();
+  }
+
+  onColumnClick(col) {
+    if (!this.cardPlay || this.cardPlay.card.mode !== "column") return;
+    this.selectedColumn = col;
+    this.onCardTargetClick(3, col);
+  }
+
+  updateColumnPickUI() {
+    const frame = this.root.querySelector("#board-frame");
+    const bottom = this.root.querySelector("#board-files-bottom");
+    const castingColumn = this.cardPlay?.card?.mode === "column";
+    frame?.classList.toggle("column-pick", !!castingColumn);
+    if (!bottom) return;
+    bottom.querySelectorAll(".board-file-btn").forEach((btn) => {
+      const col = Number(btn.dataset.col);
+      btn.disabled = !castingColumn;
+      btn.classList.toggle("is-target", !!castingColumn);
+      btn.classList.toggle("is-active", castingColumn && this.selectedColumn === col);
+    });
   }
 
   onCardTargetClick(row, col) {
@@ -577,6 +620,7 @@ export class MatchSession {
     const ms = boardFxDuration(kind);
     setTimeout(() => {
       this.boardFx = null;
+    this.selectedColumn = null;
       frame?.classList.remove(`board-frame--fx-${kind}`, "board-frame--spell-impact");
       this.$("board")?.classList.remove("board--spell-shake");
       if (this.checkWin()) return;
@@ -787,6 +831,7 @@ ${starLine}`;
     await delay((spec.duration ?? MIN_SPELL_ANIM_MS) + SPELL_BANNER_EXTRA_MS);
     this.spellAnimation = null;
     this.boardFx = null;
+    this.selectedColumn = null;
     removeSpellOverlay(overlay);
     board?.classList.remove("board--spell-shake");
     frame?.classList.remove("board-frame--spell-impact");
@@ -804,6 +849,7 @@ ${starLine}`;
     await delay((spec.duration ?? 900) + 400);
     this.spellAnimation = null;
     this.boardFx = null;
+    this.selectedColumn = null;
     if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
   }
 
@@ -1100,6 +1146,7 @@ ${starLine}`;
     this.cullAnimation = null;
     this.spellAnimation = null;
     this.boardFx = null;
+    this.selectedColumn = null;
     this.actionBusy = false;
         this.render();
       } else if (entry.type === "message") {
@@ -1236,6 +1283,9 @@ ${starLine}`;
           sq.classList.add("explosion-flash");
         }
         if (this.selectedSquare?.[0] === row && this.selectedSquare?.[1] === col) sq.classList.add("selected");
+        if (this.cardPlay?.card?.mode === "column" && this.selectedColumn === col) {
+          sq.classList.add("column-highlight");
+        }
         if (this.validTargets.some(([r, c]) => r === row && c === col)) {
           sq.classList.add("playable", "target", "spell-target");
         }
@@ -1290,6 +1340,7 @@ ${starLine}`;
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
           if (piece.vengeanceTurns > 0) el.classList.add("vengeance-mark");
+          if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (
             this.cullAnimation &&
@@ -1347,6 +1398,7 @@ ${starLine}`;
     const endBtn = this.root.querySelector("#btn-end-cards");
     if (endBtn) endBtn.disabled = s.turn !== this.localColor || s.phase !== PHASE.CARDS || !!s.gameOver;
     this.updateSpellCastUI();
+    this.updateColumnPickUI();
     this.renderHand();
     this.renderBoard();
   }

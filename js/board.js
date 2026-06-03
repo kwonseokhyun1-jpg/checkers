@@ -25,16 +25,19 @@ export function squareName(row, col) {
 
 /** Board grid with a–h file labels and 1–8 rank labels. */
 export function boardFrameHtml() {
-  const fileLabels = [...FILES].map((f) => `<span class="board-label">${f}</span>`).join("");
+  const fileBtn = (f, i) =>
+    `<button type="button" class="board-file-btn" data-col="${i}" aria-label="File ${f}" disabled>${f}</button>`;
+  const fileLabelsTop = [...FILES].map((f) => `<span class="board-label">${f}</span>`).join("");
+  const fileLabelsBottom = [...FILES].map((f, i) => fileBtn(f, i)).join("");
   const rankLabels = Array.from({ length: SIZE }, (_, row) =>
     `<span class="board-label">${SIZE - row}</span>`
   ).join("");
   return `
-    <div class="board-frame">
-      <div class="board-files board-files--top" aria-hidden="true">${fileLabels}</div>
+    <div class="board-frame" id="board-frame">
+      <div class="board-files board-files--top" aria-hidden="true">${fileLabelsTop}</div>
       <div class="board-ranks" aria-hidden="true">${rankLabels}</div>
       <div id="board" class="board" role="grid" aria-label="Checker board"></div>
-      <div class="board-files board-files--bottom" aria-hidden="true">${fileLabels}</div>
+      <div class="board-files board-files--bottom" id="board-files-bottom">${fileLabelsBottom}</div>
     </div>`;
 }
 
@@ -114,6 +117,7 @@ export function createPiece(color, row, col, king = false) {
     vengeanceTurns: 0,
     hibernationTurns: 0,
     bearAwakened: false,
+    linkedFateId: null,
     pressExtraMove: false,
   };
 }
@@ -350,6 +354,7 @@ export function applyMove(board, move, state = null) {
   for (const [cr, cc] of move.captures) {
     const cap = board[cr][cc];
     if (cap) {
+      const linkedPartner = cap.linkedFateId;
       if (cap.vengeanceTurns > 0 && piece) {
         queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
         removePiece(board, piece.row, piece.col);
@@ -363,7 +368,21 @@ export function applyMove(board, move, state = null) {
           if (mates.length) mates[0].king = true;
         }
       }
+      cap.linkedFateId = null;
       removePiece(board, cr, cc);
+      if (linkedPartner && state) {
+        for (let lr = 0; lr < SIZE; lr++)
+          for (let lc = 0; lc < SIZE; lc++) {
+            const lp = board[lr][lc];
+            if (lp && lp.id === linkedPartner) {
+              lp.linkedFateId = null;
+              if (!state.captured[lp.color]) state.captured[lp.color] = [];
+              state.captured[lp.color].push({ king: lp.king });
+              removePiece(board, lr, lc);
+              break;
+            }
+          }
+      }
     }
   }
   if (!piece.king && !(piece.rustedTurns > 0)) {

@@ -57,6 +57,7 @@ const ID_TO_CATEGORY = {
   iron_will: "defense",
   landmine: "trap",
   last_king: "special",
+  link_fate: "special",
   last_stand: "defense",
   leapfrog: "movement",
   long_step: "movement",
