@@ -337,6 +337,16 @@ export function getAllMovesForColor(board, color, state = null) {
   return steps;
 }
 
+/** Mind control: enemy piece moves and captures using the controller's color rules. */
+export function getMovesForMindControl(board, piece, controllerColor, state = null) {
+  const acting = { ...piece, color: controllerColor };
+  const jumps = getJumpMoves(board, acting, controllerColor, state);
+  const steps = getStepMoves(board, acting, controllerColor, state);
+  if (state?.meta?.optionalJumps?.[controllerColor]) return jumps.length ? jumps : steps;
+  if (jumps.length > 0) return jumps;
+  return steps;
+}
+
 
 function explodeBombAt(board, state, row, col) {
   const victims = [];
