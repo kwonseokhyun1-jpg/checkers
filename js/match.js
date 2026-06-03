@@ -1355,6 +1355,7 @@ ${starLine}`;
           if (piece.vengeanceTurns > 0) el.classList.add("vengeance-mark");
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
+          if (piece.venom > 0) el.classList.add("poisoned");
           if (
             this.cullAnimation &&
             this.cullAnimation.row === row &&
@@ -1365,6 +1366,30 @@ ${starLine}`;
             el.classList.add("piece--spell-kill-victim");
           }
           sq.appendChild(el);
+          if (piece.venom > 0) {
+            const poison = document.createElement("div");
+            poison.className = "poison-indicator";
+            const mark = document.createElement("span");
+            mark.className = "poison-indicator__mark";
+            mark.textContent = "☠";
+            mark.setAttribute("aria-hidden", "true");
+            const bar = document.createElement("div");
+            bar.className = "poison-indicator__bar";
+            bar.setAttribute("role", "meter");
+            bar.setAttribute("aria-label", `Poison — ${piece.venom} turns left`);
+            bar.setAttribute("aria-valuenow", String(piece.venom));
+            bar.setAttribute("aria-valuemin", "0");
+            bar.setAttribute("aria-valuemax", "6");
+            for (let i = 0; i < 6; i++) {
+              const block = document.createElement("span");
+              block.className =
+                "poison-indicator__block" + (i < piece.venom ? " poison-indicator__block--filled" : "");
+              bar.appendChild(block);
+            }
+            poison.appendChild(mark);
+            poison.appendChild(bar);
+            sq.appendChild(poison);
+          }
         } else if (
           this.cullAnimation &&
           this.cullAnimation.row === row &&

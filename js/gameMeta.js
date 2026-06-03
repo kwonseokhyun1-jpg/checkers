@@ -13,7 +13,6 @@ export function createMatchMeta() {
     pendingDouble: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingRicochet: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingRegicide: { [COLORS.RED]: false, [COLORS.BLACK]: false },
-    pendingOverrun: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingConduct: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     counterspell: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },

@@ -64,6 +64,7 @@ export const REMOVED_CARD_IDS = new Set([
   "mirror_move",
   "mirror_shield",
   "obstacle",
+  "overrun",
   "parallel",
   "pawns_zeal",
   "phalanx",

@@ -270,6 +270,52 @@ body {
   box-shadow: 0 0 0 2px #e85d5d, 0 0 12px rgba(232, 93, 93, 0.45);
 }
 
+.piece.poisoned {
+  box-shadow:
+    0 0 0 2px rgba(124, 252, 0, 0.65),
+    0 0 12px rgba(80, 200, 40, 0.4);
+}
+
+.poison-indicator {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.poison-indicator__mark {
+  font-size: clamp(0.45rem, 2.4vw, 0.62rem);
+  line-height: 1;
+  color: #b8ff5c;
+  text-shadow: 0 0 4px rgba(124, 252, 0, 0.85);
+}
+
+.poison-indicator__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.poison-indicator__block {
+  width: clamp(4px, 2vw, 6px);
+  height: clamp(4px, 2vw, 6px);
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(124, 252, 0, 0.2);
+  transition: background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.poison-indicator__block--filled {
+  background: linear-gradient(180deg, #d4ff7a 0%, #4a9e24 100%);
+  border-color: rgba(184, 255, 92, 0.85);
+  box-shadow: 0 0 3px rgba(124, 252, 0, 0.65);
+}
+
 .turn-banner {
   background: var(--bg-panel);
   border: 1px solid #4a4845;

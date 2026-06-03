@@ -222,7 +222,6 @@ const EFFECTS = {
   rook_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.rookTurns=2; return ok(); },
   bishop_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bishopTurns=2; return ok(); },
   pawn_zeal(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); p.pawnZeal=true; return ok(); },
-  overrun(state, color, picks) { state.meta.pendingOverrun[color]=true; return ok(); },
   cross_bolt(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(const [tr,tc] of getBoltTarget(state.board,p)) kill(state,tr,tc,color); return ok(); },
   snipe(state, color, picks) { const [r,c]=p0(picks); const t=at(state,r,c); if(!t||t.color===color) return fail(); if(!kill(state,r,c,color)) return fail(); return ok(); },
   landmine(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); if(sq.mine||sq.hiddenMine) return fail("Square already trapped"); placeMine(sq, color, true); return ok(); },
@@ -389,7 +388,7 @@ const EFFECTS = {
     }
     return fail("No valid targets");
   },
-  poison_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.venom=3; return ok('Poison — dies in 3 turns.'); },
+  poison_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.venom=6; return ok('Poison — dies in 6 turns.'); },
   deflect_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.deflectTurns=1; return ok('Deflect — next hit reflects to a random enemy.'); },
   trickster(state, color, picks) {
     let plan = state.meta.pendingTrickster;
