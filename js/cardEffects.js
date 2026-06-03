@@ -70,6 +70,7 @@ export function getValidTargets(state, color, card, picks) {
           const p = at(state, r, c);
           if (!p || p.color !== color) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
+          if (card.effect === "fireblast" && !getFireblastTarget(state.board, p).length) continue;
           res.push([r, c]);
         }
       return res;

@@ -20,12 +20,139 @@ export const EFFECT_VISUAL = {
   hibernation: "hibernation",
   bomb: "bomb_arm",
   landmine: "landmine_arm",
+
+  nudge: "move",
+  backstep: "move",
+  recall: "move",
+  repel: "move",
+  leapfrog: "move",
+  long_step: "move",
+  blink_2: "move",
+  mass_nudge: "move",
+  magnet: "move",
+  call_forward: "move",
+  promote_zone: "move",
+  retreat_3: "move",
+
+  swap_friendly: "swap",
+  hostile_swap: "swap",
+  tangle: "swap",
+  butterfly: "swap",
+  fusion: "fusion",
+  scatter: "scatter",
+  earthquake: "quake",
+  trickster: "trickster",
+
+  shield_1: "shield",
+  shield_2: "shield",
+  bulwark: "shield",
+  last_stand: "shield",
+  anchor_2: "shield",
+  deflect_1: "shield",
+  fortify: "shield",
+  fog_2: "shield",
+  rally: "shield",
+  stone_form: "shield",
+  sanctuary_pulse: "shield",
+  revive: "revive",
+  iron_will: "shield",
+
+  sanctuary: "aura",
+  darkness: "aura",
+  barrier: "barrier",
+
+  poison_3: "poison",
+  hunters_mark: "poison",
+  hex_3: "curse",
+  rust: "curse",
+  demote: "curse",
+  panic: "curse",
+  press: "curse",
+  reverse_only_2: "curse",
+  root_2: "root",
+  deep_freeze: "freeze",
+  blizzard: "freeze",
+
+  quicksand: "sink",
+  collapse: "collapse",
+
+  crown: "crown",
+  bishop_2: "crown",
+  rook_2: "crown",
+  clone: "clone",
+  offering: "offering",
+  purify: "purify",
+};
+
+/** Full-screen overlays for instant / meta spells (no board picks). */
+export const META_SPELL_OVERLAY = {
+  blind: "blind",
+  confusion: "confusion",
+  counterspell: "counter",
+  ignore: "ignore",
+  quick_march: "march",
+  overrun: "march",
+  possession: "possess",
+  constitution: "constitution",
+  dominion: "dominion",
+  last_king: "crown-burst",
+  purify: "purify",
+};
+
+export const VISUAL_DURATION_MS = {
+  coin: 2400,
+  duel: 1500,
+  stab: 1200,
+  snipe: 1300,
+  backstab: 1200,
+  sacrifice: 1600,
+  execution: 1400,
+  shadow: 2000,
+  cryo: 1300,
+  shatter: 1400,
+  lightning: 1400,
+  fire: 1300,
+  vengeance: 1100,
+  hibernation: 1200,
+  bomb_arm: 1000,
+  landmine_arm: 1000,
+  move: 1100,
+  swap: 1100,
+  scatter: 1200,
+  quake: 1400,
+  shield: 1100,
+  revive: 1300,
+  aura: 1200,
+  barrier: 1100,
+  poison: 1200,
+  curse: 1100,
+  root: 1100,
+  freeze: 1300,
+  sink: 1200,
+  collapse: 1300,
+  crown: 1200,
+  fusion: 1200,
+  clone: 1200,
+  offering: 1200,
+  purify: 1200,
+  trickster: 1400,
+  meta: 1200,
 };
 
 export function visualForEffect(effect) {
   if (effect === "bomb") return EFFECT_VISUAL.bomb_arm;
   if (effect === "landmine") return EFFECT_VISUAL.landmine_arm;
   return EFFECT_VISUAL[effect] || null;
+}
+
+export function metaOverlayForEffect(effect) {
+  return META_SPELL_OVERLAY[effect] || null;
+}
+
+export function durationForVisual(visual, fallback = 1000) {
+  if (!visual) return fallback;
+  if (visual.startsWith("meta-")) return VISUAL_DURATION_MS.meta;
+  return VISUAL_DURATION_MS[visual] ?? fallback;
 }
 
 /**
@@ -37,6 +164,8 @@ export function visualForEffect(effect) {
 export function applySquareSpellFx(square, visual, animRole, ctx) {
   if (!visual || !square) return;
   square.classList.add(`spell-fx-${visual}`);
+  if (animRole) square.classList.add(`spell-fx-role-${animRole}`);
+
   const { from, to, row, col } = ctx;
   if (visual === "duel" && from && to) {
     if (from[0] === row && from[1] === col) square.classList.add("spell-fx-duel-attacker");
@@ -83,10 +212,67 @@ export function applySquareSpellFx(square, visual, animRole, ctx) {
   if (visual === "coin" && animRole === "kill") {
     square.classList.add("spell-fx-coin-victim");
   }
+  if (visual === "move") {
+    if (from && from[0] === row && from[1] === col) square.classList.add("spell-fx-move-from");
+    if (to && to[0] === row && to[1] === col) square.classList.add("spell-fx-move-to");
+  }
+  if (visual === "swap") {
+    if (from && from[0] === row && from[1] === col) square.classList.add("spell-fx-swap-a");
+    if (to && to[0] === row && to[1] === col) square.classList.add("spell-fx-swap-b");
+  }
+}
+
+function coinOverlayMarkup() {
+  return `
+    <div class="spell-coin-stage" aria-hidden="true">
+      <div class="spell-coin-scene">
+        <div class="spell-coin-flipper">
+          <div class="spell-coin-face spell-coin-face--heads"><span>★</span><small>Heads</small></div>
+          <div class="spell-coin-face spell-coin-face--tails"><span>☠</span><small>Tails</small></div>
+        </div>
+      </div>
+      <p class="spell-coin-caption">Flipping…</p>
+    </div>`;
+}
+
+function metaOverlayMarkup(kind) {
+  const icons = {
+    blind: "👁‍🗨",
+    confusion: "🌀",
+    counter: "🛡✧",
+    ignore: "⊘",
+    march: "⚑",
+    possess: "👁",
+    constitution: "♛",
+    dominion: "⚜",
+    "crown-burst": "♔",
+    offering: "⚱",
+    purify: "✦",
+  };
+  const labels = {
+    blind: "Blind",
+    confusion: "Confusion",
+    counter: "Counterspell armed",
+    ignore: "Optional jumps",
+    march: "Quick March",
+    possess: "Possession",
+    constitution: "Constitution",
+    dominion: "Dominion",
+    "crown-burst": "Last King",
+    offering: "Offering",
+    purify: "Purify",
+  };
+  const icon = icons[kind] || "✧";
+  const label = labels[kind] || "Spell";
+  return `
+    <div class="spell-meta-stage spell-meta-stage--${kind}" aria-hidden="true">
+      <div class="spell-meta-burst">${icon}</div>
+      <p class="spell-meta-caption">${label}</p>
+    </div>`;
 }
 
 /**
- * Full-board overlay for effects with no picks (coin flip).
+ * Full-board overlay for effects with no picks (coin flip, meta spells).
  * @param {HTMLElement} boardFrame
  * @param {string} overlayKind
  */
@@ -95,8 +281,29 @@ export function mountSpellOverlay(boardFrame, overlayKind) {
   const el = document.createElement("div");
   el.className = `spell-board-overlay spell-board-overlay--${overlayKind}`;
   el.setAttribute("aria-hidden", "true");
+  if (overlayKind === "coin") {
+    el.innerHTML = coinOverlayMarkup();
+  } else {
+    el.innerHTML = metaOverlayMarkup(overlayKind);
+  }
   boardFrame.appendChild(el);
   return el;
+}
+
+/** @param {HTMLElement|null} overlay @param {{ friendly?: boolean, label?: string }} result */
+export function revealCoinFlipResult(overlay, result = {}) {
+  if (!overlay) return;
+  const caption = overlay.querySelector(".spell-coin-caption");
+  const flipper = overlay.querySelector(".spell-coin-flipper");
+  if (flipper) {
+    flipper.classList.add("spell-coin-flipper--landed");
+    flipper.classList.add(result.friendly ? "spell-coin-flipper--tails" : "spell-coin-flipper--heads");
+  }
+  if (caption) {
+    const side = result.friendly ? "Tails" : "Heads";
+    const target = result.friendly ? "friendly piece" : "enemy piece";
+    caption.textContent = result.label || `${side} — ${target}!`;
+  }
 }
 
 export function removeSpellOverlay(el) {

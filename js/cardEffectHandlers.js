@@ -3,7 +3,7 @@
  */
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget, getBackstepTarget, piecesOfColor, enemyPieces,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastRay, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMeta.js";
@@ -157,14 +157,14 @@ const EFFECTS = {
     const [r1, c1] = p0(picks);
     const p = at(state, r1, c1);
     if (!p || p.color !== color) return fail();
-    const line = getFireblastTarget(state.board, p);
-    if (!line.length) return fail("No enemy in the fireball path");
-    const [r2, c2] = line[0];
+    const ray = getFireblastRay(state.board, p);
+    if (!ray) return fail("No enemy in the fireball path");
+    const [r2, c2] = ray.target;
     const t = at(state, r2, c2);
     if (!t || t.color === color) return fail();
     if (t.shieldTurns > 0) t.shieldTurns = 0;
     if (!kill(state, r2, c2, color)) return fail();
-    return ok("Fireblast!");
+    return ok("Fireblast!", { fireblastTo: ray.target, fireblastLine: ray.lineSquares });
   },
   freeze_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.frozenTurns=1; return ok(); },
   retreat_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.retreatTurns=3; return ok(); },
@@ -359,7 +359,7 @@ const EFFECTS = {
   constitution(state, color, picks) { state.meta.constitutionTurns[color]=5; return ok(); },
   last_king(state, color, picks) { const ps=fri(state,color); if(ps.length!==1) return fail('Need exactly 1 piece'); const p=ps[0]; p.king=true; p.shieldTurns=2; return ok(); },
   succession(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); p.succession=true; return ok(); },
-  coin_flip(state, color, picks) { const pool=fri(state,color).concat(en(state,color)); if(!pool.length) return fail(); const t=pool[Math.floor(Math.random()*pool.length)]; kill(state,t.row,t.col,color); return ok("Coin flip!", { victimSquare: [t.row, t.col] }); },
+  coin_flip(state, color, picks) { const pool=fri(state,color).concat(en(state,color)); if(!pool.length) return fail(); const t=pool[Math.floor(Math.random()*pool.length)]; const victimColor=t.color; kill(state,t.row,t.col,color); return ok("Coin flip!", { victimSquare: [t.row, t.col], victimColor }); },
   butterfly(state, color, picks) { const cells=[[3,2],[3,4],[4,3],[4,5]]; const pieces=cells.map(([r,c])=>at(state,r,c)).filter(Boolean); const spots=cells.filter(([r,c])=>!at(state,r,c)); let i=0; for(const p of pieces){ if(i>=spots.length) break; const [r,c]=spots[i++]; movePiece(state.board,p.row,p.col,r,c);} return ok(); },
   ignore(state, color, picks) { state.meta.optionalJumps[color]=true; return ok(); },
   pocket(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); state.meta.pocket={piece:p,r,c}; state.meta.pocketReturnTurn=state.meta.turnNumber+2; return ok(); },
