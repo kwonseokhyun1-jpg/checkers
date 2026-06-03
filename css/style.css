@@ -458,6 +458,77 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
+  inset: auto;
+}
+
+.piece.rook-mark::after {
+  content: "♜";
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 0.45em;
+  background: var(--bg-panel);
+  border-radius: 50%;
+  width: 1.1em;
+  height: 1.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  inset: auto;
+}
+
+.piece.bishop-mark::after {
+  content: "♝";
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 0.45em;
+  background: var(--bg-panel);
+  border-radius: 50%;
+  width: 1.1em;
+  height: 1.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  inset: auto;
+}
+
+.piece.queen-mark::after {
+  content: "♛";
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 0.45em;
+  background: var(--bg-panel);
+  border-radius: 50%;
+  width: 1.1em;
+  height: 1.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  inset: auto;
+}
+
+.piece.wraith-mark::after {
+  content: "👻";
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  font-size: 0.45em;
+  background: var(--bg-panel);
+  border-radius: 50%;
+  width: 1.1em;
+  height: 1.1em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  inset: auto;
+  line-height: 1;
 }
 
 .piece.retreat-mark::after {
