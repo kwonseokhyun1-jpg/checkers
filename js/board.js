@@ -444,6 +444,25 @@ export function countPieces(board, color) {
   return n;
 }
 
+
+export function tickEndTurnEffects(board, color, state = null) {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = board[r][c];
+      if (!p || p.color !== color) continue;
+      if (p.rooted > 0) p.rooted--;
+    }
+  }
+  if (state?.squares) {
+    for (const sq of Object.values(state.squares)) {
+      if (!sq?.barrier?.turnsLeft) continue;
+      if (sq.barrier.owner === color) continue;
+      sq.barrier.turnsLeft--;
+      if (sq.barrier.turnsLeft <= 0) delete sq.barrier;
+    }
+  }
+}
+
 export function tickEffects(board, color, state = null) {
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
@@ -460,7 +479,7 @@ export function tickEffects(board, color, state = null) {
       }
       dec("shieldTurns"); dec("frozenTurns"); dec("paralyzedTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
-      dec("stoneTurns"); dec("rooted"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
+      dec("stoneTurns"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
       dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("vengeanceTurns"); dec("rustedTurns"); dec("noCaptureTurns");
       dec("deflectTurns");
       if (p.venom > 0) {
@@ -489,10 +508,7 @@ export function tickEffects(board, color, state = null) {
         if (sq.sanctuaryTurns <= 0) delete sq.sanctuary;
       }
       if (sq.darkness > 0) sq.darkness--;
-      if (sq.barrier?.turnsLeft > 0 && sq.barrier.owner === color) {
-        sq.barrier.turnsLeft--;
-        if (sq.barrier.turnsLeft <= 0) delete sq.barrier;
-      }
+
     }
   }
 }

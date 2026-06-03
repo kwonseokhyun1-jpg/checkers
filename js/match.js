@@ -10,6 +10,7 @@ import {
   applyMove,
   countPieces,
   tickEffects,
+  tickEndTurnEffects,
   findPressExtraPiece,
 } from "./board.js";
 import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed } from "./gameMeta.js";
@@ -701,6 +702,7 @@ export class MatchSession {
 
   endHumanTurn() {
     if (this.checkWin()) return;
+    tickEndTurnEffects(this.state.board, this.localColor, this.state);
     tickMeta(this.state, this.localColor);
     if (this.state.meta.possessionController === this.localColor) {
       this.state.meta.possessionId = null;
@@ -1185,6 +1187,7 @@ ${starLine}`;
       await new Promise((resolve) => this.playBoardFx(s, resolve));
     }
 
+    tickEndTurnEffects(s.board, this.opponentColor, s);
     tickMeta(s, COLORS.BLACK);
 
     if (countPieces(s.board, this.localColor) === 0) {
