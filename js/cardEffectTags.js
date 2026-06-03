@@ -60,3 +60,6 @@ export function getCardEffectTags(def) {
 export function formatEffectTooltip(def) {
   return getCardEffectTags(def).join(" · ");
 }
+
+  poison_3: ["Enemy dies in 3 turns"],
+  deflect_1: ["Next hit reflects to random enemy"],

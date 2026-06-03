@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget, getBackstepTarget } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getTeleportTargets, getBoltTarget, getAdjacentForwardBoltTarget, getFireblastTarget, getBackstepTarget } from "./board.js";
 import { collapsedSquareKey } from "./gameMeta.js";
 import { sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget } from "./cardEffectHandlers.js";
@@ -128,8 +128,8 @@ export function getValidTargets(state, color, card, picks) {
       if (picks.length === 0) return getValidTargets(state, color, { mode: "friendly" }, []);
       return getValidTargets(state, color, { mode: "enemy" }, []);
     case "e_empty":
-      if (picks.length === 0) return getValidTargets(state, color, { mode: "enemy" }, []);
-      return getValidTargets(state, color, { mode: "empty" }, []);
+      if (picks.length === 0) return getValidTargets(state, color, { mode: "enemy", effect: card.effect }, []);
+      return getValidTargets(state, color, { mode: "empty", effect: card.effect }, picks);
     case "e_e_adj":
     case "f_f_adj":
       if (picks.length === 0) return getValidTargets(state, color, { mode: card.mode === "e_e_adj" ? "enemy" : "friendly" }, []);
@@ -153,6 +153,7 @@ export function getValidTargets(state, color, card, picks) {
       const p = at(state, pr, pc);
       if (!p) return [];
       if (card.effect === "fireblast") return getFireblastTarget(state.board, p);
+      if (card.effect === "forward_bolt") return getAdjacentForwardBoltTarget(state.board, p);
       return getBoltTarget(state.board, p);
     }
     case "any_piece":
@@ -165,6 +166,19 @@ export function getValidTargets(state, color, card, picks) {
     case "empty_empty":
       if (picks.length === 0) return getValidTargets(state, color, { mode: "empty" }, []);
       return getValidTargets(state, color, { mode: "empty" }, []);
+    case "empty": {
+      for (let r = 0; r < SIZE; r++)
+        for (let c = 0; c < SIZE; c++)
+          if (emptyDark(state, r, c)) res.push([r, c]);
+      if (card.effect === "call_forward" && picks.length === 1) {
+        const [er, ec] = picks[0];
+        return res.filter(([r, c]) => {
+          const dist = Math.max(Math.abs(r - er), Math.abs(c - ec));
+          return dist > 0 && dist <= 3;
+        });
+      }
+      return res;
+    }
     default:
       return [];
   }

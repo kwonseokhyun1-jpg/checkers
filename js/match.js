@@ -232,9 +232,13 @@ export class MatchSession {
 
   beginTurn(color) {
     const s = this.state;
+    tickEffects(s.board, color, s);
     s.turnNumber[color]++;
     s.spellPlayed[color] = false;
     s.phase = PHASE.CARDS;
+    this.actionBusy = false;
+    this.cardPlay = null;
+    if (s.boardFx) s.boardFx = null;
     if (s.turnNumber[color] > 1 && s.turnNumber[color] % DRAW_EVERY_TURNS === 0) {
       const n = drawToHand(s, color, 1);
       if (n) this.setMessage("Drew a card from your deck.");
@@ -508,9 +512,14 @@ export class MatchSession {
     const piece = s.board[row][col];
     if (piece) this.showPieceInfo(piece, row, col);
 
-    if (piece && piece.color === this.localColor) {
+    const possessed =
+      piece &&
+      s.meta.possessionId === piece.id &&
+      s.meta.possessionController === this.localColor &&
+      s.turn === this.localColor;
+    if (piece && (piece.color === this.localColor || possessed)) {
       this.selectedSquare = [row, col];
-      this.validMoves = getAllMovesForColor(s.board, this.localColor, s).filter(
+      this.validMoves = getAllMovesForColor(s.board, piece.color, s).filter(
         (m) => m.from[0] === row && m.from[1] === col
       );
       if (!this.validMoves.length) {
@@ -647,8 +656,11 @@ export class MatchSession {
 
   endHumanTurn() {
     if (this.checkWin()) return;
-    tickEffects(this.state.board, this.localColor, this.state);
     tickMeta(this.state, this.localColor);
+    if (this.state.meta.possessionController === this.localColor) {
+      this.state.meta.possessionId = null;
+      this.state.meta.possessionController = null;
+    }
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
     this.beginAiTurn();
@@ -707,6 +719,7 @@ ${starLine}`;
       if (starsEl) {
         starsEl.textContent = won ? formatStars(stars) : "";
         starsEl.classList.toggle("hidden", !won);
+        starsEl.classList.toggle("game-over-stars--earned", won && stars > 0);
         starsEl.setAttribute("aria-label", won ? `${stars} of 3 stars` : "");
       }
       const gainEl = this.root.querySelector("#game-over-star-gain");
@@ -1084,7 +1097,6 @@ ${starLine}`;
       await new Promise((resolve) => this.playBoardFx(s, resolve));
     }
 
-    tickEffects(s.board, COLORS.BLACK, s);
     tickMeta(s, COLORS.BLACK);
 
     if (countPieces(s.board, this.localColor) === 0) {

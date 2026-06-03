@@ -228,7 +228,7 @@ export function forwardDirs(piece, dominion = false) {
 
 export function getStepMoves(board, piece, color, state = null) {
   const moves = [];
-  if (isFrozen(piece) || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
+  if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
   const dom = state?.meta?.dominionTurn?.[color];
 
   if (hasKnightSigil(piece))
@@ -271,7 +271,7 @@ export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
   if (piece.revivedNoCapture) return moves;
   if (piece.reverseOnlyTurns > 0 || piece.noCaptureTurns > 0) return moves;
-  if (isFrozen(piece) || piece.rooted > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
+  if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.rooted > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
   if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
   if (hasKnightSigil(piece) && piece.knightCapture)
     return getKnightMoves(board, piece, state, true);
@@ -431,10 +431,19 @@ export function tickEffects(board, color, state = null) {
       const p = board[r][c];
       if (!p || p.color !== color) continue;
       const dec = (k) => { if (p[k] > 0) p[k]--; };
+      if (p.hibernationTurns > 0) {
+        p.hibernationTurns--;
+        if (p.hibernationTurns <= 0) {
+          p.hibernationTurns = 0;
+          p.king = true;
+          p.bearAwakened = true;
+        }
+      }
       dec("shieldTurns"); dec("frozenTurns"); dec("paralyzedTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
       dec("stoneTurns"); dec("rooted"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
       dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("vengeanceTurns"); dec("rustedTurns"); dec("noCaptureTurns");
+      dec("deflectTurns");
       if (p.venom > 0) {
         p.venom--;
         if (p.venom <= 0) removePiece(board, r, c);
@@ -456,9 +465,15 @@ export function tickEffects(board, color, state = null) {
     for (const k of Object.keys(state.squares)) {
       const sq = state.squares[k];
       if (sq.ghostBlock > 0) sq.ghostBlock--;
-      if (sq.sanctuaryTurns > 0) { sq.sanctuaryTurns--; if (sq.sanctuaryTurns <= 0) delete sq.sanctuary; }
+      if (sq.sanctuaryTurns > 0 && sq.sanctuary === color) {
+        sq.sanctuaryTurns--;
+        if (sq.sanctuaryTurns <= 0) delete sq.sanctuary;
+      }
       if (sq.darkness > 0) sq.darkness--;
-      if (sq.barrier?.turnsLeft > 0) { sq.barrier.turnsLeft--; if (sq.barrier.turnsLeft <= 0) delete sq.barrier; }
+      if (sq.barrier?.turnsLeft > 0 && sq.barrier.owner === color) {
+        sq.barrier.turnsLeft--;
+        if (sq.barrier.turnsLeft <= 0) delete sq.barrier;
+      }
     }
   }
 }
@@ -481,6 +496,20 @@ export function getBoltTarget(board, piece) {
 }
 
 /** First enemy directly ahead (same file; includes shielded — for Fireblast). */
+export function getAdjacentForwardBoltTarget(board, piece) {
+  const dir = piece.color === COLORS.RED ? -1 : 1;
+  const targets = [];
+  for (const dc of [-1, 1]) {
+    const r = piece.row + dir;
+    const c = piece.col + dc;
+    if (inBounds(r, c) && isDarkSquare(r, c)) {
+      const cell = board[r][c];
+      if (cell && cell.color !== piece.color && cell.shieldTurns <= 0) targets.push([r, c]);
+    }
+  }
+  return targets;
+}
+
 export function getFireblastTarget(board, piece) {
   const dir = piece.color === COLORS.RED ? -1 : 1;
   const targets = [];

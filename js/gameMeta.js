@@ -26,6 +26,7 @@ export function createMatchMeta() {
     prospectPending: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     constitutionTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     possessionId: null,
+    possessionController: null,
     forcedCapturePieceId: null,
     lastCard: { [COLORS.RED]: null, [COLORS.BLACK]: null },
     lastMove: { [COLORS.RED]: null, [COLORS.BLACK]: null },

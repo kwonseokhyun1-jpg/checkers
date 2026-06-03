@@ -249,7 +249,9 @@ export function loadProfile() {
 }
 
 export function saveProfile(profile) {
+  profile.savedAt = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+  void import("./cloudProfile.js").then(({ scheduleCloudSave }) => scheduleCloudSave(profile)).catch(() => {});
 }
 
 export function collectionRoom(profile, cardId) {
