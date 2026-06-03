@@ -19,9 +19,26 @@ const STEPS = [
   },
 ];
 
-export function dismissTutorial() {
+function isTutorialVisible() {
   const modal = document.getElementById("tutorial-modal");
-  modal?.classList.add("hidden");
+  return !!modal && !modal.classList.contains("hidden");
+}
+
+/** @param {{ persist?: boolean, profile?: object, saveProfile?: (p: object) => void }} [opts] */
+export function dismissTutorial(opts = {}) {
+  const modal = document.getElementById("tutorial-modal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+
+  if (opts.persist) {
+    try {
+      localStorage.setItem(TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) opts.profile.tutorialDone = true;
+    opts.saveProfile?.(opts.profile);
+  }
 }
 
 export function shouldShowTutorial(profile) {
@@ -42,6 +59,7 @@ export function initTutorial({ profile, saveProfile, onDone }) {
   const stepEl = modal.querySelector("#tutorial-step");
   const nextBtn = modal.querySelector("#tutorial-next");
   const skipBtn = modal.querySelector("#tutorial-skip");
+  const backdrop = modal.querySelector(".tutorial-modal-backdrop");
   let index = 0;
 
   function render() {
@@ -53,15 +71,19 @@ export function initTutorial({ profile, saveProfile, onDone }) {
   }
 
   function finish() {
-    try {
-      localStorage.setItem(TUTORIAL_KEY, "done");
-    } catch {
-      /* ignore */
-    }
-    profile.tutorialDone = true;
-    saveProfile?.(profile);
-    modal.classList.add("hidden");
+    dismissTutorial({ persist: true, profile, saveProfile });
     onDone?.();
+  }
+
+  function isMainUiClick(target) {
+    if (!(target instanceof Element)) return false;
+    return !!(
+      target.closest(".game-nav") ||
+      target.closest("#auth-header-btn") ||
+      target.closest("#pvp-sign-in") ||
+      target.closest(".adventure-stage-row") ||
+      target.closest(".adventure-map-pin")
+    );
   }
 
   nextBtn?.addEventListener("click", () => {
@@ -72,6 +94,26 @@ export function initTutorial({ profile, saveProfile, onDone }) {
     }
   });
   skipBtn?.addEventListener("click", finish);
+  backdrop?.addEventListener("click", finish);
+
+  document.addEventListener(
+    "click",
+    (e) => {
+      if (!isTutorialVisible()) return;
+      if (isMainUiClick(e.target)) finish();
+    },
+    true
+  );
+
+  document.addEventListener(
+    "touchend",
+    (e) => {
+      if (!isTutorialVisible()) return;
+      const target = e.target;
+      if (isMainUiClick(target)) finish();
+    },
+    { capture: true, passive: true }
+  );
 
   render();
   modal.classList.remove("hidden");
