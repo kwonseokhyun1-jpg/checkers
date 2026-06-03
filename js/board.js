@@ -589,6 +589,24 @@ export function getAdjacentEmpty(board, piece) {
   return spots;
 }
 
+/** Jump over a friendly piece to land two steps away (Leapfrog / Phase Walk). */
+export function getLeapfrogTargets(board, piece, color) {
+  const targets = [];
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue;
+      const mr = piece.row + dr;
+      const mc = piece.col + dc;
+      const mid = board[mr]?.[mc];
+      if (!mid || mid.color !== color) continue;
+      const r2 = piece.row + dr * 2;
+      const c2 = piece.col + dc * 2;
+      if (inBounds(r2, c2) && isDarkSquare(r2, c2) && !board[r2][c2]) targets.push([r2, c2]);
+    }
+  }
+  return targets;
+}
+
 export function getTeleportTargets(board, piece) {
   const spots = [];
   for (let dr = -2; dr <= 2; dr++)
