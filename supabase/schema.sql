@@ -117,8 +117,19 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Realtime
-alter publication supabase_realtime add table public.pvp_matches;
+-- Realtime (skip if pvp_matches is already in the publication)
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'pvp_matches'
+  ) then
+    alter publication supabase_realtime add table public.pvp_matches;
+  end if;
+end $$;
 
 create policy "pvp_delete_host_waiting"
   on public.pvp_matches for delete

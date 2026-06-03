@@ -13,8 +13,19 @@ create policy "pvp_select_participant_or_open"
     or (status = 'waiting' and guest_id is null)
   );
 
--- Ensure Realtime publishes match updates
-alter publication supabase_realtime add table public.pvp_matches;
+-- Ensure Realtime publishes match updates (skip if already added)
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'pvp_matches'
+  ) then
+    alter publication supabase_realtime add table public.pvp_matches;
+  end if;
+end $$;
 
 -- RPC fallbacks (work even before SELECT policy is fixed)
 create or replace function public.pvp_find_waiting_room()
