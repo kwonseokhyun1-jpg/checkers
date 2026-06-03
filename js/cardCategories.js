@@ -1,9 +1,10 @@
 /** Spell categories for collection browsing and deck building */
 
-export const CARD_CATEGORY_ORDER = ["attack", "defense", "movement", "trap", "special"];
+export const CARD_CATEGORY_ORDER = ["attack", "control", "defense", "movement", "trap", "special"];
 
 export const CARD_CATEGORY_LABELS = {
   attack: "Attack",
+  control: "Control",
   defense: "Defense",
   movement: "Movement",
   trap: "Trap",
@@ -14,14 +15,14 @@ export const CARD_CATEGORY_LABELS = {
 const ID_TO_CATEGORY = {
   aegis: "defense",
   anchor: "defense",
-  backpedal: "attack",
+  backpedal: "control",
   backrank_protection: "defense",
   backstab: "attack",
   backstep: "movement",
   barrier: "defense",
   bishops_mark: "movement",
-  blind: "attack",
-  blizzard: "attack",
+  blind: "control",
+  blizzard: "control",
   bomb: "trap",
   bulwark: "defense",
   butterfly: "special",
@@ -30,16 +31,16 @@ const ID_TO_CATEGORY = {
   clone: "special",
   coin_flip: "special",
   collapse: "attack",
-  confusion: "attack",
+  confusion: "control",
   constitution: "special",
   counterspell: "trap",
   crown: "special",
   cryo_bolt: "attack",
   cull: "attack",
   darkness: "trap",
-  deep_freeze: "attack",
+  deep_freeze: "control",
   deflect: "defense",
-  demote: "attack",
+  demote: "control",
   displacement: "movement",
   dominion: "special",
   double: "special",
@@ -49,7 +50,7 @@ const ID_TO_CATEGORY = {
   fireblast: "attack",
   fog: "defense",
   fusion: "movement",
-  hex: "attack",
+  hex: "control",
   hibernation: "defense",
   hostile_swap: "attack",
   hunters_mark: "attack",
@@ -64,10 +65,10 @@ const ID_TO_CATEGORY = {
   nudge: "movement",
   offering: "special",
   overrun: "movement",
-  panic: "attack",
+  panic: "control",
   poison: "attack",
   possession: "special",
-  press: "attack",
+  press: "control",
   promote_zone: "movement",
   purify: "special",
   quick_march: "movement",
@@ -78,8 +79,8 @@ const ID_TO_CATEGORY = {
   retreat: "movement",
   revive: "special",
   rooks_mark: "movement",
-  root: "attack",
-  rust: "attack",
+  root: "control",
+  rust: "control",
   sacrifice: "attack",
   sanctuary: "defense",
   scatter: "movement",
@@ -89,14 +90,14 @@ const ID_TO_CATEGORY = {
   stab: "attack",
   stall: "defense",
   stone_form: "defense",
-  tangle: "attack",
+  tangle: "control",
   teleport: "movement",
   trickster: "special",
   vengeance: "defense",
   ward: "defense",
 };
 
-/** @typedef {"attack"|"defense"|"movement"|"trap"|"special"} CardCategory */
+/** @typedef {"attack"|"control"|"defense"|"movement"|"trap"|"special"} CardCategory */
 
 /**
  * @param {{ id: string, effect?: string, name?: string, desc?: string }} def
@@ -114,7 +115,10 @@ export function getCardCategory(def) {
   if (/move|nudge|teleport|recall|leap|step|displace|swap|scatter|retreat|bishop|rook|fusion|overrun|promote/.test(blob)) {
     return "movement";
   }
-  if (/destroy|damage|bolt|stab|snipe|duel|sacrifice|poison|hex|root|rust|panic|press|blind|freeze|lightning|fire|cull|execution|shatter|demote|tangle|magnet|earthquake|collapse/.test(blob)) {
+  if (/freeze|blind|confusion|hex|root|rust|panic|press|silence|paraly|control|cannot play|random/.test(blob)) {
+    return "control";
+  }
+  if (/destroy|damage|bolt|stab|snipe|duel|sacrifice|poison|lightning|fire|cull|execution|shatter|demote|magnet|earthquake|collapse/.test(blob)) {
     return "attack";
   }
   return "special";
