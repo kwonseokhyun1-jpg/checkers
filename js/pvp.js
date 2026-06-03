@@ -4,6 +4,13 @@ import { COLORS, createInitialBoard } from "./board.js";
 import { createMatchState } from "./match.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 
+
+function isMissingRpc(error) {
+  const code = error?.code || "";
+  const msg = String(error?.message || "");
+  return code === "PGRST202" || msg.includes("Could not find the function");
+}
+
 function randomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let s = "";
@@ -24,9 +31,34 @@ export class PvpService {
     this.onMatchRow = null;
     this.onError = null;
     this._lastVersion = -1;
+    this._pollId = null;
+  }
+
+  stopPolling() {
+    if (this._pollId) {
+      clearInterval(this._pollId);
+      this._pollId = null;
+    }
+  }
+
+  startPolling(intervalMs = 2500) {
+    this.stopPolling();
+    if (!this.matchId) return;
+    const tick = async () => {
+      if (!this.matchId) return;
+      try {
+        const row = await this.fetchMatch(this.matchId);
+        if (row) this.onMatchRow?.(row);
+      } catch (e) {
+        this.onError?.(e);
+      }
+    };
+    this._pollId = setInterval(tick, intervalMs);
+    void tick();
   }
 
   dispose() {
+    this.stopPolling();
     if (this.channel) {
       getSupabase()?.removeChannel(this.channel);
       this.channel = null;
@@ -79,40 +111,70 @@ export class PvpService {
     }
 
     const normalized = code.trim().toUpperCase();
-    const { data: row, error: findErr } = await sb
-      .from("pvp_matches")
-      .select("*")
-      .eq("code", normalized)
-      .eq("status", "waiting")
-      .is("guest_id", null)
-      .maybeSingle();
+    let data = null;
 
-    if (findErr) throw findErr;
-    if (!row) throw new Error("Room not found or already full");
-    if (row.host_id === user.id) throw new Error("You cannot join your own room");
+    const rpc = await sb.rpc("pvp_join_by_code", {
+      room_code: normalized,
+      guest_deck_ids: guestDeckIds,
+      guest_display_name: displayName,
+      state_json: null,
+    });
 
-    const state = createMatchState(row.host_deck_ids, guestDeckIds);
+    if (!rpc.error && rpc.data) {
+      data = rpc.data;
+    } else if (rpc.error && !isMissingRpc(rpc.error)) {
+      throw rpc.error;
+    } else {
+      const { data: row, error: findErr } = await sb
+        .from("pvp_matches")
+        .select("*")
+        .eq("code", normalized)
+        .eq("status", "waiting")
+        .is("guest_id", null)
+        .maybeSingle();
+
+      if (findErr) throw findErr;
+      if (!row) throw new Error("Room not found or already full.");
+      if (row.host_id === user.id) throw new Error("You cannot join your own room");
+
+      const { data: updated, error } = await sb
+        .from("pvp_matches")
+        .update({
+          guest_id: user.id,
+          guest_deck_ids: guestDeckIds,
+          guest_display_name: displayName,
+          status: "active",
+          turn: COLORS.RED,
+          version: 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id)
+        .eq("status", "waiting")
+        .select()
+        .single();
+
+      if (error) throw error;
+      data = updated;
+    }
+
+    const state = createMatchState(data.host_deck_ids, guestDeckIds);
     state.turn = COLORS.RED;
     const stateJson = serializeMatchState(state);
 
-    const { data, error } = await sb
+    const { data: ready, error: stateErr } = await sb
       .from("pvp_matches")
       .update({
-        guest_id: user.id,
-        guest_deck_ids: guestDeckIds,
-        guest_display_name: displayName,
-        status: "active",
         state_json: stateJson,
         turn: COLORS.RED,
         version: 1,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", row.id)
-      .eq("status", "waiting")
+      .eq("id", data.id)
       .select()
       .single();
 
-    if (error) throw error;
+    if (stateErr) throw stateErr;
+    data = ready;
 
     this.matchId = data.id;
     this.role = "guest";
@@ -125,6 +187,11 @@ export class PvpService {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
+
+    const rpcOpen = await sb.rpc("pvp_find_waiting_room");
+    if (!rpcOpen.error && rpcOpen.data) {
+      return this.joinRoom(rpcOpen.data, deckIds, displayName);
+    }
 
     const { data: open } = await sb
       .from("pvp_matches")
@@ -159,7 +226,15 @@ export class PvpService {
           this.onMatchRow?.(row);
         }
       )
-      .subscribe();
+      .subscribe(async (status) => {
+        if (status !== "SUBSCRIBED") return;
+        try {
+          const row = await this.fetchMatch(matchId);
+          if (row) this.onMatchRow?.(row);
+        } catch (e) {
+          this.onError?.(e);
+        }
+      });
   }
 
   async fetchMatch(matchId) {
@@ -227,4 +302,18 @@ export class PvpService {
     await sb.from("pvp_matches").delete().eq("id", this.matchId).eq("host_id", user.id).eq("status", "waiting");
     this.dispose();
   }
+}
+
+export async function probePvpBackend() {
+  const sb = getSupabase();
+  if (!sb) return { ok: false, reason: "Supabase not configured" };
+  const { error } = await sb.rpc("pvp_find_waiting_room");
+  if (error && isMissingRpc(error)) {
+    return {
+      ok: false,
+      reason: "Run supabase/fix_pvp_rls.sql in the Supabase SQL Editor (see SUPABASE_SETUP.md).",
+    };
+  }
+  if (error) return { ok: false, reason: error.message };
+  return { ok: true };
 }
