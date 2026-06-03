@@ -3,6 +3,7 @@ import { DECK_SIZE } from "./cardCatalog.js";
 import { COLORS } from "./board.js";
 import { MatchSession } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
+import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { PvpService } from "./pvp.js";
 
@@ -166,11 +167,13 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
 
     pvpService._lastVersion = row.version ?? 0;
 
+    enterMatchMode({ kind: "pvp" });
     matchSession = new MatchSession(
       deck.cardIds,
       matchRoot,
       () => {
         matchSession = null;
+        exitMatchMode();
         pvpService?.dispose();
         pvpService = null;
         renderLobby();

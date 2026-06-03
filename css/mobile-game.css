@@ -69,6 +69,21 @@ body {
 }
 
 
+
+/* Full-screen match — hide bottom nav so tab switches cannot eject you */
+body.match-active .game-nav.tabs {
+  display: none !important;
+}
+
+body.match-active .game-main {
+  padding-bottom: calc(0.75rem + var(--game-safe-bottom, 0px));
+}
+
+body.match-active #view-match:not(.hidden) {
+  display: block;
+  width: 100%;
+}
+
 /* Spell hand — allow vertical scroll without starting a cast */
 .hand.spell-hand {
   touch-action: pan-x;
