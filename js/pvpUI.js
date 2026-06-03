@@ -225,6 +225,14 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     );
   }
 
+  function opponentNameFromRow(row) {
+    const name =
+      pvpService?.localColor === COLORS.RED
+        ? row.guest_display_name
+        : row.host_display_name;
+    return name && String(name).trim() ? String(name).trim() : "Opponent";
+  }
+
   function setStatus(text, isError = false) {
     const el = root.querySelector("#pvp-status");
     if (el) {
@@ -264,10 +272,8 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       if (ver <= (pvpService?._lastVersion ?? -1)) return;
       if (matchSession.actionBusy || matchSession._syncBusy) return;
       const isMyTurn = row.turn === pvpService.localColor;
-      const opponentName =
-        pvpService.localColor === COLORS.RED
-          ? row.guest_display_name || "Opponent"
-          : row.host_display_name || "Opponent";
+      const opponentName = opponentNameFromRow(row);
+      matchSession.opponentName = opponentName;
       matchSession.importState(row.state_json);
       pvpService._lastVersion = ver;
       matchSession.setMessage(
@@ -292,10 +298,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     }
 
     const localColor = pvpService.localColor;
-    const opponentName =
-      localColor === COLORS.RED
-        ? row.guest_display_name || "Opponent"
-        : row.host_display_name || "Opponent";
+    const opponentName = opponentNameFromRow(row);
 
     root.innerHTML = "";
     const matchRoot = document.createElement("div");

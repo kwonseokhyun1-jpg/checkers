@@ -112,6 +112,7 @@ export class MatchSession {
     this.isPvp = !!options.pvp;
     this.localColor = options.localColor ?? COLORS.RED;
     this.opponentColor = this.localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+    this.opponentName = options.opponentName || "Opponent";
     this.onStateSync = options.onStateSync ?? null;
     this.onPvpWin = options.onPvpWin ?? null;
     this._syncBusy = false;
