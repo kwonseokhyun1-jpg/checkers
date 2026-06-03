@@ -4781,3 +4781,87 @@ body.adventure-stage-open {
   .adventure-map-pin__title { font-size: 0.68rem; }
   .adventure-map-pin { max-width: 46%; }
 }
+
+
+/* Game over — centered star rating */
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 350;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(4, 6, 12, 0.88);
+  backdrop-filter: blur(8px);
+}
+.game-over-overlay.hidden { display: none; }
+.game-over-card {
+  width: min(100%, 22rem);
+  text-align: center;
+  padding: 1.5rem 1.25rem;
+  border-radius: 18px;
+  background: linear-gradient(165deg, var(--bg-panel-elevated), var(--bg-panel));
+  border: 2px solid rgba(201, 162, 39, 0.35);
+  box-shadow: var(--shadow);
+}
+.game-over-stars {
+  font-size: clamp(2.5rem, 12vw, 4rem);
+  letter-spacing: 0.2em;
+  color: var(--accent-gold);
+  margin: 0.75rem auto 0.5rem;
+  line-height: 1;
+  text-align: center;
+  display: block;
+  width: 100%;
+  text-shadow: 0 0 24px rgba(232, 197, 71, 0.45);
+}
+.game-over-stars--earned {
+  animation: stars-pop 0.55s ease;
+}
+@keyframes stars-pop {
+  from { transform: scale(0.6); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Tutorial */
+.tutorial-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 450;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.tutorial-modal.hidden { display: none; }
+.tutorial-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.82);
+}
+.tutorial-modal-dialog {
+  position: relative;
+  z-index: 1;
+  max-width: 24rem;
+  width: 100%;
+  padding: 1.25rem;
+}
+.tutorial-step {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-gem);
+  margin: 0 0 0.35rem;
+}
+.tutorial-body {
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 0.5rem 0 1rem;
+}
+.tutorial-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+}

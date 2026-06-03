@@ -225,6 +225,19 @@
     </footer>
   </div>
 
+  <div id="tutorial-modal" class="tutorial-modal hidden" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
+    <div class="tutorial-modal-backdrop"></div>
+    <div class="tutorial-modal-dialog panel game-panel">
+      <p id="tutorial-step" class="tutorial-step"></p>
+      <h2 id="tutorial-title" class="panel-head__title">Tutorial</h2>
+      <p id="tutorial-body" class="tutorial-body"></p>
+      <div class="tutorial-actions">
+        <button type="button" id="tutorial-skip" class="btn-text">Skip</button>
+        <button type="button" id="tutorial-next" class="btn-primary">Next</button>
+      </div>
+    </div>
+  </div>
+
   <div id="auth-modal" class="auth-modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
     <div class="auth-modal-backdrop"></div>
     <div class="auth-modal-dialog panel game-panel">

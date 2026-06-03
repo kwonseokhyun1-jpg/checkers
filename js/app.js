@@ -43,6 +43,7 @@ import { openMysteryBox, MYSTERY_BOX_COST } from "./mysteryBox.js";
 import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
+import { initTutorial } from "./tutorial.js";
 import { initPvpUI } from "./pvpUI.js";
 import { getMatchHtml } from "./matchView.js";
 import { initAuth } from "./auth.js";
@@ -1214,6 +1215,8 @@ function init() {
 
   const authModal = document.getElementById("auth-modal");
   const authBtn = document.getElementById("auth-header-btn");
+  initTutorial({ profile, saveProfile });
+
   initAuthUI({
     authBtn,
     modal: authModal,

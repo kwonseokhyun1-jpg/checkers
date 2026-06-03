@@ -30,6 +30,10 @@ function blocked(state, r, c) {
 function emptyDark(state, r, c) {
   return isDarkSquare(r, c) && !blocked(state, r, c) && !at(state, r, c);
 }
+function enemyCardCanMove(p) {
+  return p && !(p.anchored > 0);
+}
+
 function swapAt(state, r1, c1, r2, c2) {
   const a = at(state, r1, c1), b = at(state, r2, c2);
   state.board[r1][c1] = b;
@@ -43,6 +47,12 @@ function kill(state, r, c, by, nonCap = true) {
   if (p.shieldTurns > 0) { p.shieldTurns--; return false; }
   if (p.king && state.meta.constitutionTurns[p.color] > 0 && nonCap) return false;
   if (p.lastStand) { p.lastStand = false; p.shieldTurns = 1; return false; }
+  if (p.deflectTurns > 0) {
+    p.deflectTurns = 0;
+    const es = enemyPieces(state.board, by);
+    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; removePiece(state.board, t.row, t.col); }
+    return false;
+  }
   if (p.mirrorShield) {
     p.mirrorShield = false;
     const es = enemyPieces(state.board, by);
@@ -88,10 +98,11 @@ export function planTrickster(state) {
       const p = at(state, r, c);
       if (p) all.push({ r, c, p });
     }
-  if (all.length < 6) return null;
-  const picked = shufflePick(all, 6);
+  if (all.length < 2) return null;
+  const n = Math.min(6, all.length);
+  const picked = shufflePick(all, n);
   const from = picked.map((x) => [x.r, x.c]);
-  const to = [from[1], from[2], from[3], from[4], from[5], from[0]];
+  const to = from.map((_, i) => from[(i + 1) % n]);
   return { picked, from, to, squares: [...from, ...to] };
 }
 export function getChainLightningAnimSquares(state, pr, pc, color) {
@@ -143,12 +154,12 @@ const EFFECTS = {
   shield_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,2); return ok(); },
   forward_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!kill(state,r2,c2,color)) return fail(); return ok(); },
   fireblast(state, color, picks) {
-    if (picks.length < 2) return fail();
-    const [r1, c1] = p0(picks), [r2, c2] = p1(picks);
+    const [r1, c1] = p0(picks);
     const p = at(state, r1, c1);
     if (!p || p.color !== color) return fail();
     const line = getFireblastTarget(state.board, p);
-    if (!line.some(([r, c]) => r === r2 && c === c2)) return fail("No enemy in the fireball path");
+    if (!line.length) return fail("No enemy in the fireball path");
+    const [r2, c2] = line[0];
     const t = at(state, r2, c2);
     if (!t || t.color === color) return fail();
     if (t.shieldTurns > 0) t.shieldTurns = 0;
@@ -171,7 +182,7 @@ const EFFECTS = {
   leapfrog(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const dr=Math.sign(r2-r1),dc=Math.sign(c2-c1); const mr=r1+dr,mc=c1+dc; const mid=at(state,mr,mc); if(!mid||mid.color!==color||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   phase_walk(state, color, picks) { return EFFECTS.leapfrog(state,color,picks); },
   corner_hop(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const qr=r1<4?4:0, qc=c1<4?4:0; if((r2<qr||r2>=qr+4||c2<qc||c2>=qc+4)&&!emptyDark(state,r2,c2)) return fail(); if(!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
-  anchor_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.anchored=2; return ok(); },
+  anchor_2(state, color, picks) { for (const p of fri(state, color)) p.anchored = 2; return ok('All your pieces are anchored for 2 turns.'); },
   drift(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||Math.abs(r2-r1)!==Math.abs(c2-c1)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   recall(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const rows=backRow(color); if(!rows.includes(r2)||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   flank_3(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(r1===r2&&c1===c2) return fail(); if(Math.abs(r2-r1)!==Math.abs(c2-c1)||Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
@@ -224,7 +235,7 @@ const EFFECTS = {
       if(!dr&&!dc) continue;
       const er=r+dr*2, ec=c+dc*2, lr=r+dr, lc=c+dc;
       const e=at(state,er,ec);
-      if(e&&e.color!==color&&emptyDark(state,lr,lc)){
+      if(e&&e.color!==color&&enemyCardCanMove(e)&&emptyDark(state,lr,lc)){
         movePiece(state.board,er,ec,lr,lc); markMove(state,color); return ok();
       }
     }
@@ -257,7 +268,8 @@ const EFFECTS = {
   queen_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.queenTurns=2; return ok(); },
   demote(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||!p.king) return fail(); p.king=false; return ok(); },
   promote_zone(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.promoteZone=true; return ok(); },
-  twin_soul(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); const adj=getAdjacentEmpty(state.board,p); if(!adj.length) return fail(); const [tr,tc]=adj[0]; const token=createPiece(color,tr,tc,false); token.twinId=p.id; removePiece(state.board,r,c); return ok(); },
+  clone(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); const adj=getAdjacentEmpty(state.board,p); if(!adj.length) return fail(); const [tr,tc]=adj[0]; const copy=createPiece(color,tr,tc,p.king); copy.bearAwakened=p.bearAwakened; return ok('Clone — duplicate on an adjacent square.'); },
+  twin_soul(state, color, picks) { return EFFECTS.clone(state, color, picks); },
   fusion(state, color, picks) { if(picks.length<2) return fail(); const a=at(state,...p0(picks)),b=at(state,...p1(picks)); if(!a||!b||a.color!==color||b.color!==color) return fail(); if(Math.max(Math.abs(a.row-b.row),Math.abs(a.col-b.col))!==1) return fail(); removePiece(state.board,b.row,b.col); a.superMan=3; return ok(); },
   chameleon(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=2; return ok(); },
   wraith_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.wraithTurns=2; return ok(); },
@@ -285,10 +297,10 @@ const EFFECTS = {
   coupon(state, color, picks) { state.meta.freeDraw[color]=true; return ok(); },
   hand_expand(state, color, picks) { state.meta.handMax[color]=8; return ok(); },
   mulligan(state, color, picks) { const h=state.hands[color]; const n=h.length; h.length=0; for(let i=0;i<n;i++) h.push(createCardInstance(drawRandomCard())); return ok(); },
-  hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(a.shieldTurns||b.shieldTurns) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
-  possession(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); state.meta.possessionId=p.id; return ok(); },
+  hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
+  possession(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||p.king) return fail(); state.meta.possessionId=p.id; state.meta.possessionController=color; return ok('Possession — control that piece when you move this turn.'); },
   identity_theft(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=3; return ok(); },
-  call_forward(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const e=at(state,r1,c1); if(!e||e.color===color||!emptyDark(state,r2,c2)) return fail(); if(Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3) return fail(); swapAt(state,r1,c1,r2,c2); return ok(); },
+  call_forward(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const e=at(state,r1,c1); if(!e||e.color===color||!enemyCardCanMove(e)||!emptyDark(state,r2,c2)) return fail(); if(Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3) return fail(); movePiece(state.board,r1,c1,r2,c2); return ok('Call Forward!'); },
   mirror_move(state, color, picks) { state.meta.mirrorMovePending=color; return ok(); },
   offering(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); state.meta.extraSpellCast[color]=true; state.meta.cardsLeft[color]=(state.meta.cardsLeft[color]||0)+1; return ok("Offering — cast another spell."); },
   parallel(state, color, picks) { state.meta.parallelExtra={...(state.meta.parallelExtra||{}), [color]:true}; state.meta.cardsLeft[color]=2; return ok(); },
@@ -324,6 +336,8 @@ const EFFECTS = {
     }
     return fail("No valid targets");
   },
+  poison_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.venom=3; return ok('Poison — dies in 3 turns.'); },
+  deflect_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.deflectTurns=1; return ok('Deflect — next hit reflects to a random enemy.'); },
   trickster(state, color, picks) {
     let plan = state.meta.pendingTrickster;
     if (!plan) plan = planTrickster(state);

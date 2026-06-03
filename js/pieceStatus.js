@@ -94,6 +94,7 @@ export function cleansePiece(piece) {
   piece.fortifyTurns = 0;
   piece.lastStand = false;
   piece.mirrorShield = false;
+  piece.deflectTurns = 0;
   piece.ghostGuard = false;
   piece.frozenTurns = 0;
   piece.paralyzedTurns = 0;
