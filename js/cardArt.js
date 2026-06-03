@@ -2,6 +2,7 @@
  * Spell card UI — illustrated SVG art, rarity frames, tooltips
  */
 import { getCardEffectTags, formatEffectTooltip } from "./cardEffectTags.js";
+import { illustrationForCard } from "./cardIllustrations.js";
 
 const THEME_STYLES = {
   movement: { symbol: "↗", label: "Motion", anim: "movement" },
@@ -119,11 +120,11 @@ function themeIllustration(theme, variant) {
   return shapes[theme] || shapes.arcane;
 }
 
-function artSvg(theme, hue, cardId) {
+function artSvg(theme, hue, cardId, def) {
   const gid = safeId(cardId);
   const accent = (hue + 42) % 360;
   const variant = cardVariant(cardId);
-  const inner = themeIllustration(theme, variant);
+  const inner = (def && illustrationForCard(def, variant)) || themeIllustration(theme, variant);
   const stars = starField(gid, hue, variant);
 
   return `<svg class="spell-card__svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -213,8 +214,8 @@ export function renderSpellCardEl(def, opts = {}) {
     <div class="spell-card__frame">
       <div class="spell-card__art spell-card__art--animated" aria-hidden="true">
         <div class="spell-card__art-shine"></div>
-        ${artSvg(theme, hue, def.id)}
-        <span class="spell-card__sigil">${style.symbol}</span>
+        ${artSvg(theme, hue, def.id, def)}
+        <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
       </div>
       <div class="spell-card__body">
         <span class="spell-card__rarity">${def.rarity}</span>
