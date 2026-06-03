@@ -287,6 +287,7 @@ export class MatchSession {
   /** Apply authoritative state from PvP sync (opponent moved). */
   importState(nextState) {
     if (!nextState || this.actionBusy || this._syncBusy) return;
+    const prevTurn = this.state?.turn;
     this.state = nextState;
     this.cardPlay = null;
     this.validTargets = [];
@@ -295,6 +296,14 @@ export class MatchSession {
     this.selectedColumn = null;
     this.selectedRow = null;
     this.endDrag();
+    if (
+      this.isPvp &&
+      !nextState.gameOver &&
+      prevTurn !== this.localColor &&
+      nextState.turn === this.localColor
+    ) {
+      this.beginPlayerTurn();
+    }
     this.updateSpellCastUI();
     this.render();
   }
@@ -808,13 +817,14 @@ export class MatchSession {
     }
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
-    this.beginAiTurn();
-    this.render();
     if (this.isPvp) {
       this.setMessage("Waiting for opponent…");
+      this.render();
       this.pushPvpState();
       return;
     }
+    this.beginAiTurn();
+    this.render();
     setTimeout(() => {
       if (document.hidden) {
         this._aiTurnPending = true;

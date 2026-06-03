@@ -69,6 +69,7 @@ function triggerLinkedFate(state, deadPiece, by) {
 function kill(state, r, c, by, nonCap = true, opts = {}) {
   const p = at(state, r, c);
   if (!p) return false;
+  if (!opts.linkFate && p.cloneNoCaptureThisTurn) return false;
   if (!opts.linkFate && p.shieldTurns > 0) { p.shieldTurns--; return false; }
   if (!opts.linkFate && p.king && state.meta.constitutionTurns[p.color] > 0 && nonCap) return false;
   if (!opts.linkFate && p.lastStand) { p.lastStand = false; p.shieldTurns = 1; return false; }
@@ -354,8 +355,9 @@ const EFFECTS = {
     }
     const copy = createPiece(color, r2, c2, false);
     copy.bearAwakened = p.bearAwakened;
+    copy.cloneNoCaptureThisTurn = true;
     state.board[r2][c2] = copy;
-    return ok("Clone — duplicate placed.");
+    return ok("Clone — duplicate placed (cannot be captured this turn).");
   },
   twin_soul(state, color, picks) { return EFFECTS.clone(state, color, picks); },
   fusion(state, color, picks) { if(picks.length<2) return fail(); const a=at(state,...p0(picks)),b=at(state,...p1(picks)); if(!a||!b||a.color!==color||b.color!==color) return fail(); if(a.king||b.king) return fail("Only men can fuse"); if(Math.max(Math.abs(a.row-b.row),Math.abs(a.col-b.col))!==1) return fail("Pick adjacent pieces"); removePiece(state.board,b.row,b.col); a.superMan=3; return ok("Fusion — super-man can leap 2 squares forward."); },

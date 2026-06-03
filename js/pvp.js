@@ -309,10 +309,8 @@ export async function probePvpBackend() {
   if (!sb) return { ok: false, reason: "Supabase not configured" };
   const { error } = await sb.rpc("pvp_find_waiting_room");
   if (error && isMissingRpc(error)) {
-    return {
-      ok: false,
-      reason: "Run supabase/fix_pvp_rls.sql in the Supabase SQL Editor (see SUPABASE_SETUP.md).",
-    };
+    // Join/quick match can still work via RLS after fix_pvp_rls.sql (SELECT policy only).
+    return { ok: true, hint: "Optional: run supabase/fix_pvp_rls.sql for quick-match RPCs." };
   }
   if (error) return { ok: false, reason: error.message };
   return { ok: true };
