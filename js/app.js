@@ -242,7 +242,7 @@ function showDeckSubview(sub) {
     collectionRarity = "all";
     collectionFilter = "";
     collectionCategory = "all";
-    collectionOwnedOnly = true;
+    collectionOwnedOnly = false;
     syncCollectionFilterControls();
   }
 
@@ -509,6 +509,9 @@ function appendCollectionCard(parent, def, opts = {}) {
     const wrap = document.createElement("div");
     wrap.className = "deck-collection-row";
 
+    const main = document.createElement("div");
+    main.className = "deck-collection-row__main";
+
     const art = document.createElement("div");
     art.className = "deck-collection-row__art";
     const thumb = renderSpellCardEl(def, { static: true, compact: true });
@@ -518,10 +521,13 @@ function appendCollectionCard(parent, def, opts = {}) {
 
     const info = document.createElement("div");
     info.className = "deck-collection-row__info";
+    const ownedLabel = owned > 0 ? `Owned ${owned}/${cap}` : "Not in collection";
     info.innerHTML = `
       <strong class="deck-collection-row__name">${escapeHtml(def.name)}</strong>
-      <span class="deck-collection-row__meta">Owned ${owned}/${cap} · In deck ${inDeck}/${cap}</span>`;
+      <span class="deck-collection-row__meta">${ownedLabel} · In deck ${inDeck}/${cap}</span>`;
     info.addEventListener("click", () => openInspect());
+
+    main.append(art, info);
 
     const action = document.createElement("button");
     action.type = "button";
@@ -529,16 +535,15 @@ function appendCollectionCard(parent, def, opts = {}) {
 
     if (addCheck.ok) {
       action.classList.add("deck-collection-row__action--add");
-      action.textContent = "+ Add";
+      action.textContent = "+ Add to deck";
       action.addEventListener("click", (e) => {
         e.stopPropagation();
         addCardToWorkingDeck(def.id);
       });
     } else if (showBuyAdd) {
       action.classList.add("deck-collection-row__action--buy");
-      action.textContent = `Buy · ${cost} gems`;
+      action.textContent = canAfford ? `Add for ${cost} gems` : `Need ${cost} gems`;
       action.disabled = !canAfford;
-      if (!canAfford) action.textContent = `Need ${cost} gems`;
       action.addEventListener("click", (e) => {
         e.stopPropagation();
         buyAndAddCardToWorkingDeck(def.id, statusEl);
@@ -546,13 +551,14 @@ function appendCollectionCard(parent, def, opts = {}) {
     } else {
       action.classList.add("deck-collection-row__action--disabled");
       action.disabled = true;
-      if (workingDeck.length >= DECK_SIZE) action.textContent = "Deck full";
-      else if (inDeck >= cap) action.textContent = "Max copies";
-      else if (owned < 1) action.textContent = "Not owned";
+      if (workingDeck.length >= DECK_SIZE) action.textContent = "Deck full (30/30)";
+      else if (inDeck >= cap) action.textContent = "Max copies in deck";
+      else if (owned < 1) action.textContent = "Open Shop chests to unlock";
+      else if (addCheck.reason) action.textContent = addCheck.reason;
       else action.textContent = "Can't add";
     }
 
-    wrap.append(art, info, action);
+    wrap.append(main, action);
     parent.appendChild(wrap);
     return;
   }
@@ -778,6 +784,15 @@ function renderDeckEditor() {
     }
   }
 
+  const hint = $("deck-collection-hint");
+  if (hint) {
+    hint.hidden = false;
+    hint.innerHTML =
+      workingDeck.length >= DECK_SIZE
+        ? "Deck is full. Remove a card from the strip above, or save when ready."
+        : "Tap <strong>+ Add to deck</strong> for copies you own. When all owned copies are in the deck, tap <strong>Add for X gems</strong> to buy another.";
+  }
+
   renderInventoryGrid(collEl, { deckEdit: true, statusEl: status });
 
   deckEl.innerHTML = "";
@@ -785,7 +800,7 @@ function renderDeckEditor() {
   if (!stacks.length) {
     const empty = document.createElement("p");
     empty.className = "deck-editor__strip-empty";
-    empty.textContent = "Empty — use + Add or Buy on cards below";
+    empty.textContent = "Empty deck — tap + Add to deck below";
     deckEl.appendChild(empty);
   }
   for (const { def, count } of stacks) {
