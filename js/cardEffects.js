@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getAdjacentForwardBoltTarget, getFireblastTarget, getBackstepTarget } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget } from "./board.js";
 import { collapsedSquareKey } from "./gameMeta.js";
 import { sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget } from "./cardEffectHandlers.js";
@@ -31,6 +31,7 @@ export function getCardHint(card) {
     f_e_adj: "Click your piece, then an adjacent enemy.",
     e_e: "Click two enemy pieces to link their fate.",
     e_empty: "Click an enemy, then an empty square.",
+    pyromancy_hint: "Click an enemy piece, then an empty dark square to ignite.",
     e_e_adj: "Click two adjacent enemies.",
     f_f_adj: "Click two adjacent friendly pieces.",
     diagonal: "Click your piece, then a strike target on its diagonal.",
@@ -45,6 +46,7 @@ export function getCardHint(card) {
   if (card.effect === "counterspell" || card.id === "counterspell") {
     return "Hidden trap — cancels their next spell when they cast it.";
   }
+  if (card.effect === "pyromancy") return hints.pyromancy_hint;
   return hints[card.mode] || "Click valid targets on the board.";
 }
 
@@ -114,7 +116,6 @@ export function getValidTargets(state, color, card, picks) {
           const p = at(state, r, c);
           if (!p || p.color !== color) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
-          if (card.effect === "fireblast" && !getFireblastTarget(state.board, p).length) continue;
           res.push([r, c]);
         }
       return res;
@@ -225,7 +226,6 @@ export function getValidTargets(state, color, card, picks) {
       const [pr, pc] = picks[0];
       const p = at(state, pr, pc);
       if (!p) return [];
-      if (card.effect === "fireblast") return getFireblastTarget(state.board, p);
       if (card.effect === "forward_bolt") return getAdjacentForwardBoltTarget(state.board, p);
       return getBoltTarget(state.board, p);
     }

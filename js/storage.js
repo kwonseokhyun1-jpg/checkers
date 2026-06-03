@@ -183,6 +183,19 @@ function migrateDoubleToQuickMarch(profile) {
   return profile;
 }
 
+function migrateFireblastToPyromancy(profile) {
+  const legacy = profile.collection?.fireblast;
+  if (legacy && legacy > 0) {
+    profile.collection.pyromancy = (profile.collection.pyromancy || 0) + legacy;
+    delete profile.collection.fireblast;
+  }
+  for (const deck of profile.decks || []) {
+    if (!Array.isArray(deck.cardIds)) continue;
+    deck.cardIds = deck.cardIds.map((id) => (id === "fireblast" ? "pyromancy" : id));
+  }
+  return profile;
+}
+
 function stripRemovedCards(profile) {
   for (const id of Object.keys(profile.collection || {})) {
     if (isRemovedCard(id) || !getCardDef(id)) delete profile.collection[id];
@@ -256,6 +269,7 @@ function finalizeProfile(profile) {
   if (typeof profile.stars !== "number") profile.stars = 0;
   let p = stripKnightCards(profile);
   p = migrateDoubleToQuickMarch(p);
+  p = migrateFireblastToPyromancy(p);
   p = stripRemovedCards(p);
   p = capCollection(p);
   repairProfile(p);

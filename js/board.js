@@ -98,6 +98,7 @@ export function createPiece(color, row, col, king = false) {
     anchored: 0,
     fortifyTurns: 0,
     venom: 0,
+    blazeTurns: 0,
     superMan: 0,
     hunterMark: false,
     lastStand: false,
@@ -175,6 +176,12 @@ function isFrozen(piece) {
   return piece && piece.frozenTurns > 0;
 }
 
+export function isFireBlockedForMover(state, r, c, moverColor) {
+  if (!moverColor || !state?.squares) return false;
+  const sq = state.squares[sk(r, c)];
+  return !!(sq?.fireTurns > 0 && sq.fireOwner && sq.fireOwner !== moverColor);
+}
+
 function squareBlocked(state, r, c, moverColor = null) {
   if (!inBounds(r, c)) return true;
   const key = sk(r, c);
@@ -183,6 +190,7 @@ function squareBlocked(state, r, c, moverColor = null) {
   if (sq?.obstacle) return true;
   if (sq?.ghostBlock > 0) return true;
   if (sq?.barrier?.turnsLeft > 0 && moverColor && sq.barrier.owner !== moverColor) return true;
+  if (isFireBlockedForMover(state, r, c, moverColor)) return true;
   return false;
 }
 
@@ -206,7 +214,7 @@ function slideMoves(board, piece, state, dirs) {
   const moves = [];
   for (const [dr, dc] of dirs) {
     let r = piece.row + dr, c = piece.col + dc;
-    while (inBounds(r, c) && isDarkSquare(r, c) && !squareBlocked(state, r, c)) {
+    while (inBounds(r, c) && isDarkSquare(r, c) && !squareBlocked(state, r, c, piece.color)) {
       if (board[r][c]) break;
       moves.push({ from: [piece.row, piece.col], to: [r, c], captures: [], type: "step" });
       r += dr; c += dc;
@@ -491,6 +499,10 @@ export function tickEffects(board, color, state = null) {
         p.venom--;
         if (p.venom <= 0) removePiece(board, r, c);
       }
+      if (p.blazeTurns > 0) {
+        p.blazeTurns--;
+        if (p.blazeTurns <= 0) removePiece(board, r, c);
+      }
       if (p.panicTurn) { p.panicTurn = false; }
       if (p.promoteZone) p.promoteZone = false;
       if (p.revivedNoCapture) p.revivedNoCapture = false;
@@ -513,7 +525,13 @@ export function tickEffects(board, color, state = null) {
         if (sq.sanctuaryTurns <= 0) delete sq.sanctuary;
       }
       if (sq.darkness > 0) sq.darkness--;
-
+      if (sq.fireTurns > 0) {
+        sq.fireTurns--;
+        if (sq.fireTurns <= 0) {
+          delete sq.fireTurns;
+          delete sq.fireOwner;
+        }
+      }
     }
   }
 }
@@ -535,7 +553,7 @@ export function getBoltTarget(board, piece) {
   return targets;
 }
 
-/** First enemy directly ahead (same file; includes shielded — for Fireblast). */
+/** First enemy directly ahead on a forward diagonal (Forward Bolt). */
 export function getAdjacentForwardBoltTarget(board, piece) {
   const dir = piece.color === COLORS.RED ? -1 : 1;
   const targets = [];
@@ -548,37 +566,6 @@ export function getAdjacentForwardBoltTarget(board, piece) {
     }
   }
   return targets;
-}
-
-export function getFireblastRay(board, piece) {
-  const dir = piece.color === COLORS.RED ? -1 : 1;
-  let best = null;
-  for (const dc of [-1, 1]) {
-    let r = piece.row + dir;
-    let c = piece.col + dc;
-    const line = [[piece.row, piece.col]];
-    let dist = 1;
-    while (inBounds(r, c) && isDarkSquare(r, c)) {
-      line.push([r, c]);
-      const cell = board[r][c];
-      if (cell) {
-        if (cell.color !== piece.color && (!best || dist < best.dist)) {
-          best = { target: [r, c], lineSquares: line, dist };
-        }
-        break;
-      }
-      r += dir;
-      c += dc;
-      dist += 1;
-    }
-  }
-  if (!best) return null;
-  return { target: best.target, lineSquares: best.lineSquares };
-}
-
-export function getFireblastTarget(board, piece) {
-  const ray = getFireblastRay(board, piece);
-  return ray ? [ray.target] : [];
 }
 
 /** One empty square backward-diagonal behind your piece (Backstep). */
