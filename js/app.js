@@ -74,7 +74,6 @@ let activeTab = "deck";
 let deckSubview = "list";
 /** @type {string|null} null | 'new' | deck id */
 let editingDeckId = null;
-let viewingDeckId = null;
 let workingDeck = [];
 let collectionFilter = "";
 let collectionRarity = "all";
@@ -179,7 +178,6 @@ function showTab(tab) {
   if (tab === "deck") {
     deckSubview = "list";
     editingDeckId = null;
-    viewingDeckId = null;
     showDeckSubview("list");
   }
   if (tab === "profile") renderProfile();
@@ -234,7 +232,6 @@ function showDeckSubview(sub) {
   document.body.classList.toggle("deck-editing", sub === "edit");
   $("deck-subview-list")?.classList.toggle("hidden", sub !== "list");
   $("deck-subview-edit")?.classList.toggle("hidden", sub !== "edit");
-  $("deck-subview-view")?.classList.toggle("hidden", sub !== "view");
 
   if (sub === "edit") {
     repairProfile(profile);
@@ -248,7 +245,6 @@ function showDeckSubview(sub) {
 
   if (sub === "list") renderDeckList();
   if (sub === "edit") renderDeckEditor();
-  if (sub === "view") renderDeckView();
 }
 
 
@@ -672,9 +668,14 @@ function renderInventoryGrid(container, opts = {}) {
   }
 }
 
-function openDeckView(deckId) {
-  viewingDeckId = deckId;
-  showDeckSubview("view");
+function openDeckEdit(deckId) {
+  const deck = profile.decks.find((d) => d.id === deckId);
+  if (!deck) return;
+  editingDeckId = deck.id;
+  workingDeck = [...deck.cardIds];
+  const nameInput = $("deck-name-input");
+  if (nameInput) nameInput.value = deck.name;
+  showDeckSubview("edit");
 }
 
 function renderDeckList() {
@@ -704,43 +705,12 @@ function renderDeckList() {
       <div class="deck-row-info">
         <h3 class="deck-row-name">${deck.name}</h3>
         <p class="deck-status ${statusClass}">${deck.cardIds.length}/${DECK_SIZE} cards${val.valid ? " · Ready to play" : " · Incomplete"}</p>
-        <p class="deck-row-hint">Tap to view cards</p>
+        <p class="deck-row-hint">Tap to edit</p>
       </div>
       <span class="deck-row-chevron" aria-hidden="true">›</span>
     `;
-    row.addEventListener("click", () => openDeckView(deck.id));
+    row.addEventListener("click", () => openDeckEdit(deck.id));
     list.appendChild(row);
-  }
-}
-
-function renderDeckView() {
-  updateCurrencyHeader();
-  const deck = profile.decks.find((d) => d.id === viewingDeckId);
-  const title = $("view-deck-title");
-  const status = $("view-deck-status");
-  const grid = $("view-deck-cards");
-  if (!deck || !grid) return;
-
-  if (title) title.textContent = deck.name;
-  const val = validateDeck(deck.cardIds, profile);
-  if (status) {
-    status.textContent = val.valid
-      ? `${DECK_SIZE} cards — ready to play`
-      : val.errors[0] || `${deck.cardIds.length}/${DECK_SIZE} cards`;
-    status.className = val.valid ? "deck-status ok" : "deck-status warn";
-  }
-
-  grid.innerHTML = "";
-  for (const { def, count } of getDeckStacks(deck.cardIds)) {
-    const card = renderSpellCardEl(def, {
-      button: true,
-      meta: count > 1 ? `×${count}` : undefined,
-      onClick: () =>
-        showCardPreview(def, {
-          meta: count > 1 ? `${count} copies in this deck` : "In your deck",
-        }),
-    });
-    grid.appendChild(card);
   }
 }
 
@@ -753,6 +723,12 @@ function renderDeckEditor() {
   const countBadge = $("deck-count-badge");
   const progressBar = $("deck-progress-bar");
   if (!collEl || !deckEl) return;
+
+  const deleteBtn = $("btn-delete-deck");
+  if (deleteBtn) {
+    const canDelete = editingDeckId && editingDeckId !== "new" && editingDeckId !== "deck-starter";
+    deleteBtn.hidden = !canDelete;
+  }
 
   if (heading) {
     heading.textContent = editingDeckId === "new" ? "New deck" : "In your deck";
@@ -1273,23 +1249,19 @@ function init() {
   });
 
   $("btn-new-deck")?.addEventListener("click", startNewDeck);
-  $("btn-back-from-edit")?.addEventListener("click", () => showDeckSubview("list"));
-  $("btn-back-from-view")?.addEventListener("click", () => showDeckSubview("list"));
-  $("btn-edit-from-view")?.addEventListener("click", () => {
-    const deck = profile.decks.find((d) => d.id === viewingDeckId);
-    if (!deck) return;
-    editingDeckId = deck.id;
-    workingDeck = [...deck.cardIds];
-    const nameInput = $("deck-name-input");
-    if (nameInput) nameInput.value = deck.name;
-    showDeckSubview("edit");
+  $("btn-back-from-edit")?.addEventListener("click", () => {
+    editingDeckId = null;
+    workingDeck = [];
+    showDeckSubview("list");
   });
-  $("btn-delete-from-view")?.addEventListener("click", () => {
-    const deck = profile.decks.find((d) => d.id === viewingDeckId);
+  $("btn-delete-deck")?.addEventListener("click", () => {
+    if (!editingDeckId || editingDeckId === "new") return;
+    const deck = profile.decks.find((d) => d.id === editingDeckId);
     if (!deck || !confirm(`Delete deck "${deck.name}"?`)) return;
     deleteDeck(profile, deck.id);
+    editingDeckId = null;
+    workingDeck = [];
     showDeckSubview("list");
-    showAdventureMap();
   });
 
   const syncCollectionFilter = () => {
