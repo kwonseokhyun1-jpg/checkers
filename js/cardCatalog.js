@@ -42,6 +42,7 @@ export const REMOVED_CARD_IDS = new Set([
   "cross_bolt",
   "decoy",
   "detonate",
+  "double",
   "drift",
   "echo",
   "exile_king",

@@ -82,7 +82,6 @@ export const CARD_REGISTRY = [
   { id: "collapse", name: "Collapse", desc: "Remove one dark square from play for 3 turns; piece on it relocates.", rarity: "uncommon", weight: 4, mode: "empty", effect: "collapse" },
   { id: "last_king", name: "Last King", desc: "If you have only 1 piece, it becomes a king with shield for 2 turns.", rarity: "uncommon", weight: 4, mode: "instant", effect: "last_king" },
   { id: "quick_march", name: "Quick March", desc: "After your normal move, move the same piece again; either step may capture.", rarity: "epic", weight: 2, mode: "instant", effect: "quick_march" },
-  { id: "double", name: "Quick March", desc: "DEPRECATED", rarity: "epic", weight: 0, mode: "instant", effect: "quick_march" },
   { id: "shatter", name: "Shatter", desc: "Destroy any unshielded enemy. You cannot cast spells on your next turn.", rarity: "legendary", weight: 1, mode: "enemy", effect: "destroy_unshielded" },
   { id: "fireblast", name: "Fireblast", desc: "Fireball straight ahead from your piece; first enemy in path is destroyed (shields burn away).", rarity: "legendary", weight: 1, mode: "friendly", effect: "fireblast" },
   { id: "bomb", name: "Bomb", desc: "Arm a friendly piece; when it moves, it explodes on adjacent squares (including itself).", rarity: "legendary", weight: 1, mode: "friendly", effect: "bomb" },

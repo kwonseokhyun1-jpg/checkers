@@ -142,6 +142,20 @@ export function repairProfile(profile) {
   return changed;
 }
 
+
+function migrateDoubleToQuickMarch(profile) {
+  const legacy = profile.collection?.double;
+  if (legacy && legacy > 0) {
+    profile.collection.quick_march = (profile.collection.quick_march || 0) + legacy;
+    delete profile.collection.double;
+  }
+  for (const deck of profile.decks || []) {
+    if (!Array.isArray(deck.cardIds)) continue;
+    deck.cardIds = deck.cardIds.map((id) => (id === "double" ? "quick_march" : id));
+  }
+  return profile;
+}
+
 function stripRemovedCards(profile) {
   for (const id of Object.keys(profile.collection || {})) {
     if (isRemovedCard(id) || !getCardDef(id)) delete profile.collection[id];
@@ -214,6 +228,7 @@ function normalizeLoadedProfile(parsed) {
 function finalizeProfile(profile) {
   if (typeof profile.stars !== "number") profile.stars = 0;
   let p = stripKnightCards(profile);
+  p = migrateDoubleToQuickMarch(p);
   p = stripRemovedCards(p);
   p = capCollection(p);
   repairProfile(p);
