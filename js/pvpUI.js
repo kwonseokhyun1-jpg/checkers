@@ -260,8 +260,8 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     }
 
     if (matchSession && row.status === "active" && row.state_json) {
-      if (row.version <= (pvpService?._lastVersion ?? -1)) return;
-      pvpService._lastVersion = row.version;
+      const ver = row.version ?? 0;
+      if (ver <= (pvpService?._lastVersion ?? -1)) return;
       if (matchSession.actionBusy || matchSession._syncBusy) return;
       const isMyTurn = row.turn === pvpService.localColor;
       const opponentName =
@@ -269,6 +269,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
           ? row.guest_display_name || "Opponent"
           : row.host_display_name || "Opponent";
       matchSession.importState(row.state_json);
+      pvpService._lastVersion = ver;
       matchSession.setMessage(
         isMyTurn ? "Your turn — cast a spell or move." : `${opponentName} is acting…`
       );
@@ -278,7 +279,6 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     if (row.status === "active" && row.state_json && !matchSession) {
       stopOpenRoomsSync();
       hideHosting();
-      pvpService?.stopPolling();
       launchMatch(row);
     }
   }
@@ -347,6 +347,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         : `${opponentName} is thinking…`
     );
     matchSession.render();
+    pvpService.startPolling(2000);
   }
 
   function ensurePvpService() {

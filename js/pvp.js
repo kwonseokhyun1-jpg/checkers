@@ -315,8 +315,8 @@ export class PvpService {
         (payload) => {
           const row = payload.new;
           if (!row) return;
-          if (row.version <= this._lastVersion && payload.eventType !== "INSERT") return;
-          this._lastVersion = row.version ?? 0;
+          const ver = row.version ?? 0;
+          if (ver <= this._lastVersion && payload.eventType !== "INSERT") return;
           this.onMatchRow?.(row);
         }
       )
