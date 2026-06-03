@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="css/mobile-game.css" />
   <link rel="stylesheet" href="css/spell-visuals.css" />
   <link rel="stylesheet" href="css/chess-theme.css" />
-  <link rel="stylesheet" href="css/deck-editor.css?v=6" />
+  <link rel="stylesheet" href="css/deck-editor.css?v=7" />
 </head>
 <body>
   <div class="ambient-bg" aria-hidden="true"></div>
@@ -162,7 +162,8 @@
                     <option value="rarity-desc">Rarity ↓</option>
                     <option value="rarity-asc">Rarity ↑</option>
                   </select>
-                  <label class="filter-check deck-editor__owned"><input type="checkbox" class="collection-owned-only-toggle" /> Owned only</label>
+                  <label class="filter-check deck-editor__owned"><input type="checkbox" class="collection-owned-only-toggle" checked /> Owned only</label>
+                  <label class="filter-check deck-editor__owned"><input type="checkbox" class="collection-new-only-toggle" /> New only</label>
                 </div>
               </div>
               <p id="deck-collection-hint" class="deck-editor__hint" hidden>Tap <strong>+ Add to deck</strong> for copies you own. When all owned copies are in the deck, tap <strong>Add for X gems</strong> to buy another.</p>

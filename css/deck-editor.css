@@ -185,12 +185,12 @@ body.deck-editing .game-nav.tabs {
 
 .deck-editor__strip {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.45rem;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 0.2rem 0 0.35rem;
+  padding: 0.25rem 0 0.4rem;
   -webkit-overflow-scrolling: touch;
-  min-height: 7.25rem;
+  min-height: 5.75rem;
   max-height: none;
   align-items: flex-start;
 }
@@ -204,30 +204,43 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-slot-wrap--strip {
-  flex: 0 0 4.5rem;
+  flex: 0 0 3.85rem;
+  width: 3.85rem;
   position: relative;
 }
 
 .deck-slot-wrap--strip .spell-card {
-  width: 4.5rem;
-  max-width: 4.5rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+}
+
+.deck-slot-wrap--strip .spell-card__frame {
+  width: 100%;
 }
 
 .deck-slot-wrap--strip .spell-card__art {
-  height: 3.25rem;
+  height: 2.85rem;
+}
+
+.deck-slot-wrap--strip .spell-card__body {
+  padding: 0.2rem 0.15rem 0.25rem;
 }
 
 .deck-slot-wrap--strip .spell-card__name {
-  font-size: 0.58rem;
-  line-height: 1.1;
+  font-size: 0.54rem;
+  line-height: 1.08;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  margin: 0;
 }
 
-.deck-slot-wrap--strip .spell-card__desc {
-  display: none;
+.deck-slot-wrap--strip .spell-card__desc,
+.deck-slot-wrap--strip .spell-card__rarity,
+.deck-slot-wrap--strip .spell-card__meta {
+  display: none !important;
 }
 
 .deck-slot-remove--visible {
@@ -457,6 +470,24 @@ body.deck-editing .game-nav.tabs {
   border: 1px solid #3a3835;
 }
 
+.deck-collection-row--new {
+  border-color: rgba(129, 182, 76, 0.45);
+}
+
+.deck-collection-row__new {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  background: rgba(129, 182, 76, 0.22);
+  color: #c8e6a0;
+}
+
 .deck-editor__hint {
   flex-shrink: 0;
   margin: 0 0 0.35rem;
@@ -491,6 +522,10 @@ body.deck-editing .game-nav.tabs {
 }
 
 @media (min-width: 900px) {
+  body.deck-editing {
+    overflow: auto;
+  }
+
   body.deck-editing .game-header {
     display: flex;
   }
@@ -501,6 +536,15 @@ body.deck-editing .game-nav.tabs {
     overflow: visible;
     padding-bottom: 2rem;
     max-width: 1100px;
+  }
+
+  body.deck-editing #view-deck {
+    overflow: visible;
+  }
+
+  #deck-subview-edit:not(.hidden) {
+    overflow: visible;
+    max-height: none;
   }
 
   body.deck-editing .game-shell::before {
@@ -514,13 +558,18 @@ body.deck-editing .game-nav.tabs {
   .deck-editor {
     display: grid;
     grid-template-columns: minmax(280px, 320px) 1fr;
+    grid-template-rows: minmax(520px, calc(100dvh - 11rem));
     gap: 0.75rem;
     max-width: 1100px;
+    max-height: calc(100dvh - 11rem);
     margin: 0 auto;
+    overflow: hidden;
+    align-items: stretch;
   }
 
   .deck-editor__top {
     grid-column: 1;
+    grid-row: 1;
     padding: 0.65rem;
     border: 1px solid #4a4845;
     border-radius: 8px;
@@ -528,6 +577,7 @@ body.deck-editing .game-nav.tabs {
     display: flex;
     flex-direction: column;
     min-height: 0;
+    overflow: hidden;
   }
 
   .deck-editor__deck-zone {
@@ -561,20 +611,36 @@ body.deck-editing .game-nav.tabs {
     max-width: none;
   }
 
+  .deck-slot-wrap--strip {
+    width: auto;
+  }
+
   .deck-slot-wrap--strip .spell-card__art {
-    height: 4.25rem;
+    height: 4.5rem;
   }
 
   .deck-slot-wrap--strip .spell-card__name {
-    font-size: 0.68rem;
+    font-size: 0.62rem;
   }
 
   .deck-editor__collection {
     grid-column: 2;
+    grid-row: 1;
     padding: 0.65rem;
     border: 1px solid #4a4845;
     border-radius: 8px;
     background: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #deck-subview-edit .deck-editor__grid,
+  #deck-subview-edit .deck-editor__grid.collection-grid,
+  #deck-subview-edit .deck-editor__grid .collection-grid,
+  #deck-subview-edit .deck-editor__grid-cards {
+    padding-bottom: 1rem;
   }
 
   .deck-editor__filter-row {
