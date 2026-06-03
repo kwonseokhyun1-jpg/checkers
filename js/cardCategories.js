@@ -30,7 +30,7 @@ const ID_TO_CATEGORY = {
   chain_lightning: "attack",
   clone: "special",
   coin_flip: "special",
-  collapse: "attack",
+  collapse: "trap",
   confusion: "control",
   constitution: "special",
   counterspell: "trap",
@@ -45,15 +45,15 @@ const ID_TO_CATEGORY = {
   dominion: "special",
   double: "special",
   duel: "attack",
-  earthquake: "attack",
+  earthquake: "movement",
   execution: "attack",
   fireblast: "attack",
   fog: "defense",
   fusion: "movement",
   hex: "control",
   hibernation: "defense",
-  hostile_swap: "attack",
-  hunters_mark: "attack",
+  hostile_swap: "movement",
+  hunters_mark: "control",
   ignore: "special",
   iron_will: "defense",
   landmine: "trap",
@@ -61,12 +61,12 @@ const ID_TO_CATEGORY = {
   last_stand: "defense",
   leapfrog: "movement",
   long_step: "movement",
-  magnet: "attack",
+  magnet: "movement",
   nudge: "movement",
   offering: "special",
   overrun: "movement",
   panic: "control",
-  poison: "attack",
+  poison: "control",
   possession: "special",
   press: "control",
   promote_zone: "movement",
@@ -108,17 +108,17 @@ export function getCardCategory(def) {
   if (mapped) return mapped;
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
-  if (/trap|mine|quicksand|counterspell|darkness/.test(blob)) return "trap";
+  if (/trap|mine|quicksand|counterspell|darkness|collapse/.test(blob)) return "trap";
   if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|vengeance|hibernation|fog|rally/.test(blob)) {
     return "defense";
   }
-  if (/move|nudge|teleport|recall|leap|step|displace|swap|scatter|retreat|bishop|rook|fusion|overrun|promote/.test(blob)) {
+  if (/move|nudge|teleport|recall|leap|step|displace|swap|scatter|retreat|bishop|rook|fusion|overrun|promote|pull|push|shift|earthquake|magnet|repel/.test(blob)) {
     return "movement";
   }
-  if (/freeze|blind|confusion|hex|root|rust|panic|press|silence|paraly|control|cannot play|random/.test(blob)) {
+  if (/freeze|blind|confusion|hex|root|rust|panic|press|silence|paraly|control|cannot play|random|mark|poison|die in \d+ turn/.test(blob)) {
     return "control";
   }
-  if (/destroy|damage|bolt|stab|snipe|duel|sacrifice|poison|lightning|fire|cull|execution|shatter|demote|magnet|earthquake|collapse/.test(blob)) {
+  if (/\bdestroy\b|\bkills?\b|fireball|bolt|stab|snipe|duel|sacrifice|execution|shatter|cull|lightning/.test(blob)) {
     return "attack";
   }
   return "special";
