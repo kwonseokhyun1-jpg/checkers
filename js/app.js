@@ -46,7 +46,12 @@ import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
 import { renderProfileTab, renderCosmeticBoxes } from "./profileUI.js";
-import { openMysteryBox, MYSTERY_BOX_COST } from "./mysteryBox.js";
+import {
+  openMysteryBox,
+  openBigMysteryBox,
+  MYSTERY_BOX_COST,
+  BIG_MYSTERY_BOX_COST,
+} from "./mysteryBox.js";
 import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
@@ -80,7 +85,7 @@ try {
   profile = loadProfile();
 }
 let activeTab = "deck";
-/** @type {'cards'|'cosmetics'} */
+/** @type {'cards'|'cosmetics'|'star'} */
 let activeVaultTab = "cards";
 /** @type {'list'|'edit'|'view'} */
 let deckSubview = "list";
@@ -275,20 +280,84 @@ function showDeckSubview(sub) {
 }
 
 
-async function handleOpenMysteryBox() {
+function mysteryBoxHtml({ id, title, desc, cost, big = false }) {
+  const canAfford = (profile.stars ?? 0) >= cost;
+  return `
+    <article class="mystery-box ${big ? "mystery-box--big" : ""} ${canAfford ? "mystery-box--ready" : "mystery-box--locked"}" data-mystery-id="${id}" role="button" tabindex="0" aria-label="Open ${title} for ${cost} stars">
+      <div class="mystery-box__glow" aria-hidden="true"></div>
+      <div class="mystery-box__icon" aria-hidden="true">${big ? "★?" : "?"}</div>
+      <h3 class="mystery-box__title">${title}</h3>
+      <p class="mystery-box__desc">${desc}</p>
+      <p class="mystery-box__cost"><span aria-hidden="true">★</span> ${cost} stars</p>
+      <button type="button" class="btn-primary mystery-box__btn" data-mystery-open="${id}" ${canAfford ? "" : "disabled"}>
+        ${canAfford ? `Open for ${cost} ★` : "Need more stars"}
+      </button>
+    </article>`;
+}
+
+function bindMysteryBoxCard(article, openFn) {
+  const btn = article.querySelector("[data-mystery-open]");
+  btn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    openFn();
+  });
+  article.addEventListener("click", openFn);
+  article.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openFn();
+    }
+  });
+}
+
+async function playMysteryResult(res, log) {
+  if (res.kind === "card") {
+    await playChestOpenAnimation({
+      tier: res.tier.id,
+      tierLabel: `Mystery — ${res.tier.name}`,
+      pulls: res.pulls,
+    });
+    if (log) log.textContent = `Got ${res.pulls.length} spells from ${res.tier.name}.`;
+  } else if (res.kind === "cosmetic") {
+    await playCosmeticOpenAnimation({
+      boxId: res.tier?.id || "bronze",
+      boxLabel: "Mystery Box",
+      pulls: res.pulls,
+    });
+    if (log) {
+      log.textContent = res.message + (res.bonusGems ? ` (+${res.bonusGems} gem refund)` : "");
+    }
+  } else if (res.kind === "both") {
+    await playChestOpenAnimation({
+      tier: res.cardTier.id,
+      tierLabel: `Big Mystery — ${res.cardTier.name}`,
+      pulls: res.cardPulls,
+    });
+    await playCosmeticOpenAnimation({
+      boxId: res.cosTier?.id || "gold",
+      boxLabel: "Big Mystery Box",
+      pulls: res.cosPulls,
+    });
+    if (log) {
+      const refund = res.bonusGems ? ` (+${res.bonusGems} gem refund)` : "";
+      log.textContent = `${res.message}${refund}`;
+    }
+  }
+}
+
+async function handleOpenMysteryBox({ big = false } = {}) {
   const log = $("mystery-box-log");
-  const btn = $("btn-open-mystery");
-  const canAfford = (profile.stars ?? 0) >= MYSTERY_BOX_COST;
+  const cost = big ? BIG_MYSTERY_BOX_COST : MYSTERY_BOX_COST;
+  const canAfford = (profile.stars ?? 0) >= cost;
   if (!canAfford) {
     if (log) {
-      log.textContent = `Need ${MYSTERY_BOX_COST} ★ stars. Clear Adventure stages to earn stars.`;
+      log.textContent = `Need ${cost} ★ stars. Clear Adventure stages to earn stars.`;
       log.classList.add("chest-log--error");
     }
     return;
   }
-  if (btn?.disabled) return;
 
-  const res = openMysteryBox(profile);
+  const res = big ? openBigMysteryBox(profile) : openMysteryBox(profile);
   if (!res.success) {
     if (log) {
       log.textContent = res.message;
@@ -299,27 +368,15 @@ async function handleOpenMysteryBox() {
 
   saveProfile(profile);
   updateCurrencyHeader();
-  if (btn) btn.disabled = true;
   if (log) log.classList.remove("chest-log--error");
 
+  const list = $("mystery-box-list");
+  list?.querySelectorAll(".mystery-box__btn").forEach((btn) => {
+    btn.disabled = true;
+  });
+
   try {
-    if (res.kind === "card") {
-      await playChestOpenAnimation({
-        tier: res.tier.id,
-        tierLabel: `Mystery — ${res.tier.name}`,
-        pulls: res.pulls,
-      });
-      if (log) log.textContent = `Got ${res.pulls.length} spells from ${res.tier.name}.`;
-    } else {
-      await playCosmeticOpenAnimation({
-        boxId: res.tier?.id || "bronze",
-        boxLabel: "Mystery Box",
-        pulls: res.pulls,
-      });
-      if (log) {
-        log.textContent = res.message + (res.bonusGems ? ` (+${res.bonusGems} gem refund)` : "");
-      }
-    }
+    await playMysteryResult(res, log);
   } catch (err) {
     console.error("Mystery box animation failed:", err);
     if (log) log.textContent = res.message;
@@ -329,35 +386,28 @@ async function handleOpenMysteryBox() {
   renderProfile();
 }
 
-function renderMysteryBox() {
-  const root = $("mystery-box-card");
-  if (!root) return;
-  const canAfford = (profile.stars ?? 0) >= MYSTERY_BOX_COST;
-  root.innerHTML = `
-    <article class="mystery-box ${canAfford ? "mystery-box--ready" : "mystery-box--locked"}" role="button" tabindex="0" aria-label="Open mystery box for ${MYSTERY_BOX_COST} stars">
-      <div class="mystery-box__glow" aria-hidden="true"></div>
-      <div class="mystery-box__icon" aria-hidden="true">?</div>
-      <h3 class="mystery-box__title">Mystery Box</h3>
-      <p class="mystery-box__desc">Random spell cards or cosmetics — same tier odds as the shop chests.</p>
-      <p class="mystery-box__cost"><span aria-hidden="true">★</span> ${MYSTERY_BOX_COST} stars</p>
-      <button type="button" class="btn-primary mystery-box__btn" id="btn-open-mystery" ${canAfford ? "" : "disabled"}>
-        ${canAfford ? "Open mystery box" : "Need more stars"}
-      </button>
-    </article>`;
+function renderStarsShop() {
+  const list = $("mystery-box-list");
+  if (!list) return;
+  list.innerHTML = `
+    ${mysteryBoxHtml({
+      id: "standard",
+      title: "Mystery Box",
+      desc: "Random spell cards or cosmetics — same tier odds as shop chests.",
+      cost: MYSTERY_BOX_COST,
+    })}
+    ${mysteryBoxHtml({
+      id: "big",
+      title: "Big Mystery Box",
+      desc: "Spells and cosmetics in one open — better tier odds (50% gold).",
+      cost: BIG_MYSTERY_BOX_COST,
+      big: true,
+    })}
+  `;
 
-  const open = () => handleOpenMysteryBox();
-  root.querySelector("#btn-open-mystery")?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    open();
-  });
-  const card = root.querySelector(".mystery-box");
-  card?.addEventListener("click", open);
-  card?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      open();
-    }
-  });
+  const articles = list.querySelectorAll(".mystery-box");
+  bindMysteryBoxCard(articles[0], () => handleOpenMysteryBox({ big: false }));
+  bindMysteryBoxCard(articles[1], () => handleOpenMysteryBox({ big: true }));
 }
 
 function showVaultTab(tab) {
@@ -375,7 +425,6 @@ function showVaultTab(tab) {
 }
 
 function renderCosmeticsShop() {
-  renderMysteryBox();
   renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
     logEl: $("cosmetic-box-log"),
     onGemsChange: updateGemHeader,
@@ -389,6 +438,7 @@ function renderChests(options = {}) {
   const { clearPulls = true } = options;
   updateCurrencyHeader();
   renderCosmeticsShop();
+  renderStarsShop();
   const list = $("chest-list");
   const pullsEl = $("chest-pulls");
   if (pullsEl && clearPulls) {
@@ -1498,7 +1548,7 @@ function init() {
       repairProfile(profile);
       updateCurrencyHeader();
       renderDeckList();
-      renderMysteryBox();
+      renderStarsShop();
       renderProfile();
       pvpController?.render();
       showTab(activeTab);
@@ -1522,7 +1572,7 @@ function init() {
       repairProfile(profile);
       updateCurrencyHeader();
       renderDeckList();
-      renderMysteryBox();
+      renderStarsShop();
       pvpController?.render();
     }
   });
