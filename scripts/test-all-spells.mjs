@@ -201,6 +201,19 @@ for (const card of cards) {
 }
 
 
+
+// Fireblast diagonal ray test
+{
+  const s = baseState();
+  place(s, COLOR, 5, 0);
+  place(s, OPP, 3, 2); // forward diagonal from 5,0
+  const fb = cards.find((c) => c.id === "fireblast");
+  const res = applyCard(s, COLOR, fb, [[5, 0]]);
+  if (!res.success) throw new Error("Fireblast failed: " + res.message);
+  if (at(s, 3, 2)) throw new Error("Fireblast should destroy diagonal enemy");
+  console.log("Fireblast diagonal test: OK");
+}
+
 // Fusion behavior check
 {
   const s = baseState();

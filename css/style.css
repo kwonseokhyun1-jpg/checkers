@@ -1007,6 +1007,9 @@ body {
   gap: 0.5rem;
   max-height: 420px;
   overflow-y: auto;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .hand.spell-hand .spell-card { max-width: none; }
 .modal-content--card { max-width: 400px; }

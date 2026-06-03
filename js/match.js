@@ -373,7 +373,9 @@ export class MatchSession {
         ? `${card.name} — tap a file letter (a–h) below the board.`
         : card.mode === "row"
           ? `${card.name} — tap a rank number (1–8) beside the board.`
-          : `${card.name} — drag to the board or tap highlighted squares.`
+          : card.effect === "fireblast"
+            ? `${card.name} — tap one of your highlighted pieces to fire.`
+            : `${card.name} — drag to the board or tap highlighted squares.`
     );
     this.render();
   }
@@ -567,9 +569,35 @@ export class MatchSession {
     el.classList.add("spell-card--draggable");
     el.addEventListener("pointerdown", (e) => {
       if (!this.canPlaySpells() || e.button !== 0) return;
-      e.preventDefault();
-      el.setPointerCapture(e.pointerId);
-      this.beginDrag(card, el, e.clientX, e.clientY);
+      const startX = e.clientX;
+      const startY = e.clientY;
+      let dragStarted = false;
+
+      const onMove = (ev) => {
+        if (dragStarted) {
+          this.onDragMove(ev);
+          return;
+        }
+        const dx = ev.clientX - startX;
+        const dy = ev.clientY - startY;
+        if (Math.hypot(dx, dy) < 14) return;
+        dragStarted = true;
+        ev.preventDefault();
+        try { el.setPointerCapture(ev.pointerId); } catch (_) {}
+        this.beginDrag(card, el, ev.clientX, ev.clientY);
+        this.onDragMove(ev);
+      };
+
+      const onUp = (ev) => {
+        document.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerup", onUp);
+        document.removeEventListener("pointercancel", onUp);
+        if (dragStarted) this.onDragEnd(ev);
+      };
+
+      document.addEventListener("pointermove", onMove);
+      document.addEventListener("pointerup", onUp);
+      document.addEventListener("pointercancel", onUp);
     });
   }
 

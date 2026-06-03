@@ -72,19 +72,31 @@ body.deck-editing .game-nav.tabs {
   overflow: hidden;
 }
 
-/* ── Sticky toolbar ── */
-.deck-editor__top {
+/* ── Sticky toolbar (always visible while scrolling collection) ── */
+.deck-editor__toolbar {
   flex-shrink: 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.35rem;
+  align-items: center;
   padding: 0.35rem 0.5rem 0.25rem;
   border-bottom: 1px solid #4a4845;
   background: var(--bg-deep, #262421);
 }
 
-.deck-editor__toolbar {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 0.35rem;
-  align-items: center;
+.deck-editor__toolbar--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.deck-editor__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .deck-editor__back {
@@ -149,6 +161,12 @@ body.deck-editing .game-nav.tabs {
   margin: 0.15rem 0 0;
 }
 
+.deck-editor__error,
+.deck-editor__progress {
+  flex-shrink: 0;
+  padding: 0 0.5rem;
+}
+
 .deck-editor__progress[hidden] {
   display: none !important;
 }
@@ -161,6 +179,7 @@ body.deck-editing .game-nav.tabs {
 .deck-editor__deck-zone {
   flex-shrink: 0;
   padding: 0 0.5rem;
+  border-bottom: 1px solid rgba(74, 72, 69, 0.65);
 }
 
 .deck-editor__deck-head {
@@ -318,7 +337,8 @@ body.deck-editing .game-nav.tabs {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding-bottom: var(--deck-editor-nav-space);
+  padding-bottom: calc(var(--deck-editor-nav-space) + 4.5rem);
+  scroll-padding-top: 0.5rem;
 }
 
 #deck-subview-edit .collection-category-section {
@@ -521,6 +541,48 @@ body.deck-editing .game-nav.tabs {
   margin-bottom: 0;
 }
 
+
+/* ── Mobile bottom save bar (always reachable while scrolling) ── */
+.deck-editor__save-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--nav-height, 4.25rem) + var(--game-safe-bottom, 0px));
+  z-index: 35;
+  margin: 0 auto;
+  max-width: 480px;
+  padding: 0.45rem 0.65rem;
+  background: rgba(38, 36, 33, 0.96);
+  border-top: 1px solid #4a4845;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.deck-editor__save-bar-count {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.deck-editor__save-bar-count.deck-editor__count--ready {
+  color: var(--accent-primary, #81b64c);
+}
+
+.deck-editor__save-bar-btn {
+  flex: 1;
+  max-width: 12rem;
+  min-height: 2.65rem;
+  margin: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.88rem;
+}
+
 @media (min-width: 900px) {
   body.deck-editing {
     overflow: auto;
@@ -558,7 +620,7 @@ body.deck-editing .game-nav.tabs {
   .deck-editor {
     display: grid;
     grid-template-columns: minmax(280px, 320px) 1fr;
-    grid-template-rows: minmax(520px, calc(100dvh - 11rem));
+    grid-template-rows: auto minmax(480px, calc(100dvh - 12rem));
     gap: 0.75rem;
     max-width: 1100px;
     max-height: calc(100dvh - 11rem);
@@ -567,9 +629,36 @@ body.deck-editing .game-nav.tabs {
     align-items: stretch;
   }
 
-  .deck-editor__top {
-    grid-column: 1;
+  .deck-editor__toolbar--sticky {
+    grid-column: 1 / -1;
     grid-row: 1;
+    position: sticky;
+    top: 0;
+    border: 1px solid #4a4845;
+    border-radius: 8px;
+    padding: 0.65rem;
+  }
+
+  .deck-editor__error,
+  .deck-editor__progress {
+    grid-column: 1 / -1;
+  }
+
+  .deck-editor__body {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: minmax(280px, 320px) 1fr;
+    gap: 0.75rem;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .deck-editor__save-bar {
+    display: none;
+  }
+
+  .deck-editor__deck-zone {
     padding: 0.65rem;
     border: 1px solid #4a4845;
     border-radius: 8px;
@@ -578,6 +667,7 @@ body.deck-editing .game-nav.tabs {
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
+    border-bottom: none;
   }
 
   .deck-editor__deck-zone {
@@ -641,6 +731,10 @@ body.deck-editing .game-nav.tabs {
   #deck-subview-edit .deck-editor__grid .collection-grid,
   #deck-subview-edit .deck-editor__grid-cards {
     padding-bottom: 1rem;
+  }
+
+  .deck-editor__status-row {
+    grid-column: 1 / -1;
   }
 
   .deck-editor__filter-row {
