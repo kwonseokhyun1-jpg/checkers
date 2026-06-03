@@ -792,6 +792,15 @@ body {
   opacity: 0.85;
   text-shadow: 0 1px 4px rgba(0,0,0,0.6);
 }
+
+/* Effect-specific art replaces the large corner sigil */
+.spell-card__sigil--effect {
+  display: none;
+}
+
+.spell-card__svg .card-motif {
+  color: hsl(var(--card-hue) 92% 92%);
+}
 .spell-card__body { padding: 0.5rem 0.55rem 0.6rem; }
 .spell-card__rarity {
   font-size: 0.62rem;

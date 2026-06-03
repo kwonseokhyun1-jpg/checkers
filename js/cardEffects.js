@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getTeleportTargets, getBoltTarget, getAdjacentForwardBoltTarget, getFireblastTarget, getBackstepTarget } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getAdjacentForwardBoltTarget, getFireblastTarget, getBackstepTarget } from "./board.js";
 import { collapsedSquareKey } from "./gameMeta.js";
 import { sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget } from "./cardEffectHandlers.js";
@@ -123,6 +123,19 @@ export function getValidTargets(state, color, card, picks) {
           [pr, pc + 1],
         ].filter(([r, c]) => emptyDark(state, r, c));
       if (card.effect === "backstep") return getBackstepTarget(state.board, p);
+      if (card.effect === "leapfrog" || card.effect === "phase_walk") {
+        return getLeapfrogTargets(state.board, p, color).filter(([r, c]) => emptyDark(state, r, c));
+      }
+      if (card.effect === "recall") {
+        const rows = color === COLORS.RED ? [5, 6, 7] : [0, 1, 2];
+        const spots = [];
+        for (const r of rows) {
+          for (let c = 0; c < SIZE; c++) {
+            if (emptyDark(state, r, c)) spots.push([r, c]);
+          }
+        }
+        return spots;
+      }
       return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
     }
     case "f_f":
