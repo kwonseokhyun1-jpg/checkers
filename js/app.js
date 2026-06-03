@@ -231,6 +231,7 @@ function syncCollectionFilterControls() {
 
 function showDeckSubview(sub) {
   deckSubview = sub;
+  document.body.classList.toggle("deck-editing", sub === "edit");
   $("deck-subview-list")?.classList.toggle("hidden", sub !== "list");
   $("deck-subview-edit")?.classList.toggle("hidden", sub !== "edit");
   $("deck-subview-view")?.classList.toggle("hidden", sub !== "view");
@@ -720,22 +721,24 @@ function renderDeckEditor() {
     countBadge.textContent = countLabel;
     countBadge.classList.toggle("deck-editor__count--ready", val.valid);
   }
-  if (status) {
-    if (val.valid) {
-      status.textContent = "";
-      status.className = "deck-status ok deck-status--hidden";
-    } else {
-      status.textContent = val.errors[0] || `${countLabel} — keep adding spells`;
-      status.className = "deck-status warn";
-    }
-  }
-
   const progressFill = $("deck-progress-fill");
   const pct = Math.min(100, (workingDeck.length / DECK_SIZE) * 100);
   if (progressFill) progressFill.style.width = `${pct}%`;
   if (progressBar) {
+    progressBar.hidden = false;
     progressBar.setAttribute("aria-valuenow", String(workingDeck.length));
     progressBar.setAttribute("aria-valuemax", String(DECK_SIZE));
+  }
+  if (status) {
+    if (val.valid) {
+      status.textContent = "";
+      status.hidden = true;
+      status.className = "deck-editor__error deck-status ok";
+    } else {
+      status.hidden = false;
+      status.textContent = val.errors[0] || `${countLabel} — keep adding spells`;
+      status.className = "deck-editor__error deck-status warn";
+    }
   }
 
   renderInventoryGrid(collEl, { deckEdit: true, statusEl: status });
@@ -745,7 +748,7 @@ function renderDeckEditor() {
   if (!stacks.length) {
     const empty = document.createElement("p");
     empty.className = "deck-editor__strip-empty";
-    empty.textContent = "No cards yet — add spells below";
+    empty.textContent = "Empty — tap + Add on cards below";
     deckEl.appendChild(empty);
   }
   for (const { def, count } of stacks) {
