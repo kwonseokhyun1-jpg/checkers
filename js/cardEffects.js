@@ -4,7 +4,7 @@
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget } from "./board.js";
 import { collapsedSquareKey } from "./gameMeta.js";
 import { sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, chainLightningCanTarget } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
 export { applyCard, applyEffect };
@@ -245,10 +245,7 @@ export function getValidTargets(state, color, card, picks) {
           if (emptyDark(state, r, c)) res.push([r, c]);
       if (card.effect === "call_forward" && picks.length === 1) {
         const [er, ec] = picks[0];
-        return res.filter(([r, c]) => {
-          const dist = Math.max(Math.abs(r - er), Math.abs(c - ec));
-          return dist > 0 && dist <= 3;
-        });
+        return res.filter(([r, c]) => callForwardMoveOk(state, er, ec, r, c));
       }
       return res;
     }
