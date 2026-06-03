@@ -35,7 +35,8 @@ import {
   buildAnimSpec,
   MIN_SPELL_ANIM_MS,
 } from "./spellAnimations.js";
-import { applySquareSpellFx, mountSpellOverlay, removeSpellOverlay, revealCoinFlipResult } from "./spellFx.js";
+import { applySquareSpellFx, mountSpellOverlay, removeSpellOverlay, revealCoinFlipResult, animateCoinDropToSquare } from "./spellFx.js";
+import { pickCoinFlipVictim } from "./cardEffectHandlers.js";
 import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares } from "./cardEffectHandlers.js";
 
@@ -959,10 +960,18 @@ ${starLine}`;
       }
     }
     if (card.effect === "coin_flip") {
+      const victim = pickCoinFlipVictim(s, this.localColor);
+      if (!victim) return { success: false, message: "No valid targets" };
+
+      const victimSquare = [victim.row, victim.col];
+      const victimColor = victim.color;
+      s.meta.pendingCoinFlipSquare = victimSquare;
+
       const spec = buildAnimSpec(card, [], this.localColor, extra);
-      const frame = this.$("board")?.closest(".board-frame");
+      const board = this.$("board");
+      const frame = board?.closest(".board-frame");
       let coinOverlay = null;
-      if (spec.overlay) coinOverlay = mountSpellOverlay(frame, spec.overlay);
+      if (spec.overlay) coinOverlay = mountSpellOverlay(board, spec.overlay);
       this.spellAnimation = spec;
       if (spec.visual) frame?.classList.add(`board-frame--fx-${spec.visual}`);
       frame?.classList.add("board-frame--spell-instant");
@@ -972,12 +981,13 @@ ${starLine}`;
         banner.className = "turn-banner spell-anim-instant";
       }
       this.render();
-      await delay(1600);
+      await delay(2700);
+      revealCoinFlipResult(coinOverlay, { friendly: victimColor === this.localColor });
+      await delay(450);
+      await animateCoinDropToSquare(coinOverlay, board, victim.row, victim.col);
       const res = applyCard(this.state, this.localColor, card, picks);
+      if (!res.success) s.meta.pendingCoinFlipSquare = null;
       if (res.success && res.victimSquare) {
-        const friendly = res.victimColor === this.localColor;
-        revealCoinFlipResult(coinOverlay, { friendly });
-        await delay(700);
         await this.runVictimSquareFlash({
           type: "kill",
           visual: "coin",

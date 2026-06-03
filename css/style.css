@@ -304,6 +304,7 @@ body {
 }
 
 .board {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   width: min(92vw, 480px);
@@ -3025,7 +3026,8 @@ body.chest-open-active {
   justify-content: center;
 }
 .spell-board-overlay--coin::before {
-  content: "🪙";
+  content: none;
+  display: none;
   font-size: 4.5rem;
   filter: drop-shadow(0 0 20px rgba(255, 215, 80, 0.9));
   animation: spell-coin-flip 1.2s ease-in-out 2;
