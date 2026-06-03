@@ -9,12 +9,14 @@ import {
   fetchProfileRow,
   isUsernameAvailable,
   suggestAvailableUsername,
+  validateUsernameFormat,
+  USERNAME_PATTERN,
 } from "./auth.js";
 import { upsertProfileRow } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { dismissTutorial } from "./tutorial.js";
 
-const USERNAME_RE = /^[A-Za-z0-9_]{3,24}$/;
+const USERNAME_RE = USERNAME_PATTERN;
 
 /**
  * @param {object} opts
