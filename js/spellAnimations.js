@@ -25,7 +25,7 @@ const BOARD_SHAKE_EFFECTS = new Set([
   "chain_lightning", "purify",
   "earthquake",
   "fireline",
-  "fireblast",
+  "pyromancy",
   "cross_bolt",
   "duel",
   "scatter",
@@ -39,7 +39,7 @@ const BOARD_SHAKE_EFFECTS = new Set([
 ]);
 
 const KILL_EFFECTS = new Set([
-  "snipe", "destroy_unshielded", "execution", "forward_bolt", "fireblast", "cryo_bolt",
+  "snipe", "destroy_unshielded", "execution", "forward_bolt", "pyromancy", "cryo_bolt",
   "coin_flip", "sacrifice", "backstab", "shatter",
 ]);
 
@@ -209,21 +209,17 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
-  if (effect === "fireblast" && p.length >= 1) {
-    const to = extra.fireblastTo || (p.length >= 2 ? p[1] : null);
-    const lineSquares = extra.fireblastLine || (to ? squaresBetween(p[0], to) : []);
-    if (to) {
-      return finishSpec({
-        type: "kill",
-        visual: "fire",
-        duration: Math.max(MIN_SPELL_ANIM_MS, 1300),
-        label,
-        squares: [to],
-        from: p[0],
-        to,
-        lineSquares,
-      }, effect);
-    }
+  if (effect === "pyromancy" && p.length >= 2) {
+    const squares = extra.pyromancySquares || p.slice(0, 2);
+    return finishSpec({
+      type: "multi",
+      visual: "fire",
+      duration: Math.max(MIN_SPELL_ANIM_MS, 1400),
+      label,
+      squares,
+      from: squares[0],
+      to: squares[1],
+    }, effect);
   }
 
   if (effect === "chain_lightning" && extra.chainSquares?.length) {

@@ -46,6 +46,7 @@ export const REMOVED_CARD_IDS = new Set([
   "drift",
   "echo",
   "exile_king",
+  "fireblast",
   "fireline",
   "flank",
   "fortify",

@@ -15,7 +15,7 @@ export const EFFECT_VISUAL = {
   cryo_bolt: "cryo",
   destroy_unshielded: "shatter",
   chain_lightning: "lightning",
-  fireblast: "fire",
+  pyromancy: "fire",
   vengeance: "vengeance",
   hibernation: "hibernation",
   bomb: "bomb_arm",

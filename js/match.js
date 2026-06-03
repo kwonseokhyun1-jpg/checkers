@@ -413,8 +413,8 @@ export class MatchSession {
         ? `${card.name} — tap a file letter (a–h) below the board.`
         : card.mode === "row"
           ? `${card.name} — tap a rank number (1–8) beside the board.`
-          : card.effect === "fireblast"
-            ? `${card.name} — tap one of your highlighted pieces to fire.`
+          : card.effect === "pyromancy"
+            ? `${card.name} — tap an enemy piece, then an empty dark square to ignite.`
             : card.effect === "sanctuary" || card.effect === "darkness"
               ? `${card.name} — tap a square; highlighted area shows the zone.`
               : card.effect === "clone"
@@ -1064,16 +1064,8 @@ ${starLine}`;
       const [pr, pc] = picks[0];
       extra.chainSquares = getChainLightningAnimSquares(s, pr, pc, this.localColor);
     }
-    if (card.effect === "fireblast" && picks.length) {
-      const [pr, pc] = picks[0];
-      const piece = s.board[pr]?.[pc];
-      if (piece) {
-        const ray = getFireblastRay(s.board, piece);
-        if (ray) {
-          extra.fireblastTo = ray.target;
-          extra.fireblastLine = ray.lineSquares;
-        }
-      }
+    if (card.effect === "pyromancy" && picks.length >= 2) {
+      extra.pyromancySquares = picks.slice(0, 2);
     }
     if (card.effect === "sanctuary" && picks.length) {
       extra.sanctuaryCells = getSanctuaryCells(picks[0][0], picks[0][1]);
@@ -1441,6 +1433,7 @@ ${starLine}`;
         if (terrain?.sanctuary && terrain?.sanctuaryTurns > 0) cls += " has-sanctuary";
         if (terrain?.darkness > 0) cls += " has-darkness-core";
         else if (isInDarknessZone(s, row, col)) cls += " has-darkness-zone";
+        if (terrain?.fireTurns > 0) cls += " has-fire-tile";
         if (zonePreview.sanctuary.has(key)) cls += " sanctuary-zone-preview";
         if (zonePreview.darkness.has(key)) cls += " darkness-zone-preview";
         if (isSquareCollapsed(s.meta, row, col)) cls += " square--collapsed";
@@ -1486,6 +1479,24 @@ ${starLine}`;
           sq.appendChild(darkEl);
         }
 
+        if (terrain?.fireTurns > 0) {
+          const fireEl = document.createElement("div");
+          fireEl.className = "fire-tile-indicator";
+          fireEl.setAttribute(
+            "aria-label",
+            `Burning tile — ${terrain.fireTurns} turn${terrain.fireTurns === 1 ? "" : "s"} left`
+          );
+          const flames = document.createElement("span");
+          flames.className = "fire-tile-indicator__flames";
+          flames.textContent = "🔥";
+          flames.setAttribute("aria-hidden", "true");
+          const turns = document.createElement("span");
+          turns.className = "fire-tile-indicator__turns";
+          turns.textContent = String(terrain.fireTurns);
+          fireEl.appendChild(flames);
+          fireEl.appendChild(turns);
+          sq.appendChild(fireEl);
+        }
 
         if (this.aiHighlight?.from?.[0] === row && this.aiHighlight?.from?.[1] === col) {
           sq.classList.add("ai-from");
@@ -1565,6 +1576,7 @@ ${starLine}`;
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (piece.venom > 0) el.classList.add("poisoned");
+          if (piece.blazeTurns > 0) el.classList.add("burning");
           if (
             this.cullAnimation &&
             this.cullAnimation.row === row &&
@@ -1613,6 +1625,30 @@ ${starLine}`;
             poison.appendChild(mark);
             poison.appendChild(bar);
             sq.appendChild(poison);
+          }
+          if (piece.blazeTurns > 0) {
+            const fire = document.createElement("div");
+            fire.className = "fire-indicator";
+            const mark = document.createElement("span");
+            mark.className = "fire-indicator__mark";
+            mark.textContent = "🔥";
+            mark.setAttribute("aria-hidden", "true");
+            const bar = document.createElement("div");
+            bar.className = "fire-indicator__bar";
+            bar.setAttribute("role", "meter");
+            bar.setAttribute("aria-label", `Burning — ${piece.blazeTurns} turns left`);
+            bar.setAttribute("aria-valuenow", String(piece.blazeTurns));
+            bar.setAttribute("aria-valuemin", "0");
+            bar.setAttribute("aria-valuemax", "2");
+            for (let i = 0; i < 2; i++) {
+              const block = document.createElement("span");
+              block.className =
+                "fire-indicator__block" + (i < piece.blazeTurns ? " fire-indicator__block--filled" : "");
+              bar.appendChild(block);
+            }
+            fire.appendChild(mark);
+            fire.appendChild(bar);
+            sq.appendChild(fire);
           }
         } else if (
           this.cullAnimation &&

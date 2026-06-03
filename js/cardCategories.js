@@ -47,7 +47,7 @@ const ID_TO_CATEGORY = {
   duel: "attack",
   earthquake: "special",
   execution: "attack",
-  fireblast: "attack",
+  pyromancy: "attack",
   fog: "defense",
   fusion: "movement",
   hex: "control",

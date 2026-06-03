@@ -96,7 +96,10 @@ export const EFFECT_ILLUSTRATIONS = {
 
   forward_bolt: () => wrap(`${piece(24, 44)} ${enemy(40, 28, 5)} ${bolt(28, 40, 38, 32)}`),
   destroy_unshielded: () => wrap(`${enemy(32, 32, 7)} ${xMark(32, 32, 8)}`),
-  fireblast: () => wrap(`${piece(32, 48, 5)} ${column(32, 10, 42)}<path d="M28 18 L32 8 L36 18 L32 14 Z" fill="currentColor" opacity="0.65"/><path d="M26 26 L32 16 L38 26" stroke="currentColor" stroke-width="1.8" fill="none"/>`),
+  pyromancy: () =>
+    wrap(
+      `${enemy(22, 34, 5)}${square(44, 34, 14, 0.2)}<path d="M18 28 L22 16 L26 28 Z" fill="#f97316" opacity="0.9"/><path d="M40 28 L44 14 L48 28 Z" fill="#f97316" opacity="0.9"/><path d="M20 32 Q22 36 24 32" stroke="#fb923c" stroke-width="1.2" fill="none"/><path d="M42 32 Q44 36 46 32" stroke="#fb923c" stroke-width="1.2" fill="none"/>`
+    ),
   snipe: () => wrap(`${piece(18, 48, 4)} ${enemy(50, 14, 5)} ${arrow(22, 44, 46, 18, 2)}`),
   duel: () => wrap(`${piece(22, 38, 5)} ${enemy(42, 38, 5)} ${xMark(32, 38, 5)}`),
   sacrifice: () => wrap(`${piece(20, 40, 5, 0.35)} ${arrow(26, 36, 44, 28)} ${enemy(46, 26, 6)} ${xMark(46, 26, 5)}`),

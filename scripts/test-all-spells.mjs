@@ -226,16 +226,22 @@ for (const card of cards) {
   console.log("Clone spawn test: OK");
 }
 
-// Fireblast diagonal ray test
+// Pyromancy — burn enemy + tile
 {
   const s = baseState();
-  place(s, COLOR, 5, 0);
-  place(s, OPP, 3, 2); // forward diagonal from 5,0
-  const fb = cards.find((c) => c.id === "fireblast");
-  const res = applyCard(s, COLOR, fb, [[5, 0]]);
-  if (!res.success) throw new Error("Fireblast failed: " + res.message);
-  if (at(s, 3, 2)) throw new Error("Fireblast should destroy diagonal enemy");
-  console.log("Fireblast diagonal test: OK");
+  place(s, OPP, 3, 2);
+  const pyro = cards.find((c) => c.id === "pyromancy");
+  const res = applyCard(s, COLOR, pyro, [
+    [3, 2],
+    [4, 3],
+  ]);
+  if (!res.success) throw new Error("Pyromancy failed: " + res.message);
+  const enemy = at(s, 3, 2);
+  if (!enemy || enemy.blazeTurns !== 2) throw new Error("Pyromancy should set blazeTurns=2 on enemy");
+  const sq = s.squares["3,3"] || s.squares["4,3"];
+  const key = Object.keys(s.squares).find((k) => s.squares[k]?.fireTurns === 2);
+  if (!key) throw new Error("Pyromancy should ignite empty dark tile");
+  console.log("Pyromancy test: OK");
 }
 
 // Fusion behavior check

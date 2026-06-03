@@ -3,7 +3,7 @@
  */
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastRay, getBackstepTarget, piecesOfColor, enemyPieces,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMeta.js";
@@ -213,18 +213,18 @@ const EFFECTS = {
   shield_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,1); return ok(); },
   shield_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,2); return ok(); },
   forward_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!kill(state,r2,c2,color)) return fail(); return ok(); },
-  fireblast(state, color, picks) {
-    const [r1, c1] = p0(picks);
-    const p = at(state, r1, c1);
-    if (!p || p.color !== color) return fail();
-    const ray = getFireblastRay(state.board, p);
-    if (!ray) return fail("No enemy in the fireball path");
-    const [r2, c2] = ray.target;
-    const t = at(state, r2, c2);
-    if (!t || t.color === color) return fail();
-    if (t.shieldTurns > 0) t.shieldTurns = 0;
-    if (!kill(state, r2, c2, color)) return fail();
-    return ok("Fireblast!", { fireblastTo: ray.target, fireblastLine: ray.lineSquares });
+  pyromancy(state, color, picks) {
+    if (picks.length < 2) return fail("Pick an enemy, then an empty dark square");
+    const [er, ec] = p0(picks);
+    const [tr, tc] = p1(picks);
+    const enemy = at(state, er, ec);
+    if (!enemy || enemy.color === color) return fail("First target must be an enemy piece");
+    if (!emptyDark(state, tr, tc)) return fail("Second target must be an empty dark square");
+    enemy.blazeTurns = 2;
+    const sq = getSq(state, tr, tc);
+    sq.fireTurns = 2;
+    sq.fireOwner = color;
+    return ok("Pyromancy — burns for 2 turns!", { pyromancySquares: [[er, ec], [tr, tc]] });
   },
   freeze_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.frozenTurns=1; return ok(); },
   retreat_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.retreatTurns=3; return ok(); },

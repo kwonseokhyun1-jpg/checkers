@@ -31,6 +31,7 @@ const CURSE_RULES = [
   { key: "silenced", label: "Silenced", turns: true },
   { key: "hexed", label: "Hexed", turns: true },
   { key: "venom", label: "Venom", turns: true },
+  { key: "blazeTurns", label: "Burning", turns: true },
   { key: "slowed", label: "Slowed", turns: true },
   { key: "reverseOnlyTurns", label: "Reverse March", turns: true },
   { key: "stoneTurns", label: "Stone", turns: true },
@@ -103,6 +104,7 @@ export function cleansePiece(piece) {
   piece.silenced = 0;
   piece.hexed = 0;
   piece.venom = 0;
+  piece.blazeTurns = 0;
   piece.linkedFateId = null;
   piece.slowed = 0;
   piece.reverseOnlyTurns = 0;
