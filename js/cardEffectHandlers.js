@@ -3,7 +3,7 @@
  */
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastTarget, getBackstepTarget, piecesOfColor, enemyPieces,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getFireblastRay, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMeta.js";
@@ -157,14 +157,14 @@ const EFFECTS = {
     const [r1, c1] = p0(picks);
     const p = at(state, r1, c1);
     if (!p || p.color !== color) return fail();
-    const line = getFireblastTarget(state.board, p);
-    if (!line.length) return fail("No enemy in the fireball path");
-    const [r2, c2] = line[0];
+    const ray = getFireblastRay(state.board, p);
+    if (!ray) return fail("No enemy in the fireball path");
+    const [r2, c2] = ray.target;
     const t = at(state, r2, c2);
     if (!t || t.color === color) return fail();
     if (t.shieldTurns > 0) t.shieldTurns = 0;
     if (!kill(state, r2, c2, color)) return fail();
-    return ok("Fireblast!");
+    return ok("Fireblast!", { fireblastTo: ray.target, fireblastLine: ray.lineSquares });
   },
   freeze_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.frozenTurns=1; return ok(); },
   retreat_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.retreatTurns=3; return ok(); },

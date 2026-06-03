@@ -96,7 +96,7 @@ export const CARD_REGISTRY = [
   { id: "confusion", name: "Confusion", desc: "On opponent's next turn, their move is chosen randomly.", rarity: "epic", weight: 2, mode: "instant", effect: "confusion" },
   { id: "counterspell", name: "Counterspell", desc: "Hidden trap: the next enemy spell is cancelled when they cast it.", rarity: "epic", weight: 2, mode: "instant", effect: "counterspell" },
   { id: "deep_freeze", name: "Deep Freeze", desc: "Freeze every enemy on one diagonal through your piece for 2 turns.", rarity: "epic", weight: 2, mode: "friendly", effect: "deep_freeze" },
-  { id: "earthquake", name: "Earthquake", desc: "All pieces shift 1 square toward board center if possible.", rarity: "epic", weight: 2, mode: "instant", effect: "earthquake" },
+  { id: "earthquake", name: "Earthquake", desc: "All pieces shift 1 square toward board center if possible.", rarity: "legendary", weight: 1, mode: "instant", effect: "earthquake" },
   { id: "hostile_swap", name: "Hostile Swap", desc: "Swap one of your pieces with an unshielded enemy.", rarity: "epic", weight: 2, mode: "f_e", effect: "hostile_swap" },
   { id: "purify", name: "Purify", desc: "Remove all shields, debuffs, and buffs from every piece.", rarity: "epic", weight: 2, mode: "instant", effect: "purify" },
   { id: "trickster", name: "Trickster", desc: "Swap the positions of 6 random pieces.", rarity: "epic", weight: 2, mode: "instant", effect: "trickster" },

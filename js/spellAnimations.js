@@ -184,18 +184,21 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
-  if (effect === "fireblast" && p.length >= 2) {
-    const lineSquares = squaresBetween(p[0], p[1]);
-    return finishSpec({
-      type: "kill",
-      visual: "fire",
-      duration: Math.max(MIN_SPELL_ANIM_MS, 1300),
-      label,
-      squares: [p[1]],
-      from: p[0],
-      to: p[1],
-      lineSquares,
-    }, effect);
+  if (effect === "fireblast" && p.length >= 1) {
+    const to = extra.fireblastTo || (p.length >= 2 ? p[1] : null);
+    const lineSquares = extra.fireblastLine || (to ? squaresBetween(p[0], to) : []);
+    if (to) {
+      return finishSpec({
+        type: "kill",
+        visual: "fire",
+        duration: Math.max(MIN_SPELL_ANIM_MS, 1300),
+        label,
+        squares: [to],
+        from: p[0],
+        to,
+        lineSquares,
+      }, effect);
+    }
   }
 
   if (effect === "chain_lightning" && extra.chainSquares?.length) {

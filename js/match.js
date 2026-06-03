@@ -901,6 +901,17 @@ ${starLine}`;
       const [pr, pc] = picks[0];
       extra.chainSquares = getChainLightningAnimSquares(s, pr, pc, this.localColor);
     }
+    if (card.effect === "fireblast" && picks.length) {
+      const [pr, pc] = picks[0];
+      const piece = s.board[pr]?.[pc];
+      if (piece) {
+        const ray = getFireblastRay(s.board, piece);
+        if (ray) {
+          extra.fireblastTo = ray.target;
+          extra.fireblastLine = ray.lineSquares;
+        }
+      }
+    }
     if (card.effect === "coin_flip") {
       const spec = buildAnimSpec(card, [], this.localColor, extra);
       const frame = this.$("board")?.closest(".board-frame");
