@@ -12,6 +12,7 @@ import {
 } from "./auth.js";
 import { upsertProfileRow } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
+import { dismissTutorial } from "./tutorial.js";
 
 const USERNAME_RE = /^[A-Za-z0-9_]{3,24}$/;
 
@@ -94,6 +95,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
   }
 
   function open(modeOverride) {
+    dismissTutorial();
     if (!isAuthAvailable()) {
       setError("Add Supabase anon key in js/supabaseConfig.js");
       modal.classList.remove("hidden");
@@ -251,6 +253,18 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
       }
 
       await signIn(identifier, password);
+      const user = getCurrentUser();
+      if (!user) {
+        setError("Sign-in failed — no session returned. Try again or confirm your email.");
+        return;
+      }
+      try {
+        await pullCloudProfile();
+        onSignedIn?.();
+      } catch (err) {
+        console.warn("Profile sync after sign-in failed", err);
+      }
+      updateHeaderBtn(user);
       close();
     } catch (err) {
       let msg = err?.message || "Authentication failed";

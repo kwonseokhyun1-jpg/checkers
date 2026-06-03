@@ -19,6 +19,11 @@ const STEPS = [
   },
 ];
 
+export function dismissTutorial() {
+  const modal = document.getElementById("tutorial-modal");
+  modal?.classList.add("hidden");
+}
+
 export function shouldShowTutorial(profile) {
   if (profile?.tutorialDone) return false;
   try {
