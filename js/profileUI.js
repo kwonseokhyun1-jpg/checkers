@@ -144,23 +144,31 @@ function accountSectionHtml({ signedIn, username, email }) {
     <div class="profile-account">
       <h3 class="profile-section-title">Account</h3>
       <p class="profile-account__email muted">${escapeHtml(email)}</p>
-      <label class="label-sm" for="profile-username">Username</label>
-      <div class="profile-username-row">
-        <input
-          type="text"
-          id="profile-username"
-          class="input-text"
-          autocomplete="username"
-          minlength="3"
-          maxlength="24"
-          pattern="[A-Za-z0-9_]{3,24}"
-          value="${escapeHtml(username)}"
-          placeholder="Your in-game name"
-        />
-        <button type="button" class="btn-primary" id="profile-username-save">Save</button>
+      <span class="label-sm">Username</span>
+      <div class="profile-username-display" id="profile-username-display-wrap">
+        <span class="profile-account__username" id="profile-username-display">${escapeHtml(username) || "—"}</span>
+        <button type="button" class="btn-secondary profile-username-change-btn" id="profile-username-change">Change username</button>
       </div>
-      <p id="profile-username-hint" class="auth-username-hint" aria-live="polite"></p>
-      <p id="profile-username-status" class="profile-username-status" role="status"></p>
+      <div class="profile-username-edit" id="profile-username-edit" hidden>
+        <label class="label-sm" for="profile-username">New username</label>
+        <div class="profile-username-row">
+          <input
+            type="text"
+            id="profile-username"
+            class="input-text"
+            autocomplete="username"
+            minlength="3"
+            maxlength="24"
+            pattern="[A-Za-z0-9_]{3,24}"
+            value="${escapeHtml(username)}"
+            placeholder="Your in-game name"
+          />
+          <button type="button" class="btn-primary profile-username-save-btn" id="profile-username-save">Save</button>
+        </div>
+        <button type="button" class="btn-secondary profile-username-cancel-btn" id="profile-username-cancel">Cancel</button>
+        <p id="profile-username-hint" class="auth-username-hint" aria-live="polite"></p>
+        <p id="profile-username-status" class="profile-username-status" role="status"></p>
+      </div>
     </div>`;
 }
 
@@ -256,12 +264,44 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
 
   if (!signedIn) return;
 
+  const usernameDisplay = root.querySelector("#profile-username-display");
+  const usernameDisplayWrap = root.querySelector("#profile-username-display-wrap");
+  const usernameEdit = root.querySelector("#profile-username-edit");
+  const changeBtn = root.querySelector("#profile-username-change");
+  const cancelBtn = root.querySelector("#profile-username-cancel");
   const usernameInput = root.querySelector("#profile-username");
   const usernameHint = root.querySelector("#profile-username-hint");
   const usernameStatus = root.querySelector("#profile-username-status");
   const saveBtn = root.querySelector("#profile-username-save");
   let usernameCheckTimer = null;
   let savedUsername = "";
+  let editingUsername = false;
+
+  const setUsernameDisplay = (name) => {
+    if (usernameDisplay) usernameDisplay.textContent = name || "—";
+  };
+
+  const showUsernameView = () => {
+    editingUsername = false;
+    usernameDisplayWrap?.removeAttribute("hidden");
+    usernameEdit?.setAttribute("hidden", "");
+    setHint("");
+    setStatus("");
+    if (usernameInput) usernameInput.value = savedUsername;
+  };
+
+  const showUsernameEdit = () => {
+    editingUsername = true;
+    usernameDisplayWrap?.setAttribute("hidden", "");
+    usernameEdit?.removeAttribute("hidden");
+    if (usernameInput) {
+      usernameInput.value = savedUsername;
+      usernameInput.focus();
+      usernameInput.select();
+    }
+    setStatus("");
+    scheduleUsernameCheck();
+  };
 
   const setHint = (msg, state = "") => {
     if (!usernameHint) return;
@@ -278,6 +318,7 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   };
 
   const scheduleUsernameCheck = () => {
+    if (!editingUsername) return;
     clearTimeout(usernameCheckTimer);
     usernameCheckTimer = setTimeout(async () => {
       const name = usernameInput?.value?.trim() || "";
@@ -320,13 +361,15 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   });
 
   usernameInput?.addEventListener("input", scheduleUsernameCheck);
+  changeBtn?.addEventListener("click", showUsernameEdit);
+  cancelBtn?.addEventListener("click", showUsernameView);
 
   void (async () => {
     try {
       const row = await fetchProfileRow(user.id);
       savedUsername = row?.username || user.user_metadata?.display_name || "";
+      setUsernameDisplay(savedUsername);
       if (usernameInput && savedUsername) usernameInput.value = savedUsername;
-      scheduleUsernameCheck();
     } catch (e) {
       console.warn("Could not load profile username", e);
     }
@@ -339,8 +382,8 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
     try {
       const updated = await updateUsername(name);
       savedUsername = updated;
-      setStatus("Username saved.");
-      setHint("Current username", "ok");
+      setUsernameDisplay(savedUsername);
+      showUsernameView();
       onUsernameChanged?.(updated);
     } catch (e) {
       setStatus(e.message || "Could not save username", true);
