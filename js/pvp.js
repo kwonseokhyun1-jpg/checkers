@@ -34,6 +34,7 @@ export class PvpService {
     this.onMatchRow = null;
     this.onError = null;
     this._lastVersion = -1;
+    this._hadStateJson = false;
     this._pollId = null;
   }
 
@@ -127,6 +128,10 @@ export class PvpService {
     const user = getCurrentUser();
     if (!sb || !user) return [];
 
+    const rpc = await sb.rpc("pvp_list_open_rooms");
+    if (!rpc.error && Array.isArray(rpc.data)) return rpc.data;
+    if (rpc.error && !isMissingRpc(rpc.error)) throw rpc.error;
+
     const { data, error } = await sb
       .from("pvp_matches")
       .select("id, host_id, host_display_name, created_at, status, guest_id")
@@ -140,13 +145,36 @@ export class PvpService {
     return data || [];
   }
 
-  /** @deprecated use listMyWaitingRooms + listOthersWaitingRooms */
-  async listOpenRooms() {
-    const [mine, others] = await Promise.all([
-      this.listMyWaitingRooms(),
-      this.listOthersWaitingRooms(),
-    ]);
-    return [...mine, ...others];
+  async directJoinWaitingRow(matchId, guestDeckIds, displayName) {
+    const sb = getSupabase();
+    const user = getCurrentUser();
+    if (!sb || !user) throw new Error("Sign in to play PvP");
+
+    const { data: updated, error } = await sb
+      .from("pvp_matches")
+      .update({
+        guest_id: user.id,
+        guest_deck_ids: guestDeckIds,
+        guest_display_name: displayName,
+        status: "active",
+        turn: COLORS.RED,
+        version: 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", matchId)
+      .eq("status", "waiting")
+      .is("guest_id", null)
+      .neq("host_id", user.id)
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === "PGRST116") {
+        throw new Error("That room is no longer available.");
+      }
+      throw error;
+    }
+    return updated;
   }
 
   async joinRoomById(matchId, guestDeckIds, displayName) {
@@ -154,19 +182,23 @@ export class PvpService {
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
-    const { data: row, error: findErr } = await sb
-      .from("pvp_matches")
-      .select("*")
-      .eq("id", matchId)
-      .eq("status", "waiting")
-      .is("guest_id", null)
-      .maybeSingle();
+    if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
+      throw new Error("Select a valid 30-card deck first");
+    }
 
-    if (findErr) throw findErr;
-    if (!row) throw new Error("That room is no longer available.");
-    if (row.host_id === user.id) throw new Error("You cannot join your own room");
+    const rpc = await sb.rpc("pvp_join_by_id", {
+      p_match_id: matchId,
+      guest_deck_ids: guestDeckIds,
+      guest_display_name: displayName,
+    });
 
-    return this.joinWaitingRow(row, guestDeckIds, displayName);
+    if (!rpc.error && rpc.data) {
+      return this.finalizeGuestJoin(rpc.data, guestDeckIds);
+    }
+    if (rpc.error && !isMissingRpc(rpc.error)) throw rpc.error;
+
+    const data = await this.directJoinWaitingRow(matchId, guestDeckIds, displayName);
+    return this.finalizeGuestJoin(data, guestDeckIds);
   }
 
   async joinRoom(code, guestDeckIds, displayName) {
@@ -204,28 +236,19 @@ export class PvpService {
       if (findErr) throw findErr;
       if (!row) throw new Error("Room not found or already full.");
       if (row.host_id === user.id) throw new Error("You cannot join your own room");
-
-      const { data: updated, error } = await sb
-        .from("pvp_matches")
-        .update({
-          guest_id: user.id,
-          guest_deck_ids: guestDeckIds,
-          guest_display_name: displayName,
-          status: "active",
-          turn: COLORS.RED,
-          version: 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", row.id)
-        .eq("status", "waiting")
-        .select()
-        .single();
-
-      if (error) throw error;
-      data = updated;
+      return this.joinWaitingRow(row, guestDeckIds, displayName);
     }
 
     return this.finalizeGuestJoin(data, guestDeckIds);
+  }
+
+  /** @deprecated use listMyWaitingRooms + listOthersWaitingRooms */
+  async listOpenRooms() {
+    const [mine, others] = await Promise.all([
+      this.listMyWaitingRooms(),
+      this.listOthersWaitingRooms(),
+    ]);
+    return [...mine, ...others];
   }
 
   async joinWaitingRow(row, guestDeckIds, displayName) {
@@ -250,24 +273,7 @@ export class PvpService {
     } else if (rpc.error && !isMissingRpc(rpc.error)) {
       throw rpc.error;
     } else {
-      const { data: updated, error } = await sb
-        .from("pvp_matches")
-        .update({
-          guest_id: user.id,
-          guest_deck_ids: guestDeckIds,
-          guest_display_name: displayName,
-          status: "active",
-          turn: COLORS.RED,
-          version: 1,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", row.id)
-        .eq("status", "waiting")
-        .select()
-        .single();
-
-      if (error) throw error;
-      data = updated;
+      data = await this.directJoinWaitingRow(row.id, guestDeckIds, displayName);
     }
 
     return this.finalizeGuestJoin(data, guestDeckIds);
@@ -278,13 +284,14 @@ export class PvpService {
     const state = createMatchState(data.host_deck_ids, guestDeckIds);
     state.turn = COLORS.RED;
     const stateJson = serializeMatchState(state);
+    const nextVersion = (data.version ?? 0) + 1;
 
     const { data: ready, error: stateErr } = await sb
       .from("pvp_matches")
       .update({
         state_json: stateJson,
         turn: COLORS.RED,
-        version: 1,
+        version: nextVersion,
         updated_at: new Date().toISOString(),
       })
       .eq("id", data.id)
@@ -315,8 +322,11 @@ export class PvpService {
         (payload) => {
           const row = payload.new;
           if (!row) return;
-          if (row.version <= this._lastVersion && payload.eventType !== "INSERT") return;
+          const versionAdvanced = (row.version ?? 0) > this._lastVersion;
+          const stateArrived = row.state_json && !this._hadStateJson;
+          if (!versionAdvanced && !stateArrived && payload.eventType !== "INSERT") return;
           this._lastVersion = row.version ?? 0;
+          this._hadStateJson = Boolean(row.state_json);
           this.onMatchRow?.(row);
         }
       )
@@ -459,10 +469,13 @@ export function subscribeOpenRooms(onChange) {
 export async function probePvpBackend() {
   const sb = getSupabase();
   if (!sb) return { ok: false, reason: "Supabase not configured" };
-  const { error } = await sb.rpc("pvp_find_waiting_room");
+  const { error } = await sb.rpc("pvp_list_open_rooms");
   if (error && isMissingRpc(error)) {
-    // Join/quick match can still work via RLS after fix_pvp_rls.sql (SELECT policy only).
-    return { ok: true, hint: "Optional: run supabase/fix_pvp_rls.sql for quick-match RPCs." };
+    return {
+      ok: true,
+      rpcsMissing: true,
+      hint: "Run supabase/fix_pvp_rls.sql in the Supabase SQL Editor so open rooms and join work reliably.",
+    };
   }
   if (error) return { ok: false, reason: error.message };
   return { ok: true };

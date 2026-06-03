@@ -132,7 +132,16 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         }
         return;
       }
-      if (probe.hint) console.info("[PvP]", probe.hint);
+      if (probe.rpcsMissing) {
+        const el = root.querySelector("#pvp-status");
+        if (el && !el.textContent) {
+          el.textContent =
+            "PvP database setup incomplete — run supabase/fix_pvp_rls.sql in your Supabase SQL Editor.";
+          el.classList.add("pvp-status--error");
+        }
+      } else if (probe.hint) {
+        console.info("[PvP]", probe.hint);
+      }
     });
   }
 
@@ -304,6 +313,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     matchRoot.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP" });
 
     pvpService._lastVersion = row.version ?? 0;
+    pvpService._hadStateJson = Boolean(row.state_json);
 
     enterMatchMode({ kind: "pvp" });
     matchSession = new MatchSession(
@@ -377,7 +387,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       setStatus("Opening your room…");
       const svc = ensurePvpService();
       const row = await svc.createRoom(deck.cardIds, getDisplayName());
-      renderRoomLists([row], [], getCurrentUser().id);
+      renderRoomLists([row], []);
       setStatus("Room open — waiting under Your rooms.");
       onMatchRow(row);
       void refreshOpenRooms(row);

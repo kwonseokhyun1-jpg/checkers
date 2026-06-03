@@ -87,6 +87,81 @@ $$;
 
 grant execute on function public.pvp_join_by_code(text, jsonb, text, jsonb) to authenticated;
 
+create or replace function public.pvp_list_open_rooms()
+returns table (
+  id uuid,
+  host_id uuid,
+  host_display_name text,
+  created_at timestamptz,
+  status text,
+  guest_id uuid
+)
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select id, host_id, host_display_name, created_at, status, guest_id
+  from public.pvp_matches
+  where status = 'waiting'
+    and guest_id is null
+    and host_id <> auth.uid()
+  order by created_at desc
+  limit 30;
+$$;
+
+grant execute on function public.pvp_list_open_rooms() to authenticated;
+
+create or replace function public.pvp_join_by_id(
+  p_match_id uuid,
+  guest_deck_ids jsonb,
+  guest_display_name text
+)
+returns public.pvp_matches
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  rec public.pvp_matches;
+begin
+  if uid is null then
+    raise exception 'Sign in to join a room';
+  end if;
+
+  select * into rec
+  from public.pvp_matches
+  where id = p_match_id
+    and status = 'waiting'
+    and guest_id is null
+  for update;
+
+  if not found then
+    raise exception 'Room not found or already full';
+  end if;
+  if rec.host_id = uid then
+    raise exception 'You cannot join your own room';
+  end if;
+
+  update public.pvp_matches
+  set
+    guest_id = uid,
+    guest_deck_ids = pvp_join_by_id.guest_deck_ids,
+    guest_display_name = pvp_join_by_id.guest_display_name,
+    status = 'active',
+    turn = 'red',
+    version = 1,
+    updated_at = now()
+  where id = rec.id
+  returning * into rec;
+
+  return rec;
+end;
+$$;
+
+grant execute on function public.pvp_join_by_id(uuid, jsonb, text) to authenticated;
+
 -- Cancel a waiting room you host (works even if DELETE policy is misconfigured)
 create or replace function public.pvp_cancel_room(p_match_id uuid)
 returns void
