@@ -29,12 +29,15 @@ export function getCardHint(card) {
     f_f: "Click two of your pieces.",
     f_e: "Click your piece, then an enemy.",
     f_e_adj: "Click your piece, then an adjacent enemy.",
+    e_e: "Click two enemy pieces to link their fate.",
     e_empty: "Click an enemy, then an empty square.",
     e_e_adj: "Click two adjacent enemies.",
     f_f_adj: "Click two adjacent friendly pieces.",
     diagonal: "Click your piece, then a strike target on its diagonal.",
     any_piece: "Click any piece, then a second piece to copy.",
     any_square: "Click a square on the board.",
+    column: "Tap a file letter (a–h) below the board.",
+    e_e: "Click two enemy pieces to link their fate.",
     empty_empty: "Click two empty dark squares.",
     discard_pick: "Choose a card from your hand to discard.",
   };
@@ -131,6 +134,17 @@ export function getValidTargets(state, color, card, picks) {
     case "e_empty":
       if (picks.length === 0) return getValidTargets(state, color, { mode: "enemy", effect: card.effect }, []);
       return getValidTargets(state, color, { mode: "empty", effect: card.effect }, picks);
+    case "e_e":
+      if (picks.length === 0) return getValidTargets(state, color, { mode: "enemy" }, []);
+      {
+        const [r0, c0] = picks[0];
+        for (let r = 0; r < SIZE; r++)
+          for (let c = 0; c < SIZE; c++) {
+            const p = at(state, r, c);
+            if (p && p.color === o && !(r === r0 && c === c0)) res.push([r, c]);
+          }
+        return res;
+      }
     case "e_e_adj":
     case "f_f_adj":
       if (picks.length === 0) return getValidTargets(state, color, { mode: card.mode === "e_e_adj" ? "enemy" : "friendly" }, []);
@@ -198,11 +212,15 @@ function* pickSequences(state, color, card, max = 24) {
     yield [];
     return;
   }
+  if (card.mode === "column") {
+    for (const p of t0.slice(0, max)) yield [p];
+    return;
+  }
   if (card.mode === "friendly" || card.mode === "enemy" || card.mode === "empty" || card.mode === "any_square") {
     for (const p of t0.slice(0, max)) yield [p];
     return;
   }
-  if (card.mode === "f_f" || card.mode === "e_e_adj" || card.mode === "f_f_adj") {
+  if (card.mode === "f_f" || card.mode === "e_e" || card.mode === "e_e_adj" || card.mode === "f_f_adj") {
     let n = 0;
     for (const a of t0) {
       const t1 = getValidTargets(state, color, card, [a]);

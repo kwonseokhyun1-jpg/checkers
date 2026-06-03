@@ -41,19 +41,44 @@ function swapAt(state, r1, c1, r2, c2) {
   if (a) { a.row = r2; a.col = c2; }
   if (b) { b.row = r1; b.col = c1; }
 }
-function kill(state, r, c, by, nonCap = true) {
+
+function findPieceById(state, id) {
+  for (let r = 0; r < SIZE; r++)
+    for (let c = 0; c < SIZE; c++) {
+      const p = at(state, r, c);
+      if (p && p.id === id) return { p, r, c };
+    }
+  return null;
+}
+
+function clearLinkedFate(p) {
+  if (!p?.linkedFateId) return;
+  p.linkedFateId = null;
+}
+
+function triggerLinkedFate(state, deadPiece, by) {
+  const partnerId = deadPiece?.linkedFateId;
+  if (!partnerId) return;
+  deadPiece.linkedFateId = null;
+  const hit = findPieceById(state, partnerId);
+  if (!hit) return;
+  hit.p.linkedFateId = null;
+  kill(state, hit.r, hit.c, by, false, { linkFate: true });
+}
+
+function kill(state, r, c, by, nonCap = true, opts = {}) {
   const p = at(state, r, c);
   if (!p) return false;
-  if (p.shieldTurns > 0) { p.shieldTurns--; return false; }
-  if (p.king && state.meta.constitutionTurns[p.color] > 0 && nonCap) return false;
-  if (p.lastStand) { p.lastStand = false; p.shieldTurns = 1; return false; }
-  if (p.deflectTurns > 0) {
+  if (!opts.linkFate && p.shieldTurns > 0) { p.shieldTurns--; return false; }
+  if (!opts.linkFate && p.king && state.meta.constitutionTurns[p.color] > 0 && nonCap) return false;
+  if (!opts.linkFate && p.lastStand) { p.lastStand = false; p.shieldTurns = 1; return false; }
+  if (!opts.linkFate && p.deflectTurns > 0) {
     p.deflectTurns = 0;
     const es = enemyPieces(state.board, by);
     if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; removePiece(state.board, t.row, t.col); }
     return false;
   }
-  if (p.mirrorShield) {
+  if (!opts.linkFate && p.mirrorShield) {
     p.mirrorShield = false;
     const es = enemyPieces(state.board, by);
     if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; removePiece(state.board, t.row, t.col); }
@@ -61,8 +86,16 @@ function kill(state, r, c, by, nonCap = true) {
   }
   if (!state.captured[p.color]) state.captured[p.color] = [];
   state.captured[p.color].push({ color: p.color, king: p.king });
+  const partnerId = p.linkedFateId;
   removePiece(state.board, r, c);
   if (p.ghostGuard) getSq(state, r, c).ghostBlock = 2;
+  if (partnerId && !opts.linkFate) {
+    const hit = findPieceById(state, partnerId);
+    if (hit) {
+      hit.p.linkedFateId = null;
+      kill(state, hit.r, hit.c, by, false, { linkFate: true });
+    }
+  }
   return true;
 }
 
@@ -268,6 +301,26 @@ const EFFECTS = {
   queen_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.queenTurns=2; return ok(); },
   demote(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||!p.king) return fail(); p.king=false; return ok(); },
   promote_zone(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.promoteZone=true; return ok(); },
+  link_fate(state, color, picks) {
+    if (picks.length < 2) return fail("Pick two enemies");
+    const [r1, c1] = p0(picks), [r2, c2] = p1(picks);
+    const a = at(state, r1, c1), b = at(state, r2, c2);
+    if (!a || !b || a.color === color || b.color === color) return fail();
+    if (r1 === r2 && c1 === c2) return fail();
+    if (a.linkedFateId) {
+      const old = findPieceById(state, a.linkedFateId);
+      if (old) old.p.linkedFateId = null;
+      a.linkedFateId = null;
+    }
+    if (b.linkedFateId) {
+      const old = findPieceById(state, b.linkedFateId);
+      if (old) old.p.linkedFateId = null;
+      b.linkedFateId = null;
+    }
+    a.linkedFateId = b.id;
+    b.linkedFateId = a.id;
+    return ok("Link Fate — when one falls, the other follows.");
+  },
   clone(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); const adj=getAdjacentEmpty(state.board,p); if(!adj.length) return fail(); const [tr,tc]=adj[0]; const copy=createPiece(color,tr,tc,p.king); copy.bearAwakened=p.bearAwakened; return ok('Clone — duplicate on an adjacent square.'); },
   twin_soul(state, color, picks) { return EFFECTS.clone(state, color, picks); },
   fusion(state, color, picks) { if(picks.length<2) return fail(); const a=at(state,...p0(picks)),b=at(state,...p1(picks)); if(!a||!b||a.color!==color||b.color!==color) return fail(); if(Math.max(Math.abs(a.row-b.row),Math.abs(a.col-b.col))!==1) return fail(); removePiece(state.board,b.row,b.col); a.superMan=3; return ok(); },

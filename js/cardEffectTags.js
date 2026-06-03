@@ -34,6 +34,7 @@ const TAGS = {
   poison_3: ["Enemy dies in 3 turns"],
   deflect_1: ["Next hit reflects to random enemy"],
   clone: ["Duplicate your man on an adjacent square"],
+  link_fate: ["Link two enemies — when one is destroyed, the other dies too"],
 };
 
 const MODE_TAGS = {
@@ -47,6 +48,8 @@ const MODE_TAGS = {
   f_e_adj: ["Your piece, then adjacent enemy"],
   diagonal: ["Your piece, then diagonal strike"],
   discard_pick: ["Choose a card to discard"],
+  e_e: ["Two enemy pieces"],
+  column: ["Pick a board file (a–h)"],
 };
 
 export function getCardEffectTags(def) {
