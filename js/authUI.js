@@ -95,7 +95,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
   }
 
   function open(modeOverride) {
-    dismissTutorial();
+    dismissTutorial({ persist: true });
     if (!isAuthAvailable()) {
       setError("Add Supabase anon key in js/supabaseConfig.js");
       modal.classList.remove("hidden");

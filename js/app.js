@@ -43,7 +43,7 @@ import { openMysteryBox, MYSTERY_BOX_COST } from "./mysteryBox.js";
 import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
-import { initTutorial } from "./tutorial.js";
+import { dismissTutorial, initTutorial } from "./tutorial.js";
 import { initPvpUI } from "./pvpUI.js";
 import { getMatchHtml } from "./matchView.js";
 import { initAuth } from "./auth.js";
@@ -161,6 +161,7 @@ function hideStageModal() {
 }
 
 function showTab(tab) {
+  dismissTutorial({ persist: true, profile, saveProfile });
   activeTab = tab;
   document.querySelectorAll(".tab-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === tab);
@@ -1217,7 +1218,7 @@ function init() {
   const authBtn = document.getElementById("auth-header-btn");
   initTutorial({ profile, saveProfile });
 
-  initAuthUI({
+  const authUI = initAuthUI({
     authBtn,
     modal: authModal,
     onSignedIn: () => {
@@ -1231,7 +1232,7 @@ function init() {
   pvpController = initPvpUI({
     root: document.getElementById("view-pvp"),
     getProfile: () => profile,
-    openAuthModal: () => authModal?.classList.remove("hidden"),
+    openAuthModal: () => authUI.open("signin"),
   });
 
   initAuth().then(async (user) => {
