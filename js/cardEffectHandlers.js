@@ -34,6 +34,31 @@ function enemyCardCanMove(p) {
   return p && !(p.anchored > 0);
 }
 
+/** True when every square strictly between (r1,c1) and (r2,c2) is clear on a diagonal. */
+function diagonalPathClear(state, r1, c1, r2, c2) {
+  const dr = r2 - r1;
+  const dc = c2 - c1;
+  if (!dr && !dc) return false;
+  if (Math.abs(dr) !== Math.abs(dc)) return false;
+  const dist = Math.abs(dr);
+  const stepR = Math.sign(dr);
+  const stepC = Math.sign(dc);
+  for (let i = 1; i < dist; i++) {
+    const r = r1 + stepR * i;
+    const c = c1 + stepC * i;
+    if (blocked(state, r, c) || at(state, r, c)) return false;
+  }
+  return true;
+}
+
+export function callForwardMoveOk(state, er, ec, tr, tc) {
+  const dist = Math.max(Math.abs(tr - er), Math.abs(tc - ec));
+  if (dist < 1 || dist > 2) return false;
+  if (Math.abs(tr - er) !== Math.abs(tc - ec)) return false;
+  if (!emptyDark(state, tr, tc)) return false;
+  return diagonalPathClear(state, er, ec, tr, tc);
+}
+
 function swapAt(state, r1, c1, r2, c2) {
   const a = at(state, r1, c1), b = at(state, r2, c2);
   state.board[r1][c1] = b;
@@ -394,7 +419,16 @@ const EFFECTS = {
   hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
   possession(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||p.king) return fail(); state.meta.possessionId=p.id; state.meta.possessionController=color; return ok('Possession — control that piece when you move this turn.'); },
   identity_theft(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=3; return ok(); },
-  call_forward(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const e=at(state,r1,c1); if(!e||e.color===color||!enemyCardCanMove(e)||!emptyDark(state,r2,c2)) return fail(); if(Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3) return fail(); movePiece(state.board,r1,c1,r2,c2); return ok('Call Forward!'); },
+  call_forward(state, color, picks) {
+    if (picks.length < 2) return fail();
+    const [r1, c1] = p0(picks);
+    const [r2, c2] = p1(picks);
+    const e = at(state, r1, c1);
+    if (!e || e.color === color || !enemyCardCanMove(e)) return fail();
+    if (!callForwardMoveOk(state, r1, c1, r2, c2)) return fail("Path blocked or out of range");
+    movePiece(state.board, r1, c1, r2, c2);
+    return ok("Call Forward!");
+  },
   mirror_move(state, color, picks) { state.meta.mirrorMovePending=color; return ok(); },
   offering(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); state.meta.extraSpellCast[color]=true; state.meta.cardsLeft[color]=(state.meta.cardsLeft[color]||0)+1; return ok("Offering — cast another spell."); },
   parallel(state, color, picks) { state.meta.parallelExtra={...(state.meta.parallelExtra||{}), [color]:true}; state.meta.cardsLeft[color]=2; return ok(); },
