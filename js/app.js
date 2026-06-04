@@ -48,7 +48,7 @@ import { MatchSession } from "./match.js";
 import {
   renderProfileTab,
   renderCosmeticBoxes,
-  renderAchievementsTab,
+  renderQuestsTab,
   headerProfileAvatarHtml,
   resolveDisplayUsername,
 } from "./profileUI.js";
@@ -215,7 +215,7 @@ function showTab(tab) {
     showDeckSubview("list");
   }
   if (tab === "profile") renderProfile();
-  if (tab === "achievements") renderAchievements();
+  if (tab === "quests") renderQuests();
   if (tab === "play") showAdventureMap();
   if (tab === "pvp") pvpController?.render();
 }
@@ -272,8 +272,8 @@ function renderProfile(options = {}) {
   });
 }
 
-function renderAchievements() {
-  renderAchievementsTab(profile, $("view-achievements"), {
+function renderQuests() {
+  renderQuestsTab(profile, $("view-quests"), {
     onTitleChanged: () => updateHeaderProfileBtn(),
   });
 }
@@ -547,7 +547,7 @@ function renderCosmeticsShop() {
     onGemsChange: updateGemHeader,
     onOpened: () => {
       if (activeTab === "profile") renderProfile();
-      if (activeTab === "achievements") renderAchievements();
+      if (activeTab === "quests") renderQuests();
     },
   });
 }
@@ -1679,7 +1679,7 @@ function init() {
       renderStarsShop();
       void refreshHeaderIdentity().then(() => {
         if (activeTab === "profile") renderProfile();
-        if (activeTab === "achievements") renderAchievements();
+        if (activeTab === "quests") renderQuests();
       });
       pvpController?.render();
       showTab(activeTab);
