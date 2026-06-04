@@ -2191,8 +2191,8 @@ body {
 }
 .deck-stack-count {
   position: absolute;
-  bottom: 4px;
-  right: 4px;
+  top: 4px;
+  left: 4px;
   z-index: 2;
   padding: 0.1rem 0.4rem;
   border-radius: 6px;
