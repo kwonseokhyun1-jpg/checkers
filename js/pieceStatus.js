@@ -41,6 +41,7 @@ const CURSE_RULES = [
   { key: "panicTurn", label: "Panic", bool: true },
   { key: "revivedNoCapture", label: "Revived (no capture)", bool: true },
   { key: "berserkNoCapture", label: "Berserk (no capture)", bool: true },
+  { key: "cloneNoCaptureThisTurn", label: "Clone (no move/capture)", bool: true },
 ];
 
 function lineForRule(piece, rule) {
@@ -126,6 +127,7 @@ export function cleansePiece(piece) {
   piece.panicTurn = false;
   piece.revivedNoCapture = false;
   piece.berserkNoCapture = false;
+  piece.cloneNoCaptureThisTurn = false;
 }
 
 export function cleanseAllPieces(board) {
