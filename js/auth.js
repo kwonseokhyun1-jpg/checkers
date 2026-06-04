@@ -78,6 +78,48 @@ export async function isUsernameAvailableForUser(username, exceptUserId) {
   return exceptUserId != null && row.id === exceptUserId;
 }
 
+const USERNAME_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+export function canChangeUsername(row) {
+  const raw = row?.username_changed_at || row?.profile_json?.usernameChangedAt;
+  if (!raw) return { ok: true };
+  const last = new Date(raw).getTime();
+  if (Number.isNaN(last)) return { ok: true };
+  const elapsed = Date.now() - last;
+  if (elapsed >= USERNAME_CHANGE_COOLDOWN_MS) return { ok: true };
+  const hoursLeft = Math.ceil((USERNAME_CHANGE_COOLDOWN_MS - elapsed) / (60 * 60 * 1000));
+  return {
+    ok: false,
+    message: `Username can be changed once per day. Try again in about ${hoursLeft} hour${hoursLeft === 1 ? "" : "s"}.`,
+  };
+}
+
+async function syncAuthDisplayName(name) {
+  const sb = getSupabase();
+  if (!sb) return;
+  const { error } = await sb.auth.updateUser({ data: { display_name: name } });
+  if (error) console.warn("Could not sync auth display name", error);
+}
+
+async function updatePvpDisplayNames(userId, name) {
+  const sb = getSupabase();
+  if (!sb || !userId || !name) return;
+
+  const { error: hostErr } = await sb
+    .from("pvp_matches")
+    .update({ host_display_name: name, updated_at: new Date().toISOString() })
+    .eq("host_id", userId)
+    .in("status", ["waiting", "active"]);
+  if (hostErr) console.warn("Could not update host room names", hostErr);
+
+  const { error: guestErr } = await sb
+    .from("pvp_matches")
+    .update({ guest_display_name: name, updated_at: new Date().toISOString() })
+    .eq("guest_id", userId)
+    .in("status", ["waiting", "active"]);
+  if (guestErr) console.warn("Could not update guest room names", guestErr);
+}
+
 export async function updateUsername(newUsername) {
   const user = getCurrentUser();
   if (!user) throw new Error("Sign in to change your username.");
@@ -86,14 +128,33 @@ export async function updateUsername(newUsername) {
   const formatErr = validateUsernameFormat(name);
   if (formatErr) throw new Error(formatErr);
 
+  const row = await fetchProfileRow(user.id);
+  const current = row?.username || user.user_metadata?.display_name || "";
+  if (current.toLowerCase() === name.toLowerCase()) {
+    return name;
+  }
+
+  const cooldown = canChangeUsername(row);
+  if (!cooldown.ok) throw new Error(cooldown.message);
+
   if (!(await isUsernameAvailableForUser(name, user.id))) {
     throw new Error("That username is already taken.");
   }
 
+  const now = new Date().toISOString();
+  const profileJson =
+    row?.profile_json && typeof row.profile_json === "object"
+      ? { ...row.profile_json, usernameChangedAt: now }
+      : { usernameChangedAt: now };
+
   await upsertProfileRow(user.id, {
     username: name,
     display_name: name,
+    username_changed_at: now,
+    profile_json: profileJson,
   });
+  await syncAuthDisplayName(name);
+  await updatePvpDisplayNames(user.id, name);
   return name;
 }
 
