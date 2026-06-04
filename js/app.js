@@ -142,6 +142,12 @@ function removeOneFromDeck(cardId) {
   renderDeckEditor();
 }
 
+function removeAllFromDeck(cardId) {
+  if (!workingDeck.includes(cardId)) return;
+  workingDeck = workingDeck.filter((id) => id !== cardId);
+  renderDeckEditor();
+}
+
 function autoFinishDeck() {
   const candidates = getPlayableCards()
     .map((def) => ({ def, owned: collectionCount(profile, def.id) }))
@@ -956,7 +962,7 @@ function renderDeckEditor() {
       onClick: () => {
         showCardPreview(def, {
           meta: count > 1 ? `${count} copies in deck` : "In your deck",
-          onRemove: () => removeOneFromDeck(def.id),
+          onRemove: () => removeAllFromDeck(def.id),
         });
       },
     });

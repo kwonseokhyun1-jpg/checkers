@@ -15,7 +15,7 @@ export function closeCardPreview() {
  * @param {object} def — card definition
  * @param {object} [opts]
  * @param {() => void} [opts.onAdd] — deck builder: add to deck
- * @param {() => void} [opts.onRemove] — remove from deck slot
+ * @param {() => void} [opts.onRemove] — remove all copies from deck
  * @param {() => void} [opts.onPlay] — match: cast spell
  * @param {() => void} [opts.onBuy] — inventory: buy a copy
  * @param {boolean} [opts.buyDisabled]
@@ -83,7 +83,7 @@ export function showCardPreview(def, opts = {}) {
       const rem = document.createElement("button");
       rem.type = "button";
       rem.className = "btn-secondary";
-      rem.textContent = "Remove from deck";
+      rem.textContent = "Remove all from deck";
       rem.addEventListener("click", () => {
         opts.onRemove();
         closeCardPreview();
