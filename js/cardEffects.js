@@ -95,6 +95,9 @@ function fEmptyFirstPickTargets(state, color, card) {
   if (card.effect === "blink_2" || card.effect === "teleport") {
     return filter((piece) => getTeleportTargets(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
   }
+  if (card.effect === "displacement") {
+    return filter((piece) => getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
+  }
   if (card.effect === "nudge" || card.effect === "sidestep") {
     return filter((piece) => getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
   }
@@ -227,6 +230,18 @@ export function getValidTargets(state, color, card, picks) {
       const p = at(state, pr, pc);
       if (!p) return [];
       if (card.effect === "forward_bolt") return getAdjacentForwardBoltTarget(state.board, p);
+      if (card.effect === "deep_freeze") {
+        const targets = [];
+        for (const [dr, dc] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+          for (let i = -7; i <= 7; i++) {
+            if (!i) continue;
+            const er = pr + dr * i, ec = pc + dc * i;
+            const t = at(state, er, ec);
+            if (t && t.color !== color) targets.push([er, ec]);
+          }
+        }
+        return targets;
+      }
       return getBoltTarget(state.board, p);
     }
     case "any_piece":

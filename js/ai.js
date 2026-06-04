@@ -38,6 +38,27 @@ export function pickBestMove(board, color, state) {
   return best;
 }
 
+export function applyAiLogEntry(state, entry, color) {
+  if (entry.type === "spell" && !entry.countered) {
+    const def = entry.cardId ? getCardDef(entry.cardId) : null;
+    const card = {
+      id: entry.cardId || def?.id,
+      name: entry.cardName || def?.name,
+      effect: entry.cardEffect || def?.effect,
+      mode: entry.cardMode || def?.mode,
+    };
+    if (card.effect) applyCard(state, color, card, entry.picks || []);
+    return;
+  }
+  if (entry.type === "move") {
+    applyMove(
+      state.board,
+      { from: entry.from, to: entry.to, captures: entry.captures || [], type: entry.moveKind || "step" },
+      state
+    );
+  }
+}
+
 /**
  * Run AI turn; returns a replay log for the UI.
  * @returns {Array<{type: string, [key: string]: unknown}>}

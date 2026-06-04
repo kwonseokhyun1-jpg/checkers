@@ -15,6 +15,7 @@ export function createMatchMeta() {
     pendingRegicide: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingConduct: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     counterspell: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    deflectTrap: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     confuseNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     shatterSilenceNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
@@ -65,14 +66,20 @@ export function revealMine(sq) {
   delete sq.hiddenMine;
 }
 
-export function placeHiddenQuicksand(sq, owner) {
-  sq.hiddenQuicksand = { owner };
+export const QUICKSAND_DURATION_TURNS = 4;
+
+export function placeHiddenQuicksand(sq, owner, turnsLeft = QUICKSAND_DURATION_TURNS) {
+  sq.hiddenQuicksand = { owner, turnsLeft };
 }
 
 export function tickMineDurability(state, ownerColor) {
   if (!state?.squares || !ownerColor) return;
   for (const sq of Object.values(state.squares)) {
     if (!sq) continue;
+    if (sq.hiddenQuicksand?.owner === ownerColor && sq.hiddenQuicksand.turnsLeft != null) {
+      sq.hiddenQuicksand.turnsLeft -= 1;
+      if (sq.hiddenQuicksand.turnsLeft <= 0) delete sq.hiddenQuicksand;
+    }
     if (sq.hiddenMine?.owner === ownerColor && sq.hiddenMine.turnsLeft != null) {
       sq.hiddenMine.turnsLeft -= 1;
       if (sq.hiddenMine.turnsLeft <= 0) delete sq.hiddenMine;
@@ -127,8 +134,6 @@ export function startTurnMeta(state, color) {
   state.meta.parallelExtra = state.meta.parallelExtra || {};
   state.meta.parallelExtra[color] = false;
   state.meta.movementCardPlayed[color] = false;
-  state.meta.optionalJumps[color] = false;
-  state.meta.dominionTurn[color] = false;
   state.meta.extraSpellCast[color] = false;
   state.meta.bearBonusUsed = state.meta.bearBonusUsed || { [COLORS.RED]: false, [COLORS.BLACK]: false };
   state.meta.bearBonusUsed[color] = false;

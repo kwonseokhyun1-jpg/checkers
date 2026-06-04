@@ -276,7 +276,15 @@ function showDeckSubview(sub) {
   }
 
   if (sub === "list") renderDeckList();
-  if (sub === "edit") renderDeckEditor();
+  if (sub === "edit") {
+    renderDeckEditor();
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      $("deck-subview-edit")?.scrollTo?.(0, 0);
+    });
+  }
 }
 
 

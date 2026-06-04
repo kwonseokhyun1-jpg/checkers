@@ -5180,3 +5180,63 @@ body.adventure-stage-open {
   align-items: center;
   justify-content: space-between;
 }
+
+.has-hidden-quicksand { box-shadow: inset 0 0 0 2px #d4a57488; }
+.quicksand-indicator {
+  position: absolute;
+  inset: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 2;
+}
+.piece--clone::after {
+  content: "⧉";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  font-size: 0.6rem;
+  opacity: 0.9;
+}
+.piece.revived-wings::before {
+  content: "🪽";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.65rem;
+}
+.pvp-intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(8, 10, 20, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pvp-intro-fade 2.8s ease forwards;
+}
+.pvp-intro-card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+}
+.pvp-intro-side { text-align: center; min-width: 120px; }
+.pvp-intro-banner {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 0.5rem;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+.pvp-intro-name { font-size: 1.25rem; font-weight: 700; margin: 0; }
+.pvp-intro-vs { font-size: 2rem; opacity: 0.5; margin: 0; }
+@keyframes pvp-intro-fade {
+  0%, 75% { opacity: 1; }
+  100% { opacity: 0; visibility: hidden; }
+}

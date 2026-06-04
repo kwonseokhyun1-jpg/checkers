@@ -15,6 +15,8 @@ import {
   findPressExtraPiece,
 } from "./board.js";
 import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed } from "./gameMeta.js";
+import { runScheduledClearsWithBoard } from "./turnDuration.js";
+import { serializeMatchState } from "./pvp.js";
 import {
   initCardState,
   isInstant,
@@ -23,7 +25,7 @@ import {
   playInstant,
   applyCard,
 } from "./cardEffects.js";
-import { runAiTurn } from "./ai.js";
+import { runAiTurn, applyAiLogEntry } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
 import { renderSpellCardEl } from "./cardArt.js";
@@ -144,7 +146,9 @@ export class MatchSession {
     this.actionBusy = false;
     this._aiTurnPending = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
+    this.pvpIntro = options.pvpIntro || null;
     this.bindEls();
+    if (this.isPvp && this.pvpIntro) void this.playPvpIntro();
     if (!(options.initialState && this.isPvp)) {
       this.beginPlayerTurn();
     }
@@ -218,6 +222,7 @@ export class MatchSession {
       s.turn === this.localColor &&
       s.phase === PHASE.CARDS &&
       !s.gameOver &&
+      !s.meta.blindNext?.[this.localColor] &&
       !s.spellPlayed[this.localColor] &&
       !s.meta.shatterSilenced?.[this.localColor] &&
       !this.actionBusy &&
@@ -252,6 +257,27 @@ export class MatchSession {
       infoEl.classList.add("hidden");
       infoEl.innerHTML = "";
     }
+  }
+
+  async playPvpIntro() {
+    const overlay = document.createElement("div");
+    overlay.className = "pvp-intro-overlay";
+    const local = this.pvpIntro?.local || { name: "You", banner: "" };
+    const foe = this.pvpIntro?.opponent || { name: this.opponentName, banner: "" };
+    overlay.innerHTML = `<div class="pvp-intro-card">
+      <div class="pvp-intro-side pvp-intro-side--you">
+        ${local.banner ? `<img class="pvp-intro-banner" src="${local.banner}" alt="" />` : ""}
+        <p class="pvp-intro-name">${local.name}</p>
+      </div>
+      <p class="pvp-intro-vs">VS</p>
+      <div class="pvp-intro-side pvp-intro-side--foe">
+        ${foe.banner ? `<img class="pvp-intro-banner" src="${foe.banner}" alt="" />` : ""}
+        <p class="pvp-intro-name">${foe.name}</p>
+      </div>
+    </div>`;
+    this.root.appendChild(overlay);
+    await delay(2800);
+    overlay.remove();
   }
 
   setMessage(text) {
@@ -298,13 +324,10 @@ export class MatchSession {
     this.selectedColumn = null;
     this.selectedRow = null;
     this.endDrag();
-    if (
-      this.isPvp &&
-      !nextState.gameOver &&
-      prevTurn !== this.localColor &&
-      nextState.turn === this.localColor
-    ) {
-      this.beginPlayerTurn();
+    if (this.isPvp && !nextState.gameOver && nextState.turn === this.localColor) {
+      const tn = nextState.turnNumber?.[this.localColor] ?? 0;
+      const localTn = this.state.turnNumber?.[this.localColor] ?? 0;
+      if (tn > localTn) this.beginPlayerTurn();
     }
     this.updateSpellCastUI();
     this.render();
@@ -475,7 +498,11 @@ export class MatchSession {
       return;
     }
     picks.push([row, col]);
-    const need = picksRequired(card);
+    let need = picksRequired(card);
+    if (card.effect === "displacement" && picks.length === 2 && displacementCanPickSecond(this.state, this.localColor, picks)) {
+      need = 4;
+      this.setMessage(`${card.name} — move a second piece, or tap End spell phase after the first move.`);
+    }
     if (picks.length < need) {
       this.validTargets = getValidTargets(this.state, this.localColor, card, picks);
       this.selectedSquare = picks[picks.length - 1];
@@ -828,9 +855,11 @@ export class MatchSession {
       this.state.meta.mindControlId = null;
       this.state.meta.mindControlController = null;
     }
+    runScheduledClearsWithBoard(this.state.meta, this.state.board, this.localColor);
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
     if (this.isPvp) {
+      this.beginTurn(this.opponentColor);
       this.setMessage("Waiting for opponent…");
       this.render();
       this.pushPvpState();
@@ -1196,7 +1225,8 @@ ${starLine}`;
     this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
   }
 
-  async replayAiLog(log) {
+  async replayAiLog(log, opts = {}) {
+    const s = this.state;
     const aiLog = this.$("ai-action-log");
     if (aiLog) aiLog.innerHTML = "";
 
@@ -1260,6 +1290,7 @@ ${starLine}`;
             COLORS.BLACK
           );
           await this.runSpellAnimation(spec);
+          if (opts.apply) applyAiLogEntry(s, entry, this.opponentColor);
         }
 
         this.$("board")?.classList.remove("board--ai-spell");
@@ -1279,6 +1310,7 @@ ${starLine}`;
         this.setMessage(entry.text);
         this.render();
         await delay(AI_PACE.move);
+        if (opts.apply) applyAiLogEntry(s, entry, this.opponentColor);
         this.aiHighlight = null;
     this.cullAnimation = null;
     this.spellAnimation = null;
@@ -1325,8 +1357,10 @@ ${starLine}`;
     this.setMessage(`${this.opponentName} is acting…`);
     this.render();
 
+    const snapshot = serializeMatchState(s);
     const log = runAiTurn(s, this.opponentName);
-    await this.replayAiLog(log);
+    Object.assign(s, JSON.parse(JSON.stringify(snapshot)));
+    await this.replayAiLog(log, { apply: true });
 
     if (s.boardFx) {
       await new Promise((resolve) => this.playBoardFx(s, resolve));
@@ -1360,6 +1394,12 @@ ${starLine}`;
     if (!moves.length) {
       this.setMessage("No moves — turn passes.");
       this.endHumanTurn();
+      return;
+    }
+    if (s.meta.confuseNext?.[this.localColor]) {
+      s.meta.confuseNext[this.localColor] = false;
+      this.setMessage("Confusion — your move was chosen at random!");
+      this.executeHumanMove(moves[Math.floor(Math.random() * moves.length)]);
       return;
     }
     this.setMessage("Spell skipped — select a piece to move.");
@@ -1440,6 +1480,7 @@ ${starLine}`;
         const terrain = s.squares[key];
         let cls = `square ${isDarkSquare(row, col) ? "dark" : "light"}`;
         if (terrain?.mine && !terrain?.hiddenMine) cls += " has-mine";
+        if (terrain?.hiddenQuicksand?.owner === this.localColor) cls += " has-hidden-quicksand";
         if (terrain?.quicksand && !terrain?.hiddenQuicksand) cls += " has-quicksand";
         if (terrain?.barrier?.turnsLeft > 0) cls += " has-barrier";
         if (terrain?.sanctuary && terrain?.sanctuaryTurns > 0) cls += " has-sanctuary";
@@ -1450,6 +1491,14 @@ ${starLine}`;
         if (zonePreview.darkness.has(key)) cls += " darkness-zone-preview";
         if (isSquareCollapsed(s.meta, row, col)) cls += " square--collapsed";
         sq.className = cls;
+
+        if (terrain?.hiddenQuicksand?.owner === this.localColor) {
+          const qs = document.createElement("div");
+          qs.className = "quicksand-indicator";
+          qs.setAttribute("aria-label", "Your quicksand trap");
+          qs.textContent = "🏜";
+          sq.appendChild(qs);
+        }
 
         if (terrain?.barrier?.turnsLeft > 0) {
           const barrierEl = document.createElement("div");
@@ -1587,6 +1636,8 @@ ${starLine}`;
           if (piece.vengeanceTurns > 0) el.classList.add("vengeance-mark");
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
+          if (piece.revivedWingsThisTurn) el.classList.add("revived-wings");
+          if (piece.isClone) el.classList.add("piece--clone");
           if (piece.venom > 0) el.classList.add("poisoned");
           if (piece.blazeTurns > 0) el.classList.add("burning");
           if (

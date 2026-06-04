@@ -325,7 +325,17 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         localColor,
         initialState: row.state_json,
         opponentName,
-        cosmetics: getEquippedCosmetics(profile),
+        cosmetics,
+        pvpIntro: {
+          local: {
+            name: getDisplayName(),
+            banner: bannerUrl(cosmetics?.equipped?.banner),
+          },
+          opponent: {
+            name: opponentName,
+            banner: "",
+          },
+        },
         onStateSync: async (state) => {
           const v = pvpService._lastVersion;
           const updated = await pvpService.pushState(state, v);
