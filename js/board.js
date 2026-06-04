@@ -147,9 +147,34 @@ export function setPiece(board, row, col, piece) {
   board[row][col] = piece;
 }
 
-export function removePiece(board, row, col, { force = false } = {}) {
+function removeLinkedFatePartner(board, state, deadPiece) {
+  const partnerId = deadPiece?.linkedFateId;
+  if (!partnerId) return;
+  deadPiece.linkedFateId = null;
+  for (let lr = 0; lr < SIZE; lr++) {
+    for (let lc = 0; lc < SIZE; lc++) {
+      const lp = board[lr][lc];
+      if (lp && lp.id === partnerId) {
+        lp.linkedFateId = null;
+        if (state) {
+          if (!state.captured[lp.color]) state.captured[lp.color] = [];
+          state.captured[lp.color].push({ king: lp.king });
+        }
+        board[lr][lc] = null;
+        return;
+      }
+    }
+  }
+}
+
+export function removePiece(board, row, col, { force = false, state = null } = {}) {
   const p = board[row][col];
   if (p?.cloneNoCaptureThisTurn && !force) return false;
+  if (p && state) {
+    if (!state.captured[p.color]) state.captured[p.color] = [];
+    state.captured[p.color].push({ king: p.king });
+    if (p.linkedFateId) removeLinkedFatePartner(board, state, p);
+  }
   board[row][col] = null;
   return true;
 }
@@ -338,11 +363,11 @@ export function getAllMovesForColor(board, color, state = null) {
   return steps;
 }
 
-/** Mind control: enemy piece moves and captures using the controller's color rules. */
+/** Mind control: enemy piece moves in all diagonals and captures normally. */
 export function getMovesForMindControl(board, piece, controllerColor, state = null) {
-  const acting = { ...piece, color: controllerColor };
-  const jumps = getJumpMoves(board, acting, controllerColor, state);
-  const steps = getStepMoves(board, acting, controllerColor, state);
+  const acting = { ...piece, king: true, slowed: 0 };
+  const jumps = getJumpMoves(board, acting, piece.color, state);
+  const steps = getStepMoves(board, acting, piece.color, state);
   if (state?.meta?.optionalJumps?.[controllerColor]) return jumps.length ? jumps : steps;
   if (jumps.length > 0) return jumps;
   return steps;
@@ -508,11 +533,11 @@ export function tickEffects(board, color, state = null) {
       dec("deflectTurns");
       if (p.venom > 0) {
         p.venom--;
-        if (p.venom <= 0) removePiece(board, r, c);
+        if (p.venom <= 0) removePiece(board, r, c, { state });
       }
       if (p.blazeTurns > 0) {
         p.blazeTurns--;
-        if (p.blazeTurns <= 0) removePiece(board, r, c);
+        if (p.blazeTurns <= 0) removePiece(board, r, c, { state });
       }
       if (p.panicTurn) { p.panicTurn = false; }
       if (p.promoteZone) p.promoteZone = false;

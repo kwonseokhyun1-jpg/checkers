@@ -101,13 +101,13 @@ function kill(state, r, c, by, nonCap = true, opts = {}) {
   if (!opts.linkFate && p.deflectTurns > 0) {
     p.deflectTurns = 0;
     const es = enemyPieces(state.board, by);
-    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; removePiece(state.board, t.row, t.col); }
+    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; kill(state, t.row, t.col, by); }
     return false;
   }
   if (!opts.linkFate && p.mirrorShield) {
     p.mirrorShield = false;
     const es = enemyPieces(state.board, by);
-    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; removePiece(state.board, t.row, t.col); }
+    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; kill(state, t.row, t.col, by); }
     return false;
   }
   if (!state.captured[p.color]) state.captured[p.color] = [];
