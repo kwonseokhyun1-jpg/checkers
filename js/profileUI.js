@@ -247,24 +247,27 @@ function bindAchievementsGrid(profile, grid, { onTitleChanged } = {}) {
   }
 }
 
-export function renderAchievementsTab(profile, root, { onTitleChanged } = {}) {
+export function renderQuestsTab(profile, root, { onTitleChanged } = {}) {
   if (!root) return;
   root.innerHTML = `
-    <section class="panel game-panel achievements-panel">
+    <section class="panel game-panel quests-panel">
       <header class="panel-head panel-head--compact">
-        <h2 class="panel-head__title">Achievements</h2>
-        <p class="panel-head__desc">Complete challenges to unlock mage titles.</p>
+        <h2 class="panel-head__title">Quests</h2>
+        <p class="panel-head__desc">Complete quests to unlock mage titles.</p>
       </header>
-      <div id="achievements-grid" class="profile-achievement-grid"></div>
+      <div id="quests-grid" class="profile-achievement-grid"></div>
     </section>`;
-  bindAchievementsGrid(profile, root.querySelector("#achievements-grid"), { onTitleChanged });
+  bindAchievementsGrid(profile, root.querySelector("#quests-grid"), { onTitleChanged });
 }
+
+/** @deprecated Use renderQuestsTab */
+export const renderAchievementsTab = renderQuestsTab;
 
 export function headerProfileAvatarHtml(profile, username = "") {
   const cos = getEquippedCosmetics(profile);
   const initial = (username || "P").charAt(0).toUpperCase();
   const inner = renderAvatarPreview(cos.equipped.avatar) || `<span class="profile-avatar-fallback">${escapeHtml(initial)}</span>`;
-  return `<span class="header-profile-btn__stack profile-avatar-stack ${frameClassFor(cos.equipped.frame)}"><span class="header-profile-btn__inner profile-avatar-inner">${inner}</span></span>`;
+  return `<span class="profile-avatar-stack header-profile-btn__stack ${frameClassFor(cos.equipped.frame)}"><span class="profile-avatar-inner header-profile-btn__inner">${inner}</span></span>`;
 }
 
 export async function resolveDisplayUsername(user) {
@@ -300,7 +303,7 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
         <div id="profile-cosmetic-grid" class="profile-cosmetic-grid"></div>
       </div>
       <div id="profile-section-titles" class="profile-section-panel hidden" hidden>
-        <p class="muted profile-titles-hint">Unlock titles by completing achievements, then tap to equip.</p>
+        <p class="muted profile-titles-hint">Unlock titles by completing quests, then tap to equip.</p>
         <div id="profile-title-grid" class="profile-title-grid"></div>
       </div>
       <div id="profile-section-account" class="profile-section-panel hidden" hidden>
