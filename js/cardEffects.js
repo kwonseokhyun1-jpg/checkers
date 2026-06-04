@@ -4,7 +4,7 @@
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget } from "./board.js";
 import { collapsedSquareKey } from "./gameMeta.js";
 import { sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, chainLightningCanTarget } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
 export { applyCard, applyEffect };
@@ -36,6 +36,7 @@ export function getCardHint(card) {
     f_f_adj: "Click two adjacent friendly pieces.",
     diagonal: "Click your piece, then a strike target on its diagonal.",
     any_piece: "Click any piece, then a second piece to copy.",
+    snowball_hint: "Click any piece to freeze it.",
     any_square: "Click a square on the board.",
     column: "Tap a file letter (a–h) below the board.",
     row: "Tap a rank number (1–8) beside the board.",
@@ -47,6 +48,7 @@ export function getCardHint(card) {
     return "Hidden trap — cancels their next spell when they cast it.";
   }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
+  if (card.effect === "snowball") return hints.snowball_hint;
   return hints[card.mode] || "Click valid targets on the board.";
 }
 
@@ -54,10 +56,15 @@ function at(state, r, c) {
   return state.board[r]?.[c] ?? null;
 }
 
-function emptyDark(state, r, c) {
+function squareBlocked(state, r, c) {
   const k = sk(r, c);
-  if (collapsedSquareKey(state.meta) === k) return false;
-  if (state.squares[k]?.obstacle) return false;
+  if (collapsedSquareKey(state.meta) === k) return true;
+  if (state.squares[k]?.obstacle) return true;
+  return false;
+}
+
+function emptyDark(state, r, c) {
+  if (squareBlocked(state, r, c)) return false;
   return isDarkSquare(r, c) && !at(state, r, c);
 }
 
@@ -94,6 +101,21 @@ function fEmptyFirstPickTargets(state, color, card) {
   }
   if (card.effect === "blink_2" || card.effect === "teleport") {
     return filter((piece) => getTeleportTargets(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
+  }
+  if (card.effect === "berserk") {
+    const enemyBack = color === COLORS.RED ? [0, 1, 2] : [5, 6, 7];
+    return filter((_piece, r, c) => {
+      for (let rr = 0; rr < SIZE; rr++) {
+        for (let cc = 0; cc < SIZE; cc++) {
+          if (enemyBack.includes(rr)) continue;
+          if (!isDarkSquare(rr, cc) || squareBlocked(state, rr, cc)) continue;
+          const t = at(state, rr, cc);
+          if (t && t.color === color) continue;
+          return true;
+        }
+      }
+      return false;
+    });
   }
   if (card.effect === "nudge" || card.effect === "sidestep") {
     return filter((piece) => getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
@@ -182,6 +204,20 @@ export function getValidTargets(state, color, card, picks) {
         }
         return spots;
       }
+      if (card.effect === "berserk") {
+        const enemyBack = color === COLORS.RED ? [0, 1, 2] : [5, 6, 7];
+        const spots = [];
+        for (let r = 0; r < SIZE; r++) {
+          for (let c = 0; c < SIZE; c++) {
+            if (enemyBack.includes(r)) continue;
+            if (!isDarkSquare(r, c) || squareBlocked(state, r, c)) continue;
+            const t = at(state, r, c);
+            if (t && t.color === color) continue;
+            spots.push([r, c]);
+          }
+        }
+        return spots;
+      }
       return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
     }
     case "f_f":
@@ -230,6 +266,13 @@ export function getValidTargets(state, color, card, picks) {
       return getBoltTarget(state.board, p);
     }
     case "any_piece":
+      if (card.effect === "snowball") {
+        if (picks.length === 0) {
+          for (let r = 0; r < SIZE; r++)
+            for (let c = 0; c < SIZE; c++) if (at(state, r, c)) res.push([r, c]);
+        }
+        return res;
+      }
       if (picks.length === 0) {
         for (let r = 0; r < SIZE; r++)
           for (let c = 0; c < SIZE; c++) if (at(state, r, c)) res.push([r, c]);
@@ -245,10 +288,7 @@ export function getValidTargets(state, color, card, picks) {
           if (emptyDark(state, r, c)) res.push([r, c]);
       if (card.effect === "call_forward" && picks.length === 1) {
         const [er, ec] = picks[0];
-        return res.filter(([r, c]) => {
-          const dist = Math.max(Math.abs(r - er), Math.abs(c - ec));
-          return dist > 0 && dist <= 3;
-        });
+        return res.filter(([r, c]) => callForwardMoveOk(state, er, ec, r, c));
       }
       return res;
     }
@@ -313,6 +353,10 @@ function* pickSequences(state, color, card, max = 24) {
         if (++n >= max) return;
       }
     }
+    return;
+  }
+  if (card.mode === "any_piece" && card.effect === "snowball") {
+    for (const p of t0.slice(0, max)) yield [p];
   }
 }
 

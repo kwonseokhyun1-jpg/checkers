@@ -40,7 +40,10 @@ const CURSE_RULES = [
   { key: "hunterMark", label: "Hunter's Mark", bool: true },
   { key: "panicTurn", label: "Panic", bool: true },
   { key: "revivedNoCapture", label: "Revived (no capture)", bool: true },
+  { key: "berserkNoCapture", label: "Berserk (no capture)", bool: true },
   { key: "isClone", label: "Clone (fragile)", bool: true },
+  { key: "cloneNoCaptureThisTurn", label: "Clone (no move/capture)", bool: true },
+  { key: "mindControlDeathTurns", label: "Mind controlled (dies)", turns: true },
 ];
 
 function lineForRule(piece, rule) {
@@ -125,6 +128,9 @@ export function cleansePiece(piece) {
   piece.retreatTurns = 0;
   piece.panicTurn = false;
   piece.revivedNoCapture = false;
+  piece.berserkNoCapture = false;
+  piece.cloneNoCaptureThisTurn = false;
+  piece.mindControlDeathTurns = 0;
 }
 
 export function cleanseAllPieces(board) {

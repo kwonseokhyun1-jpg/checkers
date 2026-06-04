@@ -1,6 +1,8 @@
 /** Keep adventure matches alive when switching tabs / backgrounding the app. */
 
 const CHECKPOINT_KEY = "cc_match_checkpoint";
+/** Discard checkpoints older than 24 hours. */
+const CHECKPOINT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 let checkpointMeta = null;
 
@@ -13,14 +15,19 @@ export function enterMatchMode(meta) {
   document.body.classList.add("match-active");
 }
 
-export function exitMatchMode() {
-  checkpointMeta = null;
-  document.body.classList.remove("match-active");
+export function clearMatchCheckpoint() {
   try {
     sessionStorage.removeItem(CHECKPOINT_KEY);
   } catch {
     /* ignore */
   }
+}
+
+/** @param {{ clearCheckpoint?: boolean }} [options] */
+export function exitMatchMode(options = {}) {
+  checkpointMeta = null;
+  document.body.classList.remove("match-active");
+  if (options.clearCheckpoint) clearMatchCheckpoint();
 }
 
 export function saveMatchCheckpoint(session) {
@@ -46,11 +53,16 @@ export function readMatchCheckpoint() {
     if (!raw) return null;
     const cp = JSON.parse(raw);
     if (!cp?.state || cp.state.gameOver || cp.kind !== "adventure") {
-      sessionStorage.removeItem(CHECKPOINT_KEY);
+      clearMatchCheckpoint();
+      return null;
+    }
+    if (cp.savedAt && Date.now() - cp.savedAt > CHECKPOINT_MAX_AGE_MS) {
+      clearMatchCheckpoint();
       return null;
     }
     return cp;
   } catch {
+    clearMatchCheckpoint();
     return null;
   }
 }

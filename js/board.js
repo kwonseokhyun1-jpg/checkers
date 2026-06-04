@@ -113,7 +113,9 @@ export function createPiece(color, row, col, king = false) {
     twinId: null,
     chameleonFrom: null,
     chameleonTurns: 0,
+    mindControlDeathTurns: 0,
     revivedNoCapture: false,
+    berserkNoCapture: false,
     paralyzedTurns: 0,
     vengeanceTurns: 0,
     hibernationTurns: 0,
@@ -129,11 +131,7 @@ export function createPiece(color, row, col, king = false) {
 export function destroyPieceIfClone(board, state, row, col) {
   const p = board[row][col];
   if (!p?.isClone) return false;
-  if (state) {
-    if (!state.captured[p.color]) state.captured[p.color] = [];
-    state.captured[p.color].push({ king: p.king });
-  }
-  removePiece(board, row, col, { force: true });
+  removePiece(board, row, col, { force: true, state });
   return true;
 }
 
@@ -184,9 +182,34 @@ export function setPiece(board, row, col, piece) {
   board[row][col] = piece;
 }
 
-export function removePiece(board, row, col, { force = false } = {}) {
+function removeLinkedFatePartner(board, state, deadPiece) {
+  const partnerId = deadPiece?.linkedFateId;
+  if (!partnerId) return;
+  deadPiece.linkedFateId = null;
+  for (let lr = 0; lr < SIZE; lr++) {
+    for (let lc = 0; lc < SIZE; lc++) {
+      const lp = board[lr][lc];
+      if (lp && lp.id === partnerId) {
+        lp.linkedFateId = null;
+        if (state) {
+          if (!state.captured[lp.color]) state.captured[lp.color] = [];
+          state.captured[lp.color].push({ king: lp.king });
+        }
+        board[lr][lc] = null;
+        return;
+      }
+    }
+  }
+}
+
+export function removePiece(board, row, col, { force = false, state = null } = {}) {
   const p = board[row][col];
   if (p?.cloneNoCaptureThisTurn && !force) return false;
+  if (p && state) {
+    if (!state.captured[p.color]) state.captured[p.color] = [];
+    state.captured[p.color].push({ king: p.king });
+    if (p.linkedFateId) removeLinkedFatePartner(board, state, p);
+  }
   board[row][col] = null;
   return true;
 }
@@ -235,7 +258,7 @@ function squareBlocked(state, r, c, moverColor = null) {
 const KNIGHT_OFFSETS = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
 
 export function getKnightMoves(board, piece, state, canCapture = false) {
-  if (piece.revivedNoCapture || piece.cloneNoCaptureThisTurn) canCapture = false;
+  if (piece.revivedNoCapture || piece.cloneNoCaptureThisTurn || piece.berserkNoCapture) canCapture = false;
   const moves = [];
   for (const [dr, dc] of KNIGHT_OFFSETS) {
     const nr = piece.row + dr, nc = piece.col + dc;
@@ -282,6 +305,7 @@ export function forwardDirs(piece, dominion = false) {
 
 export function getStepMoves(board, piece, color, state = null) {
   const moves = [];
+  if (piece.cloneNoCaptureThisTurn) return moves;
   if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
   const dom = state?.meta?.dominionTurn?.[color];
 
@@ -323,7 +347,8 @@ export function getStepMoves(board, piece, color, state = null) {
 
 export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
-  if (piece.revivedNoCapture || piece.cloneNoCaptureThisTurn) return moves;
+  if (piece.cloneNoCaptureThisTurn) return moves;
+  if (piece.revivedNoCapture || piece.berserkNoCapture) return moves;
   if (piece.reverseOnlyTurns > 0 || piece.noCaptureTurns > 0) return moves;
   if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.rooted > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
   if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
@@ -374,7 +399,6 @@ export function getAllMovesForColor(board, color, state = null) {
   if (jumps.length > 0) return jumps;
   return steps;
 }
-
 
 function explodeBombAt(board, state, row, col) {
   const victims = [];
@@ -535,15 +559,20 @@ export function tickEffects(board, color, state = null) {
       dec("deflectTurns");
       if (p.venom > 0) {
         p.venom--;
-        if (p.venom <= 0) removePiece(board, r, c, { force: p.isClone });
+        if (p.venom <= 0) removePiece(board, r, c, { state, force: p.isClone });
       }
       if (p.blazeTurns > 0) {
         p.blazeTurns--;
-        if (p.blazeTurns <= 0) removePiece(board, r, c, { force: p.isClone });
+        if (p.blazeTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
+      }
+      if (p.mindControlDeathTurns > 0) {
+        p.mindControlDeathTurns--;
+        if (p.mindControlDeathTurns <= 0) removePiece(board, r, c, { state });
       }
       if (p.panicTurn) { p.panicTurn = false; }
       if (p.promoteZone) p.promoteZone = false;
       if (p.revivedNoCapture) p.revivedNoCapture = false;
+      if (p.berserkNoCapture) p.berserkNoCapture = false;
       if (p.rustedTurns > 0) {
         p.rustedTurns--;
         if (p.rustedTurns <= 0) {

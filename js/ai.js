@@ -1,5 +1,6 @@
 import { COLORS, getAllMovesForColor, applyMove, countPieces, squareName, findPressExtraPiece } from "./board.js";
 import { tryAutoPlay, canAiPlay } from "./cardEffects.js";
+import { tryConsumeCounterspell } from "./gameMeta.js";
 
 function scoreBoard(board, aiColor) {
   const human = aiColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;

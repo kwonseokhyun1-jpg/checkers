@@ -41,6 +41,7 @@ import { pickCoinFlipVictim } from "./cardEffectHandlers.js";
 import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells } from "./cardEffectHandlers.js";
 import { isInDarknessZone } from "./gameMeta.js";
+import { saveMatchCheckpoint, clearMatchCheckpoint } from "./matchLifecycle.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -60,8 +61,6 @@ const AI_PACE = {
   explosion: 1000,
 };
 
-
-
 const TWO_PICK_MODES = new Set([
   "f_empty",
   "f_f",
@@ -76,6 +75,12 @@ const TWO_PICK_MODES = new Set([
   "empty_empty",
 ]);
 
+export function isPvpTerminalBoard(state, localColor) {
+  if (!state?.board) return false;
+  const opp = localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  return countPieces(state.board, localColor) === 0 || countPieces(state.board, opp) === 0;
+}
+
 export function createMatchState(playerDeckIds, aiDeckIds = null) {
   const state = {
     board: createInitialBoard(),
@@ -89,6 +94,8 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
     turnNumber: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     spellPlayed: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
+    pvpSpellSeq: 0,
+    pvpLastSpell: null,
   };
   initCardState(state);
   initDeckPiles(state, playerDeckIds, aiDeckIds || buildAiDeck());
@@ -98,6 +105,7 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
 }
 
 function picksRequired(card) {
+  if (card.effect === "snowball") return 1;
   return TWO_PICK_MODES.has(card.mode) ? 2 : 1;
 }
 
@@ -112,10 +120,13 @@ export class MatchSession {
     this.isPvp = !!options.pvp;
     this.localColor = options.localColor ?? COLORS.RED;
     this.opponentColor = this.localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+    /** In PvP, black (guest) sees the board from their side — pieces advance toward them. */
+    this.boardFlipped = this.isPvp && this.localColor === COLORS.BLACK;
     this.opponentName = options.opponentName || "Opponent";
     this.onStateSync = options.onStateSync ?? null;
     this.onPvpWin = options.onPvpWin ?? null;
     this._syncBusy = false;
+    this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
     if (options.initialState) {
       this.state = options.initialState;
     } else {
@@ -141,6 +152,7 @@ export class MatchSession {
     this.selectedColumn = null;
     this.selectedRow = null;
     this.actionBusy = false;
+    this._gameOverUiShown = false;
     this._aiTurnPending = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.bindEls();
@@ -178,7 +190,10 @@ export class MatchSession {
     this.root.querySelector("#btn-end-cards")?.addEventListener("click", () => this.beginMovePhase());
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
     this.root.querySelector("#btn-leave-match")?.addEventListener("click", () => {
-      if (window.confirm("Leave this match? Your progress is saved — you can resume when you return.")) this.onExit?.();
+      if (window.confirm("Leave this match? Your progress is saved — you can resume when you return.")) {
+        saveMatchCheckpoint(this);
+        this.onExit?.();
+      }
     });
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
     this._onDocPointerMove = (e) => this.onDragMove(e);
@@ -219,11 +234,32 @@ export class MatchSession {
       !s.gameOver &&
       !s.spellPlayed[this.localColor] &&
       !s.meta.shatterSilenced?.[this.localColor] &&
+      !s.meta.blindNext?.[this.localColor] &&
       !this.actionBusy &&
       !this.cardPlay
     );
   }
 
+  consumeBlindIfNeeded(color) {
+    const s = this.state;
+    if (!s.meta.blindNext?.[color]) return false;
+    s.meta.blindNext[color] = false;
+    if (color === this.localColor) {
+      this.setMessage("You are blinded — spells skipped this turn.");
+    }
+    return true;
+  }
+
+  pickConfusedMove(color) {
+    const s = this.state;
+    if (!s.meta.confuseNext?.[color]) return null;
+    s.meta.confuseNext[color] = false;
+    const pool = getAllMovesForColor(s.board, color, s);
+    if (!pool.length) return null;
+    const move = pool[Math.floor(Math.random() * pool.length)];
+    if (color === this.localColor) this.setMessage("Confusion — random move!");
+    return move;
+  }
 
   showPieceInfo(piece, row, col) {
     const infoEl = this.$("piece-info");
@@ -289,7 +325,16 @@ export class MatchSession {
   importState(nextState) {
     if (!nextState || this.actionBusy || this._syncBusy) return;
     const prevTurn = this.state?.turn;
+    const prevSpellSeq = this.state?.pvpLastSpell?.seq ?? this._lastPvpSpellSeq ?? 0;
+    const incomingSpell = nextState.pvpLastSpell;
+    const replaySpell =
+      this.isPvp &&
+      incomingSpell &&
+      incomingSpell.seq > prevSpellSeq &&
+      incomingSpell.caster === this.opponentColor;
+
     this.state = nextState;
+    if (incomingSpell?.seq) this._lastPvpSpellSeq = incomingSpell.seq;
     this.cardPlay = null;
     this.validTargets = [];
     this.validMoves = [];
@@ -306,15 +351,52 @@ export class MatchSession {
       this.beginPlayerTurn();
     }
     this.updateSpellCastUI();
+    this.applyPvpOutcomeFromBoard();
     this.render();
+    if (replaySpell) void this.replayOpponentPvpSpell(incomingSpell);
+  }
+
+  async replayOpponentPvpSpell(spell) {
+    if (this.actionBusy) return;
+    this.actionBusy = true;
+    try {
+      await this.replayAiLog([
+        {
+          type: "spell",
+          cardName: spell.cardName,
+          cardId: spell.cardId,
+          cardDesc: spell.cardDesc,
+          cardEffect: spell.cardEffect,
+          cardMode: spell.cardMode,
+          picks: spell.picks || [],
+          countered: !!spell.countered,
+        },
+      ]);
+    } finally {
+      this.actionBusy = false;
+      this.render();
+    }
+  }
+
+  applyPvpOutcomeFromBoard() {
+    if (!this.isPvp || this._gameOverUiShown) return;
+    if (!isPvpTerminalBoard(this.state, this.localColor)) return;
+    if (countPieces(this.state.board, this.opponentColor) === 0) {
+      void this.showGameOver("Victory!", "You won the match!");
+      return;
+    }
+    void this.showGameOver("Defeat", "You lost the match.");
   }
 
   pushPvpState() {
-    if (!this.isPvp || !this.onStateSync || this._syncBusy) return;
+    if (!this.isPvp || !this.onStateSync) return Promise.resolve();
+    if (this._syncBusy) return this._syncPromise ?? Promise.resolve();
     this._syncBusy = true;
-    Promise.resolve(this.onStateSync(this.state)).finally(() => {
+    this._syncPromise = Promise.resolve(this.onStateSync(this.state)).finally(() => {
       this._syncBusy = false;
+      this._syncPromise = null;
     });
+    return this._syncPromise;
   }
 
   removeCardFromHand(card) {
@@ -364,6 +446,7 @@ export class MatchSession {
     this.updateSpellCastUI();
     this.setMessage(msg || "Spell played (1 per turn).");
     this.render();
+    if (this.checkWin()) return;
     this.pushPvpState();
   }
 
@@ -484,6 +567,10 @@ export class MatchSession {
     }
     void this.resolveTargetedSpell(card, [...picks]).then((res) => {
       if (!res.success) {
+        if (res.countered) {
+          this.finalizeCounteredSpell(card, res.message);
+          return;
+        }
         picks.pop();
         this.setMessage(res.message);
         this.validTargets = getValidTargets(this.state, this.localColor, card, picks);
@@ -664,14 +751,9 @@ export class MatchSession {
     const piece = s.board[row][col];
     if (piece) this.showPieceInfo(piece, row, col);
 
-    const possessed =
-      piece &&
-      s.meta.possessionId === piece.id &&
-      s.meta.possessionController === this.localColor &&
-      s.turn === this.localColor;
-    if (piece && (piece.color === this.localColor || possessed)) {
+    if (piece && piece.color === this.localColor) {
       this.selectedSquare = [row, col];
-      this.validMoves = getAllMovesForColor(s.board, piece.color, s).filter(
+      this.validMoves = getAllMovesForColor(s.board, this.localColor, s).filter(
         (m) => m.from[0] === row && m.from[1] === col
       );
       if (!this.validMoves.length) {
@@ -700,7 +782,10 @@ export class MatchSession {
   }
 
   continueMultiJump(fromR, fromC) {
-    const jumps = getAllMovesForColor(this.state.board, this.localColor, this.state).filter(
+    const s = this.state;
+    const piece = s.board[fromR]?.[fromC];
+    const movePool = getAllMovesForColor(s.board, this.localColor, s);
+    const jumps = movePool.filter(
       (m) => m.type === "jump" && m.from[0] === fromR && m.from[1] === fromC && m.captures?.length
     );
     if (!jumps.length) return false;
@@ -756,6 +841,10 @@ export class MatchSession {
 
   executeHumanMove(move) {
     const s = this.state;
+    if (s.turn === this.localColor && s.meta.confuseNext?.[this.localColor]) {
+      const forced = this.pickConfusedMove(this.localColor);
+      if (forced) move = forced;
+    }
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
     s.meta.lastMove.red = move;
@@ -812,12 +901,9 @@ export class MatchSession {
     if (this.checkWin()) return;
     tickEndTurnEffects(this.state.board, this.localColor, this.state);
     tickMeta(this.state, this.localColor);
-    if (this.state.meta.possessionController === this.localColor) {
-      this.state.meta.possessionId = null;
-      this.state.meta.possessionController = null;
-    }
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
+    if (!this.isPvp) saveMatchCheckpoint(this);
     if (this.isPvp) {
       this.setMessage("Waiting for opponent…");
       this.render();
@@ -849,8 +935,18 @@ export class MatchSession {
   }
 
   async showGameOver(title, text) {
+    if (this._gameOverUiShown) return;
+    this._gameOverUiShown = true;
     this.state.gameOver = title;
+    if (!this.isPvp) clearMatchCheckpoint();
     const won = title.startsWith("Victory");
+    if (this.isPvp) {
+      try {
+        await this.pushPvpState();
+      } catch {
+        /* opponent may still resolve outcome from board or finished row */
+      }
+    }
     let displayText = text;
     let stars = 0;
     if (won && !this.isPvp) {
@@ -895,11 +991,11 @@ ${starLine}`;
         await playStarCollectAnimation(n, starsEl);
       }
     }
-    if (this.isPvp && this.state.gameOver) {
-      const won = title.startsWith("Victory");
+    if (this.isPvp) {
       this.onPvpWin?.(won);
     }
     this.cancelCardPlay();
+    this.actionBusy = false;
     this.render();
   }
 
@@ -1020,11 +1116,30 @@ ${starLine}`;
     if (banner) banner.classList.remove("cull-casting");
   }
 
+  finalizeCounteredSpell(card, message) {
+    this.removeCardFromHand(card);
+    if (!this.state.meta.extraSpellCast?.[this.localColor]) {
+      this.state.spellPlayed[this.localColor] = true;
+    } else {
+      this.state.meta.extraSpellCast[this.localColor] = false;
+    }
+    this.cardPlay = null;
+    this.validTargets = [];
+    this.selectedSquare = null;
+    this.selectedColumn = null;
+    this.selectedRow = null;
+    this.endDrag();
+    this.updateSpellCastUI();
+    this.setMessage(message || "Enemy Counterspell! Your spell fizzles.");
+    this.render();
+    this.pushPvpState();
+  }
+
   async applySpellWithAnimation(card, picks) {
     const countered = tryConsumeCounterspell(this.state, this.localColor);
     if (countered) {
       await this.runCounterspellReveal();
-      return { success: false, message: "Enemy Counterspell! Your spell fizzles." };
+      return { success: false, countered: true, message: "Enemy Counterspell! Your spell fizzles." };
     }
 
     if (card.effect === "cull") {
@@ -1132,7 +1247,8 @@ ${starLine}`;
     try {
       const res = await this.applySpellWithAnimation(card, []);
       if (!res.success) {
-        this.setMessage(res.message || "Spell failed.");
+        if (res.countered) this.finalizeCounteredSpell(card, res.message);
+        else this.setMessage(res.message || "Spell failed.");
         return;
       }
       this.removeCardFromHand(card);
@@ -1143,6 +1259,7 @@ ${starLine}`;
       } else {
         this.setMessage(res.message || "Spell cast.");
       }
+      this.recordPvpSpell(card, []);
       if (this.checkWin()) return;
       this.render();
       this.pushPvpState();
@@ -1334,6 +1451,7 @@ ${starLine}`;
 
     s.turn = this.localColor;
     s.phase = PHASE.CARDS;
+    saveMatchCheckpoint(this);
     this.beginPlayerTurn();
     this.setMessage("Your turn — cast a spell or select a piece to move.");
     this.render();
@@ -1344,6 +1462,11 @@ ${starLine}`;
     if (s.gameOver || s.turn !== this.localColor) return;
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
+    const confused = this.pickConfusedMove(this.localColor);
+    if (confused) {
+      this.executeHumanMove(confused);
+      return;
+    }
     const moves = getAllMovesForColor(s.board, this.localColor, s);
     if (!moves.length) {
       this.setMessage("No moves — turn passes.");
@@ -1377,7 +1500,7 @@ ${starLine}`;
     if (!handEl) return;
     handEl.innerHTML = "";
     const s = this.state;
-    const n = s.hands.red.length;
+    const n = s.hands[this.localColor].length;
     if (countLabel) {
       countLabel.textContent = n === 1 ? "1 card in hand" : `${n} cards in hand`;
     }
@@ -1386,7 +1509,7 @@ ${starLine}`;
     const castingId = this.cardPlay?.card?.instanceId;
     handEl.classList.toggle("spell-hand--locked", !canPlay);
 
-    for (const card of s.hands.red) {
+    for (const card of s.hands[this.localColor]) {
       const playable =
         canPlay && (isInstant(card) || getValidTargets(s, this.localColor, card, []).length > 0);
       const el = renderSpellCardEl(card, {
@@ -1402,7 +1525,7 @@ ${starLine}`;
     const opp = this.$("hand-black");
     if (opp) {
       opp.innerHTML = "";
-      for (let i = 0; i < s.hands.black.length; i++) {
+      for (let i = 0; i < s.hands[this.opponentColor].length; i++) {
         const div = document.createElement("div");
         div.className = "card-mini";
         div.textContent = "?";
@@ -1414,6 +1537,8 @@ ${starLine}`;
   renderBoard() {
     const boardEl = this.$("board");
     if (!boardEl) return;
+    const boardFrame = this.root.querySelector("#board-frame");
+    boardFrame?.classList.toggle("board-frame--local-flipped", this.boardFlipped);
     boardEl.innerHTML = "";
     const s = this.state;
     const zonePreview = this.getZonePreviewSets();
@@ -1569,6 +1694,8 @@ ${starLine}`;
           if (piece.paralyzedTurns > 0) el.classList.add("paralyzed-mark");
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
+          if (piece.bishopTurns > 0) el.classList.add("bishop-mark");
+          if (piece.rookTurns > 0) el.classList.add("rook-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
@@ -1576,6 +1703,7 @@ ${starLine}`;
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (piece.isClone) el.classList.add("clone-mark");
+          if (piece.berserkNoCapture) el.classList.add("berserk-mark");
           if (piece.venom > 0) el.classList.add("poisoned");
           if (piece.blazeTurns > 0) el.classList.add("burning");
           if (
@@ -1651,6 +1779,62 @@ ${starLine}`;
             fire.appendChild(bar);
             sq.appendChild(fire);
           }
+          if (piece.bishopTurns > 0) {
+            const bishop = document.createElement("div");
+            bishop.className = "bishop-indicator";
+            bishop.setAttribute(
+              "aria-label",
+              `Bishop's Mark — ${piece.bishopTurns} turn${piece.bishopTurns === 1 ? "" : "s"} left`
+            );
+            const mark = document.createElement("span");
+            mark.className = "bishop-indicator__mark";
+            mark.textContent = "♗";
+            mark.setAttribute("aria-hidden", "true");
+            const bar = document.createElement("div");
+            bar.className = "bishop-indicator__bar";
+            bar.setAttribute("role", "meter");
+            bar.setAttribute("aria-label", `Bishop's Mark — ${piece.bishopTurns} turns left`);
+            bar.setAttribute("aria-valuenow", String(piece.bishopTurns));
+            bar.setAttribute("aria-valuemin", "0");
+            bar.setAttribute("aria-valuemax", "2");
+            for (let i = 0; i < 2; i++) {
+              const block = document.createElement("span");
+              block.className =
+                "bishop-indicator__block" + (i < piece.bishopTurns ? " bishop-indicator__block--filled" : "");
+              bar.appendChild(block);
+            }
+            bishop.appendChild(mark);
+            bishop.appendChild(bar);
+            sq.appendChild(bishop);
+          }
+          if (piece.rookTurns > 0) {
+            const rook = document.createElement("div");
+            rook.className = "rook-indicator";
+            rook.setAttribute(
+              "aria-label",
+              `Rook's Mark — ${piece.rookTurns} turn${piece.rookTurns === 1 ? "" : "s"} left`
+            );
+            const mark = document.createElement("span");
+            mark.className = "rook-indicator__mark";
+            mark.textContent = "♜";
+            mark.setAttribute("aria-hidden", "true");
+            const bar = document.createElement("div");
+            bar.className = "rook-indicator__bar";
+            bar.setAttribute("role", "meter");
+            bar.setAttribute("aria-label", `Rook's Mark — ${piece.rookTurns} turns left`);
+            bar.setAttribute("aria-valuenow", String(piece.rookTurns));
+            bar.setAttribute("aria-valuemin", "0");
+            bar.setAttribute("aria-valuemax", "2");
+            for (let i = 0; i < 2; i++) {
+              const block = document.createElement("span");
+              block.className =
+                "rook-indicator__block" + (i < piece.rookTurns ? " rook-indicator__block--filled" : "");
+              bar.appendChild(block);
+            }
+            rook.appendChild(mark);
+            rook.appendChild(bar);
+            sq.appendChild(rook);
+          }
         } else if (
           this.cullAnimation &&
           this.cullAnimation.row === row &&
@@ -1674,7 +1858,7 @@ ${starLine}`;
     if (banner) {
       if (s.gameOver) banner.textContent = "Game over";
       else if (s.turn === this.localColor) {
-        const spellNote = s.meta.shatterSilenced?.red
+        const spellNote = s.meta.shatterSilenced?.[this.localColor]
           ? "No spells (Shatter backlash) · "
           : s.spellPlayed[this.localColor]
             ? "Spell used · "
@@ -1699,7 +1883,15 @@ ${starLine}`;
     this.updateSpellCastUI();
     this.updateColumnPickUI();
     this.updateRowPickUI();
+    this.updatePlayerPanels();
     this.renderHand();
     this.renderBoard();
+  }
+
+  updatePlayerPanels() {
+    const youIcon = this.root.querySelector(".panel-player .piece-icon");
+    if (youIcon) youIcon.className = `piece-icon ${this.localColor}`;
+    const oppIcon = this.root.querySelector(".panel-opponent .piece-icon");
+    if (oppIcon) oppIcon.className = `piece-icon ${this.opponentColor}`;
   }
 }

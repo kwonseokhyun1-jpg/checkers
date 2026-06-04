@@ -24,8 +24,6 @@ export function createMatchMeta() {
     dominionTurn: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     prospectPending: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     constitutionTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
-    possessionId: null,
-    possessionController: null,
     forcedCapturePieceId: null,
     lastCard: { [COLORS.RED]: null, [COLORS.BLACK]: null },
     lastMove: { [COLORS.RED]: null, [COLORS.BLACK]: null },
@@ -163,8 +161,11 @@ export function tickMeta(state, color) {
 }
 
 export function tryConsumeCounterspell(state, casterColor) {
+  if (!state.meta.counterspell) {
+    state.meta.counterspell = { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  }
   const trapOwner = casterColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
-  if (!state.meta.counterspell?.[trapOwner]) return null;
+  if (!state.meta.counterspell[trapOwner]) return null;
   state.meta.counterspell[trapOwner] = false;
   return { trapOwner };
 }

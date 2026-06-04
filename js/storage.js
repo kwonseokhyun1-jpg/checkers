@@ -9,9 +9,12 @@ const LEGACY_STORAGE_KEY = "cardCheckersProfile_v5";
 export const STARTING_GEMS = 400;
 export const STARTING_STARS = 0;
 export const TESTING_STARS = 30;
-/** Testing grant — applied on each profile load for now */
-export const TESTING_GEMS = 4000;
+/** @deprecated Use STARTING_GEMS — kept for migration only */
+export const TESTING_GEMS = STARTING_GEMS;
 export const WIN_GEMS = 10;
+/** One-time grant applied to every profile (local + cloud via grant_gems_1000.sql). */
+export const GEMS_BONUS_1000_FLAG = "gemsGrant1000_v1";
+export const GEMS_BONUS_1000 = 1000;
 
 /** Starter / beginner deck: 3× each curated common until 30 cards (10 × 3). */
 export const STARTER_COPIES_PER_CARD = 3;
@@ -60,7 +63,7 @@ function defaultProfile() {
   };
 
   return {
-    gems: TESTING_GEMS,
+    gems: STARTING_GEMS,
     stars: TESTING_STARS,
     collection,
     decks: [starterDeck],
@@ -255,7 +258,7 @@ function normalizeLoadedProfile(parsed) {
   migrateAdventureDecks(stub);
 
   return {
-    gems: typeof parsed.gems === "number" ? parsed.gems : TESTING_GEMS,
+    gems: typeof parsed.gems === "number" ? parsed.gems : STARTING_GEMS,
     stars: typeof parsed.stars === "number" ? parsed.stars : STARTING_STARS,
     collection: parsed.collection && typeof parsed.collection === "object" ? parsed.collection : {},
     decks: Array.isArray(parsed.decks) ? parsed.decks : [],

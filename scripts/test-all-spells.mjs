@@ -20,7 +20,7 @@ import {
   applyVenomToPiece,
   applyBurnToPiece,
 } from "../js/board.js";
-import { createMatchMeta } from "../js/gameMeta.js";
+import { createMatchMeta, tryConsumeCounterspell } from "../js/gameMeta.js";
 import { initCardState } from "../js/cardEffects.js";
 
 const handlerKeys = new Set(
@@ -149,6 +149,10 @@ function uiPickCombos(state, card, limit = 64) {
   const combos = [];
   const t0 = getValidTargets(state, COLOR, card, []);
   if (card.mode === "instant" || card.mode === "discard_pick") return [[]];
+  if (card.effect === "snowball") {
+    for (const p of t0.slice(0, limit)) combos.push([p]);
+    return combos;
+  }
   if (["friendly", "enemy", "empty", "any_square", "column", "row"].includes(card.mode)) {
     for (const p of t0.slice(0, limit)) combos.push([p]);
     return combos;
@@ -197,7 +201,7 @@ for (const card of cards) {
     row.status = "warn";
     row.notes.push("Works with correct picks but UI/AI targeting cannot find a valid play");
   }
-  if (card.mode === "column" || card.mode === "row", "row" || card.mode === "f_e_adj") {
+  if (card.mode === "column" || card.mode === "row" || card.mode === "f_e_adj") {
     const autoWorks = setups.some((mk) => { try { return tryAutoPlay(mk(), card).success; } catch { return false; } });
     if (!autoWorks) row.notes.push(`tryAutoPlay omits ${card.mode} targeting`);
   }
@@ -290,9 +294,20 @@ for (const card of cards) {
   const res = applyCard(s, COLOR, fusionCard, [[5, 0], [4, 1]]);
   if (!res.success) throw new Error("Fusion manual test failed: " + res.message);
   const survivor = at(s, 5, 0);
-  if (!survivor || survivor.superMan !== 3) throw new Error("Fusion should leave superMan=3 on survivor");
+  if (!survivor || !survivor.bearAwakened) throw new Error("Fusion should grant bearAwakened on survivor");
+  if (survivor.superMan) throw new Error("Fusion should not use superMan leap");
   if (at(s, 4, 1)) throw new Error("Fusion should remove second piece");
-  console.log("Fusion test: OK (superMan=3, second piece removed)");
+  console.log("Fusion test: OK (bearAwakened, second piece removed)");
+}
+
+// Counterspell trap
+{
+  const s = baseState();
+  s.meta.counterspell[COLOR] = true;
+  const trapped = tryConsumeCounterspell(s, OPP);
+  if (!trapped || trapped.trapOwner !== COLOR) throw new Error("Counterspell should trigger for opponent cast");
+  if (s.meta.counterspell[COLOR]) throw new Error("Counterspell trap should be consumed");
+  console.log("Counterspell test: OK");
 }
 
 // Backstep UI targeting check

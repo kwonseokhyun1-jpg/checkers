@@ -197,6 +197,22 @@ body {
   border-radius: 6px;
 }
 
+/* PvP: guest (black) sees the board from their side — your pieces advance toward you */
+.board-frame--local-flipped {
+  transform: rotate(180deg);
+}
+.board-frame--local-flipped .piece,
+.board-frame--local-flipped .board-file-btn,
+.board-frame--local-flipped .board-rank-btn,
+.board-frame--local-flipped .barrier-indicator,
+.board-frame--local-flipped .sanctuary-indicator,
+.board-frame--local-flipped .shield-indicator,
+.board-frame--local-flipped .poison-indicator,
+.board-frame--local-flipped .fire-indicator,
+.board-frame--local-flipped .fire-tile-indicator {
+  transform: rotate(180deg);
+}
+
 .board-frame {
   background: #262421;
   border: 1px solid #4a4845;
@@ -452,6 +468,96 @@ body {
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 }
 
+
+.bishop-indicator {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.bishop-indicator__mark {
+  font-size: clamp(0.45rem, 2.4vw, 0.62rem);
+  line-height: 1;
+  color: #e9d5ff;
+  text-shadow: 0 0 4px rgba(159, 122, 234, 0.85);
+}
+
+.bishop-indicator__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.bishop-indicator__block {
+  width: clamp(5px, 2.2vw, 7px);
+  height: clamp(5px, 2.2vw, 7px);
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(196, 181, 253, 0.25);
+}
+
+.bishop-indicator__block--filled {
+  background: linear-gradient(180deg, #e9d5ff 0%, #7c3aed 100%);
+  border-color: rgba(196, 181, 253, 0.9);
+  box-shadow: 0 0 4px rgba(159, 122, 234, 0.75);
+}
+
+.piece.bishop-mark {
+  box-shadow:
+    0 0 0 2px rgba(159, 122, 234, 0.75),
+    0 0 10px rgba(124, 58, 237, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.rook-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.rook-indicator__mark {
+  font-size: clamp(0.45rem, 2.4vw, 0.62rem);
+  line-height: 1;
+  color: #bfdbfe;
+  text-shadow: 0 0 4px rgba(59, 130, 246, 0.85);
+}
+
+.rook-indicator__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.rook-indicator__block {
+  width: clamp(5px, 2.2vw, 7px);
+  height: clamp(5px, 2.2vw, 7px);
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(147, 197, 253, 0.25);
+}
+
+.rook-indicator__block--filled {
+  background: linear-gradient(180deg, #bfdbfe 0%, #2563eb 100%);
+  border-color: rgba(147, 197, 253, 0.9);
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.75);
+}
+
+.piece.rook-mark {
+  box-shadow:
+    0 0 0 2px rgba(59, 130, 246, 0.75),
+    0 0 10px rgba(37, 99, 235, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
 
 .shield-indicator {
   position: absolute;

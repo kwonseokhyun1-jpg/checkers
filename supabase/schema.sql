@@ -5,6 +5,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   username text unique,
   display_name text,
+  username_changed_at timestamptz,
   profile_json jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -161,8 +162,7 @@ $$;
 
 grant execute on function public.email_for_login(text) to anon, authenticated;
 
--- PvP join RPCs (bypass RLS for room discovery)
- (work even before SELECT policy is fixed)
+-- PvP join RPCs (bypass RLS for room discovery; work even before SELECT policy is fixed)
 create or replace function public.pvp_find_waiting_room()
 returns text
 language sql

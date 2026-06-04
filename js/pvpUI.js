@@ -1,7 +1,7 @@
-import { getCurrentUser, isAuthAvailable } from "./auth.js";
+import { fetchProfileRow, getCurrentUser, isAuthAvailable } from "./auth.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { COLORS } from "./board.js";
-import { MatchSession } from "./match.js";
+import { MatchSession, isPvpTerminalBoard } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
@@ -218,11 +218,17 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     return profile.decks.find((d) => d.id === id);
   }
 
-  function getDisplayName() {
+  async function getDisplayName() {
     const user = getCurrentUser();
-    return (
-      user?.user_metadata?.display_name || user?.email?.split("@")[0] || "Player"
-    );
+    if (!user) return "Player";
+    try {
+      const row = await fetchProfileRow(user.id);
+      const fromProfile = row?.username || row?.display_name;
+      if (fromProfile && String(fromProfile).trim()) return String(fromProfile).trim();
+    } catch {
+      /* fall through */
+    }
+    return user.user_metadata?.display_name || user.email?.split("@")[0] || "Player";
   }
 
   function opponentNameFromRow(row) {
@@ -267,18 +273,31 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       return;
     }
 
-    if (matchSession && row.status === "active" && row.state_json) {
+    if (matchSession && row.state_json && (row.status === "active" || row.status === "finished")) {
       const ver = row.version ?? 0;
-      if (ver <= (pvpService?._lastVersion ?? -1)) return;
-      if (matchSession.actionBusy || matchSession._syncBusy) return;
+      const terminal = isPvpTerminalBoard(row.state_json, pvpService.localColor);
+      const finished = row.status === "finished";
+      if (!finished && ver <= (pvpService?._lastVersion ?? -1)) return;
+      if ((matchSession.actionBusy || matchSession._syncBusy) && !terminal && !finished) return;
+      if (terminal || finished) matchSession.actionBusy = false;
       const isMyTurn = row.turn === pvpService.localColor;
       const opponentName = opponentNameFromRow(row);
       matchSession.opponentName = opponentName;
       matchSession.importState(row.state_json);
-      pvpService._lastVersion = ver;
-      matchSession.setMessage(
-        isMyTurn ? "Your turn — cast a spell or move." : `${opponentName} is acting…`
-      );
+      if (ver > (pvpService?._lastVersion ?? -1)) pvpService._lastVersion = ver;
+      if (!matchSession._gameOverUiShown && finished && row.winner_id) {
+        const user = getCurrentUser();
+        const won = user?.id === row.winner_id;
+        void matchSession.showGameOver(
+          won ? "Victory!" : "Defeat",
+          won ? "You won the match!" : "You lost the match."
+        );
+      }
+      if (!matchSession._gameOverUiShown) {
+        matchSession.setMessage(
+          isMyTurn ? "Your turn — cast a spell or move." : `${opponentName} is acting…`
+        );
+      }
       return;
     }
 
@@ -380,7 +399,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     try {
       setStatus("Opening your room…");
       const svc = ensurePvpService();
-      const row = await svc.createRoom(deck.cardIds, getDisplayName());
+      const row = await svc.createRoom(deck.cardIds, await await getDisplayName());
       renderRoomLists([row], [], getCurrentUser().id);
       setStatus("Room open — waiting under Your rooms.");
       onMatchRow(row);
@@ -411,7 +430,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       setStatus("Joining match…");
       stopOpenRoomsSync();
       const svc = ensurePvpService();
-      const row = await svc.joinRoomById(matchId, deck.cardIds, getDisplayName());
+      const row = await svc.joinRoomById(matchId, deck.cardIds, await getDisplayName());
       onMatchRow(row);
     } catch (e) {
       setStatus(e.message || "Could not join room", true);

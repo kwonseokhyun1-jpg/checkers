@@ -66,6 +66,12 @@ function ring(x, y, r) {
   return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.55"/>`;
 }
 
+function tickMarks(x, y, count, size = 5, gap = 6) {
+  return Array.from({ length: count }, (_, i) =>
+    `<rect x="${x + i * gap}" y="${y}" width="${size}" height="${size}" rx="1" fill="currentColor" opacity="0.75"/>`
+  ).join("");
+}
+
 /** @type {Record<string, (variant: number) => string>} */
 export const EFFECT_ILLUSTRATIONS = {
   nudge: () => wrap(`${piece(18, 42)} ${ghost(36, 28)} ${arrow(24, 38, 32, 32)}`),
@@ -117,6 +123,8 @@ export const EFFECT_ILLUSTRATIONS = {
   root_2: () => wrap(`${enemy(32, 28, 6)}<path d="M24 40 C28 34 36 34 40 40 M26 44 C30 38 34 38 38 44" stroke="currentColor" stroke-width="1.8" fill="none" opacity="0.65"/>`),
   panic: () => wrap(`${enemy(32, 26, 6)} ${arrow(32, 32, 32, 46)}<path d="M26 48 L32 42 L38 48" stroke="currentColor" stroke-width="1.6" fill="none"/>`),
   blizzard: () => wrap(`<path d="M12 32 H52" stroke="currentColor" stroke-width="2" opacity="0.45"/>${enemy(22, 32, 3)}${enemy(32, 32, 3)}${enemy(42, 32, 3)}<text x="40" y="20" font-size="8" fill="currentColor" opacity="0.55">❄</text>`),
+  snowball: () => wrap(`${piece(32, 34, 6)}<circle cx="20" cy="22" r="5" fill="currentColor" opacity="0.35"/><text x="16" y="25" font-size="8" fill="currentColor" opacity="0.7">❄</text>`),
+  berserk: () => wrap(`${piece(20, 44, 5)}<path d="M24 40 Q32 20 48 28" stroke="currentColor" stroke-width="2" fill="none" opacity="0.55"/>${enemy(46, 26, 5)} ${xMark(46, 26, 4)}`),
   create_foe: () => wrap(`${square(32, 34, 16, 0.15)}${enemy(32, 34, 6)}<text x="38" y="22" font-size="7" fill="currentColor" opacity="0.55">+</text>`),
   deep_freeze: () => wrap(`${piece(32, 48, 4)}<path d="M10 54 L54 10" stroke="currentColor" stroke-width="2" opacity="0.45"/>${enemy(22, 40, 3)}${enemy(32, 30, 3)}${enemy(42, 20, 3)}`),
   reverse_only_2: () => wrap(`${enemy(32, 24, 6)} ${arrow(32, 28, 32, 44)}<path d="M24 48 H40" stroke="currentColor" stroke-width="1.8" opacity="0.4"/>`),
@@ -154,11 +162,17 @@ export const EFFECT_ILLUSTRATIONS = {
   constitution: () => wrap(`${piece(32, 36, 6)} ${crown(32, 20)} ${shield(32, 34, 0.7)}<text x="42" y="48" font-size="7" fill="currentColor" opacity="0.5">5t</text>`),
   last_king: () => wrap(`${piece(32, 36, 7)} ${crown(32, 20)} ${shield(32, 34, 0.65)}`),
   revive: () => wrap(`${ghost(32, 40)} ${arrow(32, 44, 32, 34)} ${piece(32, 28, 5, 0.7)}<path d="M24 48 H40" stroke="currentColor" stroke-width="1.5" opacity="0.35"/>`),
-  possession: () => wrap(`${piece(18, 40, 4)} ${enemy(44, 28, 6)}<path d="M18 36 C28 30 38 28 44 28" stroke="currentColor" stroke-width="1.4" fill="none" stroke-dasharray="3 2"/>`),
+  mind_control: () => wrap(`${enemy(44, 30, 6)}<circle cx="32" cy="32" r="9" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.7"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.85"/><path d="M32 20 V26 M32 38 V44 M20 32 H26 M38 32 H44" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`),
   link_fate: () => wrap(`${enemy(22, 32, 5)} ${enemy(42, 32, 5)}<path d="M28 32 H36" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.6"/>`),
   hunters_mark: () => wrap(`${enemy(40, 26, 5)}<circle cx="40" cy="26" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M40 14 V18 M40 34 V38 M28 26 H32 M48 26 H52" stroke="currentColor" stroke-width="1.5"/>`),
-  bishop_2: () => wrap(`${piece(32, 48, 5)}<path d="M32 44 L14 26 M32 44 L50 26" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/>`),
-  rook_2: () => wrap(`${piece(32, 48, 5)}<path d="M32 44 V18 M32 44 H14 M32 44 H50" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/>`),
+  bishop_2: () =>
+    wrap(
+      `${piece(32, 48, 5)}<path d="M32 44 L14 26 M32 44 L50 26" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/><text x="44" y="22" font-size="13" fill="currentColor" opacity="0.9">♗</text>${tickMarks(38, 26, 2)}`
+    ),
+  rook_2: () =>
+    wrap(
+      `${piece(32, 48, 5)}<path d="M32 44 V18 M32 44 H14 M32 44 H50" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/><text x="44" y="22" font-size="13" fill="currentColor" opacity="0.9">♜</text>${tickMarks(38, 26, 2)}`
+    ),
   hostile_swap: () => wrap(`${piece(22, 36, 5)} ${enemy(42, 36, 5)} ${arrow(28, 36, 36, 36)} ${arrow(36, 32, 28, 32)}`),
 };
 

@@ -1,6 +1,6 @@
 # Card Checkers — Spell Compendium
 
-**135 spells** in the draw pool.
+**84 spells** in the draw pool.
 
 ## Common
 
@@ -23,6 +23,7 @@
 - **Prospect** — Gain 10 gems now and 10 more at the start of your next turn.
 - **Recycle** — Discard 1 card from hand, draw 2 cards.
 - **Sidestep** — Move a piece 1 square horizontally onto an adjacent dark square.
+- **Snowball** — Freeze any piece of your choice — it cannot move on its owner's next turn.
 - **Venom** — Enemy takes 1 damage; 2 damage destroys it (shield blocks 1 tick).
 
 ## Uncommon
@@ -140,7 +141,7 @@
 - **Hostile Swap** — Swap one of your pieces with an enemy (both unshielded).
 - **Last King** — If you have only 1 piece, it becomes a king with shield for 2 turns.
 - **Mirror Shield** — Next enemy spell on this piece reflects to a random enemy.
-- **Possession** — Control an enemy piece for its owner's next move only.
+- **Mind Control** — Permanently convert an enemy man to your color; it dies after 5 of your turns.
 - **Queen's Crown** — Piece has king + knight movement for 2 turns.
 - **Revive** — Return a captured man to any empty square in your back 3 rows.
 - **Roulette** — Random card effect hits a random valid target.
