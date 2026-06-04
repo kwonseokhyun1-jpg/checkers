@@ -259,6 +259,21 @@ function syncCollectionFilterControls() {
   if (categoryEl) categoryEl.value = collectionCategory;
 }
 
+/** Reset scroll when opening deck edit so list scroll position does not carry over (mobile). */
+function scrollDeckEditViewToTop() {
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  document.querySelector(".game-main")?.scrollTo?.(0, 0);
+  document
+    .querySelectorAll(
+      "#deck-subview-edit .deck-editor__grid, #deck-subview-edit .deck-editor__body, #deck-subview-edit"
+    )
+    .forEach((el) => {
+      el.scrollTop = 0;
+    });
+}
+
 function showDeckSubview(sub) {
   deckSubview = sub;
   document.body.classList.toggle("deck-editing", sub === "edit");
@@ -277,7 +292,10 @@ function showDeckSubview(sub) {
   }
 
   if (sub === "list") renderDeckList();
-  if (sub === "edit") renderDeckEditor();
+  if (sub === "edit") {
+    renderDeckEditor();
+    requestAnimationFrame(() => scrollDeckEditViewToTop());
+  }
 }
 
 
