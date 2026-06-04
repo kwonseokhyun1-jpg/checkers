@@ -20,7 +20,7 @@ export const THEME_KEYS = [
   ["combat", ["stab", "shatter", "destroy", "snipe", "duel", "execution", "cull", "pyromancy", "backstab", "sacrifice", "chain_lightning", "cryo", "bomb", "magnet"]],
   ["special", ["create_foe", "butterfly", "clone", "earthquake"]],
   ["defense", ["shield", "ward", "aegis", "bulwark", "stall", "sanctuary", "last_stand", "barrier", "anchor", "iron_will", "vengeance", "backrank_protection", "hibernation"]],
-  ["debuff", ["rust", "root", "hex", "panic", "backpedal", "blizzard", "deep_freeze", "blind", "confusion", "press", "tangle"]],
+  ["debuff", ["rust", "root", "hex", "panic", "backpedal", "blizzard", "deep_freeze", "snowball", "blind", "confusion", "press", "tangle"]],
   ["board", ["quicksand", "landmine", "collapse", "darkness", "earthquake", "scatter", "butterfly", "call_forward"]],
   ["meta", ["counterspell", "purify", "trickster", "ignore", "offering", "quick_march", "dominion", "constitution", "last_king", "revive", "mind_control"]],
 ];

@@ -9,6 +9,7 @@ const TAGS = {
   chain_lightning: ["Strike adjacent enemies only", "Up to 2 kills if enemies touch each other", "Your piece is paralyzed 2 turns"],
   pyromancy: ["Enemy piece + empty dark square — both burn 2 turns; fire tiles block enemies"],
   freeze_1: ["Enemy cannot move on their next turn"],
+  snowball: ["Freeze any piece — cannot move on its owner's next turn"],
   freeze_2: ["Enemy cannot move on their next turn"],
   deep_freeze: ["Freeze all enemies on one diagonal through your piece for 2 turns"],
   retreat_3: ["Backward movement for 3 turns"],

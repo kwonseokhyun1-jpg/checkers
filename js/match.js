@@ -99,6 +99,7 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
 }
 
 function picksRequired(card) {
+  if (card.effect === "snowball") return 1;
   return TWO_PICK_MODES.has(card.mode) ? 2 : 1;
 }
 

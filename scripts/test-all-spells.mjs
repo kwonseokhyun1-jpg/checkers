@@ -145,6 +145,10 @@ function uiPickCombos(state, card, limit = 64) {
   const combos = [];
   const t0 = getValidTargets(state, COLOR, card, []);
   if (card.mode === "instant" || card.mode === "discard_pick") return [[]];
+  if (card.effect === "snowball") {
+    for (const p of t0.slice(0, limit)) combos.push([p]);
+    return combos;
+  }
   if (["friendly", "enemy", "empty", "any_square", "column", "row"].includes(card.mode)) {
     for (const p of t0.slice(0, limit)) combos.push([p]);
     return combos;
@@ -193,7 +197,7 @@ for (const card of cards) {
     row.status = "warn";
     row.notes.push("Works with correct picks but UI/AI targeting cannot find a valid play");
   }
-  if (card.mode === "column" || card.mode === "row", "row" || card.mode === "f_e_adj") {
+  if (card.mode === "column" || card.mode === "row" || card.mode === "f_e_adj") {
     const autoWorks = setups.some((mk) => { try { return tryAutoPlay(mk(), card).success; } catch { return false; } });
     if (!autoWorks) row.notes.push(`tryAutoPlay omits ${card.mode} targeting`);
   }
