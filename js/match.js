@@ -582,6 +582,10 @@ export class MatchSession {
     }
     void this.resolveTargetedSpell(card, [...picks]).then((res) => {
       if (!res.success) {
+        if (res.countered) {
+          this.finalizeCounteredSpell(card, res.message);
+          return;
+        }
         picks.pop();
         this.setMessage(res.message);
         this.validTargets = getValidTargets(this.state, this.localColor, card, picks);
@@ -1144,11 +1148,30 @@ ${starLine}`;
     if (banner) banner.classList.remove("cull-casting");
   }
 
+  finalizeCounteredSpell(card, message) {
+    this.removeCardFromHand(card);
+    if (!this.state.meta.extraSpellCast?.[this.localColor]) {
+      this.state.spellPlayed[this.localColor] = true;
+    } else {
+      this.state.meta.extraSpellCast[this.localColor] = false;
+    }
+    this.cardPlay = null;
+    this.validTargets = [];
+    this.selectedSquare = null;
+    this.selectedColumn = null;
+    this.selectedRow = null;
+    this.endDrag();
+    this.updateSpellCastUI();
+    this.setMessage(message || "Enemy Counterspell! Your spell fizzles.");
+    this.render();
+    this.pushPvpState();
+  }
+
   async applySpellWithAnimation(card, picks) {
     const countered = tryConsumeCounterspell(this.state, this.localColor);
     if (countered) {
       await this.runCounterspellReveal();
-      return { success: false, message: "Enemy Counterspell! Your spell fizzles." };
+      return { success: false, countered: true, message: "Enemy Counterspell! Your spell fizzles." };
     }
 
     if (card.effect === "cull") {
@@ -1256,7 +1279,8 @@ ${starLine}`;
     try {
       const res = await this.applySpellWithAnimation(card, []);
       if (!res.success) {
-        this.setMessage(res.message || "Spell failed.");
+        if (res.countered) this.finalizeCounteredSpell(card, res.message);
+        else this.setMessage(res.message || "Spell failed.");
         return;
       }
       this.removeCardFromHand(card);
