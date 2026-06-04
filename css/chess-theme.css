@@ -514,6 +514,51 @@ body {
     0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
+.rook-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.rook-indicator__mark {
+  font-size: clamp(0.45rem, 2.4vw, 0.62rem);
+  line-height: 1;
+  color: #bfdbfe;
+  text-shadow: 0 0 4px rgba(59, 130, 246, 0.85);
+}
+
+.rook-indicator__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.rook-indicator__block {
+  width: clamp(5px, 2.2vw, 7px);
+  height: clamp(5px, 2.2vw, 7px);
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(147, 197, 253, 0.25);
+}
+
+.rook-indicator__block--filled {
+  background: linear-gradient(180deg, #bfdbfe 0%, #2563eb 100%);
+  border-color: rgba(147, 197, 253, 0.9);
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.75);
+}
+
+.piece.rook-mark {
+  box-shadow:
+    0 0 0 2px rgba(59, 130, 246, 0.75),
+    0 0 10px rgba(37, 99, 235, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
 .shield-indicator {
   position: absolute;
   top: 2px;
