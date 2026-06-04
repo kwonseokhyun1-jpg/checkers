@@ -12,6 +12,9 @@ export const TESTING_STARS = 30;
 /** Testing grant — applied on each profile load for now */
 export const TESTING_GEMS = 4000;
 export const WIN_GEMS = 10;
+/** One-time grant applied to every profile (local + cloud via grant_gems_1000.sql). */
+export const GEMS_BONUS_1000_FLAG = "gemsGrant1000_v1";
+export const GEMS_BONUS_1000 = 1000;
 
 /** Starter / beginner deck: 3× each curated common until 30 cards (10 × 3). */
 export const STARTER_COPIES_PER_CARD = 3;
@@ -113,6 +116,12 @@ export function repairProfile(profile) {
   let changed = false;
   if (!profile.newCardIds || typeof profile.newCardIds !== "object") {
     profile.newCardIds = {};
+    changed = true;
+  }
+
+  if (!profile[GEMS_BONUS_1000_FLAG]) {
+    profile.gems = (typeof profile.gems === "number" ? profile.gems : 0) + GEMS_BONUS_1000;
+    profile[GEMS_BONUS_1000_FLAG] = true;
     changed = true;
   }
 
