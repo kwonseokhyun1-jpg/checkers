@@ -5266,3 +5266,230 @@ body.adventure-stage-open {
   align-items: center;
   justify-content: space-between;
 }
+
+/* —— Mage titles & achievements —— */
+.game-header__player {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  margin-right: 0.5rem;
+  max-width: 10rem;
+}
+.game-header__username {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text, #e8ecf4);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.game-header__mage-title {
+  line-height: 1;
+}
+.profile-equipped-title-slot {
+  text-align: center;
+  margin: -0.25rem 0 1rem;
+}
+.profile-section-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+}
+.profile-section-tab {
+  font-family: var(--font-ui, "DM Sans", sans-serif);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(232, 236, 244, 0.7);
+  cursor: pointer;
+}
+.profile-section-tab.active {
+  color: var(--accent-gem, #5ce1e6);
+  border-color: rgba(92, 225, 230, 0.45);
+  background: rgba(92, 225, 230, 0.1);
+}
+.profile-section-panel.hidden {
+  display: none !important;
+}
+.profile-titles-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+}
+.mage-title-tag {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid transparent;
+}
+.mage-title-tag--compact {
+  font-size: 0.65rem;
+}
+.mage-title--common { color: #8fd4a8; border-color: rgba(143, 212, 168, 0.45); }
+.mage-title--uncommon { color: #e8b86d; border-color: rgba(232, 184, 109, 0.45); }
+.mage-title--rare { color: #7ec8ff; border-color: rgba(126, 200, 255, 0.45); }
+.mage-title--epic { color: #c4a8ff; border-color: rgba(196, 168, 255, 0.45); }
+.mage-title--legendary { color: #ffd87a; border-color: rgba(255, 216, 122, 0.5); }
+.mage-title--mythic {
+  background: linear-gradient(90deg, #ff6b9d, #c4a8ff, #5ce1e6, #ffd87a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  border-color: rgba(255, 255, 255, 0.25);
+  animation: mage-title-shimmer 3s ease-in-out infinite;
+}
+@keyframes mage-title-shimmer {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.25); }
+}
+.mage-title-tag--glow-cyan { text-shadow: 0 0 8px rgba(92, 225, 230, 0.65); }
+.mage-title-tag--glow-violet { text-shadow: 0 0 8px rgba(140, 100, 220, 0.7); }
+.mage-title-tag--glow-ember { text-shadow: 0 0 8px rgba(255, 120, 60, 0.65); }
+.mage-title-tag--glow-crimson { text-shadow: 0 0 8px rgba(220, 50, 70, 0.7); }
+.mage-title-tag--glow-gold { text-shadow: 0 0 10px rgba(255, 200, 80, 0.75); }
+.mage-title-tag--glow-frost { text-shadow: 0 0 8px rgba(180, 230, 255, 0.75); }
+.mage-title-tag--glow-amber { text-shadow: 0 0 8px rgba(255, 180, 60, 0.6); }
+.mage-title-tag--glow-purple { text-shadow: 0 0 8px rgba(120, 60, 180, 0.7); }
+.mage-title-tag--glow-forest { text-shadow: 0 0 8px rgba(80, 180, 100, 0.6); }
+.mage-title-tag--glow-rainbow {
+  text-shadow: 0 0 10px rgba(196, 168, 255, 0.8), 0 0 14px rgba(92, 225, 230, 0.5);
+}
+.profile-showcase__mage-title {
+  margin: 0 0 0.5rem;
+}
+.profile-achievement-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+.profile-achievement-card {
+  position: relative;
+  padding: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(12, 16, 28, 0.75);
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+.profile-achievement-card--locked {
+  opacity: 0.55;
+}
+.profile-achievement-card--claimable {
+  opacity: 1;
+  box-shadow: 0 0 20px rgba(92, 225, 230, 0.2);
+  border-color: rgba(92, 225, 230, 0.45);
+}
+.profile-achievement-card--claimed .profile-achievement-card__status {
+  color: var(--accent-gem, #5ce1e6);
+  text-shadow: 0 0 10px rgba(92, 225, 230, 0.55);
+}
+.profile-achievement-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+.profile-achievement-card__title {
+  margin: 0;
+  font-size: 0.95rem;
+}
+.profile-achievement-card__desc {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+.profile-achievement-card__progress {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  margin-bottom: 0.35rem;
+}
+.profile-achievement-card__progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #3a6ea5, var(--accent-gem, #5ce1e6));
+  transition: width 0.3s ease;
+}
+.profile-achievement-card__progress-text {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.profile-achievement-card__status {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(232, 236, 244, 0.55);
+}
+.profile-achievement-card--claimable .profile-achievement-card__status {
+  color: #ffd87a;
+  animation: achievement-glow 1.5s ease-in-out infinite;
+}
+@keyframes achievement-glow {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; text-shadow: 0 0 12px rgba(255, 216, 122, 0.8); }
+}
+.profile-achievement-card__claim {
+  margin-top: 0.65rem;
+  width: 100%;
+}
+.profile-title-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+}
+.profile-title-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.85rem 0.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(12, 16, 28, 0.65);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.profile-title-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.profile-title-card--locked {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.profile-title-card--equipped {
+  border-color: var(--accent-gem, #5ce1e6);
+  box-shadow: 0 0 16px rgba(92, 225, 230, 0.25);
+}
+.profile-title-card__tag {
+  font-size: 0.8rem;
+}
+.profile-title-card__rarity {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.7;
+}
+.profile-title-card__action {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--accent-gem, #5ce1e6);
+}
+.pvp-loading__title {
+  margin-top: 0.25rem;
+  min-height: 1.1rem;
+}

@@ -1,6 +1,7 @@
 import { isKnightCard, isRemovedCard, getCardDef, getPlayableCards, maxCopiesForCard, DECK_SIZE } from "./cardCatalog.js";
 import { defaultAdventureProgress, migrateAdventureDecks, repairAdventureProgress } from "./adventure.js";
 import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
+import { normalizeAchievements, DEFAULT_ACHIEVEMENTS, syncArcaneMastery } from "./achievements.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
 
@@ -70,6 +71,7 @@ function defaultProfile() {
     selectedDeckId: starterDeck.id,
     adventure: defaultAdventureProgress(),
     cosmetics: structuredClone(DEFAULT_COSMETICS),
+    achievements: structuredClone(DEFAULT_ACHIEVEMENTS),
     savedAt: Date.now(),
   };
 }
@@ -264,6 +266,7 @@ function normalizeLoadedProfile(parsed) {
     decks: Array.isArray(parsed.decks) ? parsed.decks : [],
     selectedDeckId: parsed.selectedDeckId ?? null,
     cosmetics: normalizeCosmetics(parsed.cosmetics),
+    achievements: normalizeAchievements(parsed.achievements),
     adventure: stub.adventure,
   };
 }
@@ -278,6 +281,9 @@ function finalizeProfile(profile) {
   repairProfile(p);
   p = trimDecksToCollection(p);
   repairProfile(p);
+  if (!p.achievements) p.achievements = structuredClone(DEFAULT_ACHIEVEMENTS);
+  p.achievements = normalizeAchievements(p.achievements);
+  syncArcaneMastery(p);
   return p;
 }
 
@@ -337,6 +343,7 @@ export function addToCollection(profile, cardId, count = 1) {
   if (added > 0) {
     profile.collection[cardId] = collectionCount(profile, cardId) + added;
     markCardNew(profile, cardId);
+    syncArcaneMastery(profile);
     saveProfile(profile);
   }
   return added;

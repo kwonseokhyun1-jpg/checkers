@@ -1,5 +1,24 @@
 import { COSMETIC_BOXES, COSMETIC_BY_ID, COSMETIC_TYPES, equipCosmetic, getEquippedCosmetics, openCosmeticBox } from "./cosmetics.js";
 import {
+  ACHIEVEMENTS,
+  achievementRewardTitle,
+  canClaimAchievement,
+  claimAchievement,
+  isAchievementClaimed,
+  isAchievementComplete,
+  progressLabel,
+} from "./achievements.js";
+import {
+  MAGE_TITLES,
+  MAGE_TITLE_BY_ID,
+  TITLE_RARITY_CLASS,
+  equipTitle,
+  equippedTitleTagHtml,
+  getEquippedTitleId,
+  ownsTitle,
+  titleTagHtml,
+} from "./mageTitles.js";
+import {
   COSMETIC_BOX_TIERS,
   cosmeticBoxSvgMarkup,
   renderAvatarPreview,
@@ -44,13 +63,16 @@ function filterTabLabel(type) {
   return label.endsWith("s") ? label : `${label}s`;
 }
 
-function loadoutHtml(cos) {
+function loadoutHtml(cos, profile) {
   const avatar = COSMETIC_BY_ID[cos.equipped.avatar];
   const banner = COSMETIC_BY_ID[cos.equipped.banner];
   const frame = COSMETIC_BY_ID[cos.equipped.frame];
   const skin = COSMETIC_BY_ID[cos.equipped.pieceSkin];
+  const titleId = getEquippedTitleId(profile);
+  const title = titleId ? MAGE_TITLE_BY_ID[titleId] : null;
   return `
     <p class="profile-showcase__title">Equipped loadout</p>
+    ${title ? `<p class="profile-showcase__mage-title">${titleTagHtml(titleId)}</p>` : ""}
     <ul class="profile-loadout">
       <li class="profile-loadout__item">
         <span class="profile-loadout__label">Avatar</span>
@@ -68,6 +90,7 @@ function loadoutHtml(cos) {
         <span class="profile-loadout__label">Pieces</span>
         <span class="profile-loadout__value">${skin?.name || "—"}</span>
       </li>
+      ${title ? `<li class="profile-loadout__item"><span class="profile-loadout__label">Title</span><span class="profile-loadout__value">${title.display}</span></li>` : ""}
     </ul>`;
 }
 
@@ -173,7 +196,7 @@ function accountSectionHtml({ signedIn, username, email }) {
     </div>`;
 }
 
-export function renderProfileTab(profile, root, { onGemsChange, onUsernameChanged } = {}) {
+export function renderProfileTab(profile, root, { onGemsChange, onUsernameChanged, onTitleChanged } = {}) {
   if (!root) return;
   const cos = getEquippedCosmetics(profile);
   const user = getCurrentUser();
@@ -196,21 +219,37 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
           <div class="profile-avatar-stack ${frameClassFor(cos.equipped.frame)}" id="profile-avatar-stack">
             <div class="profile-avatar-inner" id="profile-avatar-preview" aria-hidden="true">${renderAvatarPreview(cos.equipped.avatar)}</div>
           </div>
-          <div class="profile-showcase__meta" id="profile-loadout-meta">${loadoutHtml(cos)}</div>
+          <div class="profile-showcase__meta" id="profile-loadout-meta">${loadoutHtml(cos, profile)}</div>
         </div>
       </div>
+      <div id="profile-equipped-title-slot" class="profile-equipped-title-slot">${equippedTitleTagHtml(profile)}</div>
       <h3 class="profile-section-title">Your collection</h3>
-      <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
-        ${COSMETIC_TYPES.map(
-          (t) => `<button type="button" class="profile-filter-btn" role="tab" data-cos-filter="${t}">${filterTabLabel(t)}</button>`
-        ).join("")}
+      <div class="profile-section-tabs" role="tablist" aria-label="Profile collection">
+        <button type="button" class="profile-section-tab active" role="tab" data-profile-section="cosmetics">Cosmetics</button>
+        <button type="button" class="profile-section-tab" role="tab" data-profile-section="achievements">Achievements</button>
+        <button type="button" class="profile-section-tab" role="tab" data-profile-section="titles">Titles</button>
       </div>
-      <div id="profile-cosmetic-grid" class="profile-cosmetic-grid"></div>
+      <div id="profile-section-cosmetics" class="profile-section-panel">
+        <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
+          ${COSMETIC_TYPES.map(
+            (t) => `<button type="button" class="profile-filter-btn" role="tab" data-cos-filter="${t}">${filterTabLabel(t)}</button>`
+          ).join("")}
+        </div>
+        <div id="profile-cosmetic-grid" class="profile-cosmetic-grid"></div>
+      </div>
+      <div id="profile-section-achievements" class="profile-section-panel hidden" hidden>
+        <div id="profile-achievement-grid" class="profile-achievement-grid"></div>
+      </div>
+      <div id="profile-section-titles" class="profile-section-panel hidden" hidden>
+        <p class="muted profile-titles-hint">Unlock titles by completing achievements, then tap to equip.</p>
+        <div id="profile-title-grid" class="profile-title-grid"></div>
+      </div>
     </section>
   `;
 
   const grid = root.querySelector("#profile-cosmetic-grid");
   let filter = "avatar";
+  let profileSection = "cosmetics";
 
   const refreshShowcase = () => {
     const c = getEquippedCosmetics(profile);
@@ -219,7 +258,9 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
     const stack = root.querySelector("#profile-avatar-stack");
     if (stack) stack.className = `profile-avatar-stack ${frameClassFor(c.equipped.frame)}`;
     const meta = root.querySelector("#profile-loadout-meta");
-    if (meta) meta.innerHTML = loadoutHtml(c);
+    if (meta) meta.innerHTML = loadoutHtml(c, profile);
+    const titleSlot = root.querySelector("#profile-equipped-title-slot");
+    if (titleSlot) titleSlot.innerHTML = equippedTitleTagHtml(profile);
   };
 
   const renderGrid = () => {
@@ -262,6 +303,128 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   }
   root.querySelector(".profile-filter-btn")?.classList.add("active");
   renderGrid();
+
+  const renderAchievements = () => {
+    const achGrid = root.querySelector("#profile-achievement-grid");
+    if (!achGrid) return;
+    achGrid.innerHTML = "";
+    for (const ach of ACHIEVEMENTS) {
+      const reward = achievementRewardTitle(ach.id);
+      const complete = isAchievementComplete(profile, ach.id);
+      const claimed = isAchievementClaimed(profile, ach.id);
+      const canClaim = canClaimAchievement(profile, ach.id);
+      const locked = !complete && !claimed;
+      const card = document.createElement("article");
+      card.className = [
+        "profile-achievement-card",
+        locked ? "profile-achievement-card--locked" : "",
+        complete ? "profile-achievement-card--complete" : "",
+        claimed ? "profile-achievement-card--claimed" : "",
+        canClaim ? "profile-achievement-card--claimable" : "",
+        reward ? TITLE_RARITY_CLASS[reward.rarity] || "" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const prog = progressLabel(profile, ach.id);
+      const pct = ach.target ? Math.min(100, Math.round(((profile.achievements?.progress?.[ach.id] || 0) / ach.target) * 100)) : 0;
+      const statusLabel = claimed ? "Unlocked" : canClaim ? "Claim Title" : complete ? "Complete" : "In progress";
+      card.innerHTML = `
+        <div class="profile-achievement-card__head">
+          <h4 class="profile-achievement-card__title">${escapeHtml(ach.title)}</h4>
+          ${reward ? `<span class="profile-achievement-card__reward mage-title-tag mage-title-tag--glow-${reward.glow} ${TITLE_RARITY_CLASS[reward.rarity] || ""}">[${escapeHtml(reward.display)}]</span>` : ""}
+        </div>
+        <p class="profile-achievement-card__desc">${escapeHtml(ach.description)}</p>
+        <div class="profile-achievement-card__progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+          <div class="profile-achievement-card__progress-fill" style="width:${pct}%"></div>
+        </div>
+        <p class="profile-achievement-card__progress-text">${escapeHtml(prog)}</p>
+        <span class="profile-achievement-card__status">${statusLabel}</span>`;
+      if (canClaim) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn-primary profile-achievement-card__claim";
+        btn.textContent = "Claim Title";
+        btn.addEventListener("click", () => {
+          const res = claimAchievement(profile, ach.id);
+          if (res.success) {
+            saveProfile(profile);
+            renderAchievements();
+            renderTitles();
+            refreshShowcase();
+            onTitleChanged?.();
+          }
+        });
+        card.appendChild(btn);
+      }
+      achGrid.appendChild(card);
+    }
+  };
+
+  const renderTitles = () => {
+    const titleGrid = root.querySelector("#profile-title-grid");
+    if (!titleGrid) return;
+    titleGrid.innerHTML = "";
+    const equippedId = getEquippedTitleId(profile);
+    for (const title of MAGE_TITLES) {
+      const unlocked = ownsTitle(profile, title.id);
+      const equipped = equippedId === title.id;
+      const card = document.createElement("button");
+      card.type = "button";
+      card.disabled = !unlocked;
+      card.className = [
+        "profile-title-card",
+        TITLE_RARITY_CLASS[title.rarity] || "",
+        `profile-title-card--glow-${title.glow}`,
+        unlocked ? "" : "profile-title-card--locked",
+        equipped ? "profile-title-card--equipped" : "",
+      ]
+        .filter(Boolean)
+        .join(" ");
+      card.innerHTML = `
+        <span class="profile-title-card__tag mage-title-tag mage-title-tag--glow-${title.glow} ${TITLE_RARITY_CLASS[title.rarity] || ""}">[${escapeHtml(title.display)}]</span>
+        <span class="profile-title-card__rarity">${title.rarity}</span>
+        <span class="profile-title-card__action">${equipped ? "Equipped" : unlocked ? "Equip" : "Locked"}</span>`;
+      card.addEventListener("click", () => {
+        if (!unlocked) return;
+        const res = equipTitle(profile, equipped ? null : title.id);
+        if (res.success) {
+          saveProfile(profile);
+          renderTitles();
+          refreshShowcase();
+          onTitleChanged?.();
+        }
+      });
+      titleGrid.appendChild(card);
+    }
+  };
+
+  const setProfileSection = (section) => {
+    profileSection = section;
+    root.querySelectorAll(".profile-section-tab").forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.profileSection === section);
+    });
+    root.querySelector("#profile-section-cosmetics")?.classList.toggle("hidden", section !== "cosmetics");
+    const cosPanel = root.querySelector("#profile-section-cosmetics");
+    if (cosPanel) cosPanel.hidden = section !== "cosmetics";
+    const achPanel = root.querySelector("#profile-section-achievements");
+    if (achPanel) {
+      achPanel.classList.toggle("hidden", section !== "achievements");
+      achPanel.hidden = section !== "achievements";
+    }
+    const titlePanel = root.querySelector("#profile-section-titles");
+    if (titlePanel) {
+      titlePanel.classList.toggle("hidden", section !== "titles");
+      titlePanel.hidden = section !== "titles";
+    }
+    if (section === "achievements") renderAchievements();
+    if (section === "titles") renderTitles();
+  };
+
+  for (const tab of root.querySelectorAll(".profile-section-tab")) {
+    tab.addEventListener("click", () => setProfileSection(tab.dataset.profileSection));
+  }
+  renderAchievements();
+  renderTitles();
 
   if (!signedIn) return;
 
@@ -367,6 +530,7 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
       profileRow = await fetchProfileRow(user.id);
       savedUsername = profileRow?.username || user.user_metadata?.display_name || "";
       setUsernameDisplay(savedUsername);
+      onUsernameChanged?.(savedUsername);
       if (usernameInput && savedUsername) usernameInput.value = savedUsername;
       const cooldown = canChangeUsername(profileRow);
       if (!cooldown.ok) setHint(cooldown.message, "bad");

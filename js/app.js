@@ -46,6 +46,7 @@ import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
 import { renderProfileTab, renderCosmeticBoxes } from "./profileUI.js";
+import { equippedTitleTagHtml } from "./mageTitles.js";
 import {
   openMysteryBox,
   openBigMysteryBox,
@@ -212,15 +213,31 @@ function showTab(tab) {
   if (tab === "pvp") pvpController?.render();
 }
 
+function updateHeaderPlayerIdentity(username) {
+  const playerEl = document.getElementById("header-player");
+  const nameEl = document.getElementById("header-username");
+  const titleEl = document.getElementById("header-mage-title");
+  const authBtn = document.getElementById("auth-header-btn");
+  const show = Boolean(username);
+  if (playerEl) {
+    playerEl.classList.toggle("hidden", !show);
+    playerEl.hidden = !show;
+  }
+  if (nameEl) nameEl.textContent = username || "";
+  if (titleEl) titleEl.innerHTML = show ? equippedTitleTagHtml(profile) : "";
+  if (authBtn && show) authBtn.textContent = username;
+}
+
 function renderProfile() {
   const root = $("view-profile");
   renderProfileTab(profile, root, {
     onGemsChange: updateGemHeader,
     onUsernameChanged: (name) => {
-      const authBtn = document.getElementById("auth-header-btn");
-      if (authBtn && name) authBtn.textContent = name;
+      updateHeaderPlayerIdentity(name);
     },
+    onTitleChanged: () => updateHeaderPlayerIdentity(document.getElementById("header-username")?.textContent),
   });
+  updateHeaderPlayerIdentity(document.getElementById("header-username")?.textContent);
 }
 
 function updateCurrencyHeader() {
@@ -1394,6 +1411,7 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
     aiDeckIds: enemyDeck,
     opponentName,
     cosmetics: getEquippedCosmetics(profile),
+    profile,
   };
   if (resumeState) {
     sessionOpts.initialState = resumeState;

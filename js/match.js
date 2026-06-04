@@ -42,6 +42,7 @@ import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells } from "./cardEffectHandlers.js";
 import { isInDarknessZone } from "./gameMeta.js";
 import { saveMatchCheckpoint, clearMatchCheckpoint } from "./matchLifecycle.js";
+import { createMatchAchievementTracker } from "./achievementTracker.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -117,6 +118,7 @@ export class MatchSession {
    */
   constructor(deckCardIds, rootEl, onExit, onWin, options = {}) {
     this.cosmetics = options.cosmetics || null;
+    this.profile = options.profile || null;
     this.isPvp = !!options.pvp;
     this.localColor = options.localColor ?? COLORS.RED;
     this.opponentColor = this.localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
@@ -155,6 +157,11 @@ export class MatchSession {
     this._gameOverUiShown = false;
     this._aiTurnPending = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
+    this.achievementTracker =
+      this.profile && !this.isPvp ? createMatchAchievementTracker(this.profile, this.localColor) : null;
+    if (this.achievementTracker) {
+      this.state.meta.achievementHook = this.achievementTracker;
+    }
     this.bindEls();
     if (!(options.initialState && this.isPvp)) {
       this.beginPlayerTurn();
@@ -203,6 +210,7 @@ export class MatchSession {
   }
 
   dispose() {
+    this.achievementTracker?.dispose();
     document.removeEventListener("keydown", this._onKeyDown);
     document.removeEventListener("pointermove", this._onDocPointerMove);
     document.removeEventListener("pointerup", this._onDocPointerUp);
@@ -312,6 +320,9 @@ export class MatchSession {
       if (n) this.setMessage("Drew a card from your deck.");
     }
     startTurnMeta(s, color);
+    if (color === this.localColor) {
+      this.achievementTracker?.onTurnStart();
+    }
     if (color === this.localColor && s.meta.shatterSilenced?.[color]) {
       this.setMessage("Shatter backlash — no spells this turn. Select a piece to move.");
     }
@@ -848,7 +859,12 @@ export class MatchSession {
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
     s.meta.lastMove.red = move;
+    const capBefore = s.captured[this.localColor]?.length ?? 0;
+    this.achievementTracker?.onMoveBefore(s);
     applyMove(s.board, move, s);
+    const capAfter = s.captured[this.localColor]?.length ?? 0;
+    if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
+    this.achievementTracker?.onMoveAfter(s);
 
     const finish = () => {
       const [landR, landC] = move.to;
@@ -990,6 +1006,9 @@ ${starLine}`;
         const { playStarCollectAnimation } = await import("./starCollectAnimation.js");
         await playStarCollectAnimation(n, starsEl);
       }
+    }
+    if (won && this.achievementTracker) {
+      this.achievementTracker.onVictory(this.state);
     }
     if (this.isPvp) {
       this.onPvpWin?.(won);
@@ -1136,31 +1155,37 @@ ${starLine}`;
   }
 
   async applySpellWithAnimation(card, picks) {
+    const finishSpellTrack = (res) => {
+      this.achievementTracker?.onSpellAfter(this.state, card.effect, res);
+      return res;
+    };
+    this.achievementTracker?.onSpellBefore(this.state);
+
     const countered = tryConsumeCounterspell(this.state, this.localColor);
     if (countered) {
       await this.runCounterspellReveal();
-      return { success: false, countered: true, message: "Enemy Counterspell! Your spell fizzles." };
+      return finishSpellTrack({ success: false, countered: true, message: "Enemy Counterspell! Your spell fizzles." });
     }
 
     if (card.effect === "cull") {
       const target = findCullTarget(this.state, this.localColor);
-      if (!target) return { success: false, message: "No enemy to cull." };
+      if (!target) return finishSpellTrack({ success: false, message: "No enemy to cull." });
       const victim = cullVictimSnapshot(target);
       await this.playCullAnimation(target.row, target.col, victim);
-      return applyCard(this.state, this.localColor, card, picks);
+      return finishSpellTrack(applyCard(this.state, this.localColor, card, picks));
     }
 
     if (card.effect === "counterspell") {
       const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success) await this.runHiddenCounterspellCast();
-      return res;
+      return finishSpellTrack(res);
     }
 
     const s = this.state;
     let extra = {};
     if (card.effect === "trickster") {
       const plan = planTrickster(s);
-      if (!plan) return { success: false, message: "Need at least 4 pieces on the board." };
+      if (!plan) return finishSpellTrack({ success: false, message: "Need at least 4 pieces on the board." });
       s.meta.pendingTrickster = plan;
       extra.tricksterSquares = plan.squares;
     }
@@ -1190,7 +1215,7 @@ ${starLine}`;
     }
     if (card.effect === "coin_flip") {
       const victim = pickCoinFlipVictim(s, this.localColor);
-      if (!victim) return { success: false, message: "No valid targets" };
+      if (!victim) return finishSpellTrack({ success: false, message: "No valid targets" });
 
       const victimSquare = [victim.row, victim.col];
       const victimColor = victim.color;
@@ -1231,12 +1256,12 @@ ${starLine}`;
       if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
       frame?.classList.remove("board-frame--spell-instant");
       if (banner) banner.className = "turn-banner";
-      return res;
+      return finishSpellTrack(res);
     }
 
     const spec = buildAnimSpec(card, picks, this.localColor, extra);
     await this.runSpellAnimation(spec);
-    return applyCard(this.state, this.localColor, card, picks);
+    return finishSpellTrack(applyCard(this.state, this.localColor, card, picks));
   }
 
   async castInstantSpell(card) {
@@ -1430,8 +1455,11 @@ ${starLine}`;
     this.setMessage(`${this.opponentName} is acting…`);
     this.render();
 
+    const capBefore = s.captured[this.localColor]?.length ?? 0;
     const log = runAiTurn(s, this.opponentName);
     await this.replayAiLog(log);
+    const capAfter = s.captured[this.localColor]?.length ?? 0;
+    if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
 
     if (s.boardFx) {
       await new Promise((resolve) => this.playBoardFx(s, resolve));
