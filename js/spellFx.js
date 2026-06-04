@@ -73,7 +73,10 @@ export const EFFECT_VISUAL = {
   root_2: "root",
   deep_freeze: "freeze",
   blizzard: "freeze",
-  snowball: "freeze",
+  snowball: "snowball",
+  berserk: "berserk",
+  magnet: "move",
+  link_fate: "curse",
 
   quicksand: "sink",
   collapse: "collapse",
@@ -130,6 +133,8 @@ export const VISUAL_DURATION_MS = {
   curse: 1100,
   root: 1100,
   freeze: 1300,
+  snowball: 1400,
+  berserk: 1600,
   sink: 1200,
   collapse: 1300,
   crown: 1200,
@@ -217,6 +222,13 @@ export function applySquareSpellFx(square, visual, animRole, ctx) {
   if (visual === "move") {
     if (from && from[0] === row && from[1] === col) square.classList.add("spell-fx-move-from");
     if (to && to[0] === row && to[1] === col) square.classList.add("spell-fx-move-to");
+  }
+  if (visual === "snowball") {
+    if (to && to[0] === row && to[1] === col) square.classList.add("spell-fx-snowball-victim");
+  }
+  if (visual === "berserk") {
+    if (from && from[0] === row && from[1] === col) square.classList.add("spell-fx-berserk-from");
+    if (to && to[0] === row && to[1] === col) square.classList.add("spell-fx-berserk-to");
   }
   if (visual === "swap") {
     if (from && from[0] === row && from[1] === col) square.classList.add("spell-fx-swap-a");

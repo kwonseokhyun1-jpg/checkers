@@ -35,6 +35,8 @@ const BOARD_SHAKE_EFFECTS = new Set([
   "gravity_well",
   "shield_bash",
   "cryo_bolt",
+  "snowball",
+  "berserk",
   "cull",
 ]);
 
@@ -52,7 +54,7 @@ const MULTI_KILL_EFFECTS = new Set([
 
 const MOVE_EFFECTS = new Set([
   "blink_2", "long_step", "sidestep", "nudge", "chain_pull", "repel", "leapfrog",
-  "phase_walk", "corner_hop", "drift", "recall", "flank_3", "warp_gate",
+  "phase_walk", "corner_hop", "drift", "recall", "flank_3", "warp_gate", "berserk",
   "bait_switch", "hostile_swap", "mass_nudge", "displacement", "magnet", "call_forward", "butterfly", "iron_will",
 ]);
 
@@ -307,6 +309,19 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
+  if (effect === "berserk" && p.length >= 2) {
+    return finishSpec({
+      type: "move",
+      visual: "berserk",
+      duration: animDurationForEffect("berserk"),
+      label,
+      squares: p.slice(0, 2),
+      from: p[0],
+      to: p[1],
+      lineSquares: squaresBetween(p[0], p[1]),
+    }, effect);
+  }
+
   if ((MOVE_EFFECTS.has(effect) || (p.length >= 2 && mode !== "empty_empty")) && p.length >= 2) {
     const lineSquares = squaresBetween(p[0], p[1]);
     return finishSpec({
@@ -373,6 +388,17 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
 
   if (TERRAIN_EFFECTS.has(effect) && p.length) {
     return finishSpec({ type: "terrain", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);
+  }
+
+  if (effect === "snowball" && p.length === 1) {
+    return finishSpec({
+      type: "debuff",
+      visual: "snowball",
+      duration: animDurationForEffect("snowball"),
+      label,
+      squares: p,
+      to: p[0],
+    }, effect);
   }
 
   if (p.length === 1) {

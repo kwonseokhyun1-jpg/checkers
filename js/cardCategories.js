@@ -23,6 +23,8 @@ const ID_TO_CATEGORY = {
   bishops_mark: "movement",
   blind: "control",
   blizzard: "control",
+  snowball: "control",
+  berserk: "movement",
   bomb: "attack",
   bulwark: "defense",
   butterfly: "special",
