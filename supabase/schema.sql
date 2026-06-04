@@ -161,8 +161,7 @@ $$;
 
 grant execute on function public.email_for_login(text) to anon, authenticated;
 
--- PvP join RPCs (bypass RLS for room discovery)
- (work even before SELECT policy is fixed)
+-- PvP join RPCs (bypass RLS for room discovery; work even before SELECT policy is fixed)
 create or replace function public.pvp_find_waiting_room()
 returns text
 language sql

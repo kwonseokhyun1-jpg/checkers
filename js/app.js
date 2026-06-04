@@ -63,6 +63,7 @@ import {
   enterMatchMode,
   exitMatchMode,
   isMatchActive,
+  clearMatchCheckpoint,
   readMatchCheckpoint,
   saveMatchCheckpoint,
 } from "./matchLifecycle.js";
@@ -80,7 +81,7 @@ try {
   profile = loadProfile();
 } catch (err) {
   console.error("Failed to load profile, resetting save:", err);
-  localStorage.removeItem("cardCheckersProfile_v6");
+  localStorage.removeItem("cardCheckersProfile_v7");
   localStorage.removeItem("cardCheckersProfile_v5");
   profile = loadProfile();
 }
@@ -1368,10 +1369,16 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
 function tryResumeSavedMatch() {
   const cp = readMatchCheckpoint();
   if (!cp) return false;
-  const deck = profile.decks.find((d) => d.id === cp.deckId) || profile.decks.find((d) => d.cardIds?.length === DECK_SIZE);
+  const deck =
+    profile.decks.find((d) => d.id === cp.deckId) ||
+    profile.decks.find((d) => d.cardIds?.length === DECK_SIZE);
   const level = cp.levelId ? getLevel(cp.levelId) : null;
   if (!deck || deck.cardIds.length !== DECK_SIZE || !level || !cp.aiDeckIds?.length) {
-    exitMatchMode();
+    clearMatchCheckpoint();
+    return false;
+  }
+  if (!window.confirm("Resume your adventure match where you left off?")) {
+    clearMatchCheckpoint();
     return false;
   }
   selectedAdventureLevel = cp.levelId;
@@ -1561,7 +1568,16 @@ function init() {
     openAuthModal: () => authUI.open("signin"),
   });
 
-  initAuth().then(async (user) => {
+  bindMatchVisibilityHandlers(() => matchSession);
+  repairProfile(profile);
+  syncCollectionFilterControls();
+
+  void bootstrapAfterAuth();
+}
+
+async function bootstrapAfterAuth() {
+  try {
+    const user = await initAuth();
     if (user) {
       try {
         const cloud = await pullCloudProfile();
@@ -1575,11 +1591,9 @@ function init() {
       renderStarsShop();
       pvpController?.render();
     }
-  });
-
-  bindMatchVisibilityHandlers(() => matchSession);
-  repairProfile(profile);
-  syncCollectionFilterControls();
+  } catch (e) {
+    console.warn("Auth init failed", e);
+  }
   if (!tryResumeSavedMatch()) showTab("deck");
 }
 
