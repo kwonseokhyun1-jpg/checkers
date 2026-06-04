@@ -5,6 +5,9 @@ import { addToCollection, saveProfile } from "./storage.js";
 export const MYSTERY_BOX_COST = 10;
 export const BIG_MYSTERY_BOX_COST = 20;
 
+/** Standard Star Chest (10★): chance each open grants cosmetics instead of spells. */
+export const STAR_CHEST_COSMETIC_CHANCE = 0.5;
+
 const CARD_TIERS = [
   { id: "bronze", name: "Bronze Chest", cards: 3, weights: { common: 70, uncommon: 25, rare: 5, epic: 0 } },
   { id: "silver", name: "Silver Chest", cards: 5, weights: { common: 50, uncommon: 35, rare: 12, epic: 3 } },
@@ -60,8 +63,8 @@ export function openMysteryBox(profile) {
   }
   profile.stars = (profile.stars ?? 0) - MYSTERY_BOX_COST;
 
-  const isCard = Math.random() < 0.5;
-  if (isCard) {
+  const isCosmetic = Math.random() < STAR_CHEST_COSMETIC_CHANCE;
+  if (!isCosmetic) {
     const tier = pickTier(CARD_TIERS);
     const pulls = grantCardTier(profile, tier);
     saveProfile(profile);

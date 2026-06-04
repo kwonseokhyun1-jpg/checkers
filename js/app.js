@@ -52,6 +52,7 @@ import {
   openBigMysteryBox,
   MYSTERY_BOX_COST,
   BIG_MYSTERY_BOX_COST,
+  STAR_CHEST_COSMETIC_CHANCE,
 } from "./mysteryBox.js";
 import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
@@ -393,14 +394,14 @@ async function playMysteryResult(res, log) {
   if (res.kind === "card") {
     await playChestOpenAnimation({
       tier: res.tier.id,
-      tierLabel: `Mystery — ${res.tier.name}`,
+      tierLabel: `Star Chest — ${res.tier.name}`,
       pulls: res.pulls,
     });
     if (log) log.textContent = `Got ${res.pulls.length} spells from ${res.tier.name}.`;
   } else if (res.kind === "cosmetic") {
     await playCosmeticOpenAnimation({
       boxId: res.tier?.id || "bronze",
-      boxLabel: "Mystery Box",
+      boxLabel: "Star Chest",
       pulls: res.pulls,
     });
     if (log) {
@@ -471,8 +472,8 @@ function renderStarsShop() {
   list.innerHTML = `
     ${mysteryBoxHtml({
       id: "standard",
-      title: "Mystery Box",
-      desc: "Random spell cards or cosmetics — same tier odds as shop chests.",
+      title: "Star Chest",
+      desc: `${Math.round(STAR_CHEST_COSMETIC_CHANCE * 100)}% cosmetics · ${Math.round((1 - STAR_CHEST_COSMETIC_CHANCE) * 100)}% spells — same tier odds as Shop chests.`,
       cost: MYSTERY_BOX_COST,
     })}
     ${mysteryBoxHtml({
