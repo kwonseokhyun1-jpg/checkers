@@ -263,7 +263,6 @@ function syncCollectionFilterControls() {
   if (categoryEl) categoryEl.value = collectionCategory;
 }
 
-
 const DECK_EDIT_MOBILE_MQ = "(max-width: 899px)";
 /** @type {number|null} */
 let deckListScrollYBeforeEdit = null;
