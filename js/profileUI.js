@@ -89,7 +89,6 @@ function profileHeroCardHtml(cos, profile, { username, email }) {
           </div>
         </div>
       </div>
-      <button type="button" class="btn-secondary btn-sm profile-hero-card__edit" id="profile-edit-btn">Edit profile</button>
     </div>`;
 }
 
@@ -541,11 +540,6 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
 
   changeBtn?.addEventListener("click", () => showUsernameEditor(true));
   cancelBtn?.addEventListener("click", () => showUsernameEditor(false));
-
-  root.querySelector("#profile-edit-btn")?.addEventListener("click", () => {
-    setProfileSection("account");
-    showUsernameEditor(true);
-  });
 
   root.querySelector("#profile-sign-out")?.addEventListener("click", () => {
     void signOut();
