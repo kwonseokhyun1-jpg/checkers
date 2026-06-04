@@ -101,13 +101,13 @@ function kill(state, r, c, by, nonCap = true, opts = {}) {
   if (!opts.linkFate && p.deflectTurns > 0) {
     p.deflectTurns = 0;
     const es = enemyPieces(state.board, by);
-    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; kill(state, t.row, t.col, by); }
+    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; removePiece(state.board, t.row, t.col); }
     return false;
   }
   if (!opts.linkFate && p.mirrorShield) {
     p.mirrorShield = false;
     const es = enemyPieces(state.board, by);
-    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; kill(state, t.row, t.col, by); }
+    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; removePiece(state.board, t.row, t.col); }
     return false;
   }
   if (!state.captured[p.color]) state.captured[p.color] = [];
@@ -477,10 +477,9 @@ const EFFECTS = {
     const landed = at(state, r2, c2);
     if (landed) {
       landed.berserkNoCapture = true;
-      landed.shieldTurns = Math.max(landed.shieldTurns || 0, 1);
     }
     markMove(state, color);
-    return ok(victim ? "Berserk — enemy shattered! Shielded, no capture this turn." : "Berserk — teleported! Shielded, no capture this turn.");
+    return ok(victim ? "Berserk — enemy shattered! No capture this turn." : "Berserk — teleported! No capture this turn.");
   },
   create_foe(state, color, picks) {
     const [r, c] = p0(picks);
