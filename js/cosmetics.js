@@ -75,6 +75,8 @@ export const DEFAULT_COSMETICS = {
     banner: "banner_default",
     pieceSkin: "skin_classic",
   },
+  unlockedTitles: [],
+  equippedTitle: null,
 };
 
 export function normalizeCosmetics(raw) {
@@ -89,6 +91,12 @@ export function normalizeCosmetics(raw) {
   for (const t of COSMETIC_TYPES) {
     const id = raw.equipped?.[t];
     if (id && base.owned[t]?.includes(id)) base.equipped[t] = id;
+  }
+  if (Array.isArray(raw.unlockedTitles)) {
+    base.unlockedTitles = [...new Set(raw.unlockedTitles.filter((id) => typeof id === "string" && id.startsWith("title_")))];
+  }
+  if (raw.equippedTitle && base.unlockedTitles.includes(raw.equippedTitle)) {
+    base.equippedTitle = raw.equippedTitle;
   }
   return base;
 }

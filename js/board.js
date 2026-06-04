@@ -466,9 +466,13 @@ export function applyMove(board, move, state = null) {
   const sq = state ? getSq(state, tr, tc) : null;
   if (sq?.sanctified === piece.color && !piece.king) piece.king = true;
   if (sq?.hiddenQuicksand) {
+    const qsOwner = sq.hiddenQuicksand.owner;
     sq.quicksand = true;
     delete sq.hiddenQuicksand;
-    if (piece) applyFreezeToPiece(board, state, tr, tc, 1);
+    if (piece) {
+      applyFreezeToPiece(board, state, tr, tc, 1);
+      state?.meta?.achievementHook?.trapTriggered?.(qsOwner, piece.color);
+    }
   } else if (sq?.quicksand && piece) {
     applyFreezeToPiece(board, state, tr, tc, 1);
     sq.quicksand = false;
@@ -478,6 +482,7 @@ export function applyMove(board, move, state = null) {
     const mineOwner = getMineOwner(sq);
     if (mineOwner && mineOwner !== piece.color && piece) {
       queueBoardFx(state, "mine", tr, tc);
+      state?.meta?.achievementHook?.trapTriggered?.(mineOwner, piece.color);
       removePiece(board, tr, tc);
       sq.mine = null;
       return null;
@@ -486,6 +491,7 @@ export function applyMove(board, move, state = null) {
     const mineOwner = getMineOwner(sq);
     if (mineOwner && mineOwner !== piece.color && piece) {
       queueBoardFx(state, "mine", tr, tc);
+      state?.meta?.achievementHook?.trapTriggered?.(mineOwner, piece.color);
       removePiece(board, tr, tc);
       sq.mine = null;
       return null;
