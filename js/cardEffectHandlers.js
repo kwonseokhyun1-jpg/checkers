@@ -358,7 +358,7 @@ const EFFECTS = {
       const t = at(state, r + i, c + i);
       if (t && t.color !== color && applyFreezeToPiece(state.board, state, r + i, c + i, 2)) n++;
     }
-    return n ? ok() : fail("No enemies on that diagonal");
+    return n ? ok(`Deep Freeze — ${n} frozen.`, { freezeCount: n }) : fail("No enemies on that diagonal");
   },
   root_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.rooted=1; return ok(); },
   slow_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.slowed=2; return ok(); },
@@ -496,7 +496,7 @@ const EFFECTS = {
       const t = at(state, row, c);
       if (t && t.color !== color && !t.king && applyFreezeToPiece(state.board, state, row, c, 1)) n++;
     }
-    return n ? ok() : fail("No enemies in that row");
+    return n ? ok(`Blizzard — ${n} frozen.`, { freezeCount: n }) : fail("No enemies in that row");
   },
   berserk(state, color, picks) {
     if (picks.length < 2) return fail();

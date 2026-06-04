@@ -3,6 +3,7 @@ import {
   frameClassFor,
   renderAvatarPreview,
 } from "./cosmeticArt.js";
+import { equippedTitleTagHtml } from "./mageTitles.js";
 
 const LOADING_MS = 4000;
 
@@ -29,6 +30,7 @@ export function buildPvpPlayerShowcaseHtml(player) {
         </div>
       </div>
       <p class="pvp-loading__name">${escapeHtml(username)}</p>
+      <div class="pvp-loading__title">${equippedTitleTagHtml({ cosmetics })}</div>
     </div>`;
 }
 
