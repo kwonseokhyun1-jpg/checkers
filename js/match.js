@@ -62,7 +62,15 @@ const AI_PACE = {
   explosion: 1000,
 };
 
-
+function findPieceInState(state, id) {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = state.board[r][c];
+      if (p && p.id === id) return { piece: p, row: r, col: c };
+    }
+  }
+  return null;
+}
 
 const TWO_PICK_MODES = new Set([
   "f_empty",
@@ -91,6 +99,8 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
     turnNumber: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     spellPlayed: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
+    pvpSpellSeq: 0,
+    pvpLastSpell: null,
   };
   initCardState(state);
   initDeckPiles(state, playerDeckIds, aiDeckIds || buildAiDeck());
@@ -121,6 +131,7 @@ export class MatchSession {
     this.onStateSync = options.onStateSync ?? null;
     this.onPvpWin = options.onPvpWin ?? null;
     this._syncBusy = false;
+    this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
     if (options.initialState) {
       this.state = options.initialState;
     } else {
@@ -227,11 +238,36 @@ export class MatchSession {
       !s.gameOver &&
       !s.spellPlayed[this.localColor] &&
       !s.meta.shatterSilenced?.[this.localColor] &&
+      !s.meta.blindNext?.[this.localColor] &&
       !this.actionBusy &&
       !this.cardPlay
     );
   }
 
+  consumeBlindIfNeeded(color) {
+    const s = this.state;
+    if (!s.meta.blindNext?.[color]) return false;
+    s.meta.blindNext[color] = false;
+    if (color === this.localColor) {
+      this.setMessage("You are blinded — spells skipped this turn.");
+    }
+    return true;
+  }
+
+  pickConfusedMove(color) {
+    const s = this.state;
+    if (!s.meta.confuseNext?.[color]) return null;
+    s.meta.confuseNext[color] = false;
+    let pool = getAllMovesForColor(s.board, color, s);
+    if (s.meta.mindControlId && s.meta.mindControlController === color) {
+      const hit = findPieceInState(s, s.meta.mindControlId);
+      if (hit) pool = getMovesForMindControl(s.board, hit.piece, color, s);
+    }
+    if (!pool.length) return null;
+    const move = pool[Math.floor(Math.random() * pool.length)];
+    if (color === this.localColor) this.setMessage("Confusion — random move!");
+    return move;
+  }
 
   showPieceInfo(piece, row, col) {
     const infoEl = this.$("piece-info");
@@ -297,7 +333,16 @@ export class MatchSession {
   importState(nextState) {
     if (!nextState || this.actionBusy || this._syncBusy) return;
     const prevTurn = this.state?.turn;
+    const prevSpellSeq = this.state?.pvpLastSpell?.seq ?? this._lastPvpSpellSeq ?? 0;
+    const incomingSpell = nextState.pvpLastSpell;
+    const replaySpell =
+      this.isPvp &&
+      incomingSpell &&
+      incomingSpell.seq > prevSpellSeq &&
+      incomingSpell.caster === this.opponentColor;
+
     this.state = nextState;
+    if (incomingSpell?.seq) this._lastPvpSpellSeq = incomingSpell.seq;
     this.cardPlay = null;
     this.validTargets = [];
     this.validMoves = [];
@@ -315,6 +360,29 @@ export class MatchSession {
     }
     this.updateSpellCastUI();
     this.render();
+    if (replaySpell) void this.replayOpponentPvpSpell(incomingSpell);
+  }
+
+  async replayOpponentPvpSpell(spell) {
+    if (this.actionBusy) return;
+    this.actionBusy = true;
+    try {
+      await this.replayAiLog([
+        {
+          type: "spell",
+          cardName: spell.cardName,
+          cardId: spell.cardId,
+          cardDesc: spell.cardDesc,
+          cardEffect: spell.cardEffect,
+          cardMode: spell.cardMode,
+          picks: spell.picks || [],
+          countered: !!spell.countered,
+        },
+      ]);
+    } finally {
+      this.actionBusy = false;
+      this.render();
+    }
   }
 
   pushPvpState() {
@@ -775,6 +843,10 @@ export class MatchSession {
 
   executeHumanMove(move) {
     const s = this.state;
+    if (s.turn === this.localColor && s.meta.confuseNext?.[this.localColor]) {
+      const forced = this.pickConfusedMove(this.localColor);
+      if (forced) move = forced;
+    }
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
     s.meta.lastMove.red = move;
@@ -1164,6 +1236,7 @@ ${starLine}`;
       } else {
         this.setMessage(res.message || "Spell cast.");
       }
+      this.recordPvpSpell(card, []);
       if (this.checkWin()) return;
       this.render();
       this.pushPvpState();
@@ -1366,6 +1439,11 @@ ${starLine}`;
     if (s.gameOver || s.turn !== this.localColor) return;
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
+    const confused = this.pickConfusedMove(this.localColor);
+    if (confused) {
+      this.executeHumanMove(confused);
+      return;
+    }
     const moves = getAllMovesForColor(s.board, this.localColor, s);
     if (!moves.length) {
       this.setMessage("No moves — turn passes.");

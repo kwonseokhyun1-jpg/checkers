@@ -10,6 +10,7 @@ import {
 } from "./cosmeticArt.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import {
+  canChangeUsername,
   fetchProfileRow,
   getCurrentUser,
   isAuthAvailable,
@@ -359,12 +360,16 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   changeBtn?.addEventListener("click", () => showUsernameEditor(true));
   cancelBtn?.addEventListener("click", () => showUsernameEditor(false));
 
+  let profileRow = null;
+
   void (async () => {
     try {
-      const row = await fetchProfileRow(user.id);
-      savedUsername = row?.username || user.user_metadata?.display_name || "";
+      profileRow = await fetchProfileRow(user.id);
+      savedUsername = profileRow?.username || user.user_metadata?.display_name || "";
       setUsernameDisplay(savedUsername);
       if (usernameInput && savedUsername) usernameInput.value = savedUsername;
+      const cooldown = canChangeUsername(profileRow);
+      if (!cooldown.ok) setHint(cooldown.message, "bad");
     } catch (e) {
       console.warn("Could not load profile username", e);
     }
@@ -375,7 +380,10 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
     setStatus("");
     saveBtn.disabled = true;
     try {
+      const cooldown = canChangeUsername(profileRow);
+      if (!cooldown.ok) throw new Error(cooldown.message);
       const updated = await updateUsername(name);
+      profileRow = await fetchProfileRow(user.id);
       savedUsername = updated;
       setUsernameDisplay(savedUsername);
       showUsernameEditor(false);
