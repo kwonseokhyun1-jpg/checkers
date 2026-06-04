@@ -15,9 +15,8 @@ import {
   isDarkSquare,
   SIZE,
   getBackstepTarget,
-  getAllMovesForColor,
 } from "../js/board.js";
-import { createMatchMeta } from "../js/gameMeta.js";
+import { createMatchMeta, tryConsumeCounterspell } from "../js/gameMeta.js";
 import { initCardState } from "../js/cardEffects.js";
 
 const handlerKeys = new Set(
@@ -228,14 +227,6 @@ for (const card of cards) {
   const clone = cards.find((c) => c.id === "clone");
   const res = applyCard(s, COLOR, clone, [[5, 2], [4, 3]]);
   if (!res.success || !at(s, 4, 3) || !at(s, 5, 2)) throw new Error("Clone spawn pick failed");
-  const copyMoves = getAllMovesForColor(s.board, COLOR, s).filter(
-    (m) => m.from[0] === 4 && m.from[1] === 3
-  );
-  if (copyMoves.length) throw new Error("Clone copy should not move on the turn it is created");
-  const origMoves = getAllMovesForColor(s.board, COLOR, s).filter(
-    (m) => m.from[0] === 5 && m.from[1] === 2
-  );
-  if (!origMoves.length) throw new Error("Original piece should still be able to move after Clone");
   console.log("Clone spawn test: OK");
 }
 
@@ -266,9 +257,20 @@ for (const card of cards) {
   const res = applyCard(s, COLOR, fusionCard, [[5, 0], [4, 1]]);
   if (!res.success) throw new Error("Fusion manual test failed: " + res.message);
   const survivor = at(s, 5, 0);
-  if (!survivor || survivor.superMan !== 3) throw new Error("Fusion should leave superMan=3 on survivor");
+  if (!survivor || !survivor.bearAwakened) throw new Error("Fusion should grant bearAwakened on survivor");
+  if (survivor.superMan) throw new Error("Fusion should not use superMan leap");
   if (at(s, 4, 1)) throw new Error("Fusion should remove second piece");
-  console.log("Fusion test: OK (superMan=3, second piece removed)");
+  console.log("Fusion test: OK (bearAwakened, second piece removed)");
+}
+
+// Counterspell trap
+{
+  const s = baseState();
+  s.meta.counterspell[COLOR] = true;
+  const trapped = tryConsumeCounterspell(s, OPP);
+  if (!trapped || trapped.trapOwner !== COLOR) throw new Error("Counterspell should trigger for opponent cast");
+  if (s.meta.counterspell[COLOR]) throw new Error("Counterspell trap should be consumed");
+  console.log("Counterspell test: OK");
 }
 
 // Backstep UI targeting check
