@@ -54,10 +54,15 @@ function at(state, r, c) {
   return state.board[r]?.[c] ?? null;
 }
 
-function emptyDark(state, r, c) {
+function squareBlocked(state, r, c) {
   const k = sk(r, c);
-  if (collapsedSquareKey(state.meta) === k) return false;
-  if (state.squares[k]?.obstacle) return false;
+  if (collapsedSquareKey(state.meta) === k) return true;
+  if (state.squares[k]?.obstacle) return true;
+  return false;
+}
+
+function emptyDark(state, r, c) {
+  if (squareBlocked(state, r, c)) return false;
   return isDarkSquare(r, c) && !at(state, r, c);
 }
 
@@ -94,6 +99,21 @@ function fEmptyFirstPickTargets(state, color, card) {
   }
   if (card.effect === "blink_2" || card.effect === "teleport") {
     return filter((piece) => getTeleportTargets(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
+  }
+  if (card.effect === "berserk") {
+    const enemyBack = color === COLORS.RED ? [0, 1, 2] : [5, 6, 7];
+    return filter((_piece, r, c) => {
+      for (let rr = 0; rr < SIZE; rr++) {
+        for (let cc = 0; cc < SIZE; cc++) {
+          if (enemyBack.includes(rr)) continue;
+          if (!isDarkSquare(rr, cc) || squareBlocked(state, rr, cc)) continue;
+          const t = at(state, rr, cc);
+          if (t && t.color === color) continue;
+          return true;
+        }
+      }
+      return false;
+    });
   }
   if (card.effect === "nudge" || card.effect === "sidestep") {
     return filter((piece) => getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
@@ -178,6 +198,20 @@ export function getValidTargets(state, color, card, picks) {
         for (const r of rows) {
           for (let c = 0; c < SIZE; c++) {
             if (emptyDark(state, r, c)) spots.push([r, c]);
+          }
+        }
+        return spots;
+      }
+      if (card.effect === "berserk") {
+        const enemyBack = color === COLORS.RED ? [0, 1, 2] : [5, 6, 7];
+        const spots = [];
+        for (let r = 0; r < SIZE; r++) {
+          for (let c = 0; c < SIZE; c++) {
+            if (enemyBack.includes(r)) continue;
+            if (!isDarkSquare(r, c) || squareBlocked(state, r, c)) continue;
+            const t = at(state, r, c);
+            if (t && t.color === color) continue;
+            spots.push([r, c]);
           }
         }
         return spots;

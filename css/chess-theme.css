@@ -197,6 +197,22 @@ body {
   border-radius: 6px;
 }
 
+/* PvP: guest (black) sees the board from their side — your pieces advance toward you */
+.board-frame--local-flipped {
+  transform: rotate(180deg);
+}
+.board-frame--local-flipped .piece,
+.board-frame--local-flipped .board-file-btn,
+.board-frame--local-flipped .board-rank-btn,
+.board-frame--local-flipped .barrier-indicator,
+.board-frame--local-flipped .sanctuary-indicator,
+.board-frame--local-flipped .shield-indicator,
+.board-frame--local-flipped .poison-indicator,
+.board-frame--local-flipped .fire-indicator,
+.board-frame--local-flipped .fire-tile-indicator {
+  transform: rotate(180deg);
+}
+
 .board-frame {
   background: #262421;
   border: 1px solid #4a4845;

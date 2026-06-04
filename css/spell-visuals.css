@@ -578,3 +578,103 @@
   opacity: 0;
   transition: opacity 0.2s;
 }
+
+/* ── Snowball (ice projectile) ── */
+.board-frame--fx-snowball {
+  box-shadow: 0 0 36px rgba(160, 230, 255, 0.45);
+}
+.square.spell-fx-snowball.spell-fx-role-debuff {
+  animation: spell-snowball-freeze 0.55s ease-in-out 5;
+  box-shadow: inset 0 0 20px rgba(180, 240, 255, 0.85);
+}
+.square.spell-fx-snowball-victim::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: -40%;
+  width: 55%;
+  height: 55%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #b8ecff 45%, transparent 70%);
+  transform: translateY(-50%);
+  animation: spell-snowball-fly 0.65s ease-out 2;
+  pointer-events: none;
+  z-index: 5;
+}
+.square.spell-fx-snowball-victim::after {
+  content: "❄";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  animation: spell-freeze-sparkle 0.45s ease-in-out 5;
+  pointer-events: none;
+}
+@keyframes spell-snowball-fly {
+  0% { transform: translate(-120%, -50%) scale(0.35); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: translate(0, -50%) scale(1); opacity: 0; }
+}
+@keyframes spell-snowball-freeze {
+  0%, 100% { filter: brightness(1) hue-rotate(0deg); }
+  50% { filter: brightness(1.45) hue-rotate(12deg); }
+}
+
+/* ── Berserk (teleport slam) ── */
+.board-frame--fx-berserk {
+  animation: spell-berserk-board-pulse 0.4s ease-in-out 4;
+}
+.square.spell-fx-berserk-from {
+  animation: spell-berserk-vanish 0.5s ease-in 3;
+  box-shadow: inset 0 0 22px rgba(255, 90, 40, 0.75);
+}
+.square.spell-fx-berserk-from::after {
+  content: "⚡";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  animation: spell-berserk-spin 0.45s linear 4;
+  pointer-events: none;
+}
+.square.spell-fx-berserk-to {
+  animation: spell-berserk-land 0.55s ease-out 4;
+  box-shadow: inset 0 0 24px rgba(255, 120, 60, 0.85);
+}
+.square.spell-fx-berserk-to::after {
+  content: "🛡";
+  position: absolute;
+  top: 6%;
+  right: 8%;
+  font-size: 0.85rem;
+  animation: spell-shield-pop 0.45s ease-out 3;
+  pointer-events: none;
+}
+.square.spell-anim-type-move.spell-fx-berserk.spell-fx-role-hit {
+  animation: spell-berserk-impact 0.4s ease-out 3;
+}
+@keyframes spell-berserk-board-pulse {
+  0%, 100% { box-shadow: 0 0 32px rgba(255, 70, 50, 0.35); }
+  50% { box-shadow: 0 0 52px rgba(255, 90, 60, 0.65); }
+}
+@keyframes spell-berserk-vanish {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.75); opacity: 0.35; filter: brightness(1.6); }
+}
+@keyframes spell-berserk-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes spell-berserk-land {
+  0% { transform: scale(1.35); filter: brightness(1.8); }
+  60% { transform: scale(0.92); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes spell-berserk-impact {
+  0%, 100% { box-shadow: inset 0 0 8px rgba(255, 80, 40, 0.4); }
+  50% { box-shadow: inset 0 0 28px rgba(255, 40, 20, 0.95); }
+}

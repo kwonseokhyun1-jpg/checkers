@@ -95,7 +95,7 @@ function kill(state, r, c, by, nonCap = true, opts = {}) {
   const p = at(state, r, c);
   if (!p) return false;
   if (!opts.linkFate && p.cloneNoCaptureThisTurn) return false;
-  if (!opts.linkFate && p.shieldTurns > 0) { p.shieldTurns--; return false; }
+  if (!opts.berserkSlam && !opts.linkFate && p.shieldTurns > 0) { p.shieldTurns--; return false; }
   if (!opts.linkFate && p.king && state.meta.constitutionTurns[p.color] > 0 && nonCap) return false;
   if (!opts.linkFate && p.lastStand) { p.lastStand = false; p.shieldTurns = 1; return false; }
   if (!opts.linkFate && p.deflectTurns > 0) {
@@ -452,6 +452,35 @@ const EFFECTS = {
       if (t && t.color !== color && !t.king) { t.frozenTurns = Math.max(t.frozenTurns || 0, 1); n++; }
     }
     return n ? ok() : fail("No enemies in that row");
+  },
+  snowball(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color === color) return fail();
+    p.frozenTurns = Math.max(p.frozenTurns || 0, 1);
+    return ok("Snowball — frozen!");
+  },
+  berserk(state, color, picks) {
+    if (picks.length < 2) return fail();
+    const [r1, c1] = p0(picks);
+    const [r2, c2] = p1(picks);
+    const p = at(state, r1, c1);
+    if (!p || p.color !== color) return fail();
+    const enemyBack = backRow(opp(color));
+    if (enemyBack.includes(r2)) return fail("Cannot land on enemy back rank");
+    if (!isDarkSquare(r2, c2) || blocked(state, r2, c2)) return fail();
+    const victim = at(state, r2, c2);
+    if (victim && victim.color === color) return fail();
+    if (victim && victim.color !== color) kill(state, r2, c2, color, true, { berserkSlam: true });
+    if (at(state, r2, c2)) return fail("Square blocked");
+    movePiece(state.board, r1, c1, r2, c2);
+    const landed = at(state, r2, c2);
+    if (landed) {
+      landed.berserkNoCapture = true;
+      landed.shieldTurns = Math.max(landed.shieldTurns || 0, 1);
+    }
+    markMove(state, color);
+    return ok(victim ? "Berserk — enemy shattered! Shielded, no capture this turn." : "Berserk — teleported! Shielded, no capture this turn.");
   },
   create_foe(state, color, picks) {
     const [r, c] = p0(picks);

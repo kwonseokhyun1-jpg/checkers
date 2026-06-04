@@ -113,6 +113,8 @@ export class MatchSession {
     this.isPvp = !!options.pvp;
     this.localColor = options.localColor ?? COLORS.RED;
     this.opponentColor = this.localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+    /** In PvP, black (guest) sees the board from their side — pieces advance toward them. */
+    this.boardFlipped = this.isPvp && this.localColor === COLORS.BLACK;
     this.opponentName = options.opponentName || "Opponent";
     this.onStateSync = options.onStateSync ?? null;
     this.onPvpWin = options.onPvpWin ?? null;
@@ -1389,7 +1391,7 @@ ${starLine}`;
     if (!handEl) return;
     handEl.innerHTML = "";
     const s = this.state;
-    const n = s.hands.red.length;
+    const n = s.hands[this.localColor].length;
     if (countLabel) {
       countLabel.textContent = n === 1 ? "1 card in hand" : `${n} cards in hand`;
     }
@@ -1398,7 +1400,7 @@ ${starLine}`;
     const castingId = this.cardPlay?.card?.instanceId;
     handEl.classList.toggle("spell-hand--locked", !canPlay);
 
-    for (const card of s.hands.red) {
+    for (const card of s.hands[this.localColor]) {
       const playable =
         canPlay && (isInstant(card) || getValidTargets(s, this.localColor, card, []).length > 0);
       const el = renderSpellCardEl(card, {
@@ -1414,7 +1416,7 @@ ${starLine}`;
     const opp = this.$("hand-black");
     if (opp) {
       opp.innerHTML = "";
-      for (let i = 0; i < s.hands.black.length; i++) {
+      for (let i = 0; i < s.hands[this.opponentColor].length; i++) {
         const div = document.createElement("div");
         div.className = "card-mini";
         div.textContent = "?";
@@ -1426,6 +1428,8 @@ ${starLine}`;
   renderBoard() {
     const boardEl = this.$("board");
     if (!boardEl) return;
+    const boardFrame = this.root.querySelector("#board-frame");
+    boardFrame?.classList.toggle("board-frame--local-flipped", this.boardFlipped);
     boardEl.innerHTML = "";
     const s = this.state;
     const zonePreview = this.getZonePreviewSets();
@@ -1587,6 +1591,7 @@ ${starLine}`;
           if (piece.vengeanceTurns > 0) el.classList.add("vengeance-mark");
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
+          if (piece.berserkNoCapture) el.classList.add("berserk-mark");
           if (piece.venom > 0) el.classList.add("poisoned");
           if (piece.blazeTurns > 0) el.classList.add("burning");
           if (
@@ -1685,7 +1690,7 @@ ${starLine}`;
     if (banner) {
       if (s.gameOver) banner.textContent = "Game over";
       else if (s.turn === this.localColor) {
-        const spellNote = s.meta.shatterSilenced?.red
+        const spellNote = s.meta.shatterSilenced?.[this.localColor]
           ? "No spells (Shatter backlash) · "
           : s.spellPlayed[this.localColor]
             ? "Spell used · "
@@ -1710,7 +1715,15 @@ ${starLine}`;
     this.updateSpellCastUI();
     this.updateColumnPickUI();
     this.updateRowPickUI();
+    this.updatePlayerPanels();
     this.renderHand();
     this.renderBoard();
+  }
+
+  updatePlayerPanels() {
+    const youIcon = this.root.querySelector(".panel-player .piece-icon");
+    if (youIcon) youIcon.className = `piece-icon ${this.localColor}`;
+    const oppIcon = this.root.querySelector(".panel-opponent .piece-icon");
+    if (oppIcon) oppIcon.className = `piece-icon ${this.opponentColor}`;
   }
 }

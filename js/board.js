@@ -114,6 +114,7 @@ export function createPiece(color, row, col, king = false) {
     chameleonFrom: null,
     chameleonTurns: 0,
     revivedNoCapture: false,
+    berserkNoCapture: false,
     paralyzedTurns: 0,
     vengeanceTurns: 0,
     hibernationTurns: 0,
@@ -197,7 +198,7 @@ function squareBlocked(state, r, c, moverColor = null) {
 const KNIGHT_OFFSETS = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
 
 export function getKnightMoves(board, piece, state, canCapture = false) {
-  if (piece.revivedNoCapture) canCapture = false;
+  if (piece.revivedNoCapture || piece.berserkNoCapture) canCapture = false;
   const moves = [];
   for (const [dr, dc] of KNIGHT_OFFSETS) {
     const nr = piece.row + dr, nc = piece.col + dc;
@@ -285,7 +286,7 @@ export function getStepMoves(board, piece, color, state = null) {
 
 export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
-  if (piece.revivedNoCapture) return moves;
+  if (piece.revivedNoCapture || piece.berserkNoCapture) return moves;
   if (piece.reverseOnlyTurns > 0 || piece.noCaptureTurns > 0) return moves;
   if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.rooted > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
   if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
@@ -516,6 +517,7 @@ export function tickEffects(board, color, state = null) {
       if (p.panicTurn) { p.panicTurn = false; }
       if (p.promoteZone) p.promoteZone = false;
       if (p.revivedNoCapture) p.revivedNoCapture = false;
+      if (p.berserkNoCapture) p.berserkNoCapture = false;
       if (p.rustedTurns > 0) {
         p.rustedTurns--;
         if (p.rustedTurns <= 0) {

@@ -117,6 +117,8 @@ export const EFFECT_ILLUSTRATIONS = {
   root_2: () => wrap(`${enemy(32, 28, 6)}<path d="M24 40 C28 34 36 34 40 40 M26 44 C30 38 34 38 38 44" stroke="currentColor" stroke-width="1.8" fill="none" opacity="0.65"/>`),
   panic: () => wrap(`${enemy(32, 26, 6)} ${arrow(32, 32, 32, 46)}<path d="M26 48 L32 42 L38 48" stroke="currentColor" stroke-width="1.6" fill="none"/>`),
   blizzard: () => wrap(`<path d="M12 32 H52" stroke="currentColor" stroke-width="2" opacity="0.45"/>${enemy(22, 32, 3)}${enemy(32, 32, 3)}${enemy(42, 32, 3)}<text x="40" y="20" font-size="8" fill="currentColor" opacity="0.55">❄</text>`),
+  snowball: () => wrap(`${enemy(40, 30, 6)}<circle cx="18" cy="38" r="7" fill="currentColor" opacity="0.35"/><path d="M14 38 L22 38" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><text x="14" y="41" font-size="6" fill="currentColor" opacity="0.7">❄</text>`),
+  berserk: () => wrap(`${piece(20, 44, 5)}<path d="M24 40 Q32 20 48 28" stroke="currentColor" stroke-width="2" fill="none" opacity="0.55"/>${enemy(46, 26, 5)} ${xMark(46, 26, 4)}<text x="38" y="48" font-size="7" fill="currentColor" opacity="0.65">🛡</text>`),
   create_foe: () => wrap(`${square(32, 34, 16, 0.15)}${enemy(32, 34, 6)}<text x="38" y="22" font-size="7" fill="currentColor" opacity="0.55">+</text>`),
   deep_freeze: () => wrap(`${piece(32, 48, 4)}<path d="M10 54 L54 10" stroke="currentColor" stroke-width="2" opacity="0.45"/>${enemy(22, 40, 3)}${enemy(32, 30, 3)}${enemy(42, 20, 3)}`),
   reverse_only_2: () => wrap(`${enemy(32, 24, 6)} ${arrow(32, 28, 32, 44)}<path d="M24 48 H40" stroke="currentColor" stroke-width="1.8" opacity="0.4"/>`),
