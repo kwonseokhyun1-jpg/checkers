@@ -91,6 +91,28 @@ body.deck-editing .game-nav.tabs {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
+/* Mobile: pin toolbar to viewport (window scroll on iOS can hide sticky headers). */
+@media (max-width: 899px) {
+  body.deck-editing .deck-editor__toolbar--sticky {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(100%, 480px);
+    z-index: 50;
+    padding-top: calc(var(--game-safe-top, 0px) + 0.35rem);
+  }
+
+  body.deck-editing .deck-editor {
+    padding-top: calc(var(--game-safe-top, 0px) + 3.15rem);
+  }
+
+  body.deck-editing .deck-editor__error:not([hidden]),
+  body.deck-editing .deck-editor__progress:not([hidden]) {
+    margin-top: 0.15rem;
+  }
+}
+
 .deck-editor__body {
   flex: 1;
   min-height: 0;
