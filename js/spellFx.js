@@ -73,6 +73,7 @@ export const EFFECT_VISUAL = {
   root_2: "root",
   deep_freeze: "freeze",
   blizzard: "freeze",
+  snowball: "freeze",
 
   quicksand: "sink",
   collapse: "collapse",

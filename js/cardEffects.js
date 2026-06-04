@@ -36,6 +36,7 @@ export function getCardHint(card) {
     f_f_adj: "Click two adjacent friendly pieces.",
     diagonal: "Click your piece, then a strike target on its diagonal.",
     any_piece: "Click any piece, then a second piece to copy.",
+    snowball_hint: "Click any piece to freeze it.",
     any_square: "Click a square on the board.",
     column: "Tap a file letter (a–h) below the board.",
     row: "Tap a rank number (1–8) beside the board.",
@@ -47,6 +48,7 @@ export function getCardHint(card) {
     return "Hidden trap — cancels their next spell when they cast it.";
   }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
+  if (card.effect === "snowball") return hints.snowball_hint;
   return hints[card.mode] || "Click valid targets on the board.";
 }
 
@@ -230,6 +232,13 @@ export function getValidTargets(state, color, card, picks) {
       return getBoltTarget(state.board, p);
     }
     case "any_piece":
+      if (card.effect === "snowball") {
+        if (picks.length === 0) {
+          for (let r = 0; r < SIZE; r++)
+            for (let c = 0; c < SIZE; c++) if (at(state, r, c)) res.push([r, c]);
+        }
+        return res;
+      }
       if (picks.length === 0) {
         for (let r = 0; r < SIZE; r++)
           for (let c = 0; c < SIZE; c++) if (at(state, r, c)) res.push([r, c]);
@@ -310,6 +319,10 @@ function* pickSequences(state, color, card, max = 24) {
         if (++n >= max) return;
       }
     }
+    return;
+  }
+  if (card.mode === "any_piece" && card.effect === "snowball") {
+    for (const p of t0.slice(0, max)) yield [p];
   }
 }
 

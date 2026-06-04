@@ -252,6 +252,7 @@ const EFFECTS = {
     return ok("Pyromancy — burns for 2 turns!", { pyromancySquares: [[er, ec], [tr, tc]] });
   },
   freeze_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.frozenTurns=1; return ok(); },
+  snowball(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p) return fail(); p.frozenTurns=Math.max(p.frozenTurns||0,1); return ok(); },
   retreat_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.retreatTurns=3; return ok(); },
   knight_perm(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.knightTurns=2; p.isKnight=false; return ok(); },
   crown(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.king=true; return ok(); },

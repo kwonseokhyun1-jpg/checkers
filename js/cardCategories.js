@@ -87,6 +87,7 @@ const ID_TO_CATEGORY = {
   shadow_swap: "movement",
   shatter: "attack",
   snipe: "attack",
+  snowball: "control",
   stab: "attack",
   stall: "defense",
   stone_form: "defense",
