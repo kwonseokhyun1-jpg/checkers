@@ -80,6 +80,7 @@ export function initTutorial({ profile, saveProfile, onDone }) {
     return !!(
       target.closest(".game-nav") ||
       target.closest("#auth-header-btn") ||
+      target.closest("#header-profile-btn") ||
       target.closest("#pvp-sign-in") ||
       target.closest(".adventure-stage-row") ||
       target.closest(".adventure-map-pin")

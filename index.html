@@ -28,10 +28,6 @@
         </div>
       </div>
       <div class="game-header__actions">
-        <div class="game-header__player hidden" id="header-player" hidden>
-          <span id="header-username" class="game-header__username"></span>
-          <span id="header-mage-title" class="game-header__mage-title"></span>
-        </div>
         <div class="hud-currency">
           <div class="hud-gems" title="Gems">
             <span class="hud-gems__icon" aria-hidden="true">◆</span>
@@ -44,6 +40,9 @@
             <span class="hud-stars__label">stars</span>
           </div>
         </div>
+        <button type="button" id="header-profile-btn" class="header-profile-btn hidden" hidden aria-label="Open profile">
+          <span id="header-profile-avatar" class="header-profile-btn__avatar" aria-hidden="true"></span>
+        </button>
         <button type="button" id="auth-header-btn" class="btn-secondary btn-sm auth-header-btn">Sign in</button>
       </div>
     </header>
@@ -65,14 +64,15 @@
         <span class="tab-btn__icon" aria-hidden="true">⚡</span>
         <span>PvP</span>
       </button>
-      <button type="button" class="tab-btn game-nav__btn" data-tab="profile" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">☺</span>
-        <span>Profile</span>
+      <button type="button" class="tab-btn game-nav__btn" data-tab="achievements" role="tab">
+        <span class="tab-btn__icon" aria-hidden="true">🏆</span>
+        <span>Achievements</span>
       </button>
     </nav>
 
     <main class="game-main">
-            <div id="view-profile" class="view view-panel hidden"></div>
+      <div id="view-profile" class="view view-panel hidden"></div>
+      <div id="view-achievements" class="view view-panel hidden"></div>
 
       <div id="view-chests" class="view view-panel hidden">
         <section class="panel game-panel vault-panel">
