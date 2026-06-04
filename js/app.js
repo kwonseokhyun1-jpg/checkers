@@ -733,9 +733,9 @@ function appendCollectionCard(parent, def, opts = {}) {
 
     const art = document.createElement("div");
     art.className = "deck-collection-row__art";
+    art.addEventListener("click", () => openInspect());
     const thumb = renderSpellCardEl(def, { static: true, compact: true });
     thumb.classList.add("deck-collection-row__thumb");
-    thumb.addEventListener("click", () => openInspect());
     art.appendChild(thumb);
 
     const info = document.createElement("div");
