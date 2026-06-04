@@ -4,8 +4,9 @@ import { COLORS } from "./board.js";
 import { MatchSession, isPvpTerminalBoard } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
-import { getEquippedCosmetics } from "./cosmetics.js";
+import { getEquippedCosmetics, normalizeCosmetics } from "./cosmetics.js";
 import { PvpService, probePvpBackend, subscribeOpenRooms } from "./pvp.js";
+import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -26,6 +27,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
 
   let pvpService = null;
   let matchSession = null;
+  let matchLaunching = false;
   let unsubscribeOpenRooms = null;
   let openRoomsPollId = null;
 
@@ -239,6 +241,30 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     return name && String(name).trim() ? String(name).trim() : "Opponent";
   }
 
+  function localNameFromRow(row) {
+    const name =
+      pvpService?.localColor === COLORS.RED
+        ? row.host_display_name
+        : row.guest_display_name;
+    return name && String(name).trim() ? String(name).trim() : "You";
+  }
+
+  function opponentIdFromRow(row) {
+    return pvpService?.localColor === COLORS.RED ? row.guest_id : row.host_id;
+  }
+
+  async function cosmeticsForUser(userId, fallbackProfile) {
+    if (!userId) return getEquippedCosmetics(fallbackProfile);
+    try {
+      const row = await fetchProfileRow(userId);
+      const fromCloud = row?.profile_json?.cosmetics;
+      if (fromCloud) return normalizeCosmetics(fromCloud);
+    } catch {
+      /* use local defaults */
+    }
+    return getEquippedCosmetics(fallbackProfile);
+  }
+
   function setStatus(text, isError = false) {
     const el = root.querySelector("#pvp-status");
     if (el) {
@@ -301,23 +327,46 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       return;
     }
 
-    if (row.status === "active" && row.state_json && !matchSession) {
+    if (row.status === "active" && row.state_json && !matchSession && !matchLaunching) {
       stopOpenRoomsSync();
       hideHosting();
-      launchMatch(row);
+      matchLaunching = true;
+      void launchMatch(row).finally(() => {
+        if (!matchSession) matchLaunching = false;
+      });
     }
   }
 
-  function launchMatch(row) {
+  async function launchMatch(row) {
     const profile = getProfile();
     const deck = getSelectedDeck();
     if (!deck || deck.cardIds.length !== DECK_SIZE) {
+      matchLaunching = false;
       setStatus("Invalid deck.", true);
+      renderLobby();
       return;
     }
 
     const localColor = pvpService.localColor;
     const opponentName = opponentNameFromRow(row);
+    const localName = localNameFromRow(row);
+    const user = getCurrentUser();
+
+    const [localCosmetics, opponentCosmetics] = await Promise.all([
+      cosmeticsForUser(user?.id, profile),
+      cosmeticsForUser(opponentIdFromRow(row), profile),
+    ]);
+
+    await showPvpMatchLoading(root, {
+      local: { username: localName, cosmetics: localCosmetics },
+      opponent: { username: opponentName, cosmetics: opponentCosmetics },
+    });
+
+    if (!pvpService || row.status !== "active" || !row.state_json) {
+      matchLaunching = false;
+      if (!matchSession) renderLobby();
+      return;
+    }
 
     root.innerHTML = "";
     const matchRoot = document.createElement("div");
@@ -333,6 +382,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       matchRoot,
       () => {
         matchSession = null;
+        matchLaunching = false;
         exitMatchMode();
         pvpService?.dispose();
         pvpService = null;
@@ -344,17 +394,17 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         localColor,
         initialState: row.state_json,
         opponentName,
-        cosmetics: getEquippedCosmetics(profile),
+        cosmetics: localCosmetics,
         onStateSync: async (state) => {
           const v = pvpService._lastVersion;
           const updated = await pvpService.pushState(state, v);
           if (updated) pvpService._lastVersion = updated.version;
         },
         onPvpWin: async (won) => {
-          const user = getCurrentUser();
-          if (!user) return;
+          const currentUser = getCurrentUser();
+          if (!currentUser) return;
           const winnerId = won
-            ? user.id
+            ? currentUser.id
             : localColor === COLORS.RED
               ? row.guest_id
               : row.host_id;
@@ -370,6 +420,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     );
     matchSession.render();
     pvpService.startPolling(2000);
+    matchLaunching = false;
   }
 
   function ensurePvpService() {
