@@ -86,6 +86,12 @@ const TWO_PICK_MODES = new Set([
   "empty_empty",
 ]);
 
+export function isPvpTerminalBoard(state, localColor) {
+  if (!state?.board) return false;
+  const opp = localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  return countPieces(state.board, localColor) === 0 || countPieces(state.board, opp) === 0;
+}
+
 export function createMatchState(playerDeckIds, aiDeckIds = null) {
   const state = {
     board: createInitialBoard(),
@@ -157,6 +163,7 @@ export class MatchSession {
     this.selectedColumn = null;
     this.selectedRow = null;
     this.actionBusy = false;
+    this._gameOverUiShown = false;
     this._aiTurnPending = false;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.bindEls();
@@ -359,6 +366,7 @@ export class MatchSession {
       this.beginPlayerTurn();
     }
     this.updateSpellCastUI();
+    this.applyPvpOutcomeFromBoard();
     this.render();
     if (replaySpell) void this.replayOpponentPvpSpell(incomingSpell);
   }
@@ -385,12 +393,25 @@ export class MatchSession {
     }
   }
 
+  applyPvpOutcomeFromBoard() {
+    if (!this.isPvp || this._gameOverUiShown) return;
+    if (!isPvpTerminalBoard(this.state, this.localColor)) return;
+    if (countPieces(this.state.board, this.opponentColor) === 0) {
+      void this.showGameOver("Victory!", "You won the match!");
+      return;
+    }
+    void this.showGameOver("Defeat", "You lost the match.");
+  }
+
   pushPvpState() {
-    if (!this.isPvp || !this.onStateSync || this._syncBusy) return;
+    if (!this.isPvp || !this.onStateSync) return Promise.resolve();
+    if (this._syncBusy) return this._syncPromise ?? Promise.resolve();
     this._syncBusy = true;
-    Promise.resolve(this.onStateSync(this.state)).finally(() => {
+    this._syncPromise = Promise.resolve(this.onStateSync(this.state)).finally(() => {
       this._syncBusy = false;
+      this._syncPromise = null;
     });
+    return this._syncPromise;
   }
 
   removeCardFromHand(card) {
@@ -440,6 +461,7 @@ export class MatchSession {
     this.updateSpellCastUI();
     this.setMessage(msg || "Spell played (1 per turn).");
     this.render();
+    if (this.checkWin()) return;
     this.pushPvpState();
   }
 
@@ -941,9 +963,18 @@ export class MatchSession {
   }
 
   async showGameOver(title, text) {
+    if (this._gameOverUiShown) return;
+    this._gameOverUiShown = true;
     this.state.gameOver = title;
     if (!this.isPvp) clearMatchCheckpoint();
     const won = title.startsWith("Victory");
+    if (this.isPvp) {
+      try {
+        await this.pushPvpState();
+      } catch {
+        /* opponent may still resolve outcome from board or finished row */
+      }
+    }
     let displayText = text;
     let stars = 0;
     if (won && !this.isPvp) {
@@ -988,11 +1019,11 @@ ${starLine}`;
         await playStarCollectAnimation(n, starsEl);
       }
     }
-    if (this.isPvp && this.state.gameOver) {
-      const won = title.startsWith("Victory");
+    if (this.isPvp) {
       this.onPvpWin?.(won);
     }
     this.cancelCardPlay();
+    this.actionBusy = false;
     this.render();
   }
 

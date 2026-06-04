@@ -1,7 +1,7 @@
 import { fetchProfileRow, getCurrentUser, isAuthAvailable } from "./auth.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { COLORS } from "./board.js";
-import { MatchSession } from "./match.js";
+import { MatchSession, isPvpTerminalBoard } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
@@ -273,18 +273,31 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       return;
     }
 
-    if (matchSession && row.status === "active" && row.state_json) {
+    if (matchSession && row.state_json && (row.status === "active" || row.status === "finished")) {
       const ver = row.version ?? 0;
-      if (ver <= (pvpService?._lastVersion ?? -1)) return;
-      if (matchSession.actionBusy || matchSession._syncBusy) return;
+      const terminal = isPvpTerminalBoard(row.state_json, pvpService.localColor);
+      const finished = row.status === "finished";
+      if (!finished && ver <= (pvpService?._lastVersion ?? -1)) return;
+      if ((matchSession.actionBusy || matchSession._syncBusy) && !terminal && !finished) return;
+      if (terminal || finished) matchSession.actionBusy = false;
       const isMyTurn = row.turn === pvpService.localColor;
       const opponentName = opponentNameFromRow(row);
       matchSession.opponentName = opponentName;
       matchSession.importState(row.state_json);
-      pvpService._lastVersion = ver;
-      matchSession.setMessage(
-        isMyTurn ? "Your turn — cast a spell or move." : `${opponentName} is acting…`
-      );
+      if (ver > (pvpService?._lastVersion ?? -1)) pvpService._lastVersion = ver;
+      if (!matchSession._gameOverUiShown && finished && row.winner_id) {
+        const user = getCurrentUser();
+        const won = user?.id === row.winner_id;
+        void matchSession.showGameOver(
+          won ? "Victory!" : "Defeat",
+          won ? "You won the match!" : "You lost the match."
+        );
+      }
+      if (!matchSession._gameOverUiShown) {
+        matchSession.setMessage(
+          isMyTurn ? "Your turn — cast a spell or move." : `${opponentName} is acting…`
+        );
+      }
       return;
     }
 
