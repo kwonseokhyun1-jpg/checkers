@@ -66,6 +66,12 @@ function ring(x, y, r) {
   return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.55"/>`;
 }
 
+function tickMarks(x, y, count, size = 5, gap = 6) {
+  return Array.from({ length: count }, (_, i) =>
+    `<rect x="${x + i * gap}" y="${y}" width="${size}" height="${size}" rx="1" fill="currentColor" opacity="0.75"/>`
+  ).join("");
+}
+
 /** @type {Record<string, (variant: number) => string>} */
 export const EFFECT_ILLUSTRATIONS = {
   nudge: () => wrap(`${piece(18, 42)} ${ghost(36, 28)} ${arrow(24, 38, 32, 32)}`),
@@ -159,7 +165,10 @@ export const EFFECT_ILLUSTRATIONS = {
   mind_control: () => wrap(`${enemy(44, 30, 6)}<circle cx="32" cy="32" r="9" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.7"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.85"/><path d="M32 20 V26 M32 38 V44 M20 32 H26 M38 32 H44" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`),
   link_fate: () => wrap(`${enemy(22, 32, 5)} ${enemy(42, 32, 5)}<path d="M28 32 H36" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.6"/>`),
   hunters_mark: () => wrap(`${enemy(40, 26, 5)}<circle cx="40" cy="26" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M40 14 V18 M40 34 V38 M28 26 H32 M48 26 H52" stroke="currentColor" stroke-width="1.5"/>`),
-  bishop_2: () => wrap(`${piece(32, 48, 5)}<path d="M32 44 L14 26 M32 44 L50 26" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/>`),
+  bishop_2: () =>
+    wrap(
+      `${piece(32, 48, 5)}<path d="M32 44 L14 26 M32 44 L50 26" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/><text x="44" y="22" font-size="13" fill="currentColor" opacity="0.9">♗</text>${tickMarks(38, 26, 2)}`
+    ),
   rook_2: () => wrap(`${piece(32, 48, 5)}<path d="M32 44 V18 M32 44 H14 M32 44 H50" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/>`),
   hostile_swap: () => wrap(`${piece(22, 36, 5)} ${enemy(42, 36, 5)} ${arrow(28, 36, 36, 36)} ${arrow(36, 32, 28, 32)}`),
 };
