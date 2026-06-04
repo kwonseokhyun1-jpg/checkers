@@ -501,7 +501,11 @@ export class MatchSession {
     let need = picksRequired(card);
     if (card.effect === "displacement" && picks.length === 2 && displacementCanPickSecond(this.state, this.localColor, picks)) {
       need = 4;
-      this.setMessage(`${card.name} — move a second piece, or tap End spell phase after the first move.`);
+      const used = new Set([`${picks[0][0]},${picks[0][1]}`]);
+      this.validTargets = getValidTargets(this.state, this.localColor, card, []).filter(
+        ([r, c]) => !used.has(`${r},${c}`)
+      );
+      this.setMessage(`${card.name} — pick a second piece and destination (4 targets total).`);
     }
     if (picks.length < need) {
       this.validTargets = getValidTargets(this.state, this.localColor, card, picks);
