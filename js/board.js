@@ -113,6 +113,7 @@ export function createPiece(color, row, col, king = false) {
     twinId: null,
     chameleonFrom: null,
     chameleonTurns: 0,
+    mindControlDeathTurns: 0,
     revivedNoCapture: false,
     berserkNoCapture: false,
     paralyzedTurns: 0,
@@ -365,17 +366,6 @@ export function getAllMovesForColor(board, color, state = null) {
   return steps;
 }
 
-/** Mind control: enemy piece moves in all diagonals and captures normally. */
-export function getMovesForMindControl(board, piece, controllerColor, state = null) {
-  const acting = { ...piece, king: true, slowed: 0 };
-  const jumps = getJumpMoves(board, acting, piece.color, state);
-  const steps = getStepMoves(board, acting, piece.color, state);
-  if (state?.meta?.optionalJumps?.[controllerColor]) return jumps.length ? jumps : steps;
-  if (jumps.length > 0) return jumps;
-  return steps;
-}
-
-
 function explodeBombAt(board, state, row, col) {
   const victims = [];
   for (let dr = -1; dr <= 1; dr++) {
@@ -540,6 +530,10 @@ export function tickEffects(board, color, state = null) {
       if (p.blazeTurns > 0) {
         p.blazeTurns--;
         if (p.blazeTurns <= 0) removePiece(board, r, c, { state });
+      }
+      if (p.mindControlDeathTurns > 0) {
+        p.mindControlDeathTurns--;
+        if (p.mindControlDeathTurns <= 0) removePiece(board, r, c, { state });
       }
       if (p.panicTurn) { p.panicTurn = false; }
       if (p.promoteZone) p.promoteZone = false;

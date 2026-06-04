@@ -42,6 +42,7 @@ const CURSE_RULES = [
   { key: "revivedNoCapture", label: "Revived (no capture)", bool: true },
   { key: "berserkNoCapture", label: "Berserk (no capture)", bool: true },
   { key: "cloneNoCaptureThisTurn", label: "Clone (no move/capture)", bool: true },
+  { key: "mindControlDeathTurns", label: "Mind controlled (dies)", turns: true },
 ];
 
 function lineForRule(piece, rule) {
@@ -128,6 +129,7 @@ export function cleansePiece(piece) {
   piece.revivedNoCapture = false;
   piece.berserkNoCapture = false;
   piece.cloneNoCaptureThisTurn = false;
+  piece.mindControlDeathTurns = 0;
 }
 
 export function cleanseAllPieces(board) {

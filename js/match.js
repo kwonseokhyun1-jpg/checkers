@@ -7,7 +7,6 @@ import {
   isDarkSquare,
   createInitialBoard,
   getAllMovesForColor,
-  getMovesForMindControl,
   applyMove,
   countPieces,
   tickEffects,
@@ -61,16 +60,6 @@ const AI_PACE = {
   message: 900,
   explosion: 1000,
 };
-
-function findPieceInState(state, id) {
-  for (let r = 0; r < SIZE; r++) {
-    for (let c = 0; c < SIZE; c++) {
-      const p = state.board[r][c];
-      if (p && p.id === id) return { piece: p, row: r, col: c };
-    }
-  }
-  return null;
-}
 
 const TWO_PICK_MODES = new Set([
   "f_empty",
@@ -265,11 +254,7 @@ export class MatchSession {
     const s = this.state;
     if (!s.meta.confuseNext?.[color]) return null;
     s.meta.confuseNext[color] = false;
-    let pool = getAllMovesForColor(s.board, color, s);
-    if (s.meta.mindControlId && s.meta.mindControlController === color) {
-      const hit = findPieceInState(s, s.meta.mindControlId);
-      if (hit) pool = getMovesForMindControl(s.board, hit.piece, color, s);
-    }
+    const pool = getAllMovesForColor(s.board, color, s);
     if (!pool.length) return null;
     const move = pool[Math.floor(Math.random() * pool.length)];
     if (color === this.localColor) this.setMessage("Confusion — random move!");
@@ -766,18 +751,11 @@ export class MatchSession {
     const piece = s.board[row][col];
     if (piece) this.showPieceInfo(piece, row, col);
 
-    const mindControlled =
-      piece &&
-      s.meta.mindControlId === piece.id &&
-      s.meta.mindControlController === this.localColor &&
-      s.turn === this.localColor;
-    if (piece && (piece.color === this.localColor || mindControlled)) {
+    if (piece && piece.color === this.localColor) {
       this.selectedSquare = [row, col];
-      this.validMoves = mindControlled
-        ? getMovesForMindControl(s.board, piece, this.localColor, s)
-        : getAllMovesForColor(s.board, this.localColor, s).filter(
-            (m) => m.from[0] === row && m.from[1] === col
-          );
+      this.validMoves = getAllMovesForColor(s.board, this.localColor, s).filter(
+        (m) => m.from[0] === row && m.from[1] === col
+      );
       if (!this.validMoves.length) {
         this.setMessage(
           piece.paralyzedTurns > 0
@@ -806,13 +784,7 @@ export class MatchSession {
   continueMultiJump(fromR, fromC) {
     const s = this.state;
     const piece = s.board[fromR]?.[fromC];
-    const mindControlled =
-      piece &&
-      s.meta.mindControlId === piece.id &&
-      s.meta.mindControlController === this.localColor;
-    const movePool = mindControlled
-      ? getMovesForMindControl(s.board, piece, this.localColor, s)
-      : getAllMovesForColor(s.board, this.localColor, s);
+    const movePool = getAllMovesForColor(s.board, this.localColor, s);
     const jumps = movePool.filter(
       (m) => m.type === "jump" && m.from[0] === fromR && m.from[1] === fromC && m.captures?.length
     );
@@ -929,10 +901,6 @@ export class MatchSession {
     if (this.checkWin()) return;
     tickEndTurnEffects(this.state.board, this.localColor, this.state);
     tickMeta(this.state, this.localColor);
-    if (this.state.meta.mindControlController === this.localColor) {
-      this.state.meta.mindControlId = null;
-      this.state.meta.mindControlController = null;
-    }
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
     if (!this.isPvp) saveMatchCheckpoint(this);
