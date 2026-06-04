@@ -187,6 +187,10 @@ function hideStageModal() {
 function showTab(tab) {
   if (isMatchActive()) return;
   dismissTutorial({ persist: true, profile, saveProfile });
+  if (tab !== "deck" && deckSubview === "edit") {
+    unlockBodyScrollForDeckEdit();
+    document.body.classList.remove("deck-editing");
+  }
   activeTab = tab;
   document.querySelectorAll(".tab-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === tab);
@@ -259,15 +263,48 @@ function syncCollectionFilterControls() {
   if (categoryEl) categoryEl.value = collectionCategory;
 }
 
-/** Reset scroll when opening deck edit so list scroll position does not carry over (mobile). */
+
+const DECK_EDIT_MOBILE_MQ = "(max-width: 899px)";
+/** @type {number|null} */
+let deckListScrollYBeforeEdit = null;
+
+function usesMobileDeckEditorScrollLock() {
+  return window.matchMedia(DECK_EDIT_MOBILE_MQ).matches;
+}
+
+/** iOS keeps window scroll when body overflow is hidden; lock body at y=0 for mobile edit. */
+function lockBodyScrollForDeckEdit() {
+  if (!usesMobileDeckEditorScrollLock()) return;
+  deckListScrollYBeforeEdit = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.style.position = "fixed";
+  document.body.style.top = "0";
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.width = "100%";
+}
+
+function unlockBodyScrollForDeckEdit() {
+  if (deckListScrollYBeforeEdit == null) return;
+  const restoreY = deckListScrollYBeforeEdit;
+  deckListScrollYBeforeEdit = null;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  window.scrollTo(0, restoreY);
+}
+
 function scrollDeckEditViewToTop() {
   window.scrollTo(0, 0);
   document.documentElement.scrollTop = 0;
   document.body.scrollTop = 0;
+  document.querySelector(".game-shell")?.scrollTo?.(0, 0);
   document.querySelector(".game-main")?.scrollTo?.(0, 0);
+  document.querySelector("#view-deck")?.scrollTo?.(0, 0);
   document
     .querySelectorAll(
-      "#deck-subview-edit .deck-editor__grid, #deck-subview-edit .deck-editor__body, #deck-subview-edit"
+      "#deck-subview-edit, #deck-subview-edit .deck-editor, #deck-subview-edit .deck-editor__body, #deck-subview-edit .deck-editor__grid, #deck-subview-edit .deck-editor__grid-cards"
     )
     .forEach((el) => {
       el.scrollTop = 0;
@@ -275,12 +312,15 @@ function scrollDeckEditViewToTop() {
 }
 
 function showDeckSubview(sub) {
+  if (sub !== "edit") unlockBodyScrollForDeckEdit();
+
   deckSubview = sub;
   document.body.classList.toggle("deck-editing", sub === "edit");
   $("deck-subview-list")?.classList.toggle("hidden", sub !== "list");
   $("deck-subview-edit")?.classList.toggle("hidden", sub !== "edit");
 
   if (sub === "edit") {
+    lockBodyScrollForDeckEdit();
     repairProfile(profile);
     saveProfile(profile);
     collectionRarity = "all";
@@ -294,7 +334,11 @@ function showDeckSubview(sub) {
   if (sub === "list") renderDeckList();
   if (sub === "edit") {
     renderDeckEditor();
-    requestAnimationFrame(() => scrollDeckEditViewToTop());
+    scrollDeckEditViewToTop();
+    requestAnimationFrame(() => {
+      scrollDeckEditViewToTop();
+      requestAnimationFrame(scrollDeckEditViewToTop);
+    });
   }
 }
 
