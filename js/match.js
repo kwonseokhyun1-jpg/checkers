@@ -1695,6 +1695,7 @@ ${starLine}`;
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
           if (piece.bishopTurns > 0) el.classList.add("bishop-mark");
+          if (piece.rookTurns > 0) el.classList.add("rook-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
@@ -1804,6 +1805,34 @@ ${starLine}`;
             bishop.appendChild(mark);
             bishop.appendChild(bar);
             sq.appendChild(bishop);
+          }
+          if (piece.rookTurns > 0) {
+            const rook = document.createElement("div");
+            rook.className = "rook-indicator";
+            rook.setAttribute(
+              "aria-label",
+              `Rook's Mark — ${piece.rookTurns} turn${piece.rookTurns === 1 ? "" : "s"} left`
+            );
+            const mark = document.createElement("span");
+            mark.className = "rook-indicator__mark";
+            mark.textContent = "♜";
+            mark.setAttribute("aria-hidden", "true");
+            const bar = document.createElement("div");
+            bar.className = "rook-indicator__bar";
+            bar.setAttribute("role", "meter");
+            bar.setAttribute("aria-label", `Rook's Mark — ${piece.rookTurns} turns left`);
+            bar.setAttribute("aria-valuenow", String(piece.rookTurns));
+            bar.setAttribute("aria-valuemin", "0");
+            bar.setAttribute("aria-valuemax", "2");
+            for (let i = 0; i < 2; i++) {
+              const block = document.createElement("span");
+              block.className =
+                "rook-indicator__block" + (i < piece.rookTurns ? " rook-indicator__block--filled" : "");
+              bar.appendChild(block);
+            }
+            rook.appendChild(mark);
+            rook.appendChild(bar);
+            sq.appendChild(rook);
           }
         } else if (
           this.cullAnimation &&
