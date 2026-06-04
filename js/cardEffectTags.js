@@ -33,7 +33,7 @@ const TAGS = {
   root_2: ["Enemy cannot jump/capture next turn"],
   silence_3: ["Suppress special movement 3 turns"],
   poison_3: ["Enemy dies in 6 turns — 6-turn poison bar"],
-  deflect_1: ["Next hit reflects to random enemy"],
+  deflect_1: ["Spell kill blocked: 2-turn shield + closest enemy dies", "Deflecting shield lasts 2 turns"],
   clone: ["Your man, then pick an adjacent empty square for the copy"],
   link_fate: ["Link two enemies — when one is destroyed, the other dies too"],
 };

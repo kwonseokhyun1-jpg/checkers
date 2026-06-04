@@ -486,6 +486,39 @@ body {
     0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
+.deflecting-shield-indicator {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.deflecting-shield-indicator__mark {
+  font-size: clamp(0.5rem, 2.6vw, 0.68rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 3px rgba(180, 140, 255, 0.95));
+}
+
+.deflecting-shield-indicator__turns {
+  font-size: clamp(0.42rem, 2vw, 0.55rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #c4b5fd;
+  text-shadow: 0 0 4px rgba(180, 140, 255, 0.85);
+}
+
+.piece.deflecting-shield-mark {
+  box-shadow:
+    0 0 0 2px #a78bfa,
+    0 0 10px rgba(167, 139, 250, 0.5),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
 .turn-banner {
   background: var(--bg-panel);
   border: 1px solid #4a4845;

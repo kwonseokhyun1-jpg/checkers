@@ -146,17 +146,9 @@ export function setPiece(board, row, col, piece) {
   board[row][col] = piece;
 }
 
-export function tryLastStandOnCapture(piece) {
-  if (!piece?.lastStand) return false;
-  piece.lastStand = false;
-  piece.shieldTurns = Math.max(piece.shieldTurns, 1);
-  return true;
-}
-
 export function removePiece(board, row, col, { force = false } = {}) {
   const p = board[row][col];
   if (p?.cloneNoCaptureThisTurn && !force) return false;
-  if (!force && tryLastStandOnCapture(p)) return false;
   board[row][col] = null;
   return true;
 }
@@ -340,10 +332,7 @@ export function getAllMovesForColor(board, color, state = null) {
       steps.push(...getStepMoves(board, piece, color, state));
     }
   }
-  if (state?.meta?.optionalJumps?.[color]) {
-    if (jumps.length && steps.length) return [...jumps, ...steps];
-    return jumps.length ? jumps : steps;
-  }
+  if (state?.meta?.optionalJumps?.[color]) return jumps.length ? jumps : steps;
   if (jumps.length > 0) return jumps;
   return steps;
 }
@@ -353,10 +342,7 @@ export function getMovesForMindControl(board, piece, controllerColor, state = nu
   const acting = { ...piece, color: controllerColor };
   const jumps = getJumpMoves(board, acting, controllerColor, state);
   const steps = getStepMoves(board, acting, controllerColor, state);
-  if (state?.meta?.optionalJumps?.[controllerColor]) {
-    if (jumps.length && steps.length) return [...jumps, ...steps];
-    return jumps.length ? jumps : steps;
-  }
+  if (state?.meta?.optionalJumps?.[controllerColor]) return jumps.length ? jumps : steps;
   if (jumps.length > 0) return jumps;
   return steps;
 }
@@ -390,7 +376,6 @@ export function applyMove(board, move, state = null) {
   for (const [cr, cc] of move.captures) {
     const cap = board[cr][cc];
     if (cap) {
-      if (cap.lastStand) { cap.lastStand = false; cap.shieldTurns = Math.max(cap.shieldTurns, 1); continue; }
       const linkedPartner = cap.linkedFateId;
       if (cap.vengeanceTurns > 0 && piece) {
         queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
@@ -519,7 +504,8 @@ export function tickEffects(board, color, state = null) {
       dec("queenTurns"); dec("wraithTurns");
       dec("stoneTurns"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
       dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("vengeanceTurns"); dec("rustedTurns"); dec("noCaptureTurns");
-      dec("deflectTurns");
+      dec("deflectingShieldTurns");
+      if (p.deflectTurns > 0) p.deflectTurns--;
       if (p.venom > 0) {
         p.venom--;
         if (p.venom <= 0) removePiece(board, r, c);
@@ -531,7 +517,6 @@ export function tickEffects(board, color, state = null) {
       if (p.panicTurn) { p.panicTurn = false; }
       if (p.promoteZone) p.promoteZone = false;
       if (p.revivedNoCapture) p.revivedNoCapture = false;
-      if (p.revivedWingsThisTurn) p.revivedWingsThisTurn = false;
       if (p.rustedTurns > 0) {
         p.rustedTurns--;
         if (p.rustedTurns <= 0) {

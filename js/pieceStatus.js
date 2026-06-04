@@ -14,6 +14,7 @@ const BUFF_RULES = [
   { key: "superMan", label: "Superman Leap", turns: true },
   { key: "lastStand", label: "Last Stand", bool: true },
   { key: "mirrorShield", label: "Mirror Shield", bool: true },
+  { key: "deflectingShieldTurns", label: "Deflecting Shield", turns: true },
   { key: "ghostGuard", label: "Ghost Guard", bool: true },
   { key: "bombArmed", label: "Bomb Armed", bool: true },
   { key: "hibernationTurns", label: "Hibernating", turns: true },
