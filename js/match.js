@@ -185,15 +185,48 @@ export class MatchSession {
     });
   }
 
+  async handleLeaveMatch() {
+    if (this.isPvp) {
+      if (this.state.gameOver || this._gameOverUiShown) {
+        this.onExit?.();
+        return;
+      }
+      if (
+        !window.confirm(
+          "Leave this PvP match? You will forfeit — your opponent wins automatically."
+        )
+      ) {
+        return;
+      }
+      await this.forfeitPvpMatch();
+      this.onExit?.();
+      return;
+    }
+    if (
+      window.confirm(
+        "Leave this match? Your progress is saved — you can resume when you return."
+      )
+    ) {
+      saveMatchCheckpoint(this);
+      this.onExit?.();
+    }
+  }
+
+  /** Record a loss in the database when the local player leaves an active PvP match. */
+  async forfeitPvpMatch() {
+    if (!this.isPvp || this.state.gameOver || this._gameOverUiShown) return;
+    this._gameOverUiShown = true;
+    this.state.gameOver = "Defeat";
+    const result = this.onPvpWin?.(false);
+    if (result && typeof result.then === "function") await result;
+  }
+
   bindEls() {
     this.bindBoardFrame();
     this.root.querySelector("#btn-end-cards")?.addEventListener("click", () => this.beginMovePhase());
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
     this.root.querySelector("#btn-leave-match")?.addEventListener("click", () => {
-      if (window.confirm("Leave this match? Your progress is saved — you can resume when you return.")) {
-        saveMatchCheckpoint(this);
-        this.onExit?.();
-      }
+      void this.handleLeaveMatch();
     });
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
     this._onDocPointerMove = (e) => this.onDragMove(e);
