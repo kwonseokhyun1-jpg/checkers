@@ -45,8 +45,13 @@ import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { MatchSession } from "./match.js";
-import { renderProfileTab, renderCosmeticBoxes } from "./profileUI.js";
-import { equippedTitleTagHtml } from "./mageTitles.js";
+import {
+  renderProfileTab,
+  renderCosmeticBoxes,
+  renderAchievementsTab,
+  headerProfileAvatarHtml,
+  resolveDisplayUsername,
+} from "./profileUI.js";
 import {
   openMysteryBox,
   openBigMysteryBox,
@@ -69,7 +74,7 @@ import {
   readMatchCheckpoint,
   saveMatchCheckpoint,
 } from "./matchLifecycle.js";
-import { initAuth } from "./auth.js";
+import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { renderSpellCardEl, escapeHtml } from "./cardArt.js";
@@ -210,35 +215,67 @@ function showTab(tab) {
     showDeckSubview("list");
   }
   if (tab === "profile") renderProfile();
+  if (tab === "achievements") renderAchievements();
   if (tab === "play") showAdventureMap();
   if (tab === "pvp") pvpController?.render();
 }
 
-function updateHeaderPlayerIdentity(username) {
-  const playerEl = document.getElementById("header-player");
-  const nameEl = document.getElementById("header-username");
-  const titleEl = document.getElementById("header-mage-title");
+let headerDisplayUsername = "";
+
+function updateHeaderProfileBtn(username = headerDisplayUsername) {
+  if (username) headerDisplayUsername = username;
+  const profileBtn = document.getElementById("header-profile-btn");
   const authBtn = document.getElementById("auth-header-btn");
-  const show = Boolean(username);
-  if (playerEl) {
-    playerEl.classList.toggle("hidden", !show);
-    playerEl.hidden = !show;
+  const user = getCurrentUser();
+  const signedIn = Boolean(user);
+
+  if (authBtn) {
+    authBtn.classList.toggle("hidden", signedIn);
+    authBtn.hidden = signedIn;
   }
-  if (nameEl) nameEl.textContent = username || "";
-  if (titleEl) titleEl.innerHTML = show ? equippedTitleTagHtml(profile) : "";
-  if (authBtn && show) authBtn.textContent = username;
+  if (profileBtn) {
+    profileBtn.classList.toggle("hidden", !signedIn);
+    profileBtn.hidden = !signedIn;
+    if (signedIn) {
+      profileBtn.innerHTML = headerProfileAvatarHtml(profile, headerDisplayUsername);
+      profileBtn.title = headerDisplayUsername ? `Profile — ${headerDisplayUsername}` : "Profile";
+    }
+  }
 }
 
-function renderProfile() {
+async function refreshHeaderIdentity() {
+  const user = getCurrentUser();
+  if (!user) {
+    headerDisplayUsername = "";
+    updateHeaderProfileBtn();
+    return;
+  }
+  headerDisplayUsername = await resolveDisplayUsername(user);
+  updateHeaderProfileBtn();
+}
+
+function openProfileTab(section) {
+  showTab("profile");
+  if (section) renderProfile({ initialSection: section });
+}
+
+function renderProfile(options = {}) {
   const root = $("view-profile");
   renderProfileTab(profile, root, {
     onGemsChange: updateGemHeader,
     onUsernameChanged: (name) => {
-      updateHeaderPlayerIdentity(name);
+      headerDisplayUsername = name;
+      updateHeaderProfileBtn(name);
     },
-    onTitleChanged: () => updateHeaderPlayerIdentity(document.getElementById("header-username")?.textContent),
+    onTitleChanged: () => updateHeaderProfileBtn(),
+    initialSection: options.initialSection,
   });
-  updateHeaderPlayerIdentity(document.getElementById("header-username")?.textContent);
+}
+
+function renderAchievements() {
+  renderAchievementsTab(profile, $("view-achievements"), {
+    onTitleChanged: () => updateHeaderProfileBtn(),
+  });
 }
 
 function updateCurrencyHeader() {
@@ -510,6 +547,7 @@ function renderCosmeticsShop() {
     onGemsChange: updateGemHeader,
     onOpened: () => {
       if (activeTab === "profile") renderProfile();
+      if (activeTab === "achievements") renderAchievements();
     },
   });
 }
@@ -1625,7 +1663,10 @@ function init() {
 
   const authModal = document.getElementById("auth-modal");
   const authBtn = document.getElementById("auth-header-btn");
+  const profileBtn = document.getElementById("header-profile-btn");
   initTutorial({ profile, saveProfile });
+
+  profileBtn?.addEventListener("click", () => openProfileTab());
 
   const authUI = initAuthUI({
     authBtn,
@@ -1636,9 +1677,16 @@ function init() {
       updateCurrencyHeader();
       renderDeckList();
       renderStarsShop();
-      renderProfile();
+      void refreshHeaderIdentity().then(() => {
+        if (activeTab === "profile") renderProfile();
+        if (activeTab === "achievements") renderAchievements();
+      });
       pvpController?.render();
       showTab(activeTab);
+    },
+    onSignedOut: () => {
+      headerDisplayUsername = "";
+      updateHeaderProfileBtn();
     },
   });
 
@@ -1674,6 +1722,7 @@ async function bootstrapAfterAuth() {
   } catch (e) {
     console.warn("Auth init failed", e);
   }
+  await refreshHeaderIdentity();
   if (!tryResumeSavedMatch()) showTab("deck");
 }
 

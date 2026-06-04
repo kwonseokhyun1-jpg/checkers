@@ -23,8 +23,9 @@ const USERNAME_RE = USERNAME_PATTERN;
  * @param {HTMLElement} opts.authBtn
  * @param {HTMLElement} opts.modal
  * @param {() => void} opts.onSignedIn
+ * @param {() => void} [opts.onSignedOut]
  */
-export function initAuthUI({ authBtn, modal, onSignedIn }) {
+export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
   if (!authBtn || !modal) return;
 
   const form = modal.querySelector("#auth-form");
@@ -122,24 +123,23 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
     if (!isAuthAvailable()) {
       authBtn.textContent = "Setup cloud";
       authBtn.title = "Configure Supabase";
+      authBtn.classList.remove("hidden");
+      authBtn.hidden = false;
       return;
     }
     if (user) {
-      const name = user.user_metadata?.display_name || user.email?.split("@")[0] || "Account";
-      authBtn.textContent = name;
-      authBtn.title = "Sign out";
+      authBtn.classList.add("hidden");
+      authBtn.hidden = true;
     } else {
       authBtn.textContent = "Sign in";
       authBtn.title = "Sign in or sign up";
+      authBtn.classList.remove("hidden");
+      authBtn.hidden = false;
     }
   }
 
-  authBtn.addEventListener("click", async () => {
-    const user = getCurrentUser();
-    if (user) {
-      await signOut();
-      return;
-    }
+  authBtn.addEventListener("click", () => {
+    if (getCurrentUser()) return;
     open("signin");
   });
 
@@ -306,6 +306,8 @@ export function initAuthUI({ authBtn, modal, onSignedIn }) {
         console.warn("Profile sync failed", err);
       }
       close();
+    } else {
+      onSignedOut?.();
     }
   });
 
