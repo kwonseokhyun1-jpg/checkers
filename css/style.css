@@ -3864,12 +3864,6 @@ body.chest-open-active {
   margin: 0;
   font-size: 0.82rem;
 }
-.profile-hero-card__edit {
-  position: absolute;
-  top: 0.85rem;
-  right: 0.85rem;
-  z-index: 2;
-}
 .profile-avatar-fallback {
   display: flex;
   align-items: center;
@@ -3899,26 +3893,40 @@ body.chest-open-active {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.65rem;
-  height: 2.65rem;
+  width: 2.25rem;
+  height: 2.25rem;
   padding: 0;
   border: none;
   border-radius: 0;
   background: transparent;
   cursor: pointer;
+  overflow: hidden;
   transition: transform 0.15s ease, filter 0.15s ease;
 }
 .header-profile-btn:hover {
   transform: scale(1.04);
   filter: brightness(1.08);
 }
+.header-profile-btn .profile-avatar-stack {
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.header-profile-btn .profile-avatar-stack::before,
+.header-profile-btn .profile-avatar-stack::after {
+  display: none;
+}
 .header-profile-btn__stack {
-  width: 2.65rem;
-  height: 2.65rem;
+  width: 2.25rem;
+  height: 2.25rem;
 }
 .header-profile-btn__inner {
   width: 100%;
   height: 100%;
+}
+.header-profile-btn .profile-avatar-fallback {
+  font-size: 0.95rem;
 }
 .auth-header-btn.hidden,
 .header-profile-btn.hidden {
