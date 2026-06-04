@@ -1726,6 +1726,7 @@ ${starLine}`;
           if (piece.paralyzedTurns > 0) el.classList.add("paralyzed-mark");
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
           if (piece.retreatTurns > 0) el.classList.add("retreat-mark");
+          if (piece.bishopTurns > 0) el.classList.add("bishop-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
@@ -1807,6 +1808,34 @@ ${starLine}`;
             fire.appendChild(mark);
             fire.appendChild(bar);
             sq.appendChild(fire);
+          }
+          if (piece.bishopTurns > 0) {
+            const bishop = document.createElement("div");
+            bishop.className = "bishop-indicator";
+            bishop.setAttribute(
+              "aria-label",
+              `Bishop's Mark — ${piece.bishopTurns} turn${piece.bishopTurns === 1 ? "" : "s"} left`
+            );
+            const mark = document.createElement("span");
+            mark.className = "bishop-indicator__mark";
+            mark.textContent = "♗";
+            mark.setAttribute("aria-hidden", "true");
+            const bar = document.createElement("div");
+            bar.className = "bishop-indicator__bar";
+            bar.setAttribute("role", "meter");
+            bar.setAttribute("aria-label", `Bishop's Mark — ${piece.bishopTurns} turns left`);
+            bar.setAttribute("aria-valuenow", String(piece.bishopTurns));
+            bar.setAttribute("aria-valuemin", "0");
+            bar.setAttribute("aria-valuemax", "2");
+            for (let i = 0; i < 2; i++) {
+              const block = document.createElement("span");
+              block.className =
+                "bishop-indicator__block" + (i < piece.bishopTurns ? " bishop-indicator__block--filled" : "");
+              bar.appendChild(block);
+            }
+            bishop.appendChild(mark);
+            bishop.appendChild(bar);
+            sq.appendChild(bishop);
           }
         } else if (
           this.cullAnimation &&
