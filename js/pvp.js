@@ -316,7 +316,13 @@ export class PvpService {
           const row = payload.new;
           if (!row) return;
           const ver = row.version ?? 0;
-          if (ver <= this._lastVersion && payload.eventType !== "INSERT") return;
+          if (
+            ver <= this._lastVersion &&
+            payload.eventType !== "INSERT" &&
+            row.status !== "finished"
+          ) {
+            return;
+          }
           this.onMatchRow?.(row);
         }
       )
