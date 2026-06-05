@@ -372,7 +372,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     const matchRoot = document.createElement("div");
     matchRoot.id = "pvp-match-root";
     root.appendChild(matchRoot);
-    matchRoot.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP" });
+    matchRoot.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP", pvp: true });
 
     pvpService._lastVersion = row.version ?? 0;
 
