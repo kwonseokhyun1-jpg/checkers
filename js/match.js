@@ -43,6 +43,14 @@ import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDark
 import { isInDarknessZone } from "./gameMeta.js";
 import { saveMatchCheckpoint, clearMatchCheckpoint } from "./matchLifecycle.js";
 import { createMatchAchievementTracker } from "./achievementTracker.js";
+import {
+  appendHistoryEntry,
+  buildViewState,
+  ensureStartHistory,
+  formatHistoryChipLabel,
+  formatPieceMoveLabel,
+  highlightForHistoryEntry,
+} from "./moveHistory.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -99,6 +107,7 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
     gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     pvpSpellSeq: 0,
     pvpLastSpell: null,
+    moveHistory: [],
   };
   initCardState(state);
   initDeckPiles(state, playerDeckIds, aiDeckIds || buildAiDeck());
@@ -158,6 +167,8 @@ export class MatchSession {
     this.actionBusy = false;
     this._gameOverUiShown = false;
     this._aiTurnPending = false;
+    this.historyViewIndex = null;
+    this._pendingHistoryMove = null;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.achievementTracker =
       this.profile && !this.isPvp ? createMatchAchievementTracker(this.profile, this.localColor) : null;
@@ -165,10 +176,97 @@ export class MatchSession {
       this.state.meta.achievementHook = this.achievementTracker;
     }
     this.bindEls();
+    if (this.isPvp) ensureStartHistory(this.state);
     if (!(options.initialState && this.isPvp)) {
       this.beginPlayerTurn();
     }
     this.render();
+  }
+
+  isViewingHistory() {
+    return this.isPvp && this.historyViewIndex != null;
+  }
+
+  getViewState() {
+    return buildViewState(this.state, this.historyViewIndex);
+  }
+
+  recordPvpHistoryEntry(label, type, extras = {}) {
+    if (!this.isPvp) return;
+    appendHistoryEntry(this.state, { label, type, color: this.localColor, ...extras });
+    this.historyViewIndex = null;
+  }
+
+  setHistoryViewIndex(index) {
+    if (!this.isPvp) return;
+    const max = (this.state.moveHistory?.length ?? 0) - 1;
+    if (max < 0) {
+      this.historyViewIndex = null;
+    } else if (index == null || index >= max) {
+      this.historyViewIndex = null;
+    } else {
+      this.historyViewIndex = Math.max(0, index);
+    }
+    const entry =
+      this.historyViewIndex != null ? this.state.moveHistory[this.historyViewIndex] : null;
+    this.aiHighlight = entry ? highlightForHistoryEntry(entry) : null;
+    this.selectedSquare = null;
+    this.validMoves = [];
+    this.cancelCardPlay();
+    this.updateHistoryNavUI();
+    this.render();
+  }
+
+  stepHistory(delta) {
+    const history = this.state.moveHistory;
+    if (!history?.length) return;
+    const max = history.length - 1;
+    const current = this.historyViewIndex ?? max;
+    this.setHistoryViewIndex(current + delta);
+  }
+
+  updateHistoryNavUI() {
+    const bar = this.$("pvp-move-history");
+    if (!bar) return;
+    const history = this.state.moveHistory ?? [];
+    const max = history.length - 1;
+    const viewIdx = this.historyViewIndex ?? max;
+    const prevBtn = this.$("pvp-history-prev");
+    const nextBtn = this.$("pvp-history-next");
+    const track = this.$("pvp-history-track");
+    const status = this.$("pvp-history-status");
+
+    if (prevBtn) prevBtn.disabled = viewIdx <= 0;
+    if (nextBtn) nextBtn.disabled = viewIdx >= max;
+
+    if (status) {
+      const reviewing = this.isViewingHistory();
+      status.classList.toggle("hidden", !reviewing);
+      if (reviewing) {
+        const entry = history[viewIdx];
+        status.textContent = entry
+          ? `Reviewing: ${formatHistoryChipLabel(entry, viewIdx)} — tap › for live`
+          : "Reviewing earlier position";
+      }
+    }
+
+    if (!track) return;
+    track.innerHTML = "";
+    const start = Math.max(1, viewIdx - 2);
+    const end = Math.min(max, viewIdx + 2);
+    for (let i = start; i <= end; i++) {
+      const entry = history[i];
+      if (!entry || entry.type === "start") continue;
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "pvp-move-history__chip";
+      chip.setAttribute("role", "listitem");
+      if (i === viewIdx) chip.classList.add("pvp-move-history__chip--active");
+      else if (i < viewIdx) chip.classList.add("pvp-move-history__chip--past");
+      chip.textContent = formatHistoryChipLabel(entry, i);
+      chip.addEventListener("click", () => this.setHistoryViewIndex(i));
+      track.appendChild(chip);
+    }
   }
 
   $(id) {
@@ -205,6 +303,8 @@ export class MatchSession {
       }
     });
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
+    this.$("pvp-history-prev")?.addEventListener("click", () => this.stepHistory(-1));
+    this.$("pvp-history-next")?.addEventListener("click", () => this.stepHistory(1));
     this._onDocPointerMove = (e) => this.onDragMove(e);
     this._onDocPointerUp = (e) => this.onDragEnd(e);
 
@@ -220,11 +320,18 @@ export class MatchSession {
   }
 
   onKeyDown(e) {
-    if (e.key !== "Enter" || e.repeat) return;
     const tag = e.target?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target?.isContentEditable) return;
+
+    if (this.isPvp && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+      e.preventDefault();
+      this.stepHistory(e.key === "ArrowLeft" ? -1 : 1);
+      return;
+    }
+
+    if (e.key !== "Enter" || e.repeat) return;
     const s = this.state;
-    if (!s || s.gameOver || s.turn !== this.localColor || this.actionBusy) return;
+    if (!s || s.gameOver || this.isViewingHistory() || s.turn !== this.localColor || this.actionBusy) return;
     if (s.phase === PHASE.CARDS) {
       e.preventDefault();
       this.beginMovePhase();
@@ -233,12 +340,19 @@ export class MatchSession {
 
   canMovePieces() {
     const s = this.state;
-    return s.turn === this.localColor && !s.gameOver && !this.actionBusy && !this.cardPlay;
+    return (
+      !this.isViewingHistory() &&
+      s.turn === this.localColor &&
+      !s.gameOver &&
+      !this.actionBusy &&
+      !this.cardPlay
+    );
   }
 
   canPlaySpells() {
     const s = this.state;
     return (
+      !this.isViewingHistory() &&
       s.turn === this.localColor &&
       s.phase === PHASE.CARDS &&
       !s.gameOver &&
@@ -348,6 +462,9 @@ export class MatchSession {
 
     this.state = nextState;
     if (incomingSpell?.seq) this._lastPvpSpellSeq = incomingSpell.seq;
+    if (this.isPvp) ensureStartHistory(this.state);
+    this.historyViewIndex = null;
+    this.aiHighlight = null;
     this.cardPlay = null;
     this.validTargets = [];
     this.validMoves = [];
@@ -365,6 +482,7 @@ export class MatchSession {
     }
     this.updateSpellCastUI();
     this.applyPvpOutcomeFromBoard();
+    this.updateHistoryNavUI();
     this.render();
     if (replaySpell) void this.replayOpponentPvpSpell(incomingSpell);
   }
@@ -483,6 +601,11 @@ export class MatchSession {
     this.endDrag();
     this.updateSpellCastUI();
     this.setMessage(msg || "Spell played (1 per turn).");
+    if (this.isPvp && card) {
+      this.recordPvpHistoryEntry(card.name, "spell", {
+        picks: picks.map((p) => [...p]),
+      });
+    }
     this.render();
     if (this.checkWin()) return;
     this.pushPvpState();
@@ -774,6 +897,7 @@ export class MatchSession {
   }
 
   onSquareClick(row, col) {
+    if (this.isViewingHistory()) return;
     const s = this.state;
     if (s.gameOver || s.turn !== this.localColor) return;
     if (this.cardPlay) {
@@ -882,6 +1006,8 @@ export class MatchSession {
 
   executeHumanMove(move) {
     const s = this.state;
+    this._pendingHistoryMove = move;
+    this._pendingHistoryLabel = formatPieceMoveLabel(s.board, move);
     if (s.turn === this.localColor && s.meta.confuseNext?.[this.localColor]) {
       const forced = this.pickConfusedMove(this.localColor);
       if (forced) move = forced;
@@ -951,6 +1077,17 @@ export class MatchSession {
     this.state.phase = PHASE.CARDS;
     if (!this.isPvp) saveMatchCheckpoint(this);
     if (this.isPvp) {
+      if (this._pendingHistoryMove) {
+        const label =
+          this._pendingHistoryLabel || formatPieceMoveLabel(this.state.board, this._pendingHistoryMove);
+        this.recordPvpHistoryEntry(label, "move", {
+          from: [...this._pendingHistoryMove.from],
+          to: [...this._pendingHistoryMove.to],
+          captures: this._pendingHistoryMove.captures?.map((c) => [...c]) ?? [],
+        });
+        this._pendingHistoryMove = null;
+        this._pendingHistoryLabel = null;
+      }
       this.setMessage("Waiting for opponent…");
       this.render();
       this.pushPvpState();
@@ -1588,7 +1725,7 @@ ${starLine}`;
     const countLabel = this.$("hand-count-label");
     if (!handEl) return;
     handEl.innerHTML = "";
-    const s = this.state;
+    const s = this.getViewState();
     const n = s.hands[this.localColor].length;
     if (countLabel) {
       countLabel.textContent = n === 1 ? "1 card in hand" : `${n} cards in hand`;
@@ -1629,7 +1766,7 @@ ${starLine}`;
     const boardFrame = this.root.querySelector("#board-frame");
     boardFrame?.classList.toggle("board-frame--local-flipped", this.boardFlipped);
     boardEl.innerHTML = "";
-    const s = this.state;
+    const s = this.getViewState();
     const zonePreview = this.getZonePreviewSets();
 
     for (let row = 0; row < SIZE; row++) {
@@ -1942,10 +2079,18 @@ ${starLine}`;
   }
 
   render() {
-    const s = this.state;
+    const s = this.getViewState();
+    const live = this.state;
     const banner = this.$("turn-banner");
     if (banner) {
-      if (s.gameOver) banner.textContent = "Game over";
+      if (this.isViewingHistory()) {
+        const idx = this.historyViewIndex;
+        const entry = live.moveHistory?.[idx];
+        banner.textContent = entry
+          ? `Reviewing — ${formatHistoryChipLabel(entry, idx)}`
+          : "Reviewing earlier position";
+        banner.className = "turn-banner history-review";
+      } else if (s.gameOver) banner.textContent = "Game over";
       else if (s.turn === this.localColor) {
         const spellNote = s.meta.shatterSilenced?.[this.localColor]
           ? "No spells (Shatter backlash) · "
@@ -1968,13 +2113,20 @@ ${starLine}`;
       }
     }
     const endBtn = this.root.querySelector("#btn-end-cards");
-    if (endBtn) endBtn.disabled = s.turn !== this.localColor || s.phase !== PHASE.CARDS || !!s.gameOver;
+    if (endBtn) {
+      endBtn.disabled =
+        this.isViewingHistory() ||
+        live.turn !== this.localColor ||
+        live.phase !== PHASE.CARDS ||
+        !!live.gameOver;
+    }
     this.updateSpellCastUI();
     this.updateColumnPickUI();
     this.updateRowPickUI();
     this.updatePlayerPanels();
     this.renderHand();
     this.renderBoard();
+    if (this.isPvp) this.updateHistoryNavUI();
   }
 
   updatePlayerPanels() {
