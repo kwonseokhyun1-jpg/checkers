@@ -4,7 +4,13 @@ import { getCardDef } from "./cardCatalog.js";
 
 /** Deep copy for AI planning without mutating the live match state. */
 export function cloneMatchState(state) {
-  return structuredClone(state);
+  const hook = state.meta?.achievementHook;
+  if (hook) state.meta.achievementHook = null;
+  try {
+    return structuredClone(state);
+  } finally {
+    if (hook) state.meta.achievementHook = hook;
+  }
 }
 
 /**
@@ -54,7 +60,7 @@ export function applyAiReplayEntry(state, entry) {
         from: entry.from,
         to: entry.to,
         type: entry.moveKind,
-        captures: entry.captures,
+        captures: entry.captures || [],
       },
       state
     );

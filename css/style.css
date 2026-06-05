@@ -1984,6 +1984,13 @@ body {
 .ai-log-entry--move { color: var(--accent-gem); }
 .square.ai-from { box-shadow: inset 0 0 0 3px #9f7aea; }
 .square.ai-to { box-shadow: inset 0 0 0 3px #e85d5d; animation: ai-pulse-to 0.8s ease infinite; }
+.piece--ai-flying {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+}
 .square.ai-capture { box-shadow: inset 0 0 0 3px #fc8181; }
 .square.explosion-flash {
   animation: explosion-flash 0.65s ease-out;
