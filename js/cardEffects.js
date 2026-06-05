@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget } from "./board.js";
 import { collapsedSquareKey } from "./gameMeta.js";
 import { sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, randomTeleportHasDestination } from "./cardEffectHandlers.js";
@@ -264,6 +264,7 @@ export function getValidTargets(state, color, card, picks) {
       const p = at(state, pr, pc);
       if (!p) return [];
       if (card.effect === "forward_bolt") return getAdjacentForwardBoltTarget(state.board, p);
+      if (card.effect === "cryo_bolt") return getCryoBoltTarget(state.board, p);
       return getBoltTarget(state.board, p);
     }
     case "any_piece":
