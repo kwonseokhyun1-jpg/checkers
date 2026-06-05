@@ -161,6 +161,7 @@ export class MatchSession {
     /** When set, renderBoard draws pieces from this grid instead of state.board (AI replay). */
     this.aiReplayBoard = null;
     this._aiTurnStartBoard = null;
+    this._aiPendingMoveLog = null;
     this._aiTurnRunning = false;
     this.cullAnimation = null;
     this.spellAnimation = null;
@@ -1370,15 +1371,25 @@ ${starLine}`;
   /** Replay log entries to the live match (spell phase or move phase). */
   async playAiTurnPresentation(log, replay, options = {}) {
     const visualOnly = options.visualOnly ?? !replay;
+    const keepDisplayHold = !!options.keepDisplayHold;
+    const holdMoves = options.holdMoves ?? this._aiPendingMoveLog ?? [];
+    const deferLiveState = !!options.deferLiveState;
     const aiLog = this.$("ai-action-log");
     const oc = this.opponentColor;
     const pendingMoves = log.filter((e) => e.type === "move");
     let movesRevealed = 0;
     const turnStartBoard = this._aiTurnStartBoard;
 
-    const displayHoldingMoves = (board) => {
-      if (visualOnly || !turnStartBoard) return null;
-      return boardHoldingPendingMoves(board, pendingMoves.slice(movesRevealed));
+    const applyEntry = (entry) => {
+      if (visualOnly) return;
+      applyAiReplayEntry(replay, entry, oc);
+      if (!deferLiveState) applyAiReplayEntry(this.state, entry, oc);
+    };
+
+    const syncDisplay = (board) => {
+      if (visualOnly || !turnStartBoard) return;
+      const slice = pendingMoves.length ? pendingMoves.slice(movesRevealed) : holdMoves;
+      this.aiReplayBoard = boardHoldingPendingMoves(board, slice);
     };
 
     for (const entry of log) {
@@ -1398,13 +1409,8 @@ ${starLine}`;
         this.$("board")?.classList.add("board--ai-spell");
         this.render();
 
-        if (!visualOnly) {
-          applyAiReplayEntry(replay, entry, oc);
-          applyAiReplayEntry(this.state, entry, oc);
-        }
-        this.aiReplayBoard = displayHoldingMoves(
-          visualOnly ? turnStartBoard : replay.board
-        );
+        applyEntry(entry);
+        syncDisplay(visualOnly ? turnStartBoard : replay.board);
         this.render();
 
         if (entry.countered) {
@@ -1422,15 +1428,13 @@ ${starLine}`;
         this.hideAiSpellBanner();
       } else if (entry.type === "move") {
         this.hideAiSpellBanner();
-        if (!visualOnly) {
-          applyAiReplayEntry(replay, entry, oc);
-          applyAiReplayEntry(this.state, entry, oc);
-          movesRevealed++;
-        }
-        this.aiReplayBoard =
-          movesRevealed < pendingMoves.length
-            ? displayHoldingMoves(replay.board)
-            : null;
+        applyEntry(entry);
+        movesRevealed++;
+        const morePending = pendingMoves.length
+          ? movesRevealed < pendingMoves.length
+          : movesRevealed < holdMoves.length;
+        syncDisplay(replay.board);
+        if (!morePending && !keepDisplayHold) this.aiReplayBoard = null;
         this.aiHighlight = {
           from: entry.from,
           to: entry.to,
@@ -1450,11 +1454,8 @@ ${starLine}`;
         }
         await delay(AI_PACE.moveSettle);
       } else if (entry.type === "message") {
-        if (!visualOnly) {
-          applyAiReplayEntry(replay, entry, oc);
-          applyAiReplayEntry(this.state, entry, oc);
-          this.aiReplayBoard = displayHoldingMoves(replay.board);
-        }
+        applyEntry(entry);
+        syncDisplay(replay.board);
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
           aiLog.scrollTop = aiLog.scrollHeight;
@@ -1466,7 +1467,20 @@ ${starLine}`;
     }
 
     if (aiLog) aiLog.scrollTop = aiLog.scrollHeight;
-    this.aiReplayBoard = null;
+    if (!keepDisplayHold) this.aiReplayBoard = null;
+  }
+
+  /** Copy replay spell/meta onto live state after the post-spell pause. */
+  syncAiReplayToLive(replay) {
+    const hook = this.state.meta?.achievementHook;
+    this.state.board = cloneBoardGrid(replay.board);
+    this.state.hands = structuredClone(replay.hands);
+    this.state.meta = structuredClone(replay.meta);
+    this.state.captured = structuredClone(replay.captured);
+    this.state.spellPlayed = structuredClone(replay.spellPlayed);
+    this.state.squares = structuredClone(replay.squares);
+    if (replay.gems) this.state.gems = structuredClone(replay.gems);
+    this.state.meta.achievementHook = hook;
   }
 
   pauseForBackground() {
@@ -1541,37 +1555,43 @@ ${starLine}`;
     const castSpell = spellLog.some((e) => e.type === "spell");
 
     try {
-      const present = async (log) => {
+      const present = async (log, opts = {}) => {
         if (!log.length) return;
         await Promise.race([
-          this.playAiTurnPresentation(log, replay),
+          this.playAiTurnPresentation(log, replay, opts),
           delay(AI_PACE.replayTimeout),
         ]);
       };
 
-      await present(spellLog);
+      await present(spellLog, { keepDisplayHold: true, deferLiveState: true });
 
       if (castSpell) {
         await delay(AI_PACE.afterSpellBeforeMove);
       }
 
-      this.setMessage(`${this.opponentName} is choosing a move…`);
-      this.aiReplayBoard = cloneBoardGrid(replay.board);
-      this.render();
+      this.setMessage(`${this.opponentName} is choosing a move…");
 
+      const movePlan = cloneMatchState(replay);
       try {
-        moveLog = runAiMovePhase(replay, this.opponentName, oc);
+        moveLog = runAiMovePhase(movePlan, this.opponentName, oc);
       } catch (err2) {
         console.error("AI move phase failed:", err2);
       }
+      this._aiPendingMoveLog = moveLog.filter((e) => e.type === "move");
+      this.aiReplayBoard = boardHoldingPendingMoves(replay.board, this._aiPendingMoveLog);
+      this.render();
 
-      await present(moveLog);
+      this.syncAiReplayToLive(replay);
+
+      await present(moveLog, { holdMoves: this._aiPendingMoveLog });
+      this._aiPendingMoveLog = null;
     } catch (err) {
       console.error("AI presentation failed:", err);
     } finally {
       this.aiHighlight = null;
       this.aiReplayBoard = null;
       this._aiTurnStartBoard = null;
+      this._aiPendingMoveLog = null;
       this.cullAnimation = null;
       this.spellAnimation = null;
       this.boardFx = null;
