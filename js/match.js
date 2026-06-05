@@ -28,6 +28,7 @@ import {
   cloneMatchState,
   syncPlannedAiState,
   applyAiReplayEntry,
+  cloneBoardGrid,
 } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
@@ -157,6 +158,8 @@ export class MatchSession {
     this.drag = null;
     this._suppressClick = false;
     this.aiHighlight = null;
+    /** When set, renderBoard draws pieces from this grid instead of state.board (AI replay). */
+    this.aiReplayBoard = null;
     this.cullAnimation = null;
     this.spellAnimation = null;
     this.boardFx = null;
@@ -391,18 +394,22 @@ export class MatchSession {
     if (this.actionBusy) return;
     this.actionBusy = true;
     try {
-      await this.playAiTurnPresentation([
-        {
-          type: "spell",
-          cardName: spell.cardName,
-          cardId: spell.cardId,
-          cardDesc: spell.cardDesc,
-          cardEffect: spell.cardEffect,
-          cardMode: spell.cardMode,
-          picks: spell.picks || [],
-          countered: !!spell.countered,
-        },
-      ]);
+      await this.playAiTurnPresentation(
+        [
+          {
+            type: "spell",
+            cardName: spell.cardName,
+            cardId: spell.cardId,
+            cardDesc: spell.cardDesc,
+            cardEffect: spell.cardEffect,
+            cardMode: spell.cardMode,
+            picks: spell.picks || [],
+            countered: !!spell.countered,
+          },
+        ],
+        null,
+        { visualOnly: true }
+      );
     } finally {
       this.actionBusy = false;
       this.render();
@@ -1358,10 +1365,18 @@ ${starLine}`;
     this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
   }
 
-  /** Replay log: apply spell/move to state as each step is shown (not all upfront). */
-  async playAiTurnPresentation(log) {
+  /** Replay log: board updates are staged (announce → pause → spell → move). */
+  async playAiTurnPresentation(log, replay, options = {}) {
+    const visualOnly = options.visualOnly ?? !replay;
     const aiLog = this.$("ai-action-log");
-    let spellAnnouncedAt = null;
+    const oc = this.opponentColor;
+    let spellAnnounced = false;
+
+    const syncDisplayFromReplay = () => {
+      if (visualOnly || !replay) return;
+      this.aiReplayBoard = cloneBoardGrid(replay.board);
+    };
+
     for (const entry of log) {
       if (entry.type === "spell") {
         const def = entry.cardId ? getCardDef(entry.cardId) : null;
@@ -1373,11 +1388,18 @@ ${starLine}`;
           aiLog.scrollTop = aiLog.scrollHeight;
         }
 
-        applyAiReplayEntry(this.state, entry, this.opponentColor);
+        syncDisplayFromReplay();
         this.showAiSpellBanner(cardName, cardDesc);
-        spellAnnouncedAt = Date.now();
         this.setMessage(`${this.opponentName} is casting ${cardName}…`);
         this.$("board")?.classList.add("board--ai-spell");
+        this.render();
+        await delay(AI_PACE.afterSpellBeforeMove);
+
+        if (!visualOnly) {
+          applyAiReplayEntry(replay, entry, oc);
+          applyAiReplayEntry(this.state, entry, oc);
+          syncDisplayFromReplay();
+        }
         this.render();
         await delay(AI_PACE.spellWindUp);
 
@@ -1398,12 +1420,12 @@ ${starLine}`;
         await delay(AI_PACE.spellSettle);
       } else if (entry.type === "move") {
         this.hideAiSpellBanner();
-        if (spellAnnouncedAt != null) {
-          const waitMs = AI_PACE.afterSpellBeforeMove - (Date.now() - spellAnnouncedAt);
-          if (waitMs > 0) await delay(waitMs);
-          spellAnnouncedAt = null;
+        if (spellAnnounced) spellAnnounced = false;
+        if (!visualOnly) {
+          applyAiReplayEntry(replay, entry, oc);
+          applyAiReplayEntry(this.state, entry, oc);
         }
-        applyAiReplayEntry(this.state, entry, this.opponentColor);
+        this.aiReplayBoard = null;
         this.aiHighlight = {
           from: entry.from,
           to: entry.to,
@@ -1423,6 +1445,11 @@ ${starLine}`;
         }
         await delay(AI_PACE.moveSettle);
       } else if (entry.type === "message") {
+        if (!visualOnly) {
+          applyAiReplayEntry(replay, entry, oc);
+          applyAiReplayEntry(this.state, entry, oc);
+          syncDisplayFromReplay();
+        }
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
           aiLog.scrollTop = aiLog.scrollHeight;
@@ -1434,6 +1461,7 @@ ${starLine}`;
     }
 
     if (aiLog) aiLog.scrollTop = aiLog.scrollHeight;
+    this.aiReplayBoard = null;
   }
 
   pauseForBackground() {
@@ -1509,10 +1537,12 @@ ${starLine}`;
       }
     }
 
+    const replay = cloneMatchState(s);
+
     try {
       if (log.length) {
         await Promise.race([
-          this.playAiTurnPresentation(log),
+          this.playAiTurnPresentation(log, replay),
           delay(AI_PACE.replayTimeout),
         ]);
       }
@@ -1520,6 +1550,7 @@ ${starLine}`;
       console.error("AI presentation failed:", err);
     } finally {
       this.aiHighlight = null;
+      this.aiReplayBoard = null;
       this.cullAnimation = null;
       this.spellAnimation = null;
       this.boardFx = null;
@@ -1754,7 +1785,8 @@ ${starLine}`;
           if (this.spellAnimation?.type) sq.classList.add(`spell-anim-type-${this.spellAnimation.type}`);
         }
 
-        const piece = s.board[row][col];
+        const pieceBoard = this.aiReplayBoard ?? s.board;
+        const piece = pieceBoard[row][col];
         if (piece) {
           const el = document.createElement("span");
           let skinClass = "";

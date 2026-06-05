@@ -2,6 +2,11 @@ import { COLORS, getAllMovesForColor, applyMove, countPieces, squareName, findPr
 import { tryAutoPlay, canAiPlay, applyCard } from "./cardEffects.js";
 import { getCardDef } from "./cardCatalog.js";
 
+/** Shallow-clone piece grid for display overrides during AI replay. */
+export function cloneBoardGrid(board) {
+  return board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+}
+
 /** Deep copy for AI planning without mutating the live match state. */
 export function cloneMatchState(state) {
   const hook = state.meta?.achievementHook;
