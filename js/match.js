@@ -58,9 +58,8 @@ const AI_PACE = {
   spellAnimMax: 1800,
   spellSettle: 600,
   moveAnnounce: 600,
-  moveSlide: 500,
   moveSettle: 500,
-  move: 2000,
+  afterSpellBeforeMove: 2000,
   message: 600,
   explosion: 1000,
   replayTimeout: 14000,
@@ -152,7 +151,6 @@ export class MatchSession {
     this.drag = null;
     this._suppressClick = false;
     this.aiHighlight = null;
-    this.aiMoveAnim = null;
     this.cullAnimation = null;
     this.spellAnimation = null;
     this.boardFx = null;
@@ -1354,65 +1352,10 @@ ${starLine}`;
     this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
   }
 
-  snapshotPieceForAnim(piece) {
-    if (!piece) return null;
-    return {
-      color: piece.color,
-      king: !!piece.king,
-      bombArmed: !!piece.bombArmed,
-      shieldTurns: piece.shieldTurns || 0,
-      frozenTurns: piece.frozenTurns || 0,
-      bearAwakened: !!piece.bearAwakened,
-    };
-  }
-
-  buildFlyingPieceEl(piece) {
-    const el = document.createElement("span");
-    let cls = `piece ${piece.color}${piece.king ? " king" : ""} piece--ai-flying`;
-    if (piece.bombArmed) cls += " bomb-armed";
-    if (piece.shieldTurns > 0) cls += " shielded";
-    if (piece.frozenTurns > 0) cls += " frozen";
-    if (piece.bearAwakened) cls += " bear-awoken";
-    el.className = cls;
-    return el;
-  }
-
-  /** Slide a piece from → to on the board before applyMove updates state. */
-  async playAiPieceMoveAnimation(from, to, pieceSnap) {
-    const board = this.$("board");
-    if (!board || !pieceSnap) {
-      await delay(AI_PACE.moveSlide);
-      return;
-    }
-    const [fr, fc] = from;
-    const [tr, tc] = to;
-    this.aiMoveAnim = { from, to };
-    this.render();
-
-    const ghost = this.buildFlyingPieceEl(pieceSnap);
-    const cell = 12.5;
-    ghost.style.cssText = [
-      "position:absolute",
-      `width:${cell}%`,
-      `height:${cell}%`,
-      `left:${fc * cell}%`,
-      `top:${fr * cell}%`,
-      `transition:left ${AI_PACE.moveSlide}ms ease,top ${AI_PACE.moveSlide}ms ease`,
-      "z-index:30",
-      "pointer-events:none",
-    ].join(";");
-    board.appendChild(ghost);
-    ghost.offsetHeight;
-    ghost.style.left = `${tc * cell}%`;
-    ghost.style.top = `${tr * cell}%`;
-    await delay(AI_PACE.moveSlide);
-    ghost.remove();
-    this.aiMoveAnim = null;
-  }
-
   /** Visual-only presentation after the AI turn is already applied to state. */
   async playAiTurnPresentation(log) {
     const aiLog = this.$("ai-action-log");
+    let afterSpell = false;
     for (const entry of log) {
       if (entry.type === "spell") {
         const def = entry.cardId ? getCardDef(entry.cardId) : null;
@@ -1445,10 +1388,13 @@ ${starLine}`;
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
         await delay(AI_PACE.spellSettle);
+        afterSpell = true;
       } else if (entry.type === "move") {
         this.hideAiSpellBanner();
-        const [tr, tc] = entry.to;
-        const pieceSnap = this.snapshotPieceForAnim(this.state.board[tr]?.[tc]);
+        if (afterSpell) {
+          await delay(AI_PACE.afterSpellBeforeMove);
+          afterSpell = false;
+        }
         this.aiHighlight = {
           from: entry.from,
           to: entry.to,
@@ -1461,9 +1407,6 @@ ${starLine}`;
         this.setMessage(entry.text);
         this.render();
         await delay(AI_PACE.moveAnnounce);
-        if (pieceSnap) {
-          await this.playAiPieceMoveAnimation(entry.from, entry.to, pieceSnap);
-        }
         this.aiHighlight = null;
         this.render();
         if (this.state.boardFx) {
@@ -1577,7 +1520,6 @@ ${starLine}`;
       console.error("AI presentation failed:", err);
     } finally {
       this.aiHighlight = null;
-      this.aiMoveAnim = null;
       this.cullAnimation = null;
       this.spellAnimation = null;
       this.boardFx = null;
@@ -1813,11 +1755,7 @@ ${starLine}`;
         }
 
         const piece = s.board[row][col];
-        const hideForAiSlide =
-          this.aiMoveAnim &&
-          this.aiMoveAnim.from[0] === row &&
-          this.aiMoveAnim.from[1] === col;
-        if (piece && !hideForAiSlide) {
+        if (piece) {
           const el = document.createElement("span");
           let skinClass = "";
           if (piece.color === this.localColor && this.cosmetics?.equipped?.pieceSkin) {
