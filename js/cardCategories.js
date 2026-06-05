@@ -78,6 +78,7 @@ const ID_TO_CATEGORY = {
   rally: "defense",
   recall: "movement",
   repel: "movement",
+  random_teleport: "movement",
   retreat: "movement",
   revive: "defense",
   rooks_mark: "movement",

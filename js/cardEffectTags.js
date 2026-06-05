@@ -22,6 +22,7 @@ const TAGS = {
   destroy_unshielded: ["Destroy any unshielded enemy", "You cannot cast spells on your next turn"],
   revive: ["Requires a captured friendly piece", "Place on any empty dark square", "Revived piece cannot capture this turn"],
   blink_2: ["Teleport within 2 squares"],
+  random_teleport: ["Jump to a random empty dark square", "Crowned if you land on the back rank"],
   long_step: ["Epic: leap 2 squares diagonally (no capture)"],
   sidestep: ["Step 1 square horizontally"],
   landmine: ["Hidden trap 2 turns — destroys enemy lander"],

@@ -29,6 +29,7 @@ export const CARD_REGISTRY = [
   { id: "recall", name: "Recall", desc: "Return one of your pieces to any empty dark square in its starting row.", rarity: "common", weight: 6, mode: "f_empty", effect: "recall" },
   { id: "repel", name: "Repel", desc: "Push an adjacent enemy piece 1 square away if the landing square is empty.", rarity: "common", weight: 6, mode: "friendly", effect: "repel" },
   { id: "leapfrog", name: "Leapfrog", desc: "Jump your piece over a friendly piece to land on the empty square beyond.", rarity: "common", weight: 6, mode: "f_empty", effect: "leapfrog" },
+  { id: "random_teleport", name: "Random Teleportation", desc: "Select a piece and it jumps to a random empty square. If it ends up on the back rank, it automatically becomes a king.", rarity: "common", weight: 6, mode: "friendly", effect: "random_teleport" },
   { id: "rally", name: "Rally", desc: "All pieces adjacent to a friendly piece gain retreat for 1 turn.", rarity: "common", weight: 6, mode: "friendly", effect: "rally" },
   { id: "coin_flip", name: "Coin Flip", desc: "50% destroy random enemy; 50% destroy random friendly.", rarity: "common", weight: 6, mode: "instant", effect: "coin_flip" },
   { id: "butterfly", name: "Butterfly Effect", desc: "Shuffle pieces on the 4 center dark squares randomly.", rarity: "common", weight: 6, mode: "instant", effect: "butterfly" },

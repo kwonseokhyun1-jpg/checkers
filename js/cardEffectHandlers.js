@@ -278,6 +278,26 @@ const EFFECTS = {
   anchor_2(state, color, picks) { for (const p of fri(state, color)) p.anchored = 2; return ok('All your pieces are anchored for 2 turns.'); },
   drift(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||Math.abs(r2-r1)!==Math.abs(c2-c1)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   recall(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const rows=backRow(color); if(!rows.includes(r2)||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
+  random_teleport(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color !== color) return fail();
+    let dest = state.meta?.pendingRandomTeleport;
+    state.meta.pendingRandomTeleport = null;
+    if (!dest) dest = pickRandomTeleportDestination(state, r, c);
+    if (!dest) return fail("No empty squares to teleport to.");
+    const [tr, tc] = dest;
+    if (!emptyDark(state, tr, tc)) return fail();
+    movePiece(state.board, r, c, tr, tc);
+    const landed = at(state, tr, tc);
+    if (landed && !landed.king && !(landed.rustedTurns > 0)) {
+      if (landed.color === COLORS.RED && tr === 0) landed.king = true;
+      if (landed.color === COLORS.BLACK && tr === SIZE - 1) landed.king = true;
+    }
+    markMove(state, color);
+    const crowned = landed?.king && (tr === promoRow(color));
+    return ok(crowned ? "Random teleport — crowned!" : "Random teleport!", { teleportFrom: [r, c], teleportTo: [tr, tc] });
+  },
   flank_3(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(r1===r2&&c1===c2) return fail(); if(Math.abs(r2-r1)!==Math.abs(c2-c1)||Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   rook_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.rookTurns=2; return ok(); },
   bishop_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bishopTurns=2; return ok(); },
@@ -608,6 +628,26 @@ export function pickCoinFlipVictim(state, color) {
   const pool = fri(state, color).concat(en(state, color));
   if (!pool.length) return null;
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+export function pickRandomTeleportDestination(state, fromR, fromC) {
+  const spots = [];
+  for (let rr = 0; rr < SIZE; rr++) {
+    for (let cc = 0; cc < SIZE; cc++) {
+      if (emptyDark(state, rr, cc) && (rr !== fromR || cc !== fromC)) spots.push([rr, cc]);
+    }
+  }
+  if (!spots.length) return null;
+  return spots[Math.floor(Math.random() * spots.length)];
+}
+
+export function randomTeleportHasDestination(state, fromR, fromC) {
+  for (let rr = 0; rr < SIZE; rr++) {
+    for (let cc = 0; cc < SIZE; cc++) {
+      if (emptyDark(state, rr, cc) && (rr !== fromR || cc !== fromC)) return true;
+    }
+  }
+  return false;
 }
 
 export function applyEffect(state, color, effect, picks) {

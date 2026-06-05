@@ -39,6 +39,7 @@ export function createMatchMeta() {
     bearBonusUsed: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingPressMove: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingCoinFlipSquare: null,
+    pendingRandomTeleport: null,
   };
 }
 
