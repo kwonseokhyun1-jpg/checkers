@@ -22,7 +22,7 @@ import {
   playInstant,
   applyCard,
 } from "./cardEffects.js";
-import { planAiTurn, applyAiReplayEntry } from "./ai.js";
+import { planAiTurnWork, runAiTurn, cloneMatchState, syncPlannedAiState } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
 import { renderSpellCardEl } from "./cardArt.js";
@@ -43,14 +43,6 @@ import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDark
 import { isInDarknessZone } from "./gameMeta.js";
 import { saveMatchCheckpoint, clearMatchCheckpoint } from "./matchLifecycle.js";
 import { createMatchAchievementTracker } from "./achievementTracker.js";
-import {
-  appendHistoryEntry,
-  buildViewState,
-  ensureStartHistory,
-  formatHistoryChipLabel,
-  formatPieceMoveLabel,
-  highlightForHistoryEntry,
-} from "./moveHistory.js";
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
@@ -62,14 +54,16 @@ const SPELL_BANNER_EXTRA_MS = 1000;
 /** Enemy turn replay pacing (ms) */
 const AI_PACE = {
   beforeTurn: 1000,
-  spellWindUp: 1700,
-  spellShow: 3200,
-  spellSettle: 1600,
-  moveAnnounce: 800,
-  moveSettle: 1200,
+  spellWindUp: 1200,
+  spellAnimMax: 1800,
+  spellSettle: 600,
+  moveAnnounce: 600,
+  moveSlide: 500,
+  moveSettle: 500,
   move: 2000,
-  message: 900,
+  message: 600,
   explosion: 1000,
+  replayTimeout: 14000,
 };
 
 const TWO_PICK_MODES = new Set([
@@ -107,7 +101,6 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
     gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     pvpSpellSeq: 0,
     pvpLastSpell: null,
-    moveHistory: [],
   };
   initCardState(state);
   initDeckPiles(state, playerDeckIds, aiDeckIds || buildAiDeck());
@@ -159,6 +152,7 @@ export class MatchSession {
     this.drag = null;
     this._suppressClick = false;
     this.aiHighlight = null;
+    this.aiMoveAnim = null;
     this.cullAnimation = null;
     this.spellAnimation = null;
     this.boardFx = null;
@@ -167,8 +161,6 @@ export class MatchSession {
     this.actionBusy = false;
     this._gameOverUiShown = false;
     this._aiTurnPending = false;
-    this.historyViewIndex = null;
-    this._pendingHistoryMove = null;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.achievementTracker =
       this.profile && !this.isPvp ? createMatchAchievementTracker(this.profile, this.localColor) : null;
@@ -176,97 +168,21 @@ export class MatchSession {
       this.state.meta.achievementHook = this.achievementTracker;
     }
     this.bindEls();
-    if (this.isPvp) ensureStartHistory(this.state);
     if (!(options.initialState && this.isPvp)) {
-      this.beginPlayerTurn();
-    }
-    this.render();
-  }
-
-  isViewingHistory() {
-    return this.isPvp && this.historyViewIndex != null;
-  }
-
-  getViewState() {
-    return buildViewState(this.state, this.historyViewIndex);
-  }
-
-  recordPvpHistoryEntry(label, type, extras = {}) {
-    if (!this.isPvp) return;
-    appendHistoryEntry(this.state, { label, type, color: this.localColor, ...extras });
-    this.historyViewIndex = null;
-  }
-
-  setHistoryViewIndex(index) {
-    if (!this.isPvp) return;
-    const max = (this.state.moveHistory?.length ?? 0) - 1;
-    if (max < 0) {
-      this.historyViewIndex = null;
-    } else if (index == null || index >= max) {
-      this.historyViewIndex = null;
-    } else {
-      this.historyViewIndex = Math.max(0, index);
-    }
-    const entry =
-      this.historyViewIndex != null ? this.state.moveHistory[this.historyViewIndex] : null;
-    this.aiHighlight = entry ? highlightForHistoryEntry(entry) : null;
-    this.selectedSquare = null;
-    this.validMoves = [];
-    this.cancelCardPlay();
-    this.updateHistoryNavUI();
-    this.render();
-  }
-
-  stepHistory(delta) {
-    const history = this.state.moveHistory;
-    if (!history?.length) return;
-    const max = history.length - 1;
-    const current = this.historyViewIndex ?? max;
-    this.setHistoryViewIndex(current + delta);
-  }
-
-  updateHistoryNavUI() {
-    const bar = this.$("pvp-move-history");
-    if (!bar) return;
-    const history = this.state.moveHistory ?? [];
-    const max = history.length - 1;
-    const viewIdx = this.historyViewIndex ?? max;
-    const prevBtn = this.$("pvp-history-prev");
-    const nextBtn = this.$("pvp-history-next");
-    const track = this.$("pvp-history-track");
-    const status = this.$("pvp-history-status");
-
-    if (prevBtn) prevBtn.disabled = viewIdx <= 0;
-    if (nextBtn) nextBtn.disabled = viewIdx >= max;
-
-    if (status) {
-      const reviewing = this.isViewingHistory();
-      status.classList.toggle("hidden", !reviewing);
-      if (reviewing) {
-        const entry = history[viewIdx];
-        status.textContent = entry
-          ? `Reviewing: ${formatHistoryChipLabel(entry, viewIdx)} — tap › for live`
-          : "Reviewing earlier position";
+      if (
+        options.initialState &&
+        !this.isPvp &&
+        this.state.turn === this.opponentColor &&
+        !this.state.gameOver
+      ) {
+        setTimeout(() => {
+          void this.runOpponentTurn().catch((err) => console.error("AI turn failed:", err));
+        }, AI_PACE.beforeTurn);
+      } else {
+        this.beginPlayerTurn();
       }
     }
-
-    if (!track) return;
-    track.innerHTML = "";
-    const start = Math.max(1, viewIdx - 2);
-    const end = Math.min(max, viewIdx + 2);
-    for (let i = start; i <= end; i++) {
-      const entry = history[i];
-      if (!entry || entry.type === "start") continue;
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "pvp-move-history__chip";
-      chip.setAttribute("role", "listitem");
-      if (i === viewIdx) chip.classList.add("pvp-move-history__chip--active");
-      else if (i < viewIdx) chip.classList.add("pvp-move-history__chip--past");
-      chip.textContent = formatHistoryChipLabel(entry, i);
-      chip.addEventListener("click", () => this.setHistoryViewIndex(i));
-      track.appendChild(chip);
-    }
+    this.render();
   }
 
   $(id) {
@@ -303,8 +219,6 @@ export class MatchSession {
       }
     });
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
-    this.$("pvp-history-prev")?.addEventListener("click", () => this.stepHistory(-1));
-    this.$("pvp-history-next")?.addEventListener("click", () => this.stepHistory(1));
     this._onDocPointerMove = (e) => this.onDragMove(e);
     this._onDocPointerUp = (e) => this.onDragEnd(e);
 
@@ -320,18 +234,11 @@ export class MatchSession {
   }
 
   onKeyDown(e) {
+    if (e.key !== "Enter" || e.repeat) return;
     const tag = e.target?.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || e.target?.isContentEditable) return;
-
-    if (this.isPvp && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
-      e.preventDefault();
-      this.stepHistory(e.key === "ArrowLeft" ? -1 : 1);
-      return;
-    }
-
-    if (e.key !== "Enter" || e.repeat) return;
     const s = this.state;
-    if (!s || s.gameOver || this.isViewingHistory() || s.turn !== this.localColor || this.actionBusy) return;
+    if (!s || s.gameOver || s.turn !== this.localColor || this.actionBusy) return;
     if (s.phase === PHASE.CARDS) {
       e.preventDefault();
       this.beginMovePhase();
@@ -340,19 +247,12 @@ export class MatchSession {
 
   canMovePieces() {
     const s = this.state;
-    return (
-      !this.isViewingHistory() &&
-      s.turn === this.localColor &&
-      !s.gameOver &&
-      !this.actionBusy &&
-      !this.cardPlay
-    );
+    return s.turn === this.localColor && !s.gameOver && !this.actionBusy && !this.cardPlay;
   }
 
   canPlaySpells() {
     const s = this.state;
     return (
-      !this.isViewingHistory() &&
       s.turn === this.localColor &&
       s.phase === PHASE.CARDS &&
       !s.gameOver &&
@@ -462,9 +362,6 @@ export class MatchSession {
 
     this.state = nextState;
     if (incomingSpell?.seq) this._lastPvpSpellSeq = incomingSpell.seq;
-    if (this.isPvp) ensureStartHistory(this.state);
-    this.historyViewIndex = null;
-    this.aiHighlight = null;
     this.cardPlay = null;
     this.validTargets = [];
     this.validMoves = [];
@@ -482,7 +379,6 @@ export class MatchSession {
     }
     this.updateSpellCastUI();
     this.applyPvpOutcomeFromBoard();
-    this.updateHistoryNavUI();
     this.render();
     if (replaySpell) void this.replayOpponentPvpSpell(incomingSpell);
   }
@@ -491,7 +387,7 @@ export class MatchSession {
     if (this.actionBusy) return;
     this.actionBusy = true;
     try {
-      await this.replayAiLog([
+      await this.playAiTurnPresentation([
         {
           type: "spell",
           cardName: spell.cardName,
@@ -501,7 +397,6 @@ export class MatchSession {
           cardMode: spell.cardMode,
           picks: spell.picks || [],
           countered: !!spell.countered,
-          ...(spell.cullTarget ? { cullTarget: spell.cullTarget, cullVictim: spell.cullVictim } : {}),
         },
       ]);
     } finally {
@@ -529,25 +424,6 @@ export class MatchSession {
       this._syncPromise = null;
     });
     return this._syncPromise;
-  }
-
-  recordPvpSpell(card, picks = [], extras = {}) {
-    if (!this.isPvp || !card) return;
-    const seq = (this.state.pvpSpellSeq || 0) + 1;
-    this.state.pvpSpellSeq = seq;
-    this.state.pvpLastSpell = {
-      seq,
-      caster: this.localColor,
-      cardId: card.id,
-      cardName: card.name,
-      cardDesc: card.desc,
-      cardEffect: card.effect,
-      cardMode: card.mode,
-      picks: (picks || []).map((p) => [...p]),
-      countered: !!extras.countered,
-      ...(extras.cullTarget ? { cullTarget: extras.cullTarget, cullVictim: extras.cullVictim } : {}),
-    };
-    this._lastPvpSpellSeq = seq;
   }
 
   removeCardFromHand(card) {
@@ -584,13 +460,8 @@ export class MatchSession {
     }
   }
 
-  finishCardPlay(msg, replayExtras = {}) {
-    const card = this.cardPlay?.card;
-    const picks = this.cardPlay?.picks ? [...this.cardPlay.picks] : [];
-    if (card) {
-      this.recordPvpSpell(card, picks, replayExtras);
-      this.removeCardFromHand(card);
-    }
+  finishCardPlay(msg) {
+    if (this.cardPlay?.card) this.removeCardFromHand(this.cardPlay.card);
     if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
     else this.state.meta.extraSpellCast[this.localColor] = false;
     this.cardPlay = null;
@@ -601,11 +472,6 @@ export class MatchSession {
     this.endDrag();
     this.updateSpellCastUI();
     this.setMessage(msg || "Spell played (1 per turn).");
-    if (this.isPvp && card) {
-      this.recordPvpHistoryEntry(card.name, "spell", {
-        picks: picks.map((p) => [...p]),
-      });
-    }
     this.render();
     if (this.checkWin()) return;
     this.pushPvpState();
@@ -739,10 +605,7 @@ export class MatchSession {
         this.render();
         return;
       }
-      this.finishCardPlay(
-        res.message,
-        res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}
-      );
+      this.finishCardPlay(res.message);
     });
   }
 
@@ -897,7 +760,6 @@ export class MatchSession {
   }
 
   onSquareClick(row, col) {
-    if (this.isViewingHistory()) return;
     const s = this.state;
     if (s.gameOver || s.turn !== this.localColor) return;
     if (this.cardPlay) {
@@ -963,6 +825,10 @@ export class MatchSession {
 
 
   playBoardFx(s, onDone) {
+    if (!s.boardFx?.squares?.length) {
+      onDone?.();
+      return;
+    }
     this.boardFx = { ...s.boardFx, squares: s.boardFx.squares.map(([r, c]) => [r, c]) };
     s.boardFx = null;
     const kind = this.boardFx.kind || "bomb";
@@ -979,12 +845,12 @@ export class MatchSession {
     const ms = boardFxDuration(kind);
     setTimeout(() => {
       this.boardFx = null;
-    this.selectedColumn = null;
-    this.selectedRow = null;
+      this.selectedColumn = null;
+      this.selectedRow = null;
       frame?.classList.remove(`board-frame--fx-${kind}`, "board-frame--spell-impact");
       this.$("board")?.classList.remove("board--spell-shake");
-      if (this.checkWin()) return;
       onDone?.();
+      this.checkWin();
     }, ms);
   }
 
@@ -1006,8 +872,6 @@ export class MatchSession {
 
   executeHumanMove(move) {
     const s = this.state;
-    this._pendingHistoryMove = move;
-    this._pendingHistoryLabel = formatPieceMoveLabel(s.board, move);
     if (s.turn === this.localColor && s.meta.confuseNext?.[this.localColor]) {
       const forced = this.pickConfusedMove(this.localColor);
       if (forced) move = forced;
@@ -1077,17 +941,6 @@ export class MatchSession {
     this.state.phase = PHASE.CARDS;
     if (!this.isPvp) saveMatchCheckpoint(this);
     if (this.isPvp) {
-      if (this._pendingHistoryMove) {
-        const label =
-          this._pendingHistoryLabel || formatPieceMoveLabel(this.state.board, this._pendingHistoryMove);
-        this.recordPvpHistoryEntry(label, "move", {
-          from: [...this._pendingHistoryMove.from],
-          to: [...this._pendingHistoryMove.to],
-          captures: this._pendingHistoryMove.captures?.map((c) => [...c]) ?? [],
-        });
-        this._pendingHistoryMove = null;
-        this._pendingHistoryLabel = null;
-      }
       this.setMessage("Waiting for opponent…");
       this.render();
       this.pushPvpState();
@@ -1100,7 +953,7 @@ export class MatchSession {
         this._aiTurnPending = true;
         return;
       }
-      this.runOpponentTurn();
+      void this.runOpponentTurn().catch((err) => console.error("AI turn failed:", err));
     }, AI_PACE.beforeTurn);
   }
 
@@ -1303,14 +1156,12 @@ ${starLine}`;
   }
 
   finalizeCounteredSpell(card, message) {
-    const picks = this.cardPlay?.picks ? [...this.cardPlay.picks] : [];
     this.removeCardFromHand(card);
     if (!this.state.meta.extraSpellCast?.[this.localColor]) {
       this.state.spellPlayed[this.localColor] = true;
     } else {
       this.state.meta.extraSpellCast[this.localColor] = false;
     }
-    this.recordPvpSpell(card, picks, { countered: true });
     this.cardPlay = null;
     this.validTargets = [];
     this.selectedSquare = null;
@@ -1461,11 +1312,7 @@ ${starLine}`;
       } else {
         this.setMessage(res.message || "Spell cast.");
       }
-      this.recordPvpSpell(
-        card,
-        [],
-        res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}
-      );
+      this.recordPvpSpell(card, []);
       if (this.checkWin()) return;
       this.render();
       this.pushPvpState();
@@ -1507,10 +1354,65 @@ ${starLine}`;
     this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
   }
 
-  async replayAiLog(log) {
-    const aiLog = this.$("ai-action-log");
-    if (aiLog) aiLog.innerHTML = "";
+  snapshotPieceForAnim(piece) {
+    if (!piece) return null;
+    return {
+      color: piece.color,
+      king: !!piece.king,
+      bombArmed: !!piece.bombArmed,
+      shieldTurns: piece.shieldTurns || 0,
+      frozenTurns: piece.frozenTurns || 0,
+      bearAwakened: !!piece.bearAwakened,
+    };
+  }
 
+  buildFlyingPieceEl(piece) {
+    const el = document.createElement("span");
+    let cls = `piece ${piece.color}${piece.king ? " king" : ""} piece--ai-flying`;
+    if (piece.bombArmed) cls += " bomb-armed";
+    if (piece.shieldTurns > 0) cls += " shielded";
+    if (piece.frozenTurns > 0) cls += " frozen";
+    if (piece.bearAwakened) cls += " bear-awoken";
+    el.className = cls;
+    return el;
+  }
+
+  /** Slide a piece from → to on the board before applyMove updates state. */
+  async playAiPieceMoveAnimation(from, to, pieceSnap) {
+    const board = this.$("board");
+    if (!board || !pieceSnap) {
+      await delay(AI_PACE.moveSlide);
+      return;
+    }
+    const [fr, fc] = from;
+    const [tr, tc] = to;
+    this.aiMoveAnim = { from, to };
+    this.render();
+
+    const ghost = this.buildFlyingPieceEl(pieceSnap);
+    const cell = 12.5;
+    ghost.style.cssText = [
+      "position:absolute",
+      `width:${cell}%`,
+      `height:${cell}%`,
+      `left:${fc * cell}%`,
+      `top:${fr * cell}%`,
+      `transition:left ${AI_PACE.moveSlide}ms ease,top ${AI_PACE.moveSlide}ms ease`,
+      "z-index:30",
+      "pointer-events:none",
+    ].join(";");
+    board.appendChild(ghost);
+    ghost.offsetHeight;
+    ghost.style.left = `${tc * cell}%`;
+    ghost.style.top = `${tr * cell}%`;
+    await delay(AI_PACE.moveSlide);
+    ghost.remove();
+    this.aiMoveAnim = null;
+  }
+
+  /** Visual-only presentation after the AI turn is already applied to state. */
+  async playAiTurnPresentation(log) {
+    const aiLog = this.$("ai-action-log");
     for (const entry of log) {
       if (entry.type === "spell") {
         const def = entry.cardId ? getCardDef(entry.cardId) : null;
@@ -1518,7 +1420,7 @@ ${starLine}`;
         const cardDesc = entry.cardDesc || def?.desc || entry.text || "";
 
         if (aiLog) {
-          aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell ai-log-entry--active">✦ Casting <strong>${cardName}</strong></div>`;
+          aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell">✦ <strong>${cardName}</strong></div>`;
           aiLog.scrollTop = aiLog.scrollHeight;
         }
 
@@ -1529,60 +1431,24 @@ ${starLine}`;
         await delay(AI_PACE.spellWindUp);
 
         if (entry.countered) {
-          if (aiLog) {
-            const active = aiLog.querySelector(".ai-log-entry--active");
-            if (active) {
-              active.classList.remove("ai-log-entry--active");
-              active.innerHTML = `✦ <strong>${cardName}</strong> — countered`;
-            }
-          }
           this.setMessage(`${this.opponentName} casts ${cardName}…`);
           this.render();
           await delay(400);
-          applyAiReplayEntry(this.state, entry);
-          this.render();
           await this.runCounterspellReveal();
           this.setMessage("Your Counterspell cancels their magic!");
-          this.$("board")?.classList.remove("board--ai-spell");
-          this.hideAiSpellBanner();
-          await delay(AI_PACE.spellSettle);
-          continue;
-        }
-
-        if (aiLog) {
-          const active = aiLog.querySelector(".ai-log-entry--active");
-          if (active) {
-            active.classList.remove("ai-log-entry--active");
-            active.innerHTML = `✦ Cast <strong>${cardName}</strong>`;
-          }
-        }
-        this.setMessage(`${this.opponentName} cast ${cardName}!`);
-        this.render();
-
-        if (entry.cardEffect === "cull" && entry.cullTarget) {
-          const [cr, cc] = entry.cullTarget;
-          await this.playCullAnimation(cr, cc, entry.cullVictim || null);
         } else {
-          const spec = buildAnimSpec(
-            {
-              effect: entry.cardEffect,
-              mode: entry.cardMode || def?.mode || "instant",
-              name: cardName,
-            },
-            entry.picks || [],
-            this.opponentColor
-          );
-          await this.runSpellAnimation(spec);
+          this.setMessage(`${this.opponentName} cast ${cardName}!`);
+          this.render();
+          await delay(AI_PACE.spellAnimMax);
         }
-
-        applyAiReplayEntry(this.state, entry);
-        this.render();
 
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
         await delay(AI_PACE.spellSettle);
       } else if (entry.type === "move") {
         this.hideAiSpellBanner();
+        const [tr, tc] = entry.to;
+        const pieceSnap = this.snapshotPieceForAnim(this.state.board[tr]?.[tc]);
         this.aiHighlight = {
           from: entry.from,
           to: entry.to,
@@ -1595,30 +1461,26 @@ ${starLine}`;
         this.setMessage(entry.text);
         this.render();
         await delay(AI_PACE.moveAnnounce);
-        applyAiReplayEntry(this.state, entry);
+        if (pieceSnap) {
+          await this.playAiPieceMoveAnimation(entry.from, entry.to, pieceSnap);
+        }
+        this.aiHighlight = null;
         this.render();
         if (this.state.boardFx) {
           await new Promise((resolve) => this.playBoardFx(this.state, resolve));
         }
         await delay(AI_PACE.moveSettle);
-        this.aiHighlight = null;
-        this.cullAnimation = null;
-        this.spellAnimation = null;
-        this.boardFx = null;
-        this.selectedColumn = null;
-        this.selectedRow = null;
-        this.render();
       } else if (entry.type === "message") {
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
           aiLog.scrollTop = aiLog.scrollHeight;
         }
-        applyAiReplayEntry(this.state, entry);
         this.setMessage(entry.text);
         this.render();
         await delay(AI_PACE.message);
       }
     }
+
     if (aiLog) aiLog.scrollTop = aiLog.scrollHeight;
   }
 
@@ -1633,38 +1495,16 @@ ${starLine}`;
       return;
     }
     this._aiTurnPending = false;
-    this.runOpponentTurn();
+    void this.runOpponentTurn().catch((err) => console.error("AI turn failed:", err));
   }
 
-  async runOpponentTurn() {
-    if (this.isPvp) return;
-    if (document.hidden) {
-      this._aiTurnPending = true;
-      return;
-    }
-    this._aiTurnPending = false;
+  async finishOpponentTurn(capBefore) {
     const s = this.state;
-    if (s.gameOver) return;
-    this.actionBusy = true;
-    this.setMessage(`${this.opponentName} is acting…`);
-    this.render();
-
-    const capBefore = s.captured[this.localColor]?.length ?? 0;
-    const log = planAiTurn(s, this.opponentName);
-    try {
-      await this.replayAiLog(log);
-    } finally {
-      this.actionBusy = false;
-      this.aiHighlight = null;
-      this.cullAnimation = null;
-      this.spellAnimation = null;
-      this.boardFx = null;
-    }
     const capAfter = s.captured[this.localColor]?.length ?? 0;
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
 
     tickEndTurnEffects(s.board, this.opponentColor, s);
-    tickMeta(s, COLORS.BLACK);
+    tickMeta(s, this.opponentColor);
 
     if (countPieces(s.board, this.localColor) === 0) {
       this.showGameOver("Defeat", "You lost all your pieces.");
@@ -1681,6 +1521,74 @@ ${starLine}`;
     this.beginPlayerTurn();
     this.setMessage("Your turn — cast a spell or select a piece to move.");
     this.render();
+  }
+
+  async runOpponentTurn() {
+    if (this.isPvp) return;
+    if (document.hidden) {
+      this._aiTurnPending = true;
+      return;
+    }
+    this._aiTurnPending = false;
+    const s = this.state;
+    if (s.gameOver) return;
+
+    this.actionBusy = true;
+    this.setMessage(`${this.opponentName} is acting…`);
+    this.render();
+
+    const capBefore = s.captured[this.localColor]?.length ?? 0;
+    const boardBefore = JSON.stringify(s.board);
+    const oc = this.opponentColor;
+    let log = [];
+    let planned = null;
+
+    try {
+      ({ log, work: planned } = planAiTurnWork(s, this.opponentName, oc));
+    } catch (err) {
+      console.error("AI plan failed:", err);
+    }
+
+    if (!planned || !log.length) {
+      try {
+        planned = cloneMatchState(s);
+        log = runAiTurn(planned, this.opponentName, oc);
+      } catch (err2) {
+        console.error("AI plan fallback failed:", err2);
+      }
+    }
+
+    if (planned) {
+      syncPlannedAiState(s, planned);
+      this.render();
+    }
+
+    try {
+      if (log.length && JSON.stringify(s.board) !== boardBefore) {
+        await Promise.race([
+          this.playAiTurnPresentation(log),
+          delay(AI_PACE.replayTimeout),
+        ]);
+      } else if (planned) {
+        syncPlannedAiState(s, planned);
+        this.render();
+      }
+    } catch (err) {
+      console.error("AI presentation failed:", err);
+    } finally {
+      this.aiHighlight = null;
+      this.aiMoveAnim = null;
+      this.cullAnimation = null;
+      this.spellAnimation = null;
+      this.boardFx = null;
+      this.actionBusy = false;
+      if (planned && JSON.stringify(s.board) === boardBefore) {
+        syncPlannedAiState(s, planned);
+        this.render();
+      }
+    }
+
+    await this.finishOpponentTurn(capBefore);
   }
 
   beginMovePhase() {
@@ -1725,7 +1633,7 @@ ${starLine}`;
     const countLabel = this.$("hand-count-label");
     if (!handEl) return;
     handEl.innerHTML = "";
-    const s = this.getViewState();
+    const s = this.state;
     const n = s.hands[this.localColor].length;
     if (countLabel) {
       countLabel.textContent = n === 1 ? "1 card in hand" : `${n} cards in hand`;
@@ -1766,7 +1674,7 @@ ${starLine}`;
     const boardFrame = this.root.querySelector("#board-frame");
     boardFrame?.classList.toggle("board-frame--local-flipped", this.boardFlipped);
     boardEl.innerHTML = "";
-    const s = this.getViewState();
+    const s = this.state;
     const zonePreview = this.getZonePreviewSets();
 
     for (let row = 0; row < SIZE; row++) {
@@ -1905,7 +1813,11 @@ ${starLine}`;
         }
 
         const piece = s.board[row][col];
-        if (piece) {
+        const hideForAiSlide =
+          this.aiMoveAnim &&
+          this.aiMoveAnim.from[0] === row &&
+          this.aiMoveAnim.from[1] === col;
+        if (piece && !hideForAiSlide) {
           const el = document.createElement("span");
           let skinClass = "";
           if (piece.color === this.localColor && this.cosmetics?.equipped?.pieceSkin) {
@@ -2079,18 +1991,10 @@ ${starLine}`;
   }
 
   render() {
-    const s = this.getViewState();
-    const live = this.state;
+    const s = this.state;
     const banner = this.$("turn-banner");
     if (banner) {
-      if (this.isViewingHistory()) {
-        const idx = this.historyViewIndex;
-        const entry = live.moveHistory?.[idx];
-        banner.textContent = entry
-          ? `Reviewing — ${formatHistoryChipLabel(entry, idx)}`
-          : "Reviewing earlier position";
-        banner.className = "turn-banner history-review";
-      } else if (s.gameOver) banner.textContent = "Game over";
+      if (s.gameOver) banner.textContent = "Game over";
       else if (s.turn === this.localColor) {
         const spellNote = s.meta.shatterSilenced?.[this.localColor]
           ? "No spells (Shatter backlash) · "
@@ -2113,20 +2017,13 @@ ${starLine}`;
       }
     }
     const endBtn = this.root.querySelector("#btn-end-cards");
-    if (endBtn) {
-      endBtn.disabled =
-        this.isViewingHistory() ||
-        live.turn !== this.localColor ||
-        live.phase !== PHASE.CARDS ||
-        !!live.gameOver;
-    }
+    if (endBtn) endBtn.disabled = s.turn !== this.localColor || s.phase !== PHASE.CARDS || !!s.gameOver;
     this.updateSpellCastUI();
     this.updateColumnPickUI();
     this.updateRowPickUI();
     this.updatePlayerPanels();
     this.renderHand();
     this.renderBoard();
-    if (this.isPvp) this.updateHistoryNavUI();
   }
 
   updatePlayerPanels() {
