@@ -22,7 +22,7 @@ import {
   playInstant,
   applyCard,
 } from "./cardEffects.js";
-import { runAiTurn } from "./ai.js";
+import { planAiTurn, applyAiReplayEntry } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
 import { renderSpellCardEl } from "./cardArt.js";
@@ -57,6 +57,8 @@ const AI_PACE = {
   spellWindUp: 1700,
   spellShow: 3200,
   spellSettle: 1600,
+  moveAnnounce: 800,
+  moveSettle: 1200,
   move: 2000,
   message: 900,
   explosion: 1000,
@@ -1366,6 +1368,8 @@ ${starLine}`;
           this.setMessage(`${this.opponentName} casts ${cardName}…`);
           this.render();
           await delay(400);
+          applyAiReplayEntry(this.state, entry);
+          this.render();
           await this.runCounterspellReveal();
           this.setMessage("Your Counterspell cancels their magic!");
           this.$("board")?.classList.remove("board--ai-spell");
@@ -1400,6 +1404,9 @@ ${starLine}`;
           await this.runSpellAnimation(spec);
         }
 
+        applyAiReplayEntry(this.state, entry);
+        this.render();
+
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
         await delay(AI_PACE.spellSettle);
@@ -1416,21 +1423,28 @@ ${starLine}`;
         }
         this.setMessage(entry.text);
         this.render();
-        await delay(AI_PACE.move);
+        await delay(AI_PACE.moveAnnounce);
+        applyAiReplayEntry(this.state, entry);
+        this.render();
+        if (this.state.boardFx) {
+          await new Promise((resolve) => this.playBoardFx(this.state, resolve));
+        }
+        await delay(AI_PACE.moveSettle);
         this.aiHighlight = null;
-    this.cullAnimation = null;
-    this.spellAnimation = null;
-    this.boardFx = null;
-    this.selectedColumn = null;
-    this.selectedRow = null;
-    this.actionBusy = false;
+        this.cullAnimation = null;
+        this.spellAnimation = null;
+        this.boardFx = null;
+        this.selectedColumn = null;
+        this.selectedRow = null;
         this.render();
       } else if (entry.type === "message") {
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
           aiLog.scrollTop = aiLog.scrollHeight;
         }
+        applyAiReplayEntry(this.state, entry);
         this.setMessage(entry.text);
+        this.render();
         await delay(AI_PACE.message);
       }
     }
@@ -1460,18 +1474,23 @@ ${starLine}`;
     this._aiTurnPending = false;
     const s = this.state;
     if (s.gameOver) return;
+    this.actionBusy = true;
     this.setMessage(`${this.opponentName} is acting…`);
     this.render();
 
     const capBefore = s.captured[this.localColor]?.length ?? 0;
-    const log = runAiTurn(s, this.opponentName);
-    await this.replayAiLog(log);
+    const log = planAiTurn(s, this.opponentName);
+    try {
+      await this.replayAiLog(log);
+    } finally {
+      this.actionBusy = false;
+      this.aiHighlight = null;
+      this.cullAnimation = null;
+      this.spellAnimation = null;
+      this.boardFx = null;
+    }
     const capAfter = s.captured[this.localColor]?.length ?? 0;
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
-
-    if (s.boardFx) {
-      await new Promise((resolve) => this.playBoardFx(s, resolve));
-    }
 
     tickEndTurnEffects(s.board, this.opponentColor, s);
     tickMeta(s, COLORS.BLACK);
