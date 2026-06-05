@@ -3864,6 +3864,36 @@ body.chest-open-active {
   margin: 0;
   font-size: 0.82rem;
 }
+.profile-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem 0.15rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.profile-hero-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  min-width: 0;
+  text-align: center;
+}
+.profile-hero-stat__value {
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #f4f6fb;
+}
+.profile-hero-stat__label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(232, 236, 244, 0.55);
+}
 .profile-avatar-fallback {
   display: flex;
   align-items: center;

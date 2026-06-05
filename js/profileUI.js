@@ -39,6 +39,7 @@ import {
   validateUsernameFormat,
 } from "./auth.js";
 import { saveProfile } from "./storage.js";
+import { getProfileStats } from "./profileStats.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -68,6 +69,25 @@ function profileTitleBadgeHtml(profile) {
   return titleId ? titleTagHtml(titleId) : "";
 }
 
+function profileHeroStatsHtml(profile) {
+  const stats = getProfileStats(profile);
+  return `
+    <div class="profile-hero-stats" aria-label="Player statistics">
+      <div class="profile-hero-stat">
+        <span class="profile-hero-stat__value">${stats.pvpWins}</span>
+        <span class="profile-hero-stat__label">PvP wins</span>
+      </div>
+      <div class="profile-hero-stat">
+        <span class="profile-hero-stat__value">${stats.adventureStagesCleared}</span>
+        <span class="profile-hero-stat__label">Stages cleared</span>
+      </div>
+      <div class="profile-hero-stat">
+        <span class="profile-hero-stat__value">${stats.spellsUnlocked}</span>
+        <span class="profile-hero-stat__label">Spells unlocked</span>
+      </div>
+    </div>`;
+}
+
 function profileHeroCardHtml(cos, profile, { username, email }) {
   const titleBadge = profileTitleBadgeHtml(profile);
   const displayName = username || "Player";
@@ -89,6 +109,7 @@ function profileHeroCardHtml(cos, profile, { username, email }) {
           </div>
         </div>
       </div>
+      ${profileHeroStatsHtml(profile)}
     </div>`;
 }
 
