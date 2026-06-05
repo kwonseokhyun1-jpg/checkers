@@ -28,6 +28,7 @@ export const EFFECT_VISUAL = {
   leapfrog: "move",
   long_step: "move",
   blink_2: "move",
+  random_teleport: "move",
   mass_nudge: "move",
   magnet: "move",
   call_forward: "move",
