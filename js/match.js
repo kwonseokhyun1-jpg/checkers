@@ -25,9 +25,9 @@ import {
 import {
   planAiTurnWork,
   runAiTurn,
+  cloneMatchState,
   applyAiReplayEntry,
   syncPlannedAiState,
-  aiTurnMatchesPlan,
 } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
@@ -60,15 +60,16 @@ const SPELL_BANNER_EXTRA_MS = 1000;
 /** Enemy turn replay pacing (ms) */
 const AI_PACE = {
   beforeTurn: 1000,
-  spellWindUp: 1700,
-  spellShow: 3200,
-  spellSettle: 1600,
-  moveAnnounce: 700,
-  moveSlide: 550,
-  moveSettle: 750,
+  spellWindUp: 1200,
+  spellAnimMax: 1800,
+  spellSettle: 600,
+  moveAnnounce: 600,
+  moveSlide: 500,
+  moveSettle: 500,
   move: 2000,
-  message: 900,
+  message: 600,
   explosion: 1000,
+  replayTimeout: 14000,
 };
 
 const TWO_PICK_MODES = new Set([
@@ -158,6 +159,7 @@ export class MatchSession {
     this._suppressClick = false;
     this.aiHighlight = null;
     this.aiMoveAnim = null;
+    this._aiReplay = null;
     this.cullAnimation = null;
     this.spellAnimation = null;
     this.boardFx = null;
@@ -1130,7 +1132,7 @@ ${starLine}`;
   }
 
   async playCullAnimation(row, col, victim = null) {
-    const piece = this.state.board[row]?.[col];
+    const piece = this.aiViewState().board[row]?.[col];
     const snap = victim || (piece ? cullVictimSnapshot(piece) : null);
     this.cullAnimation = { row, col, victim: snap };
     const frame = this.$("board")?.closest(".board-frame");
@@ -1404,8 +1406,49 @@ ${starLine}`;
     this.aiMoveAnim = null;
   }
 
+  aiViewState() {
+    return this._aiReplay?.state ?? this.state;
+  }
+
+  async runAiSpellReplay(entry, def, cardName) {
+    if (entry.cardEffect === "cull" && entry.cullTarget) {
+      const [cr, cc] = entry.cullTarget;
+      try {
+        await Promise.race([
+          this.playCullAnimation(cr, cc, entry.cullVictim || null),
+          delay(AI_PACE.spellAnimMax),
+        ]);
+      } finally {
+        this.cullAnimation = null;
+        this.$("board")?.classList.remove("board--spell-shake");
+        this.$("board")
+          ?.closest(".board-frame")
+          ?.classList.remove("board-frame--cull", "board-frame--fx-shadow", "board-frame--spell-impact");
+      }
+      return;
+    }
+    const spec = buildAnimSpec(
+      {
+        effect: entry.cardEffect,
+        mode: entry.cardMode || def?.mode || "instant",
+        name: cardName,
+      },
+      entry.picks || [],
+      COLORS.BLACK
+    );
+    if (!spec || spec.type === "cull") {
+      await delay(700);
+      return;
+    }
+    await Promise.race([
+      this.runSpellAnimation(spec),
+      delay(AI_PACE.spellAnimMax),
+    ]);
+  }
+
   async replayAiLogEntry(entry) {
     const aiLog = this.$("ai-action-log");
+    const view = this.aiViewState();
     if (entry.type === "spell") {
         const def = entry.cardId ? getCardDef(entry.cardId) : null;
         const cardName = entry.cardName || def?.name || "Spell";
@@ -1433,7 +1476,7 @@ ${starLine}`;
           this.setMessage(`${this.opponentName} casts ${cardName}…`);
           this.render();
           await delay(400);
-          applyAiReplayEntry(this.state, entry);
+          applyAiReplayEntry(view, entry);
           this.render();
           await this.runCounterspellReveal();
           this.setMessage("Your Counterspell cancels their magic!");
@@ -1453,24 +1496,10 @@ ${starLine}`;
         this.setMessage(`${this.opponentName} cast ${cardName}!`);
         this.render();
 
-        if (entry.cardEffect === "cull" && entry.cullTarget) {
-          const [cr, cc] = entry.cullTarget;
-          await this.playCullAnimation(cr, cc, entry.cullVictim || null);
-        } else {
-          const spec = buildAnimSpec(
-            {
-              effect: entry.cardEffect,
-              mode: entry.cardMode || def?.mode || "instant",
-              name: cardName,
-            },
-            entry.picks || [],
-            COLORS.BLACK
-          );
-          await this.runSpellAnimation(spec);
-        }
+        await this.runAiSpellReplay(entry, def, cardName);
 
         try {
-          applyAiReplayEntry(this.state, entry);
+          applyAiReplayEntry(view, entry);
         } catch (err) {
           console.error("AI spell apply failed:", err);
         }
@@ -1485,7 +1514,7 @@ ${starLine}`;
     if (entry.type === "move") {
         this.hideAiSpellBanner();
         const [fromR, fromC] = entry.from;
-        const pieceSnap = this.snapshotPieceForAnim(this.state.board[fromR]?.[fromC]);
+        const pieceSnap = this.snapshotPieceForAnim(view.board[fromR]?.[fromC]);
         this.aiHighlight = {
           from: entry.from,
           to: entry.to,
@@ -1500,14 +1529,14 @@ ${starLine}`;
         await delay(AI_PACE.moveAnnounce);
         await this.playAiPieceMoveAnimation(entry.from, entry.to, pieceSnap);
         try {
-          applyAiReplayEntry(this.state, entry);
+          applyAiReplayEntry(view, entry);
         } catch (err) {
           console.error("AI move apply failed:", err);
         }
         this.aiHighlight = null;
         this.render();
-        if (this.state.boardFx) {
-          await new Promise((resolve) => this.playBoardFx(this.state, resolve));
+        if (view.boardFx) {
+          await new Promise((resolve) => this.playBoardFx(view, resolve));
         }
         await delay(AI_PACE.moveSettle);
         this.cullAnimation = null;
@@ -1524,7 +1553,7 @@ ${starLine}`;
         aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
         aiLog.scrollTop = aiLog.scrollHeight;
       }
-      applyAiReplayEntry(this.state, entry);
+      applyAiReplayEntry(view, entry);
       this.setMessage(entry.text);
       this.render();
       await delay(AI_PACE.message);
@@ -1559,49 +1588,8 @@ ${starLine}`;
     void this.runOpponentTurn().catch((err) => console.error("AI turn failed:", err));
   }
 
-  async runOpponentTurn() {
-    if (this.isPvp) return;
-    if (document.hidden) {
-      this._aiTurnPending = true;
-      return;
-    }
-    this._aiTurnPending = false;
+  async finishOpponentTurn(capBefore) {
     const s = this.state;
-    if (s.gameOver) return;
-    this.actionBusy = true;
-    this.setMessage(`${this.opponentName} is acting…`);
-    this.render();
-
-    const capBefore = s.captured[this.localColor]?.length ?? 0;
-    let log = [];
-    let planned = null;
-    try {
-      ({ log, work: planned } = planAiTurnWork(s, this.opponentName));
-    } catch (err) {
-      console.error("AI plan failed:", err);
-      try {
-        log = runAiTurn(s, this.opponentName);
-        planned = s;
-      } catch (err2) {
-        console.error("AI eager fallback failed:", err2);
-      }
-    }
-    try {
-      if (log.length) await this.replayAiLog(log);
-    } catch (err) {
-      console.error("AI replay failed:", err);
-    } finally {
-      this.actionBusy = false;
-      this.aiHighlight = null;
-      this.aiMoveAnim = null;
-      this.cullAnimation = null;
-      this.spellAnimation = null;
-      this.boardFx = null;
-    }
-    if (planned && planned !== s && !aiTurnMatchesPlan(s, planned)) {
-      syncPlannedAiState(s, planned);
-      this.render();
-    }
     const capAfter = s.captured[this.localColor]?.length ?? 0;
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
 
@@ -1623,6 +1611,66 @@ ${starLine}`;
     this.beginPlayerTurn();
     this.setMessage("Your turn — cast a spell or select a piece to move.");
     this.render();
+  }
+
+  async runOpponentTurn() {
+    if (this.isPvp) return;
+    if (document.hidden) {
+      this._aiTurnPending = true;
+      return;
+    }
+    this._aiTurnPending = false;
+    const s = this.state;
+    if (s.gameOver) return;
+
+    this.actionBusy = true;
+    this.setMessage(`${this.opponentName} is acting…`);
+    this.render();
+
+    const capBefore = s.captured[this.localColor]?.length ?? 0;
+    let log = [];
+    let planned = null;
+
+    try {
+      ({ log, work: planned } = planAiTurnWork(s, this.opponentName));
+    } catch (err) {
+      console.error("AI plan failed:", err);
+      try {
+        planned = cloneMatchState(s);
+        log = runAiTurn(planned, this.opponentName);
+      } catch (err2) {
+        console.error("AI plan fallback failed:", err2);
+      }
+    }
+
+    if (planned) {
+      this._aiReplay = { state: cloneMatchState(s) };
+    }
+
+    try {
+      if (log.length) {
+        await Promise.race([
+          this.replayAiLog(log),
+          delay(AI_PACE.replayTimeout),
+        ]);
+      }
+    } catch (err) {
+      console.error("AI replay failed:", err);
+    } finally {
+      this._aiReplay = null;
+      this.aiHighlight = null;
+      this.aiMoveAnim = null;
+      this.cullAnimation = null;
+      this.spellAnimation = null;
+      this.boardFx = null;
+      this.actionBusy = false;
+      if (planned) {
+        syncPlannedAiState(s, planned);
+      }
+      this.render();
+    }
+
+    await this.finishOpponentTurn(capBefore);
   }
 
   beginMovePhase() {
@@ -1708,7 +1756,7 @@ ${starLine}`;
     const boardFrame = this.root.querySelector("#board-frame");
     boardFrame?.classList.toggle("board-frame--local-flipped", this.boardFlipped);
     boardEl.innerHTML = "";
-    const s = this.state;
+    const s = this.aiViewState();
     const zonePreview = this.getZonePreviewSets();
 
     for (let row = 0; row < SIZE; row++) {

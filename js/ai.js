@@ -193,7 +193,7 @@ export function runAiTurn(state, opponentName = "Opponent") {
     state.meta.blindNext[color] = false;
   } else if (!state.spellPlayed.black && hand.length) {
     const playable = hand.filter((c) => canAiPlay(state, color, c));
-    if (playable.length && Math.random() < 0.7) {
+    if (playable.length) {
       const card = playable[Math.floor(Math.random() * playable.length)];
       const idx = hand.indexOf(card);
       const trapped = !!state.meta.counterspell?.[COLORS.RED];
