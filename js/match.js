@@ -383,6 +383,7 @@ export class MatchSession {
           cardMode: spell.cardMode,
           picks: spell.picks || [],
           countered: !!spell.countered,
+          ...(spell.cullTarget ? { cullTarget: spell.cullTarget, cullVictim: spell.cullVictim } : {}),
         },
       ]);
     } finally {
@@ -410,6 +411,25 @@ export class MatchSession {
       this._syncPromise = null;
     });
     return this._syncPromise;
+  }
+
+  recordPvpSpell(card, picks = [], extras = {}) {
+    if (!this.isPvp || !card) return;
+    const seq = (this.state.pvpSpellSeq || 0) + 1;
+    this.state.pvpSpellSeq = seq;
+    this.state.pvpLastSpell = {
+      seq,
+      caster: this.localColor,
+      cardId: card.id,
+      cardName: card.name,
+      cardDesc: card.desc,
+      cardEffect: card.effect,
+      cardMode: card.mode,
+      picks: (picks || []).map((p) => [...p]),
+      countered: !!extras.countered,
+      ...(extras.cullTarget ? { cullTarget: extras.cullTarget, cullVictim: extras.cullVictim } : {}),
+    };
+    this._lastPvpSpellSeq = seq;
   }
 
   removeCardFromHand(card) {
@@ -446,8 +466,13 @@ export class MatchSession {
     }
   }
 
-  finishCardPlay(msg) {
-    if (this.cardPlay?.card) this.removeCardFromHand(this.cardPlay.card);
+  finishCardPlay(msg, replayExtras = {}) {
+    const card = this.cardPlay?.card;
+    const picks = this.cardPlay?.picks ? [...this.cardPlay.picks] : [];
+    if (card) {
+      this.recordPvpSpell(card, picks, replayExtras);
+      this.removeCardFromHand(card);
+    }
     if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
     else this.state.meta.extraSpellCast[this.localColor] = false;
     this.cardPlay = null;
@@ -591,7 +616,10 @@ export class MatchSession {
         this.render();
         return;
       }
-      this.finishCardPlay(res.message);
+      this.finishCardPlay(
+        res.message,
+        res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}
+      );
     });
   }
 
@@ -1138,12 +1166,14 @@ ${starLine}`;
   }
 
   finalizeCounteredSpell(card, message) {
+    const picks = this.cardPlay?.picks ? [...this.cardPlay.picks] : [];
     this.removeCardFromHand(card);
     if (!this.state.meta.extraSpellCast?.[this.localColor]) {
       this.state.spellPlayed[this.localColor] = true;
     } else {
       this.state.meta.extraSpellCast[this.localColor] = false;
     }
+    this.recordPvpSpell(card, picks, { countered: true });
     this.cardPlay = null;
     this.validTargets = [];
     this.selectedSquare = null;
@@ -1294,7 +1324,11 @@ ${starLine}`;
       } else {
         this.setMessage(res.message || "Spell cast.");
       }
-      this.recordPvpSpell(card, []);
+      this.recordPvpSpell(
+        card,
+        [],
+        res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}
+      );
       if (this.checkWin()) return;
       this.render();
       this.pushPvpState();
@@ -1399,7 +1433,7 @@ ${starLine}`;
               name: cardName,
             },
             entry.picks || [],
-            COLORS.BLACK
+            this.opponentColor
           );
           await this.runSpellAnimation(spec);
         }
