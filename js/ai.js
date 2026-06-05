@@ -75,25 +75,26 @@ export function planAiTurn(state, opponentName = "Opponent") {
 /**
  * Plan on a clone; returns log + final planned state for sync fallback.
  */
-export function planAiTurnWork(state, opponentName = "Opponent") {
+export function planAiTurnWork(state, opponentName = "Opponent", aiColor = COLORS.BLACK) {
   const work = cloneMatchState(state);
-  const log = runAiTurn(work, opponentName);
+  const log = runAiTurn(work, opponentName, aiColor);
   return { log, work };
 }
 
 /**
  * Apply one replay log entry to live state (called from UI after announce/animation).
  */
-export function applyAiReplayEntry(state, entry) {
-  const color = COLORS.BLACK;
-  const hand = state.hands.black;
+export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
+  const color = aiColor;
+  const hand = state.hands[aiColor];
 
   if (entry.type === "spell") {
     if (entry.countered) {
       const idx = hand.findIndex((c) => c.id === entry.cardId);
       if (idx >= 0) hand.splice(idx, 1);
-      state.spellPlayed.black = true;
-      if (state.meta.counterspell?.[COLORS.RED]) state.meta.counterspell[COLORS.RED] = false;
+      state.spellPlayed[aiColor] = true;
+      const human = aiColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
+      if (state.meta.counterspell?.[human]) state.meta.counterspell[human] = false;
       return true;
     }
     const idx = hand.findIndex((c) => c.id === entry.cardId);
@@ -101,7 +102,7 @@ export function applyAiReplayEntry(state, entry) {
     if (!card) return false;
     const res = applyCard(state, color, card, entry.picks || []);
     if (idx >= 0) hand.splice(idx, 1);
-    state.spellPlayed.black = true;
+    state.spellPlayed[aiColor] = true;
     return !!res?.success;
   }
 
@@ -109,12 +110,15 @@ export function applyAiReplayEntry(state, entry) {
     const [fr, fc] = entry.from;
     if (!state.board[fr]?.[fc]) return false;
     if (entry.confused) state.meta.confuseNext[color] = false;
-    if (entry.bearBonus) state.meta.bearBonusUsed[COLORS.BLACK] = true;
+    if (entry.bearBonus) {
+      if (!state.meta.bearBonusUsed) state.meta.bearBonusUsed = {};
+      state.meta.bearBonusUsed[aiColor] = true;
+    }
     if (entry.pressExtra) {
       const pressed = findPressExtraPiece(state.board, color);
       if (pressed) pressed.pressExtraMove = false;
     }
-    if (entry.quickMarch) state.meta.pendingDouble.black = false;
+    if (entry.quickMarch) state.meta.pendingDouble[aiColor] = false;
     try {
       const piece = applyMove(
         state.board,
@@ -181,9 +185,10 @@ export function pickBestMove(board, color, state) {
  * Run AI turn; returns a replay log for the UI.
  * @returns {Array<{type: string, [key: string]: unknown}>}
  */
-export function runAiTurn(state, opponentName = "Opponent") {
-  const color = COLORS.BLACK;
-  const hand = state.hands.black;
+export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLACK) {
+  const color = aiColor;
+  const human = aiColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
+  const hand = state.hands[aiColor];
   const log = [];
 
   if (state.meta.shatterSilenced?.[color]) {
@@ -191,16 +196,16 @@ export function runAiTurn(state, opponentName = "Opponent") {
   } else if (state.meta.blindNext?.[color]) {
     log.push({ type: "message", text: `${opponentName} is blinded — skips spells.`, clearBlind: true });
     state.meta.blindNext[color] = false;
-  } else if (!state.spellPlayed.black && hand.length) {
+  } else if (!state.spellPlayed[aiColor] && hand.length) {
     const playable = hand.filter((c) => canAiPlay(state, color, c));
     if (playable.length) {
       const card = playable[Math.floor(Math.random() * playable.length)];
       const idx = hand.indexOf(card);
-      const trapped = !!state.meta.counterspell?.[COLORS.RED];
+      const trapped = !!state.meta.counterspell?.[human];
       if (trapped) {
-        state.meta.counterspell[COLORS.RED] = false;
+        state.meta.counterspell[human] = false;
         hand.splice(idx, 1);
-        state.spellPlayed.black = true;
+        state.spellPlayed[aiColor] = true;
         log.push({
           type: "spell",
           cardName: card.name,
@@ -216,7 +221,7 @@ export function runAiTurn(state, opponentName = "Opponent") {
         const res = tryAutoPlay(state, color, card);
         if (res.success) {
           hand.splice(idx, 1);
-          state.spellPlayed.black = true;
+          state.spellPlayed[aiColor] = true;
           log.push({
             type: "spell",
             cardName: card.name,
@@ -261,9 +266,10 @@ export function runAiTurn(state, opponentName = "Opponent") {
     applyMove(state.board, move, state);
     const [br, bc] = move.to;
     const landed = state.board[br]?.[bc];
-    if (landed?.bearAwakened && !state.meta.bearBonusUsed?.[COLORS.BLACK]) {
-      state.meta.bearBonusUsed[COLORS.BLACK] = true;
-      const extras = getAllMovesForColor(state.board, COLORS.BLACK, state).filter(
+    if (landed?.bearAwakened && !state.meta.bearBonusUsed?.[aiColor]) {
+      if (!state.meta.bearBonusUsed) state.meta.bearBonusUsed = {};
+      state.meta.bearBonusUsed[aiColor] = true;
+      const extras = getAllMovesForColor(state.board, aiColor, state).filter(
         (m) => m.from[0] === br && m.from[1] === bc
       );
       if (extras.length) {
@@ -280,7 +286,7 @@ export function runAiTurn(state, opponentName = "Opponent") {
         });
       }
     }
-    if (state.meta.pendingDouble.black && move.type === "step") {
+    if (state.meta.pendingDouble?.[aiColor] && move.type === "step") {
       const extra = getAllMovesForColor(state.board, color, state).filter(
         (m) => m.from[0] === move.to[0] && m.from[1] === move.to[1] && (m.type === "step" || m.type === "jump")
       );
@@ -297,7 +303,7 @@ export function runAiTurn(state, opponentName = "Opponent") {
           text: `Quick follow-up ${squareName(ex.from[0], ex.from[1])} → ${squareName(ex.to[0], ex.to[1])}`,
         });
       }
-      state.meta.pendingDouble.black = false;
+      state.meta.pendingDouble[aiColor] = false;
     }
   } else {
     log.push({ type: "message", text: `${opponentName} had no legal move.` });
