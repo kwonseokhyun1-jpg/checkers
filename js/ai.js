@@ -7,6 +7,22 @@ export function cloneBoardGrid(board) {
   return board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
 }
 
+/** Show board with pending chess moves rewound (piece still at move-from square). */
+export function boardHoldingPendingMoves(board, moveEntries) {
+  if (!moveEntries?.length) return cloneBoardGrid(board);
+  let b = cloneBoardGrid(board);
+  for (const entry of moveEntries) {
+    if (entry.type !== "move") continue;
+    const [fr, fc] = entry.from;
+    const [tr, tc] = entry.to;
+    const piece = b[tr]?.[tc];
+    if (!piece) continue;
+    b[tr][tc] = null;
+    b[fr][fc] = { ...piece, row: fr, col: fc };
+  }
+  return b;
+}
+
 /** Deep copy for AI planning without mutating the live match state. */
 export function cloneMatchState(state) {
   const hook = state.meta?.achievementHook;

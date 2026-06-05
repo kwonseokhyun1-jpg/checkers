@@ -28,6 +28,8 @@ import {
   cloneMatchState,
   syncPlannedAiState,
   applyAiReplayEntry,
+  aiTurnMatchesPlan,
+  boardHoldingPendingMoves,
   cloneBoardGrid,
 } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
@@ -61,9 +63,7 @@ const SPELL_BANNER_EXTRA_MS = 1000;
 /** Enemy turn replay pacing (ms) */
 const AI_PACE = {
   beforeTurn: 1000,
-  spellWindUp: 1200,
-  spellAnimMax: 1800,
-  spellSettle: 600,
+  spellResolveBrief: 450,
   moveAnnounce: 600,
   moveSettle: 500,
   afterSpellBeforeMove: 2000,
@@ -160,6 +160,8 @@ export class MatchSession {
     this.aiHighlight = null;
     /** When set, renderBoard draws pieces from this grid instead of state.board (AI replay). */
     this.aiReplayBoard = null;
+    this._aiTurnStartBoard = null;
+    this._aiTurnRunning = false;
     this.cullAnimation = null;
     this.spellAnimation = null;
     this.boardFx = null;
@@ -1365,16 +1367,18 @@ ${starLine}`;
     this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
   }
 
-  /** Replay log: board updates are staged (announce → pause → spell → move). */
+  /** Replay log: frozen board at announce → 2s → spell → chess move. */
   async playAiTurnPresentation(log, replay, options = {}) {
     const visualOnly = options.visualOnly ?? !replay;
     const aiLog = this.$("ai-action-log");
     const oc = this.opponentColor;
-    let spellAnnounced = false;
+    const pendingMoves = log.filter((e) => e.type === "move");
+    let movesRevealed = 0;
+    const turnStartBoard = this._aiTurnStartBoard;
 
-    const syncDisplayFromReplay = () => {
-      if (visualOnly || !replay) return;
-      this.aiReplayBoard = cloneBoardGrid(replay.board);
+    const displayHoldingMoves = (board) => {
+      if (visualOnly || !turnStartBoard) return null;
+      return boardHoldingPendingMoves(board, pendingMoves.slice(movesRevealed));
     };
 
     for (const entry of log) {
@@ -1388,7 +1392,7 @@ ${starLine}`;
           aiLog.scrollTop = aiLog.scrollHeight;
         }
 
-        syncDisplayFromReplay();
+        if (turnStartBoard) this.aiReplayBoard = cloneBoardGrid(turnStartBoard);
         this.showAiSpellBanner(cardName, cardDesc);
         this.setMessage(`${this.opponentName} is casting ${cardName}…`);
         this.$("board")?.classList.add("board--ai-spell");
@@ -1398,34 +1402,36 @@ ${starLine}`;
         if (!visualOnly) {
           applyAiReplayEntry(replay, entry, oc);
           applyAiReplayEntry(this.state, entry, oc);
-          syncDisplayFromReplay();
         }
+        this.aiReplayBoard = displayHoldingMoves(
+          visualOnly ? turnStartBoard : replay.board
+        );
         this.render();
-        await delay(AI_PACE.spellWindUp);
 
         if (entry.countered) {
           this.setMessage(`${this.opponentName} casts ${cardName}…`);
-          this.render();
-          await delay(400);
+          await delay(300);
           await this.runCounterspellReveal();
           this.setMessage("Your Counterspell cancels their magic!");
         } else {
           this.setMessage(`${this.opponentName} cast ${cardName}!`);
-          this.render();
-          await delay(AI_PACE.spellAnimMax);
         }
+        this.render();
+        await delay(AI_PACE.spellResolveBrief);
 
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
-        await delay(AI_PACE.spellSettle);
       } else if (entry.type === "move") {
         this.hideAiSpellBanner();
-        if (spellAnnounced) spellAnnounced = false;
         if (!visualOnly) {
           applyAiReplayEntry(replay, entry, oc);
           applyAiReplayEntry(this.state, entry, oc);
+          movesRevealed++;
         }
-        this.aiReplayBoard = null;
+        this.aiReplayBoard =
+          movesRevealed < pendingMoves.length
+            ? displayHoldingMoves(replay.board)
+            : null;
         this.aiHighlight = {
           from: entry.from,
           to: entry.to,
@@ -1448,7 +1454,7 @@ ${starLine}`;
         if (!visualOnly) {
           applyAiReplayEntry(replay, entry, oc);
           applyAiReplayEntry(this.state, entry, oc);
-          syncDisplayFromReplay();
+          this.aiReplayBoard = displayHoldingMoves(replay.board);
         }
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
@@ -1505,6 +1511,7 @@ ${starLine}`;
 
   async runOpponentTurn() {
     if (this.isPvp) return;
+    if (this._aiTurnRunning) return;
     if (document.hidden) {
       this._aiTurnPending = true;
       return;
@@ -1513,7 +1520,9 @@ ${starLine}`;
     const s = this.state;
     if (s.gameOver) return;
 
+    this._aiTurnRunning = true;
     this.actionBusy = true;
+    this._aiTurnStartBoard = cloneBoardGrid(s.board);
     this.setMessage(`${this.opponentName} is acting…`);
     this.render();
 
@@ -1545,17 +1554,22 @@ ${starLine}`;
           this.playAiTurnPresentation(log, replay),
           delay(AI_PACE.replayTimeout),
         ]);
+      } else if (planned) {
+        syncPlannedAiState(s, planned);
+        this.render();
       }
     } catch (err) {
       console.error("AI presentation failed:", err);
     } finally {
       this.aiHighlight = null;
       this.aiReplayBoard = null;
+      this._aiTurnStartBoard = null;
       this.cullAnimation = null;
       this.spellAnimation = null;
       this.boardFx = null;
+      this._aiTurnRunning = false;
       this.actionBusy = false;
-      if (planned) {
+      if (planned && !aiTurnMatchesPlan(s, planned)) {
         syncPlannedAiState(s, planned);
         this.render();
       }
