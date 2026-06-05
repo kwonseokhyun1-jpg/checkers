@@ -37,7 +37,7 @@ import {
   MIN_SPELL_ANIM_MS,
 } from "./spellAnimations.js";
 import { applySquareSpellFx, mountSpellOverlay, removeSpellOverlay, revealCoinFlipResult, animateCoinDropToSquare } from "./spellFx.js";
-import { pickCoinFlipVictim } from "./cardEffectHandlers.js";
+import { pickCoinFlipVictim, pickRandomTeleportDestination } from "./cardEffectHandlers.js";
 import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells } from "./cardEffectHandlers.js";
 import { isInDarknessZone } from "./gameMeta.js";
@@ -1213,6 +1213,14 @@ ${starLine}`;
     if (card.effect === "darkness" && picks.length) {
       extra.darknessCells = getDarknessZoneCells(picks[0][0], picks[0][1]);
     }
+    let animPicks = picks;
+    if (card.effect === "random_teleport" && picks.length) {
+      const [r, c] = picks[0];
+      const dest = pickRandomTeleportDestination(s, r, c);
+      if (!dest) return finishSpellTrack({ success: false, message: "No empty squares to teleport to." });
+      s.meta.pendingRandomTeleport = dest;
+      animPicks = [picks[0], dest];
+    }
     if (card.effect === "coin_flip") {
       const victim = pickCoinFlipVictim(s, this.localColor);
       if (!victim) return finishSpellTrack({ success: false, message: "No valid targets" });
@@ -1259,7 +1267,7 @@ ${starLine}`;
       return finishSpellTrack(res);
     }
 
-    const spec = buildAnimSpec(card, picks, this.localColor, extra);
+    const spec = buildAnimSpec(card, animPicks, this.localColor, extra);
     await this.runSpellAnimation(spec);
     return finishSpellTrack(applyCard(this.state, this.localColor, card, picks));
   }

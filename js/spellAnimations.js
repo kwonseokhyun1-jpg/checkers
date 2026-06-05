@@ -54,7 +54,7 @@ const MULTI_KILL_EFFECTS = new Set([
 
 const MOVE_EFFECTS = new Set([
   "blink_2", "long_step", "sidestep", "nudge", "chain_pull", "repel", "leapfrog",
-  "phase_walk", "corner_hop", "drift", "recall", "flank_3", "warp_gate", "berserk",
+  "phase_walk", "corner_hop", "drift", "recall", "flank_3", "warp_gate", "berserk", "random_teleport",
   "bait_switch", "hostile_swap", "mass_nudge", "displacement", "magnet", "call_forward", "butterfly", "iron_will",
 ]);
 

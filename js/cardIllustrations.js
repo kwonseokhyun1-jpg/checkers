@@ -80,6 +80,10 @@ export const EFFECT_ILLUSTRATIONS = {
   leapfrog: () => wrap(`${piece(14, 46)} ${piece(28, 34, 4.5)} ${ghost(44, 22)} ${arcJump(18, 42, 28, 34, 42, 24)}`),
   long_step: () => wrap(`${piece(18, 46)} ${ghost(46, 18)} ${arrow(22, 42, 42, 22, 2.4)}`),
   blink_2: () => wrap(`${piece(20, 44)} ${ring(44, 20, 8)} ${piece(44, 20, 4, 0.35)} ${arrow(26, 40, 38, 26)}<circle cx="44" cy="20" r="3" fill="currentColor" opacity="0.6"/>`),
+  random_teleport: () =>
+    wrap(
+      `${piece(32, 40, 5)}<path d="M18 18 Q32 8 46 18 Q38 32 32 28 Q26 32 18 18" stroke="currentColor" stroke-width="1.6" fill="none" opacity="0.45" stroke-dasharray="3 2"/><text x="40" y="22" font-size="11" fill="currentColor" opacity="0.75">?</text>${piece(28, 20, 3.5, 0.4)}`
+    ),
   recall: () => wrap(`${piece(32, 28)} ${arrow(32, 32, 32, 44)}<path d="M14 48 H50" stroke="currentColor" stroke-width="2" opacity="0.45"/><text x="18" y="46" font-size="6" fill="currentColor" opacity="0.55">back row</text>`),
   repel: () => wrap(`${piece(24, 36)} ${enemy(40, 36)} ${ghost(54, 36)} ${arrow(30, 36, 48, 36)}`),
   mass_nudge: () => wrap(`${piece(16, 40)} ${piece(32, 40)} ${arrow(20, 36, 16, 28)} ${arrow(36, 36, 40, 28)}`),
