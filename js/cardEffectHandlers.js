@@ -618,7 +618,21 @@ const EFFECTS = {
   gems_5(state, color, picks) { state.gems[color] += 5; return ok(); },
   draw_1(state, color, picks) { state.hands[color].push(createCardInstance(drawRandomCard())); return ok(); },
   conduct(state, color, picks) { state.meta.pendingConduct[color]=true; return ok(); },
-  cryo_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const t=at(state,r2,c2); if(t&&t.frozenTurns>0) t.shieldTurns=0; if(!kill(state,r2,c2,color)) return fail(); return ok(); },
+  cryo_bolt(state, color, picks) {
+    if (picks.length < 2) return fail();
+    const [r1, c1] = p0(picks), [r2, c2] = p1(picks);
+    const caster = at(state, r1, c1);
+    if (!caster || caster.color !== color) return fail();
+    const t = at(state, r2, c2);
+    if (!t || t.color === color) return fail("No enemy on that diagonal");
+    if (t.frozenTurns > 0 || t.paralyzedTurns > 0) {
+      t.shieldTurns = 0;
+      if (!kill(state, r2, c2, color)) return fail();
+      return ok("Cryo Bolt — shattered!");
+    }
+    if (!applyFreezeToPiece(state.board, state, r2, c2, 1)) return fail();
+    return ok(t.isClone ? "Cryo Bolt — clone destroyed." : "Cryo Bolt — frozen!", { freezeCount: 1 });
+  },
   knights_charge(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||!(p.knightTurns > 0 || p.isKnight)) return fail(); p.knightCapture=true; return ok(); },
   shield_bash(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||p.shieldTurns<=0) return fail(); if(!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r2+dr,c2+dc); if(t&&t.color!==color) kill(state,r2+dr,c2+dc,color);} return ok(); },
   gem_knight(state, color, picks) { if(state.gems[color]<5) return fail('Need 5 gems'); const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||!(p.knightTurns > 0 || p.isKnight)) return fail(); state.gems[color]-=5; p.shieldTurns=Math.max(p.shieldTurns,1); return ok(); },
