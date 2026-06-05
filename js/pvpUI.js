@@ -7,6 +7,8 @@ import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { getEquippedCosmetics, normalizeCosmetics } from "./cosmetics.js";
 import { PvpService, probePvpBackend, subscribeOpenRooms } from "./pvp.js";
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
+import { recordPvpWin } from "./profileStats.js";
+import { saveProfile } from "./storage.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -372,7 +374,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     const matchRoot = document.createElement("div");
     matchRoot.id = "pvp-match-root";
     root.appendChild(matchRoot);
-    matchRoot.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP" });
+    matchRoot.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP", pvp: true });
 
     pvpService._lastVersion = row.version ?? 0;
 
@@ -403,6 +405,11 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         onPvpWin: async (won) => {
           const currentUser = getCurrentUser();
           if (!currentUser) return;
+          if (won) {
+            const profile = getProfile();
+            recordPvpWin(profile);
+            saveProfile(profile);
+          }
           const winnerId = won
             ? currentUser.id
             : localColor === COLORS.RED

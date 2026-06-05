@@ -39,6 +39,7 @@ import {
   validateUsernameFormat,
 } from "./auth.js";
 import { saveProfile } from "./storage.js";
+import { getProfileStats } from "./profileStats.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -68,6 +69,51 @@ function profileTitleBadgeHtml(profile) {
   return titleId ? titleTagHtml(titleId) : "";
 }
 
+const PROFILE_STAT_ICONS = {
+  pvp: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M10 38l6-18 8 4-4 14H10z" fill="#e85d5d"/>
+    <path d="M38 38l-6-18-8 4 4 14h10z" fill="#5ce1e6"/>
+    <circle cx="24" cy="14" r="7" fill="#e8c547"/>
+    <path d="M24 8v12M20 12h8" stroke="#1a2438" stroke-width="2" stroke-linecap="round"/>
+  </svg>`,
+  adventure: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M8 36l12-24 8 10 12-14 8 28H8z" fill="#4ade80"/>
+    <path d="M8 36h32" stroke="#166534" stroke-width="2" stroke-linecap="round"/>
+    <path d="M20 22l4 4 8-10" stroke="#dcfce7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="36" cy="12" r="5" fill="#e8c547"/>
+    <path d="M36 9v6M33 12h6" stroke="#1a2438" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`,
+  spells: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <rect x="10" y="8" width="22" height="30" rx="3" fill="#9f7aea"/>
+    <path d="M14 14h14M14 20h14M14 26h9" stroke="#ede9fe" stroke-width="2" stroke-linecap="round"/>
+    <path d="M32 10l10 10-4 18-14-4 8-24z" fill="#5ce1e6"/>
+    <circle cx="36" cy="16" r="2.5" fill="#fff"/>
+    <path d="M34 24l4-2 2 4" stroke="#1a2438" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`,
+};
+
+function profileHeroStatsHtml(profile) {
+  const stats = getProfileStats(profile);
+  const cards = [
+    { key: "pvp", label: "PvP", value: stats.pvpWins },
+    { key: "adventure", label: "Adventure", value: stats.adventureStagesCleared },
+    { key: "spells", label: "Spells", value: stats.spellsUnlocked },
+  ];
+  return `
+    <div class="profile-hero-stats" aria-label="Player statistics">
+      ${cards
+        .map(
+          (card) => `
+        <article class="profile-stat-card profile-stat-card--${card.key}">
+          <span class="profile-stat-card__label">${escapeHtml(card.label)}</span>
+          <span class="profile-stat-card__icon">${PROFILE_STAT_ICONS[card.key]}</span>
+          <span class="profile-stat-card__value">${card.value}</span>
+        </article>`
+        )
+        .join("")}
+    </div>`;
+}
+
 function profileHeroCardHtml(cos, profile, { username, email }) {
   const titleBadge = profileTitleBadgeHtml(profile);
   const displayName = username || "Player";
@@ -89,6 +135,7 @@ function profileHeroCardHtml(cos, profile, { username, email }) {
           </div>
         </div>
       </div>
+      ${profileHeroStatsHtml(profile)}
     </div>`;
 }
 
