@@ -23,8 +23,8 @@ import {
   applyCard,
 } from "./cardEffects.js";
 import {
-  planAiTurnWork,
-  runAiTurn,
+  runAiSpellPhase,
+  runAiMovePhase,
   cloneMatchState,
   syncPlannedAiState,
   applyAiReplayEntry,
@@ -1367,7 +1367,7 @@ ${starLine}`;
     this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
   }
 
-  /** Replay log: frozen board at announce → 2s → spell → chess move. */
+  /** Replay log entries to the live match (spell phase or move phase). */
   async playAiTurnPresentation(log, replay, options = {}) {
     const visualOnly = options.visualOnly ?? !replay;
     const aiLog = this.$("ai-action-log");
@@ -1397,7 +1397,6 @@ ${starLine}`;
         this.setMessage(`${this.opponentName} is casting ${cardName}…`);
         this.$("board")?.classList.add("board--ai-spell");
         this.render();
-        await delay(AI_PACE.afterSpellBeforeMove);
 
         if (!visualOnly) {
           applyAiReplayEntry(replay, entry, oc);
@@ -1528,36 +1527,45 @@ ${starLine}`;
 
     const capBefore = s.captured[this.localColor]?.length ?? 0;
     const oc = this.opponentColor;
-    let log = [];
-    let planned = null;
-
-    try {
-      ({ log, work: planned } = planAiTurnWork(s, this.opponentName, oc));
-    } catch (err) {
-      console.error("AI plan failed:", err);
-    }
-
-    if (!planned || !log.length) {
-      try {
-        planned = cloneMatchState(s);
-        log = runAiTurn(planned, this.opponentName, oc);
-      } catch (err2) {
-        console.error("AI plan fallback failed:", err2);
-      }
-    }
-
     const replay = cloneMatchState(s);
+    let spellLog = [];
+    let moveLog = [];
 
     try {
-      if (log.length) {
+      const spellPlan = cloneMatchState(s);
+      spellLog = runAiSpellPhase(spellPlan, this.opponentName, oc);
+    } catch (err) {
+      console.error("AI spell phase failed:", err);
+    }
+
+    const castSpell = spellLog.some((e) => e.type === "spell");
+
+    try {
+      const present = async (log) => {
+        if (!log.length) return;
         await Promise.race([
           this.playAiTurnPresentation(log, replay),
           delay(AI_PACE.replayTimeout),
         ]);
-      } else if (planned) {
-        syncPlannedAiState(s, planned);
-        this.render();
+      };
+
+      await present(spellLog);
+
+      if (castSpell) {
+        await delay(AI_PACE.afterSpellBeforeMove);
       }
+
+      this.setMessage(`${this.opponentName} is choosing a move…`);
+      this.aiReplayBoard = cloneBoardGrid(replay.board);
+      this.render();
+
+      try {
+        moveLog = runAiMovePhase(replay, this.opponentName, oc);
+      } catch (err2) {
+        console.error("AI move phase failed:", err2);
+      }
+
+      await present(moveLog);
     } catch (err) {
       console.error("AI presentation failed:", err);
     } finally {
@@ -1569,8 +1577,8 @@ ${starLine}`;
       this.boardFx = null;
       this._aiTurnRunning = false;
       this.actionBusy = false;
-      if (planned && !aiTurnMatchesPlan(s, planned)) {
-        syncPlannedAiState(s, planned);
+      if (!aiTurnMatchesPlan(s, replay)) {
+        syncPlannedAiState(s, replay);
         this.render();
       }
     }

@@ -98,7 +98,10 @@ export function planAiTurn(state, opponentName = "Opponent") {
  */
 export function planAiTurnWork(state, opponentName = "Opponent", aiColor = COLORS.BLACK) {
   const work = cloneMatchState(state);
-  const log = runAiTurn(work, opponentName, aiColor);
+  const log = [
+    ...runAiSpellPhase(work, opponentName, aiColor),
+    ...runAiMovePhase(work, opponentName, aiColor),
+  ];
   return { log, work };
 }
 
@@ -203,10 +206,10 @@ export function pickBestMove(board, color, state) {
 }
 
 /**
- * Run AI turn; returns a replay log for the UI.
+ * Cast a random playable spell (if any). Mutates state. Does not pick a piece move.
  * @returns {Array<{type: string, [key: string]: unknown}>}
  */
-export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLACK) {
+export function runAiSpellPhase(state, opponentName = "Opponent", aiColor = COLORS.BLACK) {
   const color = aiColor;
   const human = aiColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
   const hand = state.hands[aiColor];
@@ -258,6 +261,17 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
       }
     }
   }
+
+  return log;
+}
+
+/**
+ * Pick and apply piece move(s) on the current board (call after spell phase).
+ * @returns {Array<{type: string, [key: string]: unknown}>}
+ */
+export function runAiMovePhase(state, opponentName = "Opponent", aiColor = COLORS.BLACK) {
+  const color = aiColor;
+  const log = [];
 
   let move;
   let confused = false;
@@ -358,4 +372,15 @@ const bestPress = pressMoves.reduce((best, m) => {
   }
 
   return log;
+}
+
+/**
+ * Full AI turn (spell then move) for tests and legacy callers.
+ * @returns {Array<{type: string, [key: string]: unknown}>}
+ */
+export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLACK) {
+  return [
+    ...runAiSpellPhase(state, opponentName, aiColor),
+    ...runAiMovePhase(state, opponentName, aiColor),
+  ];
 }
