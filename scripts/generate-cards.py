@@ -142,7 +142,7 @@ SPELLS = [
     ("loading", "Loading…", "Draw 1 card.", "common", 6, "instant", "draw_1"),
     # === SYNERGY ===
     ("conduct", "Conduct", "If you played a movement card this turn, your checker step may be 2 squares.", "uncommon", 4, "instant", "conduct"),
-    ("cryo_bolt", "Cryo Bolt", "Forward Bolt on a frozen target breaks shield and destroys it.", "rare", 3, "diagonal", "cryo_bolt"),    ("shield_bash", "Shield Bash", "A shielded piece moves 1 square and destroys adjacent unshielded enemy.", "uncommon", 4, "friendly", "shield_bash"),]
+    ("cryo_bolt", "Cryo Bolt", "Bolt along your diagonal: freezes a normal enemy, or destroys a frozen or paralyzed one (breaks shield).", "rare", 3, "diagonal", "cryo_bolt"),    ("shield_bash", "Shield Bash", "A shielded piece moves 1 square and destroys adjacent unshielded enemy.", "uncommon", 4, "friendly", "shield_bash"),]
 
 def js_str(s):
     return s.replace("\\", "\\\\").replace('"', '\\"')

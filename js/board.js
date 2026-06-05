@@ -626,6 +626,24 @@ export function getBoltTarget(board, piece) {
   return targets;
 }
 
+/** First enemy on each forward diagonal (Cryo Bolt — freeze or shatter frozen/paralyzed). */
+export function getCryoBoltTarget(board, piece) {
+  const dir = piece.color === COLORS.RED ? -1 : 1;
+  const targets = [];
+  for (const dc of [-1, 1]) {
+    let r = piece.row + dir, c = piece.col + dc;
+    while (inBounds(r, c) && isDarkSquare(r, c)) {
+      const cell = board[r][c];
+      if (cell) {
+        if (cell.color !== piece.color) targets.push([r, c]);
+        break;
+      }
+      r += dir; c += dc;
+    }
+  }
+  return targets;
+}
+
 /** First enemy directly ahead on a forward diagonal (Forward Bolt). */
 export function getAdjacentForwardBoltTarget(board, piece) {
   const dir = piece.color === COLORS.RED ? -1 : 1;

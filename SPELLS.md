@@ -92,7 +92,7 @@
 - **Constitution** — Your kings cannot be destroyed by non-capture effects for 5 turns.
 - **Corner Hop** — Teleport to any empty dark square in the opposite corner quadrant of the board.
 - **Cross Bolt** — Destroy the first enemy on both forward diagonals from your piece (if any).
-- **Cryo Bolt** — Forward Bolt on a frozen target breaks shield and destroys it.
+- **Cryo Bolt** — Bolt along your diagonal: freezes a normal enemy, or destroys a frozen or paralyzed one (breaks shield).
 - **Cull** — Destroy the weakest enemy (non-king preferred, fewest escape squares).
 - **Darkness** — Pieces on 4 dark squares around a point cannot be targeted by ranged spells for 2 turns.
 - **Detonate** — Destroy your own piece to also destroy all adjacent enemies (not shielded).
