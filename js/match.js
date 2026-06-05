@@ -22,7 +22,13 @@ import {
   playInstant,
   applyCard,
 } from "./cardEffects.js";
-import { planAiTurnWork, runAiTurn, cloneMatchState, syncPlannedAiState } from "./ai.js";
+import {
+  planAiTurnWork,
+  runAiTurn,
+  cloneMatchState,
+  syncPlannedAiState,
+  applyAiReplayEntry,
+} from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
 import { renderSpellCardEl } from "./cardArt.js";
@@ -1352,10 +1358,10 @@ ${starLine}`;
     this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
   }
 
-  /** Visual-only presentation after the AI turn is already applied to state. */
+  /** Replay log: apply spell/move to state as each step is shown (not all upfront). */
   async playAiTurnPresentation(log) {
     const aiLog = this.$("ai-action-log");
-    let afterSpell = false;
+    let spellAnnouncedAt = null;
     for (const entry of log) {
       if (entry.type === "spell") {
         const def = entry.cardId ? getCardDef(entry.cardId) : null;
@@ -1367,7 +1373,9 @@ ${starLine}`;
           aiLog.scrollTop = aiLog.scrollHeight;
         }
 
+        applyAiReplayEntry(this.state, entry, this.opponentColor);
         this.showAiSpellBanner(cardName, cardDesc);
+        spellAnnouncedAt = Date.now();
         this.setMessage(`${this.opponentName} is casting ${cardName}…`);
         this.$("board")?.classList.add("board--ai-spell");
         this.render();
@@ -1388,13 +1396,14 @@ ${starLine}`;
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
         await delay(AI_PACE.spellSettle);
-        afterSpell = true;
       } else if (entry.type === "move") {
         this.hideAiSpellBanner();
-        if (afterSpell) {
-          await delay(AI_PACE.afterSpellBeforeMove);
-          afterSpell = false;
+        if (spellAnnouncedAt != null) {
+          const waitMs = AI_PACE.afterSpellBeforeMove - (Date.now() - spellAnnouncedAt);
+          if (waitMs > 0) await delay(waitMs);
+          spellAnnouncedAt = null;
         }
+        applyAiReplayEntry(this.state, entry, this.opponentColor);
         this.aiHighlight = {
           from: entry.from,
           to: entry.to,
@@ -1481,7 +1490,6 @@ ${starLine}`;
     this.render();
 
     const capBefore = s.captured[this.localColor]?.length ?? 0;
-    const boardBefore = JSON.stringify(s.board);
     const oc = this.opponentColor;
     let log = [];
     let planned = null;
@@ -1501,20 +1509,12 @@ ${starLine}`;
       }
     }
 
-    if (planned) {
-      syncPlannedAiState(s, planned);
-      this.render();
-    }
-
     try {
-      if (log.length && JSON.stringify(s.board) !== boardBefore) {
+      if (log.length) {
         await Promise.race([
           this.playAiTurnPresentation(log),
           delay(AI_PACE.replayTimeout),
         ]);
-      } else if (planned) {
-        syncPlannedAiState(s, planned);
-        this.render();
       }
     } catch (err) {
       console.error("AI presentation failed:", err);
@@ -1524,7 +1524,7 @@ ${starLine}`;
       this.spellAnimation = null;
       this.boardFx = null;
       this.actionBusy = false;
-      if (planned && JSON.stringify(s.board) === boardBefore) {
+      if (planned) {
         syncPlannedAiState(s, planned);
         this.render();
       }
