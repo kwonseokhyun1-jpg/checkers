@@ -32,6 +32,18 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
             </div>
           </div>
           ${boardFrameHtml()}
+          ${
+            options.pvp
+              ? `
+          <div id="pvp-move-history" class="pvp-move-history" aria-label="Move history">
+            <button type="button" id="pvp-history-prev" class="pvp-move-history__arrow" aria-label="Previous move" disabled>‹</button>
+            <div id="pvp-history-track" class="pvp-move-history__track" role="list"></div>
+            <button type="button" id="pvp-history-next" class="pvp-move-history__arrow" aria-label="Next move" disabled>›</button>
+          </div>
+          <p id="pvp-history-status" class="pvp-history-status hidden" role="status">Reviewing earlier position</p>
+          `
+              : ""
+          }
           <p id="message" class="match-message"></p>
           <div id="piece-info" class="piece-info hidden"></div>
         </section>
