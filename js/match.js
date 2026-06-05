@@ -22,7 +22,13 @@ import {
   playInstant,
   applyCard,
 } from "./cardEffects.js";
-import { planAiTurn, applyAiReplayEntry } from "./ai.js";
+import {
+  planAiTurnWork,
+  runAiTurn,
+  applyAiReplayEntry,
+  syncPlannedAiState,
+  aiTurnMatchesPlan,
+} from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
 import { renderSpellCardEl } from "./cardArt.js";
@@ -813,6 +819,10 @@ export class MatchSession {
 
 
   playBoardFx(s, onDone) {
+    if (!s.boardFx?.squares?.length) {
+      onDone?.();
+      return;
+    }
     this.boardFx = { ...s.boardFx, squares: s.boardFx.squares.map(([r, c]) => [r, c]) };
     s.boardFx = null;
     const kind = this.boardFx.kind || "bomb";
@@ -829,12 +839,12 @@ export class MatchSession {
     const ms = boardFxDuration(kind);
     setTimeout(() => {
       this.boardFx = null;
-    this.selectedColumn = null;
-    this.selectedRow = null;
+      this.selectedColumn = null;
+      this.selectedRow = null;
       frame?.classList.remove(`board-frame--fx-${kind}`, "board-frame--spell-impact");
       this.$("board")?.classList.remove("board--spell-shake");
-      if (this.checkWin()) return;
       onDone?.();
+      this.checkWin();
     }, ms);
   }
 
@@ -937,7 +947,7 @@ export class MatchSession {
         this._aiTurnPending = true;
         return;
       }
-      this.runOpponentTurn();
+      void this.runOpponentTurn().catch((err) => console.error("AI turn failed:", err));
     }, AI_PACE.beforeTurn);
   }
 
@@ -1394,12 +1404,9 @@ ${starLine}`;
     this.aiMoveAnim = null;
   }
 
-  async replayAiLog(log) {
+  async replayAiLogEntry(entry) {
     const aiLog = this.$("ai-action-log");
-    if (aiLog) aiLog.innerHTML = "";
-
-    for (const entry of log) {
-      if (entry.type === "spell") {
+    if (entry.type === "spell") {
         const def = entry.cardId ? getCardDef(entry.cardId) : null;
         const cardName = entry.cardName || def?.name || "Spell";
         const cardDesc = entry.cardDesc || def?.desc || entry.text || "";
@@ -1433,7 +1440,7 @@ ${starLine}`;
           this.$("board")?.classList.remove("board--ai-spell");
           this.hideAiSpellBanner();
           await delay(AI_PACE.spellSettle);
-          continue;
+          return;
         }
 
         if (aiLog) {
@@ -1462,13 +1469,20 @@ ${starLine}`;
           await this.runSpellAnimation(spec);
         }
 
-        applyAiReplayEntry(this.state, entry);
+        try {
+          applyAiReplayEntry(this.state, entry);
+        } catch (err) {
+          console.error("AI spell apply failed:", err);
+        }
         this.render();
 
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
         await delay(AI_PACE.spellSettle);
-      } else if (entry.type === "move") {
+      return;
+    }
+
+    if (entry.type === "move") {
         this.hideAiSpellBanner();
         const [fromR, fromC] = entry.from;
         const pieceSnap = this.snapshotPieceForAnim(this.state.board[fromR]?.[fromC]);
@@ -1485,7 +1499,11 @@ ${starLine}`;
         this.render();
         await delay(AI_PACE.moveAnnounce);
         await this.playAiPieceMoveAnimation(entry.from, entry.to, pieceSnap);
-        applyAiReplayEntry(this.state, entry);
+        try {
+          applyAiReplayEntry(this.state, entry);
+        } catch (err) {
+          console.error("AI move apply failed:", err);
+        }
         this.aiHighlight = null;
         this.render();
         if (this.state.boardFx) {
@@ -1498,15 +1516,30 @@ ${starLine}`;
         this.selectedColumn = null;
         this.selectedRow = null;
         this.render();
-      } else if (entry.type === "message") {
-        if (aiLog) {
-          aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
-          aiLog.scrollTop = aiLog.scrollHeight;
-        }
-        applyAiReplayEntry(this.state, entry);
-        this.setMessage(entry.text);
-        this.render();
-        await delay(AI_PACE.message);
+      return;
+    }
+
+    if (entry.type === "message") {
+      if (aiLog) {
+        aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
+        aiLog.scrollTop = aiLog.scrollHeight;
+      }
+      applyAiReplayEntry(this.state, entry);
+      this.setMessage(entry.text);
+      this.render();
+      await delay(AI_PACE.message);
+    }
+  }
+
+  async replayAiLog(log) {
+    const aiLog = this.$("ai-action-log");
+    if (aiLog) aiLog.innerHTML = "";
+
+    for (const entry of log) {
+      try {
+        await this.replayAiLogEntry(entry);
+      } catch (err) {
+        console.error("AI replay entry failed:", entry.type, err);
       }
     }
     if (aiLog) aiLog.scrollTop = aiLog.scrollHeight;
@@ -1523,7 +1556,7 @@ ${starLine}`;
       return;
     }
     this._aiTurnPending = false;
-    this.runOpponentTurn();
+    void this.runOpponentTurn().catch((err) => console.error("AI turn failed:", err));
   }
 
   async runOpponentTurn() {
@@ -1540,12 +1573,18 @@ ${starLine}`;
     this.render();
 
     const capBefore = s.captured[this.localColor]?.length ?? 0;
-    let log;
+    let log = [];
+    let planned = null;
     try {
-      log = planAiTurn(s, this.opponentName);
+      ({ log, work: planned } = planAiTurnWork(s, this.opponentName));
     } catch (err) {
       console.error("AI plan failed:", err);
-      log = [];
+      try {
+        log = runAiTurn(s, this.opponentName);
+        planned = s;
+      } catch (err2) {
+        console.error("AI eager fallback failed:", err2);
+      }
     }
     try {
       if (log.length) await this.replayAiLog(log);
@@ -1558,6 +1597,10 @@ ${starLine}`;
       this.cullAnimation = null;
       this.spellAnimation = null;
       this.boardFx = null;
+    }
+    if (planned && planned !== s && !aiTurnMatchesPlan(s, planned)) {
+      syncPlannedAiState(s, planned);
+      this.render();
     }
     const capAfter = s.captured[this.localColor]?.length ?? 0;
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();

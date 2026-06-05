@@ -8,9 +8,60 @@ export function cloneMatchState(state) {
   if (hook) state.meta.achievementHook = null;
   try {
     return structuredClone(state);
+  } catch {
+    return JSON.parse(JSON.stringify(state));
   } finally {
     if (hook) state.meta.achievementHook = hook;
   }
+}
+
+/** Fingerprint for comparing whether replay applied the planned turn. */
+export function aiStateDigest(state) {
+  const meta = state.meta ? { ...state.meta } : {};
+  delete meta.achievementHook;
+  return JSON.stringify({
+    board: state.board,
+    hands: state.hands,
+    meta,
+    captured: state.captured,
+    spellPlayed: state.spellPlayed,
+    squares: state.squares,
+  });
+}
+
+/** True when live state matches the planned AI result (board + hands). */
+export function aiTurnMatchesPlan(live, planned) {
+  return (
+    JSON.stringify(live.board) === JSON.stringify(planned.board) &&
+    JSON.stringify(live.hands) === JSON.stringify(planned.hands) &&
+    JSON.stringify(live.spellPlayed) === JSON.stringify(planned.spellPlayed)
+  );
+}
+
+/** Copy planned AI results onto live state (preserves achievementHook). */
+export function syncPlannedAiState(live, planned) {
+  const hook = live.meta?.achievementHook;
+  const patch = JSON.parse(
+    JSON.stringify({
+      board: planned.board,
+      hands: planned.hands,
+      meta: planned.meta,
+      captured: planned.captured,
+      spellPlayed: planned.spellPlayed,
+      squares: planned.squares,
+      gems: planned.gems,
+      boardFx: null,
+    })
+  );
+  live.board = patch.board;
+  live.hands = patch.hands;
+  live.meta = patch.meta;
+  live.captured = patch.captured;
+  live.spellPlayed = patch.spellPlayed;
+  live.squares = patch.squares;
+  if (patch.gems) live.gems = patch.gems;
+  live.boardFx = null;
+  live.meta.achievementHook = hook;
 }
 
 /**
@@ -18,8 +69,16 @@ export function cloneMatchState(state) {
  * @returns {Array<{type: string, [key: string]: unknown}>}
  */
 export function planAiTurn(state, opponentName = "Opponent") {
+  return planAiTurnWork(state, opponentName).log;
+}
+
+/**
+ * Plan on a clone; returns log + final planned state for sync fallback.
+ */
+export function planAiTurnWork(state, opponentName = "Opponent") {
   const work = cloneMatchState(state);
-  return runAiTurn(work, opponentName);
+  const log = runAiTurn(work, opponentName);
+  return { log, work };
 }
 
 /**
@@ -35,18 +94,20 @@ export function applyAiReplayEntry(state, entry) {
       if (idx >= 0) hand.splice(idx, 1);
       state.spellPlayed.black = true;
       if (state.meta.counterspell?.[COLORS.RED]) state.meta.counterspell[COLORS.RED] = false;
-      return;
+      return true;
     }
-    const card = hand.find((c) => c.id === entry.cardId) || getCardDef(entry.cardId);
-    if (!card) return;
-    applyCard(state, color, card, entry.picks || []);
-    const idx = hand.indexOf(card);
+    const idx = hand.findIndex((c) => c.id === entry.cardId);
+    const card = idx >= 0 ? hand[idx] : getCardDef(entry.cardId);
+    if (!card) return false;
+    const res = applyCard(state, color, card, entry.picks || []);
     if (idx >= 0) hand.splice(idx, 1);
     state.spellPlayed.black = true;
-    return;
+    return !!res?.success;
   }
 
   if (entry.type === "move") {
+    const [fr, fc] = entry.from;
+    if (!state.board[fr]?.[fc]) return false;
     if (entry.confused) state.meta.confuseNext[color] = false;
     if (entry.bearBonus) state.meta.bearBonusUsed[COLORS.BLACK] = true;
     if (entry.pressExtra) {
@@ -54,22 +115,29 @@ export function applyAiReplayEntry(state, entry) {
       if (pressed) pressed.pressExtraMove = false;
     }
     if (entry.quickMarch) state.meta.pendingDouble.black = false;
-    applyMove(
-      state.board,
-      {
-        from: entry.from,
-        to: entry.to,
-        type: entry.moveKind,
-        captures: entry.captures || [],
-      },
-      state
-    );
-    return;
+    try {
+      const piece = applyMove(
+        state.board,
+        {
+          from: entry.from,
+          to: entry.to,
+          type: entry.moveKind,
+          captures: entry.captures || [],
+        },
+        state
+      );
+      return piece != null;
+    } catch {
+      return false;
+    }
   }
 
   if (entry.type === "message") {
     if (entry.clearBlind) state.meta.blindNext[color] = false;
+    return true;
   }
+
+  return true;
 }
 
 function scoreBoard(board, aiColor) {
