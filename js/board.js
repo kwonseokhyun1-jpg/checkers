@@ -467,15 +467,11 @@ export function applyMove(board, move, state = null) {
   if (sq?.sanctified === piece.color && !piece.king) piece.king = true;
   if (sq?.hiddenQuicksand) {
     const qsOwner = sq.hiddenQuicksand.owner;
-    sq.quicksand = true;
     delete sq.hiddenQuicksand;
     if (piece) {
       applyFreezeToPiece(board, state, tr, tc, 1);
       state?.meta?.achievementHook?.trapTriggered?.(qsOwner, piece.color);
     }
-  } else if (sq?.quicksand && piece) {
-    applyFreezeToPiece(board, state, tr, tc, 1);
-    sq.quicksand = false;
   }
   if (sq?.hiddenMine) {
     revealMine(sq);

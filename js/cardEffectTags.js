@@ -26,6 +26,7 @@ const TAGS = {
   long_step: ["Epic: leap 2 squares diagonally (no capture)"],
   sidestep: ["Step 1 square horizontally"],
   landmine: ["Hidden trap 2 turns — destroys enemy lander"],
+  quicksand: ["Hidden trap — freezes the next piece to land there"],
   detonate: ["Destroy self + adjacent enemies"],
   venom: ["Poison — 2 ticks destroys target"],
   bomb: ["Arm friendly piece", "On next move: explodes", "Kills all adjacent pieces"],
