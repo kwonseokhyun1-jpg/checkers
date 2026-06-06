@@ -55,7 +55,6 @@ const ID_TO_CATEGORY = {
   hex: "control",
   hibernation: "special",
   hostile_swap: "movement",
-  hunters_mark: "control",
   ignore: "special",
   iron_will: "defense",
   landmine: "trap",
