@@ -205,6 +205,12 @@ export function pickBestMove(board, color, state) {
   return best;
 }
 
+/** Plan spell on a throwaway clone; live/replay state is not touched. */
+export function planAiSpellLog(state, opponentName = "Opponent", aiColor = COLORS.BLACK) {
+  const scratch = cloneMatchState(state);
+  return runAiSpellPhase(scratch, opponentName, aiColor);
+}
+
 /**
  * Cast a random playable spell (if any). Mutates state. Does not pick a piece move.
  * @returns {Array<{type: string, [key: string]: unknown}>}

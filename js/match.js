@@ -23,13 +23,12 @@ import {
   applyCard,
 } from "./cardEffects.js";
 import {
-  runAiSpellPhase,
+  planAiSpellLog,
   runAiMovePhase,
   cloneMatchState,
   syncPlannedAiState,
   applyAiReplayEntry,
   aiTurnMatchesPlan,
-  boardHoldingPendingMoves,
   cloneBoardGrid,
 } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
@@ -66,7 +65,7 @@ const AI_PACE = {
   spellResolveBrief: 450,
   moveAnnounce: 600,
   moveSettle: 500,
-  afterSpellBeforeMove: 2000,
+  afterSpellBeforeMove: 1000,
   message: 600,
   explosion: 1000,
   replayTimeout: 14000,
@@ -161,7 +160,6 @@ export class MatchSession {
     /** When set, renderBoard draws pieces from this grid instead of state.board (AI replay). */
     this.aiReplayBoard = null;
     this._aiTurnStartBoard = null;
-    this._aiPendingMoveLog = null;
     this._aiTurnRunning = false;
     this.cullAnimation = null;
     this.spellAnimation = null;
@@ -1368,29 +1366,11 @@ ${starLine}`;
     this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
   }
 
-  /** Replay log entries to the live match (spell phase or move phase). */
+  /** PvP-only visual replay of an opponent spell. */
   async playAiTurnPresentation(log, replay, options = {}) {
     const visualOnly = options.visualOnly ?? !replay;
-    const keepDisplayHold = !!options.keepDisplayHold;
-    const holdMoves = options.holdMoves ?? this._aiPendingMoveLog ?? [];
-    const deferLiveState = !!options.deferLiveState;
     const aiLog = this.$("ai-action-log");
     const oc = this.opponentColor;
-    const pendingMoves = log.filter((e) => e.type === "move");
-    let movesRevealed = 0;
-    const turnStartBoard = this._aiTurnStartBoard;
-
-    const applyEntry = (entry) => {
-      if (visualOnly) return;
-      applyAiReplayEntry(replay, entry, oc);
-      if (!deferLiveState) applyAiReplayEntry(this.state, entry, oc);
-    };
-
-    const syncDisplay = (board) => {
-      if (visualOnly || !turnStartBoard) return;
-      const slice = pendingMoves.length ? pendingMoves.slice(movesRevealed) : holdMoves;
-      this.aiReplayBoard = boardHoldingPendingMoves(board, slice);
-    };
 
     for (const entry of log) {
       if (entry.type === "spell") {
@@ -1403,84 +1383,89 @@ ${starLine}`;
           aiLog.scrollTop = aiLog.scrollHeight;
         }
 
-        if (turnStartBoard) this.aiReplayBoard = cloneBoardGrid(turnStartBoard);
         this.showAiSpellBanner(cardName, cardDesc);
         this.setMessage(`${this.opponentName} is casting ${cardName}…`);
         this.$("board")?.classList.add("board--ai-spell");
         this.render();
-
-        applyEntry(entry);
-        syncDisplay(visualOnly ? turnStartBoard : replay.board);
-        this.render();
+        await delay(AI_PACE.spellResolveBrief);
 
         if (entry.countered) {
-          this.setMessage(`${this.opponentName} casts ${cardName}…`);
-          await delay(300);
           await this.runCounterspellReveal();
           this.setMessage("Your Counterspell cancels their magic!");
         } else {
           this.setMessage(`${this.opponentName} cast ${cardName}!`);
         }
         this.render();
-        await delay(AI_PACE.spellResolveBrief);
-
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
-      } else if (entry.type === "move") {
-        this.hideAiSpellBanner();
-        applyEntry(entry);
-        movesRevealed++;
-        const morePending = pendingMoves.length
-          ? movesRevealed < pendingMoves.length
-          : movesRevealed < holdMoves.length;
-        syncDisplay(replay.board);
-        if (!morePending && !keepDisplayHold) this.aiReplayBoard = null;
-        this.aiHighlight = {
-          from: entry.from,
-          to: entry.to,
-          captures: entry.captures || [],
-        };
-        if (aiLog) {
-          aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--move">♟ ${entry.text}</div>`;
-          aiLog.scrollTop = aiLog.scrollHeight;
-        }
-        this.setMessage(entry.text);
-        this.render();
-        await delay(AI_PACE.moveAnnounce);
-        this.aiHighlight = null;
-        this.render();
-        if (this.state.boardFx) {
-          await new Promise((resolve) => this.playBoardFx(this.state, resolve));
-        }
-        await delay(AI_PACE.moveSettle);
-      } else if (entry.type === "message") {
-        applyEntry(entry);
-        syncDisplay(replay.board);
-        if (aiLog) {
-          aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
-          aiLog.scrollTop = aiLog.scrollHeight;
-        }
-        this.setMessage(entry.text);
-        this.render();
-        await delay(AI_PACE.message);
       }
     }
 
     if (aiLog) aiLog.scrollTop = aiLog.scrollHeight;
-    if (!keepDisplayHold) this.aiReplayBoard = null;
   }
 
-  /** Copy replay spell/meta onto live state after the post-spell pause. */
-  syncAiReplayToLive(replay) {
-    const hook = this.state.meta?.achievementHook;
-    this.state.board = cloneBoardGrid(replay.board);
-    this.state.hands = structuredClone(replay.hands);
-    this.state.meta = structuredClone(replay.meta);
-    this.state.captured = structuredClone(replay.captured);
-    this.state.spellPlayed = structuredClone(replay.spellPlayed);
-    this.state.squares = structuredClone(replay.squares);
-    if (replay.gems) this.state.gems = structuredClone(replay.gems);
-    this.state.meta.achievementHook = hook;
+  appendAiLog(html) {
+    const aiLog = this.$("ai-action-log");
+    if (!aiLog) return;
+    aiLog.innerHTML += html;
+    aiLog.scrollTop = aiLog.scrollHeight;
+  }
+
+  /** Apply spell to replay + live, then show banner and post-spell board in one render. */
+  async presentAiSpell(replay, entry) {
+    const oc = this.opponentColor;
+    const def = entry.cardId ? getCardDef(entry.cardId) : null;
+    const cardName = entry.cardName || def?.name || "Spell";
+    const cardDesc = entry.cardDesc || def?.desc || entry.text || "";
+
+    this.appendAiLog(`<div class="ai-log-entry ai-log-entry--spell">✦ <strong>${cardName}</strong></div>`);
+
+    applyAiReplayEntry(replay, entry, oc);
+    applyAiReplayEntry(this.state, entry, oc);
+    this.aiReplayBoard = cloneBoardGrid(replay.board);
+
+    this.showAiSpellBanner(cardName, cardDesc);
+    this.setMessage(`${this.opponentName} casts ${cardName}!`);
+    this.$("board")?.classList.add("board--ai-spell");
+    this.render();
+
+    if (entry.countered) {
+      await delay(300);
+      await this.runCounterspellReveal();
+      this.setMessage("Your Counterspell cancels their magic!");
+      this.render();
+    }
+
+    await delay(AI_PACE.spellResolveBrief);
+    this.$("board")?.classList.remove("board--ai-spell");
+    this.hideAiSpellBanner();
+  }
+
+  /** Apply chess move to replay + live, then show it in one render. */
+  async presentAiMove(replay, entry) {
+    const oc = this.opponentColor;
+
+    this.appendAiLog(`<div class="ai-log-entry ai-log-entry--move">♟ ${entry.text}</div>`);
+    this.setMessage(entry.text);
+    this.aiHighlight = {
+      from: entry.from,
+      to: entry.to,
+      captures: entry.captures || [],
+    };
+
+    applyAiReplayEntry(replay, entry, oc);
+    applyAiReplayEntry(this.state, entry, oc);
+    this.aiReplayBoard = null;
+    this.render();
+
+    await delay(AI_PACE.moveAnnounce);
+    this.aiHighlight = null;
+    this.render();
+
+    if (this.state.boardFx) {
+      await new Promise((resolve) => this.playBoardFx(this.state, resolve));
+    }
+    await delay(AI_PACE.moveSettle);
   }
 
   pauseForBackground() {
@@ -1536,6 +1521,7 @@ ${starLine}`;
     this._aiTurnRunning = true;
     this.actionBusy = true;
     this._aiTurnStartBoard = cloneBoardGrid(s.board);
+    this.aiReplayBoard = cloneBoardGrid(s.board);
     this.setMessage(`${this.opponentName} is acting…`);
     this.render();
 
@@ -1543,55 +1529,65 @@ ${starLine}`;
     const oc = this.opponentColor;
     const replay = cloneMatchState(s);
     let spellLog = [];
-    let moveLog = [];
 
     try {
-      const spellPlan = cloneMatchState(s);
-      spellLog = runAiSpellPhase(spellPlan, this.opponentName, oc);
+      spellLog = planAiSpellLog(s, this.opponentName, oc);
     } catch (err) {
-      console.error("AI spell phase failed:", err);
+      console.error("AI spell plan failed:", err);
     }
 
     const castSpell = spellLog.some((e) => e.type === "spell");
 
     try {
-      const present = async (log, opts = {}) => {
-        if (!log.length) return;
-        await Promise.race([
-          this.playAiTurnPresentation(log, replay, opts),
-          delay(AI_PACE.replayTimeout),
-        ]);
-      };
+      for (const entry of spellLog) {
+        if (entry.type === "message") {
+          applyAiReplayEntry(replay, entry, oc);
+          applyAiReplayEntry(this.state, entry, oc);
+          this.aiReplayBoard = cloneBoardGrid(replay.board);
+          this.appendAiLog(`<div class="ai-log-entry">${entry.text}</div>`);
+          this.setMessage(entry.text);
+          this.render();
+          await delay(AI_PACE.message);
+        }
+      }
 
-      await present(spellLog, { keepDisplayHold: true, deferLiveState: true });
+      for (const entry of spellLog) {
+        if (entry.type === "spell") {
+          await this.presentAiSpell(replay, entry);
+        }
+      }
 
       if (castSpell) {
+        this.aiReplayBoard = cloneBoardGrid(replay.board);
         await delay(AI_PACE.afterSpellBeforeMove);
       }
 
-      this.setMessage(`${this.opponentName} is choosing a move…");
-
       const movePlan = cloneMatchState(replay);
+      let moveLog = [];
       try {
         moveLog = runAiMovePhase(movePlan, this.opponentName, oc);
       } catch (err2) {
         console.error("AI move phase failed:", err2);
       }
-      this._aiPendingMoveLog = moveLog.filter((e) => e.type === "move");
-      this.aiReplayBoard = boardHoldingPendingMoves(replay.board, this._aiPendingMoveLog);
-      this.render();
-
-      this.syncAiReplayToLive(replay);
-
-      await present(moveLog, { holdMoves: this._aiPendingMoveLog });
-      this._aiPendingMoveLog = null;
+      for (const entry of moveLog) {
+        if (entry.type === "message") {
+          applyAiReplayEntry(replay, entry, oc);
+          applyAiReplayEntry(this.state, entry, oc);
+          this.aiReplayBoard = cloneBoardGrid(replay.board);
+          this.appendAiLog(`<div class="ai-log-entry">${entry.text}</div>`);
+          this.setMessage(entry.text);
+          this.render();
+          await delay(AI_PACE.message);
+        } else if (entry.type === "move") {
+          await this.presentAiMove(replay, entry);
+        }
+      }
     } catch (err) {
-      console.error("AI presentation failed:", err);
+      console.error("AI turn presentation failed:", err);
     } finally {
       this.aiHighlight = null;
       this.aiReplayBoard = null;
       this._aiTurnStartBoard = null;
-      this._aiPendingMoveLog = null;
       this.cullAnimation = null;
       this.spellAnimation = null;
       this.boardFx = null;
@@ -1827,7 +1823,9 @@ ${starLine}`;
           if (this.spellAnimation?.type) sq.classList.add(`spell-anim-type-${this.spellAnimation.type}`);
         }
 
-        const pieceBoard = this.aiReplayBoard ?? s.board;
+        const pieceBoard = this._aiTurnRunning
+          ? (this.aiReplayBoard ?? this._aiTurnStartBoard ?? s.board)
+          : (this.aiReplayBoard ?? s.board);
         const piece = pieceBoard[row][col];
         if (piece) {
           const el = document.createElement("span");
