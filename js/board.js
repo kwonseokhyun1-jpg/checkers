@@ -1,5 +1,5 @@
 /** Checkers board logic with card-effect modifiers */
-import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine } from "./gameMeta.js";
+import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance } from "./gameMeta.js";
 import { queueBoardFx } from "./boardFx.js";
 
 function sk(r, c) {
@@ -119,7 +119,6 @@ export function createPiece(color, row, col, king = false) {
     revivedNoCapture: false,
     berserkNoCapture: false,
     paralyzedTurns: 0,
-    vengeanceTurns: 0,
     hibernationTurns: 0,
     bearAwakened: false,
     linkedFateId: null,
@@ -426,13 +425,14 @@ function explodeBombAt(board, state, row, col) {
 export function applyMove(board, move, state = null) {
   const [fr, fc] = move.from;
   const [tr, tc] = move.to;
-  const piece = movePiece(board, fr, fc, tr, tc);
+  let piece = movePiece(board, fr, fc, tr, tc);
   for (const [cr, cc] of move.captures) {
     const cap = board[cr][cc];
     if (cap) {
       const linkedPartner = cap.linkedFateId;
-      if (cap.vengeanceTurns > 0 && piece) {
+      if (cap && piece && tryConsumeVengeance(state, piece.color, cap.color)) {
         queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
+        state?.meta?.achievementHook?.trapTriggered?.(cap.color, piece.color);
         removePiece(board, piece.row, piece.col);
         piece = null;
       }
@@ -461,6 +461,7 @@ export function applyMove(board, move, state = null) {
       }
     }
   }
+  if (!piece) return null;
   if (!piece.king && !(piece.rustedTurns > 0)) {
     if (piece.color === COLORS.RED && tr === 0) piece.king = true;
     if (piece.color === COLORS.BLACK && tr === SIZE - 1) piece.king = true;
@@ -559,7 +560,7 @@ export function tickEffects(board, color, state = null) {
       dec("shieldTurns"); dec("frozenTurns"); dec("paralyzedTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
       dec("stoneTurns"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
-      dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("vengeanceTurns"); dec("rustedTurns"); dec("noCaptureTurns");
+      dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("rustedTurns"); dec("noCaptureTurns");
       dec("deflectTurns");
       if (p.venom > 0) {
         p.venom--;

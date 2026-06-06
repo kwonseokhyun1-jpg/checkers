@@ -10,7 +10,7 @@ export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS };
 
 /** Meta / hand / turn-rule spells — shimmer only, no board shake */
 const META_EFFECTS = new Set([
-  "quick_march", "trickster", "ricochet", "blind", "confusion", "counterspell", "dominion",
+  "quick_march", "trickster", "ricochet", "blind", "confusion", "counterspell", "vengeance", "dominion",
   "conduct", "mirror_move", "roulette", "ignore", "mirror_board", "highlight_path",
   "pocket", "mind_control", "chameleon", "identity_theft", "succession",
   "twin_soul", "last_king", "constitution", "sanctuary_pulse", "parallel", "echo",
@@ -70,7 +70,7 @@ const TERRAIN_EFFECTS = new Set([
 const BUFF_EFFECTS = new Set([
   "shield_1", "shield_2", "retreat_3", "knight_perm", "crown", "rook_2", "bishop_2", "bishop_3",
   "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "mirror_shield", "phalanx",
-  "last_stand", "ghost_guard", "fortify", "vengeance", "hibernation", "stall", "promote_zone", "revive",
+  "last_stand", "ghost_guard", "fortify", "hibernation", "stall", "promote_zone", "revive",
   "wraith_2", "stone_form", "rally", "fusion", "create_foe",
 ]);
 
@@ -385,7 +385,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
-  if ((effect === "vengeance" || effect === "hibernation" || effect === "bomb") && p.length === 1) {
+  if ((effect === "hibernation" || effect === "bomb") && p.length === 1) {
     return withVisual({
       type: "buff",
       duration: animDurationForEffect(effect),
