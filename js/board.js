@@ -78,6 +78,8 @@ export function createPiece(color, row, col, king = false) {
     king,
     row,
     col,
+    startRow: row,
+    startCol: col,
     shieldTurns: 0,
     frozenTurns: 0,
     retreatTurns: 0,

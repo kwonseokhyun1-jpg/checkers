@@ -4,7 +4,7 @@
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget } from "./board.js";
 import { collapsedSquareKey } from "./gameMeta.js";
 import { sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, randomTeleportHasDestination } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, randomTeleportHasDestination } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
 export { applyCard, applyEffect };
@@ -161,6 +161,8 @@ export function getValidTargets(state, color, card, picks) {
                 }
               }
               if (found) res.push([r, c]);
+            } else if (card.effect === "deport") {
+              if (deportCanTarget(state, p, r, c)) res.push([r, c]);
             } else res.push([r, c]);
           }
         }

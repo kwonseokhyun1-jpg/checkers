@@ -31,6 +31,7 @@ export const EFFECT_VISUAL = {
   random_teleport: "move",
   mass_nudge: "move",
   magnet: "move",
+  deport: "move",
   call_forward: "move",
   promote_zone: "move",
   retreat_3: "move",

@@ -60,6 +60,16 @@ export function callForwardMoveOk(state, er, ec, tr, tc) {
   return diagonalPathClear(state, er, ec, tr, tc);
 }
 
+export function deportCanTarget(state, piece, r, c) {
+  if (!piece || piece.startRow == null || piece.startCol == null) return false;
+  if (!enemyCardCanMove(piece)) return false;
+  const sr = piece.startRow;
+  const sc = piece.startCol;
+  if (r === sr && c === sc) return false;
+  if (!isDarkSquare(sr, sc) || blocked(state, sr, sc)) return false;
+  return true;
+}
+
 function swapAt(state, r1, c1, r2, c2) {
   const a = at(state, r1, c1), b = at(state, r2, c2);
   state.board[r1][c1] = b;
@@ -310,6 +320,19 @@ const EFFECTS = {
   ricochet(state, color, picks) { state.meta.pendingRicochet[color]=true; return ok(); },
   duel(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); if(Math.max(Math.abs(r1-r2),Math.abs(c1-c2))!==1) return fail(); kill(state,r1,c1,color); kill(state,r2,c2,color); return ok(); },
   execution(state, color, picks) { const [r,c]=p0(picks); const t=at(state,r,c); if(!t||t.color===color) return fail(); const ms=getAllMovesForColor(state.board,t.color).filter(m=>m.from[0]===r&&m.from[1]===c); if(ms.length) return fail('Has moves'); kill(state,r,c,color); return ok(); },
+  deport(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color === color) return fail();
+    if (!deportCanTarget(state, p, r, c)) return fail("Cannot deport this piece");
+    const sr = p.startRow;
+    const sc = p.startCol;
+    const victim = at(state, sr, sc);
+    if (victim) kill(state, sr, sc, color);
+    if (at(state, sr, sc)) return fail("Starting square blocked");
+    movePiece(state.board, r, c, sr, sc);
+    return ok(victim ? "Deport — sent home; occupant destroyed!" : "Deport — sent back to starting square!");
+  },
   cull(state, color, picks) {
     const t = findCullTarget(state, color);
     if (!t) return fail("No target");
