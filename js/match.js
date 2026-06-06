@@ -403,20 +403,10 @@ export class MatchSession {
       !s.gameOver &&
       !s.spellPlayed[this.localColor] &&
       !s.meta.shatterSilenced?.[this.localColor] &&
-      !s.meta.blindNext?.[this.localColor] &&
+      !s.meta.blinded?.[this.localColor] &&
       !this.actionBusy &&
       !this.cardPlay
     );
-  }
-
-  consumeBlindIfNeeded(color) {
-    const s = this.state;
-    if (!s.meta.blindNext?.[color]) return false;
-    s.meta.blindNext[color] = false;
-    if (color === this.localColor) {
-      this.setMessage("You are blinded — spells skipped this turn.");
-    }
-    return true;
   }
 
   pickConfusedMove(color) {
@@ -486,6 +476,8 @@ export class MatchSession {
     }
     if (color === this.localColor && s.meta.shatterSilenced?.[color]) {
       this.setMessage("Shatter backlash — no spells this turn. Select a piece to move.");
+    } else if (color === this.localColor && s.meta.blinded?.[color]) {
+      this.setMessage("You are blinded — no spells this turn. Select a piece to move.");
     }
   }
 
@@ -882,7 +874,9 @@ export class MatchSession {
           ? "Spells skipped — select a piece to move"
           : s.meta.shatterSilenced?.red
             ? "Shatter backlash — no spells this turn"
-            : s.spellPlayed[this.localColor]
+            : s.meta.blinded?.red
+              ? "Blinded — no spells this turn"
+              : s.spellPlayed[this.localColor]
               ? "Already cast a spell this turn"
               : !hasTargets
                 ? "No valid targets for this spell"
@@ -2228,7 +2222,9 @@ ${starLine}`;
       else if (s.turn === this.localColor) {
         const spellNote = s.meta.shatterSilenced?.[this.localColor]
           ? "No spells (Shatter backlash) · "
-          : s.spellPlayed[this.localColor]
+          : s.meta.blinded?.[this.localColor]
+            ? "No spells (Blinded) · "
+            : s.spellPlayed[this.localColor]
             ? "Spell used · "
             : "1 spell available · ";
         if (this.cardPlay) {
