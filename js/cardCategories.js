@@ -44,6 +44,7 @@ const ID_TO_CATEGORY = {
   deep_freeze: "control",
   deflect: "defense",
   demote: "control",
+  deport: "movement",
   displacement: "movement",
   dominion: "special",
   duel: "attack",
