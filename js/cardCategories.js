@@ -112,7 +112,7 @@ export function getCardCategory(def) {
   if (mapped) return mapped;
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
-  if (/trap|mine|quicksand|counterspell|darkness/.test(blob)) return "trap";
+  if (/trap|mine|quicksand|counterspell|vengeance|darkness/.test(blob)) return "trap";
   if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|fog|rally/.test(blob)) {
     return "defense";
   }

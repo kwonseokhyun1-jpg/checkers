@@ -15,6 +15,7 @@ export function createMatchMeta() {
     pendingRegicide: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingConduct: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     counterspell: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    vengeance: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blinded: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     confuseNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
@@ -181,6 +182,20 @@ export function tryConsumeCounterspell(state, casterColor) {
 
 export function hasCounterspellArmed(state, color) {
   return !!state.meta.counterspell?.[color];
+}
+
+export function tryConsumeVengeance(state, capturerColor, victimColor) {
+  if (!state.meta.vengeance) {
+    state.meta.vengeance = { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  }
+  if (capturerColor === victimColor) return null;
+  if (!state.meta.vengeance[victimColor]) return null;
+  state.meta.vengeance[victimColor] = false;
+  return { trapOwner: victimColor };
+}
+
+export function hasVengeanceArmed(state, color) {
+  return !!state.meta.vengeance?.[color];
 }
 
 export function collapsedSquareKey(meta) {

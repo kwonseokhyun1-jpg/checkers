@@ -33,7 +33,7 @@ const TAGS = {
   press: ["Enemy piece takes an extra move after its normal move"],
   mind_control: ["Convert an enemy man to your color for 2 of your turns", "Reverts to the enemy afterward"],
   barrier: ["Blocks enemies for 1 turn"],
-  vengeance: ["Capturer dies if this piece is taken (2 turns)"],
+  vengeance: ["Hidden trap — destroys the next enemy who captures your piece"],
   hibernation: ["Sleep 2 turns (immobile)", "Wake as king + Awoken Bear", "Extra move every turn after"],
   root_2: ["Enemy cannot jump/capture next turn"],
   silence_3: ["Suppress special movement 3 turns"],

@@ -1309,6 +1309,17 @@ ${starLine}`;
     if (banner) banner.className = "turn-banner";
   }
 
+  async runHiddenVengeanceCast() {
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = "Vengeance armed — hidden.";
+      banner.className = "turn-banner spell-anim-instant";
+    }
+    this.render();
+    await delay(450 + SPELL_BANNER_EXTRA_MS);
+    if (banner) banner.className = "turn-banner";
+  }
+
   async runCounterspellReveal() {
     const frame = this.$("board")?.closest(".board-frame");
     frame?.classList.add("board-frame--counterspell");
@@ -1399,6 +1410,12 @@ ${starLine}`;
     if (card.effect === "counterspell") {
       const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success) await this.runHiddenCounterspellCast();
+      return finishSpellTrack(res);
+    }
+
+    if (card.effect === "vengeance") {
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (res.success) await this.runHiddenVengeanceCast();
       return finishSpellTrack(res);
     }
 
@@ -1515,6 +1532,8 @@ ${starLine}`;
       else this.state.meta.extraSpellCast[this.localColor] = false;
       if (card.effect === "counterspell") {
         this.setMessage("Counterspell armed. They won't know until they cast.");
+      } else if (card.effect === "vengeance") {
+        this.setMessage("Vengeance armed. They won't know until they capture.");
       } else {
         this.setMessage(res.message || "Spell cast.");
       }
@@ -2053,7 +2072,6 @@ ${starLine}`;
           if (piece.bombArmed) el.classList.add("bomb-armed");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
-          if (piece.vengeanceTurns > 0) el.classList.add("vengeance-mark");
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (piece.isClone) el.classList.add("clone-mark");
