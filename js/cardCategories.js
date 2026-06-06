@@ -97,7 +97,7 @@ const ID_TO_CATEGORY = {
   tangle: "control",
   teleport: "movement",
   trickster: "special",
-  vengeance: "defense",
+  vengeance: "trap",
   ward: "defense",
 };
 
@@ -113,7 +113,7 @@ export function getCardCategory(def) {
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
   if (/trap|mine|quicksand|counterspell|darkness/.test(blob)) return "trap";
-  if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|vengeance|hibernation|fog|rally/.test(blob)) {
+  if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|hibernation|fog|rally/.test(blob)) {
     return "defense";
   }
   if (/move|nudge|teleport|recall|leap|step|displace|swap|scatter|retreat|bishop|rook|fusion|overrun|promote|pull|push|shift|earthquake|magnet|repel/.test(blob)) {
