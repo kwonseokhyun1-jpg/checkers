@@ -16,6 +16,7 @@ const BUFF_RULES = [
   { key: "mirrorShield", label: "Mirror Shield", bool: true },
   { key: "ghostGuard", label: "Ghost Guard", bool: true },
   { key: "bombArmed", label: "Bomb Armed", bool: true },
+  { key: "vengeanceTurns", label: "Vengeance", turns: true },
   { key: "hibernationTurns", label: "Hibernating", turns: true },
   { key: "bearAwakened", label: "Awoken Bear", bool: true },
   { key: "pawnZeal", label: "Pawn's Zeal", bool: true },

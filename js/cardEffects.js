@@ -47,6 +47,9 @@ export function getCardHint(card) {
   if (card.effect === "counterspell" || card.id === "counterspell") {
     return "Hidden trap — cancels their next spell when they cast it.";
   }
+  if (card.effect === "vengeance" || card.id === "vengeance") {
+    return "Hidden trap — arm your piece; capturer dies if it is taken (2 turns).";
+  }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
   if (card.effect === "snowball") return hints.snowball_hint;
   return hints[card.mode] || "Click valid targets on the board.";

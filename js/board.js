@@ -431,6 +431,7 @@ export function applyMove(board, move, state = null) {
       const linkedPartner = cap.linkedFateId;
       if (cap.vengeanceTurns > 0 && piece) {
         queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
+        state?.meta?.achievementHook?.trapTriggered?.(cap.color, piece.color);
         removePiece(board, piece.row, piece.col);
         piece = null;
       }

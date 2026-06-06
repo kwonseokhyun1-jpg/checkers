@@ -420,9 +420,16 @@ export class MatchSession {
     return move;
   }
 
+  isHiddenTrapEffect(effect) {
+    return effect === "counterspell" || effect === "vengeance";
+  }
+
   showPieceInfo(piece, row, col) {
     const infoEl = this.$("piece-info");
-    const { buffs, curses } = getPieceStatus(piece);
+    let { buffs, curses } = getPieceStatus(piece);
+    if (piece.color !== this.localColor) {
+      buffs = buffs.filter((b) => b.label !== "Vengeance");
+    }
     if (infoEl) {
       const buffText = buffs.length
         ? buffs.map((b) => (b.turns != null ? `${b.label} (${b.turns})` : b.label)).join(", ")
@@ -625,7 +632,8 @@ export class MatchSession {
     const card = this.cardPlay?.card;
     const picks = this.cardPlay?.picks ? [...this.cardPlay.picks] : [];
     if (card) {
-      this.recordPvpSpell(card, picks, replayExtras);
+      const syncPicks = this.isHiddenTrapEffect(card.effect) ? [] : picks;
+      this.recordPvpSpell(card, syncPicks, replayExtras);
       this.removeCardFromHand(card);
     }
     if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
@@ -1292,15 +1300,19 @@ ${starLine}`;
     if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
   }
 
-  async runHiddenCounterspellCast() {
+  async runHiddenTrapCast(message) {
     const banner = this.$("turn-banner");
     if (banner) {
-      banner.textContent = "Counterspell armed — hidden.";
+      banner.textContent = message;
       banner.className = "turn-banner spell-anim-instant";
     }
     this.render();
     await delay(450 + SPELL_BANNER_EXTRA_MS);
     if (banner) banner.className = "turn-banner";
+  }
+
+  async runHiddenCounterspellCast() {
+    await this.runHiddenTrapCast("Counterspell armed — hidden.");
   }
 
   async runCounterspellReveal() {
@@ -1393,6 +1405,12 @@ ${starLine}`;
     if (card.effect === "counterspell") {
       const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success) await this.runHiddenCounterspellCast();
+      return finishSpellTrack(res);
+    }
+
+    if (card.effect === "vengeance") {
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (res.success) await this.runHiddenTrapCast("Vengeance armed — hidden.");
       return finishSpellTrack(res);
     }
 
@@ -1591,6 +1609,25 @@ ${starLine}`;
         const def = entry.cardId ? getCardDef(entry.cardId) : null;
         const cardName = entry.cardName || def?.name || "Spell";
         const cardDesc = entry.cardDesc || def?.desc || entry.text || "";
+        const hiddenTrap = entry.cardEffect === "vengeance";
+
+        if (hiddenTrap) {
+          if (aiLog) {
+            aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell">✦ Set a hidden trap</div>`;
+            aiLog.scrollTop = aiLog.scrollHeight;
+          }
+          this.setMessage(`${this.opponentName} set a hidden trap…`);
+          this.render();
+          await delay(AI_PACE.spellWindUp);
+          if (applyEntries) {
+            applyAiReplayEntry(this.state, entry, oc);
+            this.recordHistoryFromReplayEntry(entry);
+          }
+          this.render();
+          await delay(AI_PACE.spellSettle);
+          afterSpell = true;
+          continue;
+        }
 
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell ai-log-entry--active">✦ Casting <strong>${cardName}</strong></div>`;
@@ -2044,7 +2081,7 @@ ${starLine}`;
           if (piece.bombArmed) el.classList.add("bomb-armed");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
-          if (piece.vengeanceTurns > 0) el.classList.add("vengeance-mark");
+          if (piece.vengeanceTurns > 0 && piece.color === this.localColor) el.classList.add("vengeance-mark");
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (piece.isClone) el.classList.add("clone-mark");
