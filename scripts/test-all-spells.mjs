@@ -20,7 +20,7 @@ import {
   applyVenomToPiece,
   applyBurnToPiece,
 } from "../js/board.js";
-import { createMatchMeta, tryConsumeCounterspell } from "../js/gameMeta.js";
+import { createMatchMeta, tryConsumeCounterspell, tryConsumeVengeance } from "../js/gameMeta.js";
 import { initCardState } from "../js/cardEffects.js";
 
 const handlerKeys = new Set(
@@ -321,6 +321,19 @@ for (const card of cards) {
   if (!trapped || trapped.trapOwner !== COLOR) throw new Error("Counterspell should trigger for opponent cast");
   if (s.meta.counterspell[COLOR]) throw new Error("Counterspell trap should be consumed");
   console.log("Counterspell test: OK");
+}
+
+// Vengeance trap
+{
+  const s = baseState();
+  s.meta.vengeance[COLOR] = true;
+  const trapped = tryConsumeVengeance(s, OPP, COLOR);
+  if (!trapped || trapped.trapOwner !== COLOR) throw new Error("Vengeance should trigger when enemy captures your piece");
+  if (s.meta.vengeance[COLOR]) throw new Error("Vengeance trap should be consumed");
+  const s2 = baseState();
+  s2.meta.vengeance[COLOR] = true;
+  if (tryConsumeVengeance(s2, COLOR, COLOR)) throw new Error("Vengeance should not trigger on friendly capture");
+  console.log("Vengeance test: OK");
 }
 
 // Backstep UI targeting check

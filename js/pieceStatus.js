@@ -115,7 +115,6 @@ export function cleansePiece(piece) {
   piece.anchored = 0;
   piece.rusted = false;
   piece.rustedTurns = 0;
-  piece.vengeanceTurns = 0;
   piece.hibernationTurns = 0;
   piece.bearAwakened = false;
   piece.noCaptureTurns = 0;

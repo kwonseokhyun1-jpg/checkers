@@ -32,7 +32,8 @@
 - **Backstab** — Destroy an enemy behind your piece on a backward diagonal if adjacent.
 - **Bribery** — Steal up to 15 gems from opponent.
 - **Conduct** — If you played a movement card this turn, your checker step may be 2 squares.
-- **Counterspell** — Cancel the next enemy card played.
+- **Counterspell** — Hidden trap: cancel the next enemy spell when they cast it.
+- **Vengeance** — Hidden trap: the next enemy capture of your piece destroys the capturer.
 - **Deep Freeze** — Enemy cannot move for 2 of its owner's turns.
 - **Dominion** — All your men may move backward this turn.
 - **Duel** — Choose your piece and an adjacent enemy; both are destroyed unless shielded.
