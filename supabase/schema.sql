@@ -40,6 +40,7 @@ create table if not exists public.pvp_matches (
   turn text,
   version integer not null default 0,
   winner_id uuid references auth.users (id),
+  mode text not null default 'standard' check (mode in ('standard', 'mystery')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

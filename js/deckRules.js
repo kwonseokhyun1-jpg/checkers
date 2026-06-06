@@ -51,12 +51,17 @@ export function canAddCardToDeck(deckIds, cardId, profile) {
 }
 
 export function buildAiDeck() {
+  return buildMysteryDeck();
+}
+
+/** Random 30-card deck from the full playable pool — no collection ownership check. */
+export function buildMysteryDeck() {
   const pool = getPlayableCards();
   const ids = [];
   while (ids.length < DECK_SIZE) {
     const c = pool[Math.floor(Math.random() * pool.length)];
     const counts = countById(ids);
-    if ((counts[c.id] || 0) < maxCopiesForCard(c)) ids.push(c.id);
+    if ((counts[c.id] || 0) < maxCopiesForCard(c.id)) ids.push(c.id);
   }
   return ids;
 }

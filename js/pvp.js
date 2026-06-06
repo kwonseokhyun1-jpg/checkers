@@ -3,6 +3,14 @@ import { getCurrentUser } from "./auth.js";
 import { COLORS, createInitialBoard } from "./board.js";
 import { createMatchState } from "./match.js";
 import { DECK_SIZE } from "./cardCatalog.js";
+import { buildMysteryDeck } from "./deckRules.js";
+
+export const PVP_MODE_STANDARD = "standard";
+export const PVP_MODE_MYSTERY = "mystery";
+
+export function isMysteryMode(row) {
+  return row?.mode === PVP_MODE_MYSTERY;
+}
 
 
 function isMissingRpc(error) {
@@ -69,12 +77,16 @@ export class PvpService {
     this.matchId = null;
   }
 
-  async createRoom(hostDeckIds, displayName) {
+  async createRoom(hostDeckIds, displayName, { mode = PVP_MODE_STANDARD } = {}) {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
-    if (!Array.isArray(hostDeckIds) || hostDeckIds.length !== DECK_SIZE) {
+    const mystery = mode === PVP_MODE_MYSTERY;
+    if (
+      !mystery &&
+      (!Array.isArray(hostDeckIds) || hostDeckIds.length !== DECK_SIZE)
+    ) {
       throw new Error("Select a valid 30-card deck first");
     }
 
@@ -85,9 +97,10 @@ export class PvpService {
         .insert({
           code,
           host_id: user.id,
-          host_deck_ids: hostDeckIds,
+          host_deck_ids: mystery ? null : hostDeckIds,
           host_display_name: displayName,
           status: "waiting",
+          mode: mystery ? PVP_MODE_MYSTERY : PVP_MODE_STANDARD,
         })
         .select()
         .single();
@@ -111,7 +124,7 @@ export class PvpService {
 
     const { data, error } = await sb
       .from("pvp_matches")
-      .select("id, host_id, host_display_name, created_at, status, guest_id")
+      .select("id, host_id, host_display_name, created_at, status, guest_id, mode")
       .eq("host_id", user.id)
       .eq("status", "waiting")
       .is("guest_id", null)
@@ -129,7 +142,7 @@ export class PvpService {
 
     const { data, error } = await sb
       .from("pvp_matches")
-      .select("id, host_id, host_display_name, created_at, status, guest_id")
+      .select("id, host_id, host_display_name, created_at, status, guest_id, mode")
       .eq("status", "waiting")
       .is("guest_id", null)
       .neq("host_id", user.id)
@@ -173,10 +186,6 @@ export class PvpService {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
-
-    if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
-      throw new Error("Select a valid 30-card deck first");
-    }
 
     const normalized = code.trim().toUpperCase();
     let data = null;
@@ -233,7 +242,11 @@ export class PvpService {
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
-    if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
+    const mystery = isMysteryMode(row);
+    if (
+      !mystery &&
+      (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE)
+    ) {
       throw new Error("Select a valid 30-card deck first");
     }
 
@@ -275,18 +288,27 @@ export class PvpService {
 
   async finalizeGuestJoin(data, guestDeckIds) {
     const sb = getSupabase();
-    const state = createMatchState(data.host_deck_ids, guestDeckIds);
+    const mystery = isMysteryMode(data);
+    const hostDeckIds = mystery ? buildMysteryDeck() : data.host_deck_ids;
+    const resolvedGuestDeckIds = mystery ? buildMysteryDeck() : guestDeckIds;
+    const state = createMatchState(hostDeckIds, resolvedGuestDeckIds);
     state.turn = COLORS.RED;
     const stateJson = serializeMatchState(state);
 
+    const updatePayload = {
+      state_json: stateJson,
+      turn: COLORS.RED,
+      version: 1,
+      updated_at: new Date().toISOString(),
+    };
+    if (mystery) {
+      updatePayload.host_deck_ids = hostDeckIds;
+      updatePayload.guest_deck_ids = resolvedGuestDeckIds;
+    }
+
     const { data: ready, error: stateErr } = await sb
       .from("pvp_matches")
-      .update({
-        state_json: stateJson,
-        turn: COLORS.RED,
-        version: 1,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq("id", data.id)
       .select()
       .single();
