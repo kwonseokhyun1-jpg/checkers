@@ -16,6 +16,7 @@ export function createMatchMeta() {
     pendingConduct: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     counterspell: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    blinded: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     confuseNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     shatterSilenceNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     shatterSilenced: { [COLORS.RED]: false, [COLORS.BLACK]: false },
@@ -143,6 +144,13 @@ export function startTurnMeta(state, color) {
     state.meta.shatterSilenced[color] = true;
   } else {
     state.meta.shatterSilenced[color] = false;
+  }
+  state.meta.blinded = state.meta.blinded || { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  if (state.meta.blindNext?.[color]) {
+    state.meta.blindNext[color] = false;
+    state.meta.blinded[color] = true;
+  } else {
+    state.meta.blinded[color] = false;
   }
   if (state.meta.constitutionTurns[color] > 0) state.meta.constitutionTurns[color]--;
   if (state.meta.collapsedSquare && typeof state.meta.collapsedSquare === "object") {

@@ -138,7 +138,6 @@ export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
   }
 
   if (entry.type === "message") {
-    if (entry.clearBlind) state.meta.blindNext[color] = false;
     return true;
   }
 
@@ -194,9 +193,8 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
 
   if (state.meta.shatterSilenced?.[color]) {
     log.push({ type: "message", text: `${opponentName} is reeling from Shatter — no spells this turn.` });
-  } else if (state.meta.blindNext?.[color]) {
-    log.push({ type: "message", text: `${opponentName} is blinded — skips spells.`, clearBlind: true });
-    state.meta.blindNext[color] = false;
+  } else if (state.meta.blinded?.[color]) {
+    log.push({ type: "message", text: `${opponentName} is blinded — skips spells.` });
   } else if (!state.spellPlayed[aiColor] && hand.length) {
     const playable = hand.filter((c) => canAiPlay(state, color, c));
     if (playable.length) {
