@@ -54,7 +54,7 @@
 - **Overrun** — After a capture this turn, slide 1 more square forward along the same diagonal if empty.
 - **Panic** — Force an enemy man to step backward on its owner's next turn if possible.
 - **Promote Zone** — Treat your piece as on the promotion row for movement this turn.
-- **Quicksand** — Empty dark square freezes the next piece that ends a turn there.
+- **Quicksand** — Hidden trap on an empty dark square; the next piece to end a turn there is frozen (invisible until it triggers).
 - **Rally** — All pieces adjacent to a friendly piece gain retreat for 1 turn.
 - **Recall** — Return one of your pieces to any empty dark square in its starting row.
 - **Repel** — Push an adjacent enemy piece 1 square away if the landing square is empty.
