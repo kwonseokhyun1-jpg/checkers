@@ -56,6 +56,7 @@ export const REMOVED_CARD_IDS = new Set([
   "ghost_guard",
   "gravity_well",
   "highlight_path",
+  "hunters_mark",
   "identity_theft",
   "knight",
   "knights_charge",

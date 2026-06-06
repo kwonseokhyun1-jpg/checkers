@@ -318,7 +318,6 @@ const EFFECTS = {
     kill(state, t.row, t.col, color);
     return ok("The weakest enemy is culled.", { cullTarget, cullVictim });
   },
-  hunters_mark(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.hunterMark=true; return ok(); },
   venom(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
