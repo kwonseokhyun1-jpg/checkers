@@ -516,9 +516,10 @@ const EFFECTS = {
     const p = at(state, r, c);
     if (!p || p.color === color || p.king) return fail();
     if (!enemyCardCanMove(p)) return fail("Anchored");
+    p.mindControlOriginalColor = p.color;
     p.color = color;
-    p.mindControlDeathTurns = 5;
-    return ok("Mind Control — enemy converted to your piece; dies in 5 turns.");
+    p.mindControlTurns = 2;
+    return ok("Mind Control — enemy converted to your piece for 2 turns.");
   },
   identity_theft(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=3; return ok(); },
   call_forward(state, color, picks) {
