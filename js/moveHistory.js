@@ -2,8 +2,18 @@ import { squareName } from "./board.js";
 
 /** Strip synced history list from a stored snapshot (re-attached when viewing). */
 export function captureStateSnapshot(state) {
-  const snap = structuredClone(state);
+  const hook = state.meta?.achievementHook;
+  if (hook) state.meta.achievementHook = null;
+  let snap;
+  try {
+    snap = structuredClone(state);
+  } catch {
+    snap = JSON.parse(JSON.stringify(state));
+  } finally {
+    if (hook) state.meta.achievementHook = hook;
+  }
   delete snap.moveHistory;
+  if (snap.meta) delete snap.meta.achievementHook;
   return snap;
 }
 

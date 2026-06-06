@@ -8,8 +8,10 @@ import {
   formatPieceMoveLabel,
 } from "../js/moveHistory.js";
 import { createMatchState } from "../js/match.js";
+import { createMatchAchievementTracker } from "../js/achievementTracker.js";
 
 const state = createMatchState(["c1", "c2", "c3"]);
+state.meta.achievementHook = createMatchAchievementTracker({ spells: {} }, "red");
 ensureStartHistory(state);
 
 const move = { from: [5, 2], to: [4, 3], captures: [], type: "step" };
