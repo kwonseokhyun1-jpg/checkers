@@ -102,7 +102,8 @@ export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
     if (!card) return false;
     const res = applyCard(state, color, card, entry.picks || []);
     if (idx >= 0) hand.splice(idx, 1);
-    state.spellPlayed[aiColor] = true;
+    if (!state.meta.extraSpellCast?.[aiColor]) state.spellPlayed[aiColor] = true;
+    else state.meta.extraSpellCast[aiColor] = false;
     return !!res?.success;
   }
 
@@ -221,7 +222,8 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
         const res = tryAutoPlay(state, color, card);
         if (res.success) {
           hand.splice(idx, 1);
-          state.spellPlayed[aiColor] = true;
+          if (!state.meta.extraSpellCast?.[aiColor]) state.spellPlayed[aiColor] = true;
+          else state.meta.extraSpellCast[aiColor] = false;
           log.push({
             type: "spell",
             cardName: card.name,
