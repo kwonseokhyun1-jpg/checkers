@@ -5,11 +5,11 @@ import { createMatchState } from "./match.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { buildMysteryDeck } from "./deckRules.js";
 
-export const PVP_MODE_STANDARD = "standard";
+export const PVP_MODE_NORMAL = "normal";
 export const PVP_MODE_MYSTERY = "mystery";
 
 export function isMysteryMode(row) {
-  return row?.mode === PVP_MODE_MYSTERY;
+  return row?.match_mode === PVP_MODE_MYSTERY;
 }
 
 
@@ -77,12 +77,12 @@ export class PvpService {
     this.matchId = null;
   }
 
-  async createRoom(hostDeckIds, displayName, { mode = PVP_MODE_STANDARD } = {}) {
+  async createRoom(hostDeckIds, displayName, { matchMode = PVP_MODE_NORMAL } = {}) {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
-    const mystery = mode === PVP_MODE_MYSTERY;
+    const mystery = matchMode === PVP_MODE_MYSTERY;
     if (
       !mystery &&
       (!Array.isArray(hostDeckIds) || hostDeckIds.length !== DECK_SIZE)
@@ -100,7 +100,7 @@ export class PvpService {
           host_deck_ids: mystery ? null : hostDeckIds,
           host_display_name: displayName,
           status: "waiting",
-          mode: mystery ? PVP_MODE_MYSTERY : PVP_MODE_STANDARD,
+          match_mode: mystery ? PVP_MODE_MYSTERY : PVP_MODE_NORMAL,
         })
         .select()
         .single();
@@ -124,7 +124,7 @@ export class PvpService {
 
     const { data, error } = await sb
       .from("pvp_matches")
-      .select("id, host_id, host_display_name, created_at, status, guest_id, mode")
+      .select("id, host_id, host_display_name, created_at, status, guest_id, match_mode")
       .eq("host_id", user.id)
       .eq("status", "waiting")
       .is("guest_id", null)
@@ -142,7 +142,7 @@ export class PvpService {
 
     const { data, error } = await sb
       .from("pvp_matches")
-      .select("id, host_id, host_display_name, created_at, status, guest_id, mode")
+      .select("id, host_id, host_display_name, created_at, status, guest_id, match_mode")
       .eq("status", "waiting")
       .is("guest_id", null)
       .neq("host_id", user.id)

@@ -4834,14 +4834,28 @@ body.chest-open-active {
 }
 .pvp-wait-hint strong { color: var(--accent-gold); }
 
-.pvp-mystery-section {
-  margin-top: 1.25rem;
-  padding: 1rem;
-  border: 1px solid rgba(160, 120, 255, 0.35);
-  border-radius: var(--radius-sm);
-  background: rgba(120, 80, 200, 0.08);
+.pvp-setup-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
 }
-.pvp-mystery-host { width: 100%; }
+.pvp-setup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.pvp-setup-field .select-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.pvp-mode-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted, #9aa3b2);
+}
+.pvp-mode-hint.hidden { display: none; }
 .pvp-mode-badge {
   display: inline-block;
   margin-left: 0.35rem;
