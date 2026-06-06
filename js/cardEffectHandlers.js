@@ -503,7 +503,16 @@ const EFFECTS = {
     return ok("Call Forward!");
   },
   mirror_move(state, color, picks) { state.meta.mirrorMovePending=color; return ok(); },
-  offering(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); state.meta.extraSpellCast[color]=true; state.meta.cardsLeft[color]=(state.meta.cardsLeft[color]||0)+1; return ok("Offering — cast another spell."); },
+  offering(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color !== color) return fail();
+    if (!removePiece(state.board, r, c, { force: true, state })) return fail();
+    const drawn = drawToHand(state, color, 2);
+    state.meta.extraSpellCast[color] = true;
+    state.meta.cardsLeft[color] = (state.meta.cardsLeft[color] || 0) + 1;
+    return ok(`Offering — drew ${drawn} card${drawn === 1 ? "" : "s"}; cast another spell.`);
+  },
   parallel(state, color, picks) { state.meta.parallelExtra={...(state.meta.parallelExtra||{}), [color]:true}; state.meta.cardsLeft[color]=2; return ok(); },
   counterspell(state, color, picks) { state.meta.counterspell[color]=true; return ok(); },
   echo(state, color, picks) { const last=state.meta.lastCard[color]; if(!last) return fail('No previous card'); return applyEffect(state,color,last.effect,[]); },
@@ -535,10 +544,9 @@ const EFFECTS = {
     const landed = at(state, r2, c2);
     if (landed) {
       landed.berserkNoCapture = true;
-      landed.shieldTurns = Math.max(landed.shieldTurns || 0, 1);
     }
     markMove(state, color);
-    return ok(victim ? "Berserk — enemy shattered! Shielded, no capture this turn." : "Berserk — teleported! Shielded, no capture this turn.");
+    return ok(victim ? "Berserk — enemy shattered! No capture this turn." : "Berserk — teleported! No capture this turn.");
   },
   create_foe(state, color, picks) {
     const [r, c] = p0(picks);

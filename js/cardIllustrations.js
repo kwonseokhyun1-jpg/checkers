@@ -161,7 +161,7 @@ export const EFFECT_ILLUSTRATIONS = {
   counterspell: () => wrap(`${shield(32, 30, 0.9)}<path d="M26 30 L38 42 M38 30 L26 42" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`),
   purify: () => wrap(`${piece(24, 34, 4)} ${enemy(40, 34, 4)}<path d="M32 14 L34 22 H42 L35 27 L38 35 L32 30 L26 35 L29 27 L22 22 H30 Z" fill="currentColor" opacity="0.45"/>`),
   trickster: () => wrap(`${piece(18, 22, 3)}${piece(46, 22, 3)}${piece(18, 46, 3)}${piece(46, 46, 3)}<path d="M18 22 L46 46 M46 22 L18 46" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>`),
-  offering: () => wrap(`${piece(24, 40, 5, 0.35)}<path d="M40 18 L48 26 L40 34 L32 26 Z" fill="currentColor" opacity="0.35"/><text x="34" y="28" font-size="7" fill="currentColor" opacity="0.65">+1</text>`),
+  offering: () => wrap(`${piece(24, 40, 5, 0.35)}<path d="M40 18 L48 26 L40 34 L32 26 Z" fill="currentColor" opacity="0.35"/><text x="34" y="28" font-size="7" fill="currentColor" opacity="0.65">+2</text>`),
   quick_march: () => wrap(`${piece(32, 38, 6)} ${arrow(32, 34, 32, 24)} ${arrow(32, 34, 32, 14)}`),
   constitution: () => wrap(`${piece(32, 36, 6)} ${crown(32, 20)} ${shield(32, 34, 0.7)}<text x="42" y="48" font-size="7" fill="currentColor" opacity="0.5">5t</text>`),
   last_king: () => wrap(`${piece(32, 36, 7)} ${crown(32, 20)} ${shield(32, 34, 0.65)}`),
