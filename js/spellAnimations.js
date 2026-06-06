@@ -376,6 +376,15 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, "landmine");
   }
 
+  if (effect === "quicksand" && p.length === 1) {
+    return withSpec({
+      type: "terrain",
+      duration: MIN_SPELL_ANIM_MS,
+      label,
+      squares: [],
+    }, effect);
+  }
+
   if ((effect === "vengeance" || effect === "hibernation" || effect === "bomb") && p.length === 1) {
     return withVisual({
       type: "buff",

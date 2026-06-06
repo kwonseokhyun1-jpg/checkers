@@ -82,7 +82,7 @@ SPELLS = [
     ("stone_form", "Stone Form", "Piece becomes a king immediately but cannot capture for 2 turns.", "uncommon", 4, "friendly", "stone_form"),
     # === BOARD ===
     ("obstacle", "Obstacle", "Mark a light square as permanently impassable.", "uncommon", 4, "any_square", "obstacle"),
-    ("quicksand", "Quicksand", "Empty dark square freezes the next piece that ends a turn there.", "uncommon", 4, "empty", "quicksand"),
+    ("quicksand", "Quicksand", "Hidden trap on an empty dark square — the next piece to end a turn there is frozen (invisible until it triggers).", "common", 6, "empty", "quicksand"),
     ("sanctified_tile", "Sanctified Tile", "Friendly pieces entering this dark square are crowned.", "rare", 3, "empty", "sanctified"),
     ("warp_gate", "Warp Gate", "Link two empty dark squares for instant travel between them.", "rare", 3, "empty_empty", "warp_gate"),
     ("collapse", "Collapse", "Remove a dark square from play for 3 turns (only one collapsed square at a time); piece on it relocates.", "epic", 2, "empty", "collapse"),
