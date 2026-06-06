@@ -114,7 +114,8 @@ export function createPiece(color, row, col, king = false) {
     twinId: null,
     chameleonFrom: null,
     chameleonTurns: 0,
-    mindControlDeathTurns: 0,
+    mindControlTurns: 0,
+    mindControlOriginalColor: null,
     revivedNoCapture: false,
     berserkNoCapture: false,
     paralyzedTurns: 0,
@@ -568,9 +569,13 @@ export function tickEffects(board, color, state = null) {
         p.blazeTurns--;
         if (p.blazeTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
       }
-      if (p.mindControlDeathTurns > 0) {
-        p.mindControlDeathTurns--;
-        if (p.mindControlDeathTurns <= 0) removePiece(board, r, c, { state });
+      if (p.mindControlTurns > 0) {
+        p.mindControlTurns--;
+        if (p.mindControlTurns <= 0) {
+          if (p.mindControlOriginalColor) p.color = p.mindControlOriginalColor;
+          p.mindControlOriginalColor = null;
+          p.mindControlTurns = 0;
+        }
       }
       if (p.panicTurn) { p.panicTurn = false; }
       if (p.promoteZone) p.promoteZone = false;

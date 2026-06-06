@@ -31,7 +31,7 @@ const TAGS = {
   venom: ["Poison — 2 ticks destroys target"],
   bomb: ["Arm friendly piece", "On next move: explodes", "Kills all adjacent pieces"],
   press: ["Enemy piece takes an extra move after its normal move"],
-  mind_control: ["Convert an enemy man to your color permanently", "Dies automatically after 5 of your turns"],
+  mind_control: ["Convert an enemy man to your color for 2 of your turns", "Reverts to the enemy afterward"],
   barrier: ["Blocks enemies for 1 turn"],
   vengeance: ["Capturer dies if this piece is taken (2 turns)"],
   hibernation: ["Sleep 2 turns (immobile)", "Wake as king + Awoken Bear", "Extra move every turn after"],
