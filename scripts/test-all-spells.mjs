@@ -83,6 +83,19 @@ function boardSetups(randomCount = 50) {
     () => { const s = baseState(); const only = DARK.find(([r]) => r === 5); place(s, COLOR, only[0], only[1]); return s; },
     () => { const s = baseState(); s.captured[COLOR] = [{ color: COLOR, row: 0, col: 1, king: false, id: "c1" }]; return s; },
     () => { const s = baseState(); place(s, COLOR, 5, 0); place(s, OPP, 2, 1, true); return s; },
+    () => {
+      const s = baseState();
+      const e = createPiece(OPP, 0, 1);
+      setPiece(s.board, 3, 2, e);
+      return s;
+    },
+    () => {
+      const s = baseState();
+      const e = createPiece(OPP, 2, 1);
+      setPiece(s.board, 4, 3, e);
+      place(s, OPP, 0, 1);
+      return s;
+    },
   ];
   for (let i = 0; i < randomCount; i++) {
     setups.push(() => {
