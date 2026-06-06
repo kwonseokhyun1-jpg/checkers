@@ -100,7 +100,6 @@ export function createPiece(color, row, col, king = false) {
     venom: 0,
     blazeTurns: 0,
     superMan: 0,
-    hunterMark: false,
     lastStand: false,
     mirrorShield: false,
     ghostGuard: false,

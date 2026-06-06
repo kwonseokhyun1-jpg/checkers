@@ -1,6 +1,6 @@
 # Card Checkers — Spell Compendium
 
-**84 spells** in the draw pool.
+**83 spells** in the draw pool.
 
 ## Common
 
@@ -42,7 +42,6 @@
 - **Frost Bind** — Freeze an enemy piece — it cannot move on its owner's next turn.
 - **Gamble** — Pay 15 gems; draw 2 cards.
 - **Hex** — Marked enemy cannot receive buffs for 3 turns.
-- **Hunter's Mark** — Mark an enemy; your next capture may jump to it from 2 squares away.
 - **Interest** — Gain gems equal to half your total (max 25).
 - **Last Stand** — If this piece would be captured this turn, it survives with shield for 1 turn instead.
 - **Leapfrog** — Jump your piece over a friendly piece to land on the empty square beyond.

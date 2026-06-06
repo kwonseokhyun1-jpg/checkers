@@ -41,7 +41,6 @@ SPELLS = [
     ("duel", "Duel", "Choose your piece and an adjacent enemy; both are destroyed unless shielded.", "uncommon", 4, "f_e_adj", "duel"),
     ("execution", "Execution", "Destroy an enemy piece that has no legal moves.", "uncommon", 4, "enemy", "execution"),
     ("cull", "Cull", "Destroy the weakest enemy (non-king preferred, fewest escape squares).", "rare", 3, "instant", "cull"),
-    ("hunters_mark", "Hunter's Mark", "Mark an enemy; your next capture may jump to it from 2 squares away.", "uncommon", 4, "enemy", "hunters_mark"),
     ("venom", "Venom", "Enemy takes 1 damage; 2 damage destroys it (shield blocks 1 tick).", "common", 5, "enemy", "venom"),
     ("gravity_well", "Gravity Well", "Pull all enemies adjacent to a square 1 step toward that square.", "rare", 3, "empty", "gravity_well"),
     ("spear_thrust", "Spear Thrust", "Destroy the first enemy along a rank or file from your piece.", "uncommon", 4, "f_empty", "spear_thrust"),
