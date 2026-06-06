@@ -122,6 +122,16 @@ function picksRequired(card) {
   return TWO_PICK_MODES.has(card.mode) ? 2 : 1;
 }
 
+function usesAxisPick(card) {
+  return card?.mode === "row" || card?.mode === "column";
+}
+
+function axisPickMessage(card) {
+  if (card?.mode === "row") return `${card.name} — tap a rank number (1–8) beside the board.`;
+  if (card?.mode === "column") return `${card.name} — tap a file letter (a–h) below the board.`;
+  return null;
+}
+
 export class MatchSession {
   /**
    * @param {object} [options]
@@ -691,17 +701,14 @@ export class MatchSession {
     this.validTargets = targets;
     this.updateSpellCastUI();
     this.setMessage(
-      card.mode === "column"
-        ? `${card.name} — tap a file letter (a–h) below the board.`
-        : card.mode === "row"
-          ? `${card.name} — tap a rank number (1–8) beside the board.`
-          : card.effect === "pyromancy"
+      axisPickMessage(card) ??
+        (card.effect === "pyromancy"
             ? `${card.name} — tap an enemy piece, then an empty dark square to ignite.`
             : card.effect === "sanctuary" || card.effect === "darkness"
               ? `${card.name} — tap a square; highlighted area shows the zone.`
               : card.effect === "clone"
                 ? `${card.name} — tap your man, then pick where the copy spawns.`
-                : `${card.name} — drag to the board or tap highlighted squares.`
+                : `${card.name} — drag to the board or tap highlighted squares.`)
     );
     this.render();
   }
@@ -845,7 +852,7 @@ export class MatchSession {
     const sq = this.squareAtPoint(e.clientX, e.clientY);
     this.endDrag();
 
-    if (moved && sq && this.cardPlay?.card?.instanceId === card.instanceId) {
+    if (moved && sq && this.cardPlay?.card?.instanceId === card.instanceId && !usesAxisPick(card)) {
       this._suppressClick = true;
       this.onCardTargetClick(sq[0], sq[1]);
       setTimeout(() => {
@@ -936,6 +943,11 @@ export class MatchSession {
     const s = this.state;
     if (s.gameOver || s.turn !== this.localColor) return;
     if (this.cardPlay) {
+      const axisMsg = axisPickMessage(this.cardPlay.card);
+      if (axisMsg) {
+        this.setMessage(axisMsg);
+        return;
+      }
       this.onCardTargetClick(row, col);
       return;
     }
@@ -1989,7 +2001,10 @@ ${starLine}`;
         if (this.cardPlay?.card?.mode === "row" && this.selectedRow === row) {
           sq.classList.add("row-highlight");
         }
-        if (this.validTargets.some(([r, c]) => r === row && c === col)) {
+        if (
+          !usesAxisPick(this.cardPlay?.card) &&
+          this.validTargets.some(([r, c]) => r === row && c === col)
+        ) {
           sq.classList.add("playable", "target", "spell-target");
         }
         const moveHere = this.validMoves.find((m) => m.to[0] === row && m.to[1] === col);
@@ -2217,7 +2232,10 @@ ${starLine}`;
             ? "Spell used · "
             : "1 spell available · ";
         if (this.cardPlay) {
-          banner.textContent = `Casting ${this.cardPlay.card.name} — drop on board or tap highlights`;
+          const axisMsg = axisPickMessage(this.cardPlay.card);
+          banner.textContent = axisMsg
+            ? `Casting ${axisMsg}`
+            : `Casting ${this.cardPlay.card.name} — drop on board or tap highlights`;
           banner.className = "turn-banner casting";
         } else {
           banner.textContent =
