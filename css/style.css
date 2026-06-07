@@ -3765,17 +3765,27 @@ body.chest-open-active {
   background: radial-gradient(circle at 35% 30%, #4a3030, #1a1010 75%);
   box-shadow: 0 0 8px rgba(80, 40, 40, 0.5);
 }
-.piece.piece-skin-frost.red,
+.piece.piece-skin-frost.red {
+  background: radial-gradient(circle at 30% 25%, #ffe8f0, #e87888 55%, #9a3040);
+  box-shadow: 0 0 10px rgba(255, 150, 180, 0.5);
+}
 .piece.piece-skin-frost.black {
   background: radial-gradient(circle at 30% 25%, #e8f8ff, #6ab4d4 55%, #2a5a7a);
   box-shadow: 0 0 10px rgba(150, 220, 255, 0.45);
 }
-.piece.piece-skin-arcane.red,
+.piece.piece-skin-arcane.red {
+  background: radial-gradient(circle at 30% 25%, #ffb8d4, #d44f88 60%, #6a1848);
+  box-shadow: 0 0 12px rgba(255, 100, 150, 0.5);
+}
 .piece.piece-skin-arcane.black {
   background: radial-gradient(circle at 30% 25%, #d4b8ff, #6b4fd4 60%, #2a1848);
   box-shadow: 0 0 12px rgba(159, 122, 234, 0.5);
 }
-.piece.piece-skin-void.red,
+.piece.piece-skin-void.red {
+  background: radial-gradient(circle at 35% 30%, #5a3560, #280818 85%);
+  box-shadow: 0 0 14px rgba(200, 80, 120, 0.45);
+  border: 1px solid rgba(255, 140, 160, 0.35);
+}
 .piece.piece-skin-void.black {
   background: radial-gradient(circle at 35% 30%, #3a3560, #0a0814 85%);
   box-shadow: 0 0 14px rgba(123, 92, 255, 0.55);
