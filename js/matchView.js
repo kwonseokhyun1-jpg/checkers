@@ -9,8 +9,7 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
       <div class="game-layout">
         <aside class="panel panel-opponent">
           <div class="player-badge opponent"><span class="piece-icon black"></span> ${safe}</div>
-          <div class="hand-label">Enemy hand</div>
-          <div id="hand-black" class="hand hand-hidden"></div>
+          <p id="enemy-hand-count-label" class="hand-count-label">0 cards in hand</p>
         </aside>
         <section class="board-section">
           <div id="turn-banner" class="turn-banner match-banner">Your turn</div>
