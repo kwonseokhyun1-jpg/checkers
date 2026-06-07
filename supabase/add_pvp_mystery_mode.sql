@@ -26,3 +26,5 @@ alter table public.pvp_matches alter column match_mode set default 'normal';
 alter table public.pvp_matches drop constraint if exists pvp_matches_match_mode_check;
 alter table public.pvp_matches
   add constraint pvp_matches_match_mode_check check (match_mode in ('normal', 'mystery'));
+
+notify pgrst, 'reload schema';

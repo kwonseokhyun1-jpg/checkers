@@ -364,13 +364,20 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       return;
     }
 
-    if (row.status === "active" && row.state_json && !matchSession && !matchLaunching) {
-      stopOpenRoomsSync();
-      hideHosting();
-      matchLaunching = true;
-      void launchMatch(row).finally(() => {
-        if (!matchSession) matchLaunching = false;
-      });
+    if (row.status === "active" && !matchSession && !matchLaunching) {
+      if (row.state_json) {
+        stopOpenRoomsSync();
+        hideHosting();
+        matchLaunching = true;
+        void launchMatch(row).finally(() => {
+          if (!matchSession) matchLaunching = false;
+        });
+        return;
+      }
+      if (isMysteryMode(row) && pvpService?.role === "host") {
+        pvpService.startPolling(800);
+      }
+      return;
     }
   }
 
@@ -386,7 +393,18 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
 
   async function launchMatch(row) {
     const profile = getProfile();
-    const deckIds = localDeckIdsFromRow(row);
+    let deckIds = localDeckIdsFromRow(row);
+    if (!deckIds && isMysteryMode(row) && pvpService?.matchId) {
+      try {
+        const fresh = await pvpService.fetchMatch(pvpService.matchId);
+        if (fresh) {
+          row = fresh;
+          deckIds = localDeckIdsFromRow(row);
+        }
+      } catch {
+        /* retry below */
+      }
+    }
     if (!deckIds) {
       matchLaunching = false;
       setStatus(

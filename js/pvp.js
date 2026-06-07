@@ -243,10 +243,11 @@ export class PvpService {
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
     const mystery = isMysteryMode(row);
-    if (
-      !mystery &&
-      (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE)
-    ) {
+    if (mystery) {
+      return this.joinMysteryRow(row, displayName);
+    }
+
+    if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
       throw new Error("Select a valid 30-card deck first");
     }
 
@@ -284,6 +285,45 @@ export class PvpService {
     }
 
     return this.finalizeGuestJoin(data, guestDeckIds);
+  }
+
+  async joinMysteryRow(row, displayName) {
+    const sb = getSupabase();
+    const user = getCurrentUser();
+    if (!sb || !user) throw new Error("Sign in to play PvP");
+
+    const hostDeckIds = buildMysteryDeck();
+    const guestDeckIds = buildMysteryDeck();
+    const state = createMatchState(hostDeckIds, guestDeckIds);
+    state.turn = COLORS.RED;
+    const stateJson = serializeMatchState(state);
+
+    const { data, error } = await sb
+      .from("pvp_matches")
+      .update({
+        guest_id: user.id,
+        guest_deck_ids: guestDeckIds,
+        host_deck_ids: hostDeckIds,
+        guest_display_name: displayName,
+        status: "active",
+        state_json: stateJson,
+        turn: COLORS.RED,
+        version: 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", row.id)
+      .eq("status", "waiting")
+      .is("guest_id", null)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    this.matchId = data.id;
+    this.role = "guest";
+    this.localColor = COLORS.BLACK;
+    this.subscribe(data.id);
+    return data;
   }
 
   async finalizeGuestJoin(data, guestDeckIds) {
