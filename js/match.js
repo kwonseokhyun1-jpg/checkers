@@ -156,6 +156,7 @@ export class MatchSession {
     this.opponentName = options.opponentName || "Opponent";
     this.onStateSync = options.onStateSync ?? null;
     this.onPvpWin = options.onPvpWin ?? null;
+    this.onPvpForfeit = options.onPvpForfeit ?? null;
     this._syncBusy = false;
     this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
     if (options.initialState) {
@@ -354,7 +355,13 @@ export class MatchSession {
     this.bindBoardFrame();
     this.root.querySelector("#btn-end-cards")?.addEventListener("click", () => this.beginMovePhase());
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
-    this.root.querySelector("#btn-leave-match")?.addEventListener("click", () => {
+    this.root.querySelector("#btn-leave-match")?.addEventListener("click", async () => {
+      if (this.isPvp) {
+        if (!window.confirm("Leave this match? Your opponent wins automatically.")) return;
+        await this.onPvpForfeit?.();
+        this.onExit?.();
+        return;
+      }
       if (window.confirm("Leave this match? Your progress is saved — you can resume when you return.")) {
         saveMatchCheckpoint(this);
         this.onExit?.();
