@@ -69,6 +69,13 @@ export const ACHIEVEMENTS = [
     track: "cumulative",
   },
   {
+    id: "executioner",
+    title: "Executioner",
+    description: "Execute 50 enemy pieces using the Execution spell.",
+    target: 50,
+    track: "cumulative",
+  },
+  {
     id: "arcane_mastery",
     title: "Arcane Mastery",
     description: "Collect 3 copies of every legendary spell card in your inventory.",
