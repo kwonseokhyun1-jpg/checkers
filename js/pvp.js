@@ -532,7 +532,8 @@ export class PvpService {
         winner_id: winnerId,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", this.matchId);
+      .eq("id", this.matchId)
+      .eq("status", "active");
   }
 
   async cancelRoom(matchId) {
