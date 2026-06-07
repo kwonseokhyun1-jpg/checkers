@@ -2,7 +2,7 @@
 import { CARD_REGISTRY, CARDS } from "./cardRegistry.js";
 
 export const DRAW_COST = 10;
-export const START_GEMS = 100;
+export const START_GEMS = 200;
 export const HAND_MAX = 6;
 
 export { CARD_REGISTRY, CARDS };
