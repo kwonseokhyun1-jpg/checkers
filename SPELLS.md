@@ -143,7 +143,7 @@
 - **Mirror Shield** — Next enemy spell on this piece reflects to a random enemy.
 - **Mind Control** — Convert an enemy man to your color for 2 of your turns; it then reverts to the enemy.
 - **Queen's Crown** — Piece has king + knight movement for 2 turns.
-- **Revive** — Return a captured man to any empty square in your back 3 rows.
+- **Revive** — Return a captured man to any empty dark square except your back rank.
 - **Roulette** — Random card effect hits a random valid target.
 - **Shatter** — Destroy any enemy piece on the board (not shielded).
 - **Twin Soul** — Split a man into two tokens on adjacent squares; linked fate.
