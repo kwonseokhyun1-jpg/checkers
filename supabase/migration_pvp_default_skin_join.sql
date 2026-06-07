@@ -1,11 +1,5 @@
--- PvP piece skin: store host/guest skins and block same-skin joins.
--- Run in Supabase SQL Editor on existing projects.
-
-alter table public.pvp_matches
-  add column if not exists host_piece_skin text not null default 'skin_classic';
-
-alter table public.pvp_matches
-  add column if not exists guest_piece_skin text;
+-- Allow Classic Disc (default) skin matches; only block identical custom skins.
+-- Run in Supabase SQL editor after migration_pvp_piece_skin.sql.
 
 drop function if exists public.pvp_join_by_code(text, jsonb, text, jsonb);
 
@@ -33,14 +27,15 @@ begin
 
   select * into rec
   from public.pvp_matches
-  where upper(trim(code)) = upper(trim(room_code))
+  where code = upper(trim(room_code))
     and status = 'waiting'
     and guest_id is null
   for update;
 
   if not found then
-    raise exception 'Room not found or already full';
+    raise exception 'Room not found or already full.';
   end if;
+
   if rec.host_id = uid then
     raise exception 'You cannot join your own room';
   end if;
@@ -67,5 +62,3 @@ begin
   return rec;
 end;
 $$;
-
-grant execute on function public.pvp_join_by_code(text, jsonb, text, jsonb, text) to authenticated;

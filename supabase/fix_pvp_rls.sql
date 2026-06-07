@@ -80,8 +80,8 @@ begin
   end if;
 
   resolved_host_skin := coalesce(nullif(trim(rec.host_piece_skin), ''), 'skin_classic');
-  if resolved_host_skin = resolved_guest_skin then
-    raise exception 'You and the host have the same piece skin. Equip a different skin in Profile to join.';
+  if resolved_host_skin = resolved_guest_skin and resolved_host_skin <> 'skin_classic' then
+    raise exception 'You and the host have the same custom piece skin. Equip a different skin in Profile to join.';
   end if;
 
   update public.pvp_matches

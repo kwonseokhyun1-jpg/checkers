@@ -2,6 +2,7 @@
  * Achievements catalog, progress, and title claim flow.
  */
 import { getPlayableCards } from "./cardCatalog.js";
+import { normalizeCosmetics } from "./cosmetics.js";
 import { unlockTitleForAchievement, TITLE_BY_ACHIEVEMENT, MAGE_TITLE_BY_ID } from "./mageTitles.js";
 
 export const ACHIEVEMENTS = [
@@ -162,6 +163,7 @@ export function claimAchievement(profile, id) {
     return { success: false, message: "Achievement not ready to claim." };
   }
   profile.achievements = normalizeAchievements(profile.achievements);
+  profile.cosmetics = normalizeCosmetics(profile.cosmetics);
   profile.achievements.claimed.push(id);
   const title = unlockTitleForAchievement(profile, id);
   const titleDef = title || TITLE_BY_ACHIEVEMENT[id];
