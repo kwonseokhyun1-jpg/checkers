@@ -125,6 +125,8 @@ export function createPiece(color, row, col, king = false) {
     linkedFateId: null,
     isClone: false,
     cloneNoCaptureThisTurn: false,
+    freezeDeferEndTick: false,
+    paralyzeDeferEndTick: false,
   };
 }
 
@@ -136,12 +138,22 @@ export function destroyPieceIfClone(board, state, row, col) {
   return true;
 }
 
-export function applyFreezeToPiece(board, state, row, col, turns) {
+export function applyFreezeToPiece(board, state, row, col, turns, { deferEndTick = false } = {}) {
   if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
   if (!piece) return false;
   piece.frozenTurns = Math.max(piece.frozenTurns || 0, turns);
+  if (deferEndTick) piece.freezeDeferEndTick = true;
   return true;
+}
+
+function tickDeferredTurnDebuff(piece, turnsKey, deferKey) {
+  if (piece[turnsKey] <= 0) return;
+  if (piece[deferKey]) {
+    piece[deferKey] = false;
+    return;
+  }
+  piece[turnsKey]--;
 }
 
 export function applyVenomToPiece(board, state, row, col, amount) {
@@ -477,7 +489,7 @@ export function applyMove(board, move, state = null) {
     const qsOwner = sq.hiddenQuicksand.owner;
     delete sq.hiddenQuicksand;
     if (piece) {
-      applyFreezeToPiece(board, state, tr, tc, 1);
+      applyFreezeToPiece(board, state, tr, tc, 1, { deferEndTick: true });
       state?.meta?.achievementHook?.onTrapTriggered?.(qsOwner, piece.color);
     }
   }
@@ -556,6 +568,8 @@ export function tickEndTurnEffects(board, color, state = null) {
       const p = board[r][c];
       if (!p || p.color !== color) continue;
       if (p.rooted > 0) p.rooted--;
+      tickDeferredTurnDebuff(p, "frozenTurns", "freezeDeferEndTick");
+      tickDeferredTurnDebuff(p, "paralyzedTurns", "paralyzeDeferEndTick");
       if (p.cloneNoCaptureThisTurn) p.cloneNoCaptureThisTurn = false;
       if (p.panicTurn) p.panicTurn = false;
     }
@@ -584,7 +598,7 @@ export function tickEffects(board, color, state = null) {
           p.bearAwakened = true;
         }
       }
-      dec("shieldTurns"); dec("frozenTurns"); dec("paralyzedTurns"); dec("retreatTurns");
+      dec("shieldTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
       dec("stoneTurns"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
       dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("rustedTurns"); dec("noCaptureTurns");
