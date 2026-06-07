@@ -121,7 +121,6 @@ export function createPiece(color, row, col, king = false) {
     hibernationTurns: 0,
     bearAwakened: false,
     linkedFateId: null,
-    pressExtraMove: false,
     isClone: false,
     cloneNoCaptureThisTurn: false,
   };
@@ -509,16 +508,6 @@ export function applyMove(board, move, state = null) {
   return piece;
 }
 
-
-export function findPressExtraPiece(board, color) {
-  for (let r = 0; r < SIZE; r++) {
-    for (let c = 0; c < SIZE; c++) {
-      const p = board[r][c];
-      if (p && p.color === color && p.pressExtraMove) return p;
-    }
-  }
-  return null;
-}
 
 export function findPanicPiece(board, color) {
   for (let r = 0; r < SIZE; r++) {

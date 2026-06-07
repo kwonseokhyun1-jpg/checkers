@@ -11,7 +11,6 @@ import {
   countPieces,
   tickEffects,
   tickEndTurnEffects,
-  findPressExtraPiece,
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
@@ -489,6 +488,8 @@ export class MatchSession {
       this.setMessage("Shatter backlash — no spells this turn. Select a piece to move.");
     } else if (color === this.localColor && s.meta.blinded?.[color]) {
       this.setMessage("You are blinded — no spells this turn. Select a piece to move.");
+    } else if (color === this.localColor && s.meta.pendingPressMove?.[color]) {
+      this.setMessage("Press — you'll move again after your normal move. Select a piece.");
     }
   }
 
@@ -1104,7 +1105,7 @@ export class MatchSession {
         }
       }
       if (this.tryBearBonusMove(s, this.localColor, landR, landC)) return;
-      if (this.tryPressExtraMove(s, this.localColor)) return;
+      if (this.tryPressExtraMove(s, this.localColor, landR, landC)) return;
       this.endHumanTurn();
     };
 
@@ -1116,18 +1117,17 @@ export class MatchSession {
     finish();
   }
 
-  tryPressExtraMove(s, color) {
-    const pressed = findPressExtraPiece(s.board, color);
-    if (!pressed) return false;
-    pressed.pressExtraMove = false;
+  tryPressExtraMove(s, color, landR, landC) {
+    if (!s.meta.pendingPressMove?.[color]) return false;
+    s.meta.pendingPressMove[color] = false;
     const moves = getAllMovesForColor(s.board, color, s).filter(
-      (m) => m.from[0] === pressed.row && m.from[1] === pressed.col
+      (m) => m.from[0] === landR && m.from[1] === landC
     );
     if (!moves.length) return false;
     s.phase = PHASE.MOVE;
     this.validMoves = moves;
-    this.selectedSquare = [pressed.row, pressed.col];
-    this.setMessage("Press — that piece must move again!");
+    this.selectedSquare = [landR, landC];
+    this.setMessage("Press — move again!");
     this.render();
     return true;
   }

@@ -93,6 +93,7 @@ export const EFFECT_VISUAL = {
 export const META_SPELL_OVERLAY = {
   blind: "blind",
   confusion: "confusion",
+  press: "curse",
   counterspell: "counter",
   vengeance: "vengeance-arm",
   ignore: "ignore",

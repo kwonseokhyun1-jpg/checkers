@@ -132,7 +132,7 @@ export const EFFECT_ILLUSTRATIONS = {
   create_foe: () => wrap(`${square(32, 34, 16, 0.15)}${enemy(32, 34, 6)}<text x="38" y="22" font-size="7" fill="currentColor" opacity="0.55">+</text>`),
   deep_freeze: () => wrap(`${piece(32, 48, 4)}<path d="M10 54 L54 10" stroke="currentColor" stroke-width="2" opacity="0.45"/>${enemy(22, 40, 3)}${enemy(32, 30, 3)}${enemy(42, 20, 3)}`),
   reverse_only_2: () => wrap(`${enemy(32, 24, 6)} ${arrow(32, 28, 32, 44)}<path d="M24 48 H40" stroke="currentColor" stroke-width="1.8" opacity="0.4"/>`),
-  press: () => wrap(`${enemy(32, 28, 6)} ${arrow(32, 34, 32, 44)} ${arrow(38, 34, 38, 44)}`),
+  press: () => wrap(`${enemy(32, 32, 6)} ${arrow(32, 38, 32, 48)}`),
   tangle: () => wrap(`${enemy(22, 32, 5)} ${enemy(42, 32, 5)} ${arrow(28, 32, 36, 32)} ${arrow(36, 28, 28, 28)}<path d="M22 26 L42 38 M42 26 L22 38" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>`),
   blind: () => wrap(`<path d="M16 28 C24 22 40 22 48 28 C40 34 24 34 16 28 Z" fill="currentColor" opacity="0.35"/><path d="M22 28 H42" stroke="currentColor" stroke-width="2"/>`),
   confusion: () => wrap(`${enemy(32, 32, 6)}<path d="M20 20 C28 28 20 36 28 44 C36 36 44 44 44 28" stroke="currentColor" stroke-width="1.8" fill="none" opacity="0.65"/>`),
