@@ -92,14 +92,8 @@ export function formatPieceStatusMessage(piece, row, col) {
   return parts.join(" · ");
 }
 
-export function cleansePiece(piece) {
+export function cleanseDebuffs(piece) {
   if (!piece) return;
-  piece.shieldTurns = 0;
-  piece.fortifyTurns = 0;
-  piece.lastStand = false;
-  piece.mirrorShield = false;
-  piece.deflectTurns = 0;
-  piece.ghostGuard = false;
   piece.frozenTurns = 0;
   piece.paralyzedTurns = 0;
   piece.rooted = 0;
@@ -114,20 +108,40 @@ export function cleansePiece(piece) {
   piece.anchored = 0;
   piece.rusted = false;
   piece.rustedTurns = 0;
-  piece.hibernationTurns = 0;
-  piece.bearAwakened = false;
   piece.noCaptureTurns = 0;
   piece.pressExtraMove = false;
-  piece.bishopTurns = 0;
-  piece.rookTurns = 0;
-  piece.queenTurns = 0;
-  piece.retreatTurns = 0;
   piece.panicTurn = false;
   piece.revivedNoCapture = false;
   piece.berserkNoCapture = false;
   piece.cloneNoCaptureThisTurn = false;
   piece.mindControlTurns = 0;
   piece.mindControlOriginalColor = null;
+}
+
+export function cleansePiece(piece) {
+  if (!piece) return;
+  cleanseDebuffs(piece);
+  piece.shieldTurns = 0;
+  piece.fortifyTurns = 0;
+  piece.lastStand = false;
+  piece.mirrorShield = false;
+  piece.deflectTurns = 0;
+  piece.ghostGuard = false;
+  piece.hibernationTurns = 0;
+  piece.bearAwakened = false;
+  piece.bishopTurns = 0;
+  piece.rookTurns = 0;
+  piece.queenTurns = 0;
+  piece.retreatTurns = 0;
+}
+
+export function cleanseFriendlyDebuffs(board, color) {
+  for (let r = 0; r < board.length; r++) {
+    for (let c = 0; c < board[r].length; c++) {
+      const p = board[r][c];
+      if (p && p.color === color) cleanseDebuffs(p);
+    }
+  }
 }
 
 export function cleanseAllPieces(board) {
