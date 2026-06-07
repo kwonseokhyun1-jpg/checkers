@@ -12,7 +12,7 @@ import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
 import { cleanseFriendlyDebuffs } from "./pieceStatus.js";
-import { isSquareCollapsed, setCollapsedSquare } from "./gameMeta.js";
+import { isSquareCollapsed, setCollapsedSquare, ensureConstitutionTurns } from "./gameMeta.js";
 
 const opp = (c) => (c === COLORS.RED ? COLORS.BLACK : COLORS.RED);
 const ok = (m = "Spell cast.", extra = {}) => ({ success: true, message: m, ...extra });
@@ -107,7 +107,7 @@ function kill(state, r, c, by, nonCap = true, opts = {}) {
   if (!p) return false;
   if (!opts.linkFate && p.cloneNoCaptureThisTurn) return false;
   if (!opts.berserkSlam && !opts.linkFate && p.shieldTurns > 0) { p.shieldTurns--; return false; }
-  if (!opts.linkFate && p.king && state.meta.constitutionTurns[p.color] > 0 && nonCap) return false;
+  if (!opts.linkFate && p.king && ensureConstitutionTurns(state.meta)[p.color] > 0 && nonCap) return false;
   if (!opts.linkFate && p.lastStand) {
     p.lastStand = false;
     p.shieldTurns = Math.max(p.shieldTurns, LAST_STAND_SHIELD_TURNS);
@@ -640,7 +640,10 @@ const EFFECTS = {
   rally(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const q=at(state,r+dr,c+dc); if(q&&q.color===color) q.retreatTurns=Math.max(q.retreatTurns,1);} return ok(); },
   coronation_day(state, color, picks) { const pr=promoRow(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&r===pr&&!p.king) p.king=true;} return ok(); },
   regicide(state, color, picks) { state.meta.pendingRegicide[color]=true; return ok(); },
-  constitution(state, color, picks) { state.meta.constitutionTurns[color]=5; return ok(); },
+  constitution(state, color, picks) {
+    ensureConstitutionTurns(state.meta)[color] = 5;
+    return ok("Constitution — your kings are protected for 5 turns.");
+  },
   last_king(state, color, picks) { const ps=fri(state,color); if(ps.length!==1) return fail('Need exactly 1 piece'); const p=ps[0]; p.king=true; p.shieldTurns=2; return ok(); },
   succession(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); p.succession=true; return ok(); },
   coin_flip(state, color, picks) {

@@ -15,7 +15,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -160,6 +160,8 @@ export class MatchSession {
     this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
     if (options.initialState) {
       this.state = options.initialState;
+      this.state.meta = { ...createMatchMeta(), ...this.state.meta };
+      ensureConstitutionTurns(this.state.meta);
     } else {
       this.state = createMatchState(deckCardIds, options.aiDeckIds ?? null);
     }
@@ -434,6 +436,10 @@ export class MatchSession {
   showPieceInfo(piece, row, col) {
     const infoEl = this.$("piece-info");
     const { buffs, curses } = getPieceStatus(piece);
+    if (piece.king) {
+      const turns = ensureConstitutionTurns(this.state.meta)[piece.color];
+      if (turns > 0) buffs.push({ label: "Constitution", turns });
+    }
     if (infoEl) {
       const buffText = buffs.length
         ? buffs.map((b) => (b.turns != null ? `${b.label} (${b.turns})` : b.label)).join(", ")
@@ -669,6 +675,10 @@ export class MatchSession {
     this.render();
     if (this.checkWin()) return;
     this.pushPvpState();
+    if (!this.state.gameOver) {
+      const moveMsg = msg ? `${msg} Select a piece to move.` : undefined;
+      this.beginMovePhase({ afterSpell: true, spellMessage: moveMsg });
+    }
   }
 
   cancelCardPlay() {
@@ -1290,17 +1300,20 @@ ${starLine}`;
       banner.className = `turn-banner spell-anim-${spec.type}`;
     }
     this.render();
-    await delay((spec.duration ?? MIN_SPELL_ANIM_MS) + SPELL_BANNER_EXTRA_MS);
-    this.spellAnimation = null;
-    this.boardFx = null;
-    this.selectedColumn = null;
-    this.selectedRow = null;
-    removeSpellOverlay(overlay);
-    board?.classList.remove("board--spell-shake");
-    frame?.classList.remove("board-frame--spell-impact");
-    if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
-    frame?.classList.remove(`board-frame--spell-${spec.type}`);
-    if (banner) banner.classList.remove(`spell-anim-${spec.type}`);
+    try {
+      await delay((spec.duration ?? MIN_SPELL_ANIM_MS) + SPELL_BANNER_EXTRA_MS);
+    } finally {
+      this.spellAnimation = null;
+      this.boardFx = null;
+      this.selectedColumn = null;
+      this.selectedRow = null;
+      removeSpellOverlay(overlay);
+      board?.classList.remove("board--spell-shake");
+      frame?.classList.remove("board-frame--spell-impact");
+      if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
+      frame?.classList.remove(`board-frame--spell-${spec.type}`);
+      if (banner) banner.classList.remove(`spell-anim-${spec.type}`);
+    }
   }
 
   async runVictimSquareFlash(spec) {
@@ -1555,19 +1568,29 @@ ${starLine}`;
       this.recordSuccessfulSpellCast();
       if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
       else this.state.meta.extraSpellCast[this.localColor] = false;
-      if (card.effect === "counterspell") {
-        this.setMessage("Counterspell armed. They won't know until they cast.");
-      } else if (card.effect === "vengeance") {
-        this.setMessage("Vengeance armed. They won't know until they capture.");
-      } else {
-        this.setMessage(res.message || "Spell cast.");
-      }
       if (this.hasMoveHistory()) {
         this.recordHistoryEntry(card.name, "spell", { color: this.localColor, picks: [] });
       }
       if (this.checkWin()) return;
       this.render();
       this.pushPvpState();
+      if (!this.state.gameOver) {
+        let moveMsg = "Spell cast — select a piece to move.";
+        if (card.effect === "constitution") {
+          moveMsg = "Constitution active — your kings are protected. Select a piece to move.";
+        } else if (card.effect === "counterspell") {
+          moveMsg = "Counterspell armed (hidden) — select a piece to move.";
+        } else if (card.effect === "vengeance") {
+          moveMsg = "Vengeance armed (hidden) — select a piece to move.";
+        } else if (res.message) {
+          moveMsg = `${res.message} Select a piece to move.`;
+        }
+        this.beginMovePhase({ afterSpell: true, spellMessage: moveMsg });
+      }
+    } catch (err) {
+      console.error("Instant spell failed:", err);
+      this.setMessage("Spell failed — try again.");
+      this.render();
     } finally {
       this.actionBusy = false;
     }
@@ -1863,7 +1886,7 @@ ${starLine}`;
     await this.finishOpponentTurn(capBefore);
   }
 
-  beginMovePhase() {
+  beginMovePhase({ afterSpell = false, spellMessage = null } = {}) {
     const s = this.state;
     if (s.gameOver || s.turn !== this.localColor) return;
     this.cancelCardPlay();
@@ -1890,7 +1913,10 @@ ${starLine}`;
       this.endHumanTurn();
       return;
     }
-    this.setMessage("Spell skipped — select a piece to move.");
+    this.setMessage(
+      spellMessage ||
+        (afterSpell ? "Spell cast — select a piece to move." : "Spell skipped — select a piece to move.")
+    );
     this.render();
   }
 

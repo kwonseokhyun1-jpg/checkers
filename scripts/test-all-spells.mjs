@@ -20,7 +20,7 @@ import {
   applyVenomToPiece,
   applyBurnToPiece,
 } from "../js/board.js";
-import { createMatchMeta, tryConsumeCounterspell, tryConsumeVengeance } from "../js/gameMeta.js";
+import { createMatchMeta, tryConsumeCounterspell, tryConsumeVengeance, ensureConstitutionTurns } from "../js/gameMeta.js";
 import { initCardState } from "../js/cardEffects.js";
 
 const handlerKeys = new Set(
@@ -353,6 +353,28 @@ for (const card of cards) {
   s2.meta.vengeance[COLOR] = true;
   if (tryConsumeVengeance(s2, COLOR, COLOR)) throw new Error("Vengeance should not trigger on friendly capture");
   console.log("Vengeance test: OK");
+}
+
+// Constitution — protects kings from non-capture kills; works on legacy meta
+{
+  const s = baseState();
+  delete s.meta.constitutionTurns;
+  place(s, COLOR, 5, 0, true);
+  place(s, OPP, 3, 2);
+  const constitution = cards.find((c) => c.id === "constitution");
+  const cast = applyCard(s, COLOR, constitution, []);
+  if (!cast.success || ensureConstitutionTurns(s.meta)[COLOR] !== 5) {
+    throw new Error("Constitution should arm on legacy meta: " + (cast.message || ""));
+  }
+  const shatter = cards.find((c) => c.id === "shatter");
+  const failRes = applyCard(s, OPP, shatter, [[5, 0]]);
+  if (failRes.success || !at(s, 5, 0)?.king) {
+    throw new Error("Shatter should fail vs Constitution-protected king");
+  }
+  ensureConstitutionTurns(s.meta)[COLOR] = 0;
+  const okRes = applyCard(s, OPP, shatter, [[5, 0]]);
+  if (!okRes.success || at(s, 5, 0)) throw new Error("Shatter should work when Constitution expires");
+  console.log("Constitution test: OK");
 }
 
 // Backstep UI targeting check

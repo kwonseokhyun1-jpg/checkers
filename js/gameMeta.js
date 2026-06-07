@@ -117,7 +117,18 @@ export function consumeFreeDraw(state, color) {
   return false;
 }
 
+/** Ensure constitution counter exists (older saves / partial meta). */
+export function ensureConstitutionTurns(meta) {
+  if (!meta.constitutionTurns || typeof meta.constitutionTurns !== "object") {
+    meta.constitutionTurns = { [COLORS.RED]: 0, [COLORS.BLACK]: 0 };
+  }
+  if (meta.constitutionTurns[COLORS.RED] == null) meta.constitutionTurns[COLORS.RED] = 0;
+  if (meta.constitutionTurns[COLORS.BLACK] == null) meta.constitutionTurns[COLORS.BLACK] = 0;
+  return meta.constitutionTurns;
+}
+
 export function startTurnMeta(state, color) {
+  ensureConstitutionTurns(state.meta);
   state.meta.turnNumber += 1;
   const opp = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
   if (state.meta.prospectPending[color] > 0) {
