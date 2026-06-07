@@ -10,6 +10,18 @@ export function isMatchActive() {
   return document.body.classList.contains("match-active");
 }
 
+/** True when the in-match board UI (with Leave match) is on screen. */
+export function isLiveMatchUiVisible() {
+  return Boolean(document.querySelector("#btn-leave-match"));
+}
+
+/** Drop stale match-active when the shell shows menus/decks but no live match UI. */
+export function reconcileMatchShellState() {
+  if (!isMatchActive() || isLiveMatchUiVisible()) return false;
+  exitMatchMode({ clearCheckpoint: false });
+  return true;
+}
+
 export function enterMatchMode(meta) {
   checkpointMeta = meta;
   document.body.classList.add("match-active");

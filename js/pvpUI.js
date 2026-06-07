@@ -3,7 +3,7 @@ import { DECK_SIZE } from "./cardCatalog.js";
 import { COLORS } from "./board.js";
 import { MatchSession, isPvpTerminalBoard } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
-import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
+import { enterMatchMode, exitMatchMode, reconcileMatchShellState } from "./matchLifecycle.js";
 import {
   COSMETIC_BY_ID,
   getEquippedCosmetics,
@@ -487,54 +487,63 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
 
     pvpService._lastVersion = row.version ?? 0;
 
+    try {
+      matchSession = new MatchSession(
+        deckIds,
+        matchRoot,
+        () => {
+          matchSession = null;
+          matchLaunching = false;
+          exitMatchMode();
+          clearActivePvpMatchId();
+          pvpService?.dispose();
+          pvpService = null;
+          renderLobby();
+        },
+        null,
+        {
+          pvp: true,
+          localColor,
+          initialState: row.state_json,
+          opponentName,
+          cosmetics: localCosmetics,
+          opponentCosmetics,
+          onStateSync: async (state) => {
+            const v = pvpService._lastVersion;
+            const updated = await pvpService.pushState(state, v);
+            if (updated) pvpService._lastVersion = updated.version;
+          },
+          onPvpForfeit: async () => {
+            if (!pvpService || matchSession?._gameOverUiShown) return;
+            const opponentId = opponentIdFromRow(row);
+            if (opponentId) await pvpService.finishMatch(opponentId);
+          },
+          onPvpWin: async (won) => {
+            const currentUser = getCurrentUser();
+            if (!currentUser) return;
+            if (won) {
+              const profile = getProfile();
+              recordPvpWin(profile);
+              saveProfile(profile);
+            }
+            const winnerId = won
+              ? currentUser.id
+              : localColor === COLORS.RED
+                ? row.guest_id
+                : row.host_id;
+            if (winnerId) await pvpService.finishMatch(winnerId);
+          },
+        }
+      );
+    } catch (err) {
+      matchSession = null;
+      matchLaunching = false;
+      matchRoot.remove();
+      renderLobby();
+      throw err;
+    }
+
     enterMatchMode({ kind: "pvp" });
-    matchSession = new MatchSession(
-      deckIds,
-      matchRoot,
-      () => {
-        matchSession = null;
-        matchLaunching = false;
-        exitMatchMode();
-        clearActivePvpMatchId();
-        pvpService?.dispose();
-        pvpService = null;
-        renderLobby();
-      },
-      null,
-      {
-        pvp: true,
-        localColor,
-        initialState: row.state_json,
-        opponentName,
-        cosmetics: localCosmetics,
-        opponentCosmetics,
-        onStateSync: async (state) => {
-          const v = pvpService._lastVersion;
-          const updated = await pvpService.pushState(state, v);
-          if (updated) pvpService._lastVersion = updated.version;
-        },
-        onPvpForfeit: async () => {
-          if (!pvpService || matchSession?._gameOverUiShown) return;
-          const opponentId = opponentIdFromRow(row);
-          if (opponentId) await pvpService.finishMatch(opponentId);
-        },
-        onPvpWin: async (won) => {
-          const currentUser = getCurrentUser();
-          if (!currentUser) return;
-          if (won) {
-            const profile = getProfile();
-            recordPvpWin(profile);
-            saveProfile(profile);
-          }
-          const winnerId = won
-            ? currentUser.id
-            : localColor === COLORS.RED
-              ? row.guest_id
-              : row.host_id;
-          if (winnerId) await pvpService.finishMatch(winnerId);
-        },
-      }
-    );
 
     matchSession.setMessage(
       resume
@@ -762,6 +771,8 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       clearActivePvpMatchId();
       pvpService?.dispose();
       pvpService = null;
+      exitMatchMode({ clearCheckpoint: true });
+      reconcileMatchShellState();
     },
   };
 }
