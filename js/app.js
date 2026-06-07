@@ -71,7 +71,11 @@ import {
   enterMatchMode,
   exitMatchMode,
   isMatchActive,
+  isLiveMatchUiVisible,
   reconcileMatchShellState,
+  setPendingNavigationTab,
+  consumePendingNavigationTab,
+  armLeaveConfirmSkip,
   clearMatchCheckpoint,
   readMatchCheckpoint,
   saveMatchCheckpoint,
@@ -95,6 +99,13 @@ try {
   profile = loadProfile();
 }
 let activeTab = "deck";
+const TAB_LABELS = {
+  deck: "Decks",
+  chests: "Shop",
+  play: "Play",
+  pvp: "PvP",
+  quests: "Quests",
+};
 /** @type {'cards'|'cosmetics'|'star'} */
 let activeVaultTab = "cards";
 /** @type {'list'|'edit'|'view'} */
@@ -195,7 +206,15 @@ function hideStageModal() {
 
 function showTab(tab) {
   reconcileMatchShellState();
-  if (isMatchActive()) return;
+  if (isMatchActive() && isLiveMatchUiVisible()) {
+    if (tab === activeTab) return;
+    const label = TAB_LABELS[tab] || tab;
+    if (!window.confirm(`Leave your current match to open ${label}?`)) return;
+    setPendingNavigationTab(tab);
+    armLeaveConfirmSkip();
+    document.querySelector("#btn-leave-match")?.click();
+    return;
+  }
   dismissTutorial({ persist: true, profile, saveProfile });
   if (tab !== "deck" && deckSubview === "edit") {
     unlockBodyScrollForDeckEdit();
@@ -1459,7 +1478,7 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
         exitMatchMode();
         root.innerHTML = "";
         $("view-match")?.classList.add("hidden");
-        showTab("play");
+        showTab(consumePendingNavigationTab() || "play");
       },
       (stars) => {
         const { gems, stars: bestStars, starsGained } = recordLevelClear(profile, levelId, stars);
@@ -1576,17 +1595,12 @@ function init() {
     if (e.key === "Escape") closeAdventurePrebattle();
   });
   document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      reconcileMatchShellState();
-      if (isMatchActive()) return;
-      showTab(btn.dataset.tab);
-    });
+    btn.addEventListener("click", () => showTab(btn.dataset.tab));
   });
 
   document.querySelectorAll(".vault-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
       reconcileMatchShellState();
-      if (isMatchActive()) return;
       showVaultTab(btn.dataset.vaultTab);
     });
   });
@@ -1714,6 +1728,7 @@ function init() {
     root: document.getElementById("view-pvp"),
     getProfile: () => profile,
     openAuthModal: () => authUI.open("signin"),
+    onNavigateTab: showTab,
   });
 
   bindMatchVisibilityHandlers(() => matchSession);
