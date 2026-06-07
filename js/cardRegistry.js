@@ -99,7 +99,7 @@ export const CARD_REGISTRY = [
   { id: "earthquake", name: "Earthquake", desc: "All pieces shift 1 square toward board center if possible.", rarity: "legendary", weight: 1, mode: "instant", effect: "earthquake" },
   { id: "berserk", name: "Berserk", desc: "Teleport one of your pieces anywhere except the enemy back rank. Landing on an enemy destroys it; you cannot capture this turn.", rarity: "legendary", weight: 1, mode: "f_empty", effect: "berserk" },
   { id: "hostile_swap", name: "Hostile Swap", desc: "Swap one of your pieces with an unshielded enemy.", rarity: "epic", weight: 2, mode: "f_e", effect: "hostile_swap" },
-  { id: "purify", name: "Purify", desc: "Remove all shields, debuffs, and buffs from every piece.", rarity: "epic", weight: 2, mode: "instant", effect: "purify" },
+  { id: "purify", name: "Purify", desc: "Remove all debuffs from your pieces, including burn and freeze.", rarity: "epic", weight: 2, mode: "instant", effect: "purify" },
   { id: "trickster", name: "Trickster", desc: "Swap up to 6 random pieces (pieces on back ranks are unaffected).", rarity: "epic", weight: 2, mode: "instant", effect: "trickster" },
   { id: "link_fate", name: "Link Fate", desc: "Link two enemy pieces — when either is destroyed, the other dies too.", rarity: "epic", weight: 2, mode: "e_e", effect: "link_fate" },
   { id: "clone", name: "Clone", desc: "Duplicate one of your men on an adjacent empty square (original stays). The copy cannot capture, be captured, or be sacrificed until your next turn. Clones are destroyed instantly by freeze, poison, or burn.", rarity: "epic", weight: 2, mode: "f_empty", effect: "clone" },
