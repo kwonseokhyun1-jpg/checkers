@@ -72,7 +72,6 @@ SPELLS = [
     # === TRANSFORMATION ===
     ("bishops_sigil", "Bishop's Sigil", "Piece slides diagonally any distance over empties for 3 turns.", "rare", 3, "friendly", "bishop_3"),
     ("rooks_sigil", "Rook's Sigil", "Piece slides along rank/file over empties for 3 turns.", "rare", 3, "friendly", "rook_3"),    ("demote", "Demote", "Turn an enemy king back into a man.", "epic", 2, "enemy", "demote"),
-    ("promote_zone", "Promote Zone", "Treat your piece as on the promotion row for movement this turn.", "uncommon", 4, "friendly", "promote_zone"),
     ("twin_soul", "Twin Soul", "Split a man into two tokens on adjacent squares; linked fate.", "epic", 2, "friendly", "twin_soul"),
     ("fusion", "Fusion", "Merge two adjacent friendly men into one super-man (2-step non-capture).", "rare", 3, "f_f_adj", "fusion"),
     ("chameleon", "Chameleon", "Copy any piece's movement tags on the board for 2 turns.", "rare", 3, "any_piece", "chameleon"),

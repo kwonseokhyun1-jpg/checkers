@@ -38,7 +38,6 @@ export const CARD_REGISTRY = [
   { id: "rust", name: "Rust", desc: "Enemy cannot be crowned for 3 turns; when it ends, if on the far rank it becomes a king.", rarity: "common", weight: 6, mode: "enemy", effect: "rust" },
   { id: "iron_will", name: "Iron Will", desc: "A frozen or rooted friendly piece may move once (consumes debuff).", rarity: "common", weight: 5, mode: "friendly", effect: "iron_will" },
   { id: "demote", name: "Demote", desc: "Turn an enemy king back into a man.", rarity: "common", weight: 6, mode: "enemy", effect: "demote" },
-  { id: "promote_zone", name: "Promote Zone", desc: "Treat your piece as on the promotion row for movement this turn.", rarity: "common", weight: 6, mode: "friendly", effect: "promote_zone" },
   { id: "stone_form", name: "Stone Form", desc: "Piece becomes a king immediately but cannot capture for 2 turns.", rarity: "common", weight: 6, mode: "friendly", effect: "stone_form" },
   { id: "quicksand", name: "Quicksand", desc: "Hidden trap on an empty dark square — the next piece to end a turn there is frozen (trap invisible until it triggers).", rarity: "common", weight: 6, mode: "empty", effect: "quicksand" },
   { id: "create_foe", name: "Create Foe", desc: "Spawn an enemy man on any empty dark square.", rarity: "common", weight: 5, mode: "empty", effect: "create_foe" },

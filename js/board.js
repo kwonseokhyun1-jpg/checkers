@@ -109,7 +109,6 @@ export function createPiece(color, row, col, king = false) {
     knightCapture: false,
     pawnZeal: false,
     panicTurn: false,
-    promoteZone: false,
     succession: false,
     twinId: null,
     chameleonFrom: null,
@@ -615,7 +614,6 @@ export function tickEffects(board, color, state = null) {
           p.mindControlTurns = 0;
         }
       }
-      if (p.promoteZone) p.promoteZone = false;
       if (p.revivedNoCapture) p.revivedNoCapture = false;
       if (p.berserkNoCapture) p.berserkNoCapture = false;
       if (p.rustedTurns > 0) {

@@ -70,7 +70,6 @@ const ID_TO_CATEGORY = {
   poison: "attack",
   mind_control: "special",
   press: "control",
-  promote_zone: "movement",
   purify: "special",
   quick_march: "movement",
   quicksand: "trap",
