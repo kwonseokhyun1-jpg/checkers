@@ -19,6 +19,7 @@ import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSqu
 import {
   initCardState,
   isInstant,
+  isHiddenTrapSpell,
   getCardHint,
   getValidTargets,
   playInstant,
@@ -1397,6 +1398,11 @@ ${starLine}`;
     }
     this.render();
     this.pushPvpState();
+    if (this.state.turn === this.localColor && !this.state.gameOver) {
+      this.beginMovePhase();
+      this.setMessage(message || "Enemy Counterspell! Your spell fizzles.");
+      this.render();
+    }
   }
 
   async applySpellWithAnimation(card, picks) {
@@ -1630,6 +1636,17 @@ ${starLine}`;
         const def = entry.cardId ? getCardDef(entry.cardId) : null;
         const cardName = entry.cardName || def?.name || "Spell";
         const cardDesc = entry.cardDesc || def?.desc || entry.text || "";
+        const hiddenTrap =
+          !entry.countered &&
+          (entry.hidden || isHiddenTrapSpell({ effect: entry.cardEffect, id: entry.cardId }));
+
+        if (hiddenTrap) {
+          if (applyEntries) applyAiReplayEntry(this.state, entry, oc);
+          this.render();
+          await delay(AI_PACE.message);
+          afterSpell = true;
+          continue;
+        }
 
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell ai-log-entry--active">✦ Casting <strong>${cardName}</strong></div>`;
