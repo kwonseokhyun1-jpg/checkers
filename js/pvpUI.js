@@ -12,7 +12,17 @@ import {
   pieceSkinsConflict,
   SAME_PIECE_SKIN_JOIN_MESSAGE,
 } from "./cosmetics.js";
-import { PvpService, probePvpBackend, subscribeOpenRooms, isMysteryMode, PVP_MODE_MYSTERY, PVP_MODE_NORMAL } from "./pvp.js";
+import {
+  PvpService,
+  probePvpBackend,
+  subscribeOpenRooms,
+  isMysteryMode,
+  PVP_MODE_MYSTERY,
+  PVP_MODE_NORMAL,
+  saveActivePvpMatchId,
+  readActivePvpMatchId,
+  clearActivePvpMatchId,
+} from "./pvp.js";
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 import { recordPvpWin } from "./profileStats.js";
 import { saveProfile } from "./storage.js";
@@ -412,16 +422,15 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
   }
 
   function localDeckIdsFromRow(row) {
-    if (isMysteryMode(row)) {
-      const ids =
-        pvpService?.localColor === COLORS.RED ? row.host_deck_ids : row.guest_deck_ids;
-      return Array.isArray(ids) && ids.length === DECK_SIZE ? ids : null;
-    }
+    const storedIds =
+      pvpService?.localColor === COLORS.RED ? row.host_deck_ids : row.guest_deck_ids;
+    if (Array.isArray(storedIds) && storedIds.length === DECK_SIZE) return storedIds;
+    if (isMysteryMode(row)) return null;
     const deck = getSelectedDeck();
     return deck?.cardIds?.length === DECK_SIZE ? deck.cardIds : null;
   }
 
-  async function launchMatch(row) {
+  async function launchMatch(row, { resume = false } = {}) {
     const profile = getProfile();
     let deckIds = localDeckIdsFromRow(row);
     if (!deckIds && isMysteryMode(row) && pvpService?.matchId) {
@@ -457,10 +466,12 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       cosmeticsForUser(opponentIdFromRow(row), profile),
     ]);
 
-    await showPvpMatchLoading(root, {
-      local: { username: localName, cosmetics: localCosmetics },
-      opponent: { username: opponentName, cosmetics: opponentCosmetics },
-    });
+    if (!resume) {
+      await showPvpMatchLoading(root, {
+        local: { username: localName, cosmetics: localCosmetics },
+        opponent: { username: opponentName, cosmetics: opponentCosmetics },
+      });
+    }
 
     if (!pvpService || row.status !== "active" || !row.state_json) {
       matchLaunching = false;
@@ -484,6 +495,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         matchSession = null;
         matchLaunching = false;
         exitMatchMode();
+        clearActivePvpMatchId();
         pvpService?.dispose();
         pvpService = null;
         renderLobby();
@@ -525,15 +537,18 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     );
 
     matchSession.setMessage(
-      isMysteryMode(row)
-        ? localColor === row.turn
-          ? "Mystery Mode — your turn with a random deck!"
-          : `${opponentName} is thinking…`
-        : localColor === row.turn
-          ? "Your turn — cast a spell or move."
-          : `${opponentName} is thinking…`
+      resume
+        ? "Match resumed — pick up where you left off."
+        : isMysteryMode(row)
+          ? localColor === row.turn
+            ? "Mystery Mode — your turn with a random deck!"
+            : `${opponentName} is thinking…`
+          : localColor === row.turn
+            ? "Your turn — cast a spell or move."
+            : `${opponentName} is thinking…`
     );
     matchSession.render();
+    saveActivePvpMatchId(row.id);
     pvpService.startPolling(2000);
     matchLaunching = false;
   }
@@ -580,6 +595,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
           ? "Mystery room open — waiting under Your rooms."
           : "Room open — waiting under Your rooms."
       );
+      saveActivePvpMatchId(row.id);
       onMatchRow(row);
       void refreshOpenRooms(row);
     } catch (e) {
@@ -615,6 +631,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       const row = await svc.joinRoomById(matchId, guestDeckIds, await getDisplayName(), {
         guestPieceSkin,
       });
+      saveActivePvpMatchId(row.id);
       onMatchRow(row);
     } catch (e) {
       setStatus(e.message || "Could not join room", true);
@@ -622,6 +639,90 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       pvpService = null;
       startOpenRoomsSync();
     }
+  }
+
+  function isParticipant(row, userId) {
+    return row?.host_id === userId || row?.guest_id === userId;
+  }
+
+  function showPvpView() {
+    document.querySelectorAll(".tab-btn").forEach((b) => {
+      b.classList.toggle("active", b.dataset.tab === "pvp");
+    });
+    document.querySelectorAll(".view").forEach((v) => {
+      v.classList.toggle("hidden", v.id !== "view-pvp");
+    });
+  }
+
+  async function tryResumePvpMatch() {
+    if (matchSession || matchLaunching) return false;
+    const user = getCurrentUser();
+    if (!user || !isAuthAvailable()) return false;
+
+    const svc = ensurePvpService();
+    let row = null;
+
+    const savedId = readActivePvpMatchId();
+    if (savedId) {
+      try {
+        const fetched = await svc.fetchMatch(savedId);
+        if (fetched && isParticipant(fetched, user.id) && fetched.status !== "finished") {
+          row = fetched;
+        } else {
+          clearActivePvpMatchId();
+        }
+      } catch {
+        clearActivePvpMatchId();
+      }
+    }
+
+    if (!row) {
+      try {
+        row = await svc.listActiveMatchForUser();
+      } catch (e) {
+        setStatus(e.message || "Could not check for active PvP match", true);
+        return false;
+      }
+    }
+
+    if (row?.status === "active") {
+      showPvpView();
+      if (!row.state_json) {
+        svc.attachToMatch(row, user.id);
+        saveActivePvpMatchId(row.id);
+        svc.startPolling(800);
+        return true;
+      }
+      stopOpenRoomsSync();
+      hideHosting();
+      svc.attachToMatch(row, user.id);
+      matchLaunching = true;
+      try {
+        await launchMatch(row, { resume: true });
+        return !!matchSession;
+      } finally {
+        if (!matchSession) matchLaunching = false;
+      }
+    }
+
+    if (!pvpService?.matchId) {
+      try {
+        const waiting = await svc.listMyWaitingRooms();
+        if (waiting.length) {
+          showPvpView();
+          const room = waiting[0];
+          svc.attachToMatch({ ...room, status: "waiting" }, user.id);
+          saveActivePvpMatchId(room.id);
+          onMatchRow(room);
+          void refreshOpenRooms(room);
+          return true;
+        }
+      } catch {
+        /* lobby still usable */
+      }
+    }
+
+    return false;
   }
 
   async function cancelHostedRoom(matchId) {
@@ -635,6 +736,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       if (pvpService?.matchId === matchId) {
         pvpService.dispose();
         pvpService = null;
+        clearActivePvpMatchId();
       }
       hideHosting();
       setStatus("");
@@ -648,11 +750,16 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
 
   return {
     render() {
-      if (!matchSession) renderLobby();
+      if (!matchSession) {
+        renderLobby();
+        void tryResumePvpMatch();
+      }
     },
+    tryResume: tryResumePvpMatch,
     dispose() {
       stopOpenRoomsSync();
       matchSession = null;
+      clearActivePvpMatchId();
       pvpService?.dispose();
       pvpService = null;
     },

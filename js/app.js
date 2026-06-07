@@ -1726,7 +1726,10 @@ async function bootstrapAfterAuth() {
     console.warn("Auth init failed", e);
   }
   await refreshHeaderIdentity();
-  if (!tryResumeSavedMatch()) showTab("deck");
+  if (!tryResumeSavedMatch()) {
+    const resumedPvp = await pvpController?.tryResume?.();
+    if (!resumedPvp) showTab("deck");
+  }
 }
 
 init();
