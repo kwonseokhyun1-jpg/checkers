@@ -30,7 +30,7 @@ const TAGS = {
   detonate: ["Destroy self + adjacent enemies"],
   venom: ["Poison — 2 ticks destroys target"],
   bomb: ["Arm friendly piece", "On next move: explodes", "Kills all adjacent pieces"],
-  press: ["Enemy piece takes an extra move after its normal move"],
+  press: ["Opponent must move again after their normal move on their next turn"],
   mind_control: ["Convert an enemy man to your color for 2 of your turns", "Reverts to the enemy afterward"],
   barrier: ["Blocks enemies for 1 turn"],
   vengeance: ["Hidden trap — destroys the next enemy who captures your piece"],

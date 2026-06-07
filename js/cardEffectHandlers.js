@@ -383,7 +383,7 @@ const EFFECTS = {
     }
     return fail("No enemy 2 away to pull");
   },
-  press(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.pressExtraMove=true; return ok(); },
+  press(state, color, picks) { state.meta.pendingPressMove[opp(color)] = true; return ok("Press — opponent must move again next turn."); },
   vengeance(state, color, picks) {
     if (!state.meta.vengeance) state.meta.vengeance = { [COLORS.RED]: false, [COLORS.BLACK]: false };
     state.meta.vengeance[color] = true;

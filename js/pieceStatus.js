@@ -109,7 +109,6 @@ export function cleanseDebuffs(piece) {
   piece.rusted = false;
   piece.rustedTurns = 0;
   piece.noCaptureTurns = 0;
-  piece.pressExtraMove = false;
   piece.panicTurn = false;
   piece.revivedNoCapture = false;
   piece.berserkNoCapture = false;
