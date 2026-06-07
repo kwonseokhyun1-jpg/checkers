@@ -79,6 +79,14 @@ export const MAGE_TITLES = [
     achievementId: "silent_assassin",
   },
   {
+    id: "title_executioner",
+    name: "Executioner",
+    display: "Executioner",
+    rarity: "epic",
+    glow: "crimson",
+    achievementId: "executioner",
+  },
+  {
     id: "title_grand_magus",
     name: "Grand Magus",
     display: "Grand Magus",

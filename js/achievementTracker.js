@@ -65,6 +65,9 @@ export function createMatchAchievementTracker(profile, localColor) {
     if (effect === "chain_lightning") {
       applyIncrements([["storm_summoner", 1]]);
     }
+    if (effect === "execution") {
+      applyIncrements([["executioner", 1]]);
+    }
     if (effect === "sacrifice" || effect === "offering") {
       session.usedSacrificeOffering = true;
     }
