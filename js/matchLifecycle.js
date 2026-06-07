@@ -60,10 +60,12 @@ function cleanupOrphanMatchDom() {
   if (matchView?.classList.contains("hidden") && matchView.innerHTML.trim()) {
     matchView.innerHTML = "";
   }
-  const pvpView = document.getElementById("view-pvp");
   const pvpRoot = document.getElementById("pvp-match-root");
-  if (pvpRoot && pvpView?.classList.contains("hidden")) {
-    pvpRoot.remove();
+  if (pvpRoot) {
+    const leaveBtn = pvpRoot.querySelector("#btn-leave-match");
+    if (!isVisibleShellElement(leaveBtn)) {
+      pvpRoot.remove();
+    }
   }
 }
 
@@ -73,6 +75,7 @@ export function reconcileMatchShellState() {
   if (isLiveMatchUiVisible()) return false;
   cleanupOrphanMatchDom();
   exitMatchMode({ clearCheckpoint: false });
+  window.dispatchEvent(new CustomEvent("cc-match-shell-reconciled"));
   return true;
 }
 
