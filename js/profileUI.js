@@ -69,6 +69,11 @@ function profileTitleBadgeHtml(profile) {
   return titleId ? titleTagHtml(titleId) : "";
 }
 
+const PROFILE_ACCOUNT_GEAR_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+
 const PROFILE_STAT_ICONS = {
   pvp: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <path d="M14 10h20v6c0 6-4 10-10 10S14 22 14 16v-6z" fill="#e8c547"/>
@@ -130,6 +135,7 @@ function profileHeroCardHtml(cos, profile, { username, email }) {
             <div class="profile-hero-card__name-row">
               <h2 id="profile-hero-username" class="profile-hero-card__username">${escapeHtml(displayName)}</h2>
               ${titleBadge ? `<span class="profile-hero-card__title-badge">${titleBadge}</span>` : ""}
+              <button type="button" class="profile-account-gear" id="profile-account-gear" aria-label="Account settings" aria-expanded="false">${PROFILE_ACCOUNT_GEAR_ICON}</button>
             </div>
             ${email ? `<p class="profile-hero-card__email muted">${escapeHtml(email)}</p>` : ""}
           </div>
@@ -339,7 +345,6 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
       <div class="profile-section-tabs" role="tablist" aria-label="Profile sections">
         <button type="button" class="profile-section-tab active" role="tab" data-profile-section="cosmetics">Cosmetics</button>
         <button type="button" class="profile-section-tab" role="tab" data-profile-section="titles">Titles</button>
-        <button type="button" class="profile-section-tab" role="tab" data-profile-section="account">Account</button>
       </div>
       <div id="profile-section-cosmetics" class="profile-section-panel">
         <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
@@ -377,12 +382,23 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
     if (stack) stack.className = `profile-avatar-stack ${frameClassFor(c.equipped.frame)}`;
     const heroName = root.querySelector("#profile-hero-username");
     if (heroName) heroName.textContent = savedUsername || "Player";
-    const nameRow = root.querySelector(".profile-hero-card__name-row");
-    if (nameRow) {
-      const badge = profileTitleBadgeHtml(profile);
-      nameRow.innerHTML = `
-        <h2 id="profile-hero-username" class="profile-hero-card__username">${escapeHtml(savedUsername || "Player")}</h2>
-        ${badge ? `<span class="profile-hero-card__title-badge">${badge}</span>` : ""}`;
+    const badgeEl = root.querySelector(".profile-hero-card__title-badge");
+    const badge = profileTitleBadgeHtml(profile);
+    if (badge) {
+      if (badgeEl) {
+        badgeEl.innerHTML = badge;
+      } else {
+        const nameRow = root.querySelector(".profile-hero-card__name-row");
+        const gearBtn = root.querySelector("#profile-account-gear");
+        if (nameRow && gearBtn) {
+          const span = document.createElement("span");
+          span.className = "profile-hero-card__title-badge";
+          span.innerHTML = badge;
+          nameRow.insertBefore(span, gearBtn);
+        }
+      }
+    } else if (badgeEl) {
+      badgeEl.remove();
     }
     onTitleChanged?.();
   };
@@ -471,6 +487,11 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
     root.querySelectorAll(".profile-section-tab").forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.profileSection === section);
     });
+    const gearBtn = root.querySelector("#profile-account-gear");
+    if (gearBtn) {
+      gearBtn.classList.toggle("active", section === "account");
+      gearBtn.setAttribute("aria-expanded", section === "account" ? "true" : "false");
+    }
     const cosPanel = root.querySelector("#profile-section-cosmetics");
     if (cosPanel) {
       cosPanel.classList.toggle("hidden", section !== "cosmetics");
@@ -492,6 +513,7 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   for (const tab of root.querySelectorAll(".profile-section-tab")) {
     tab.addEventListener("click", () => setProfileSection(tab.dataset.profileSection));
   }
+  root.querySelector("#profile-account-gear")?.addEventListener("click", () => setProfileSection("account"));
   renderTitles();
   if (initialSection && initialSection !== "cosmetics") setProfileSection(initialSection);
 

@@ -3867,6 +3867,35 @@ body.chest-open-active {
 .profile-hero-card__title-badge {
   line-height: 1;
 }
+.profile-account-gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  margin-left: 0.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  color: rgba(232, 236, 244, 0.7);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.profile-account-gear svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.profile-account-gear:hover,
+.profile-account-gear.active {
+  color: #f4f6fb;
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.06);
+}
+.profile-account-gear:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
 .profile-hero-card__email {
   margin: 0;
   font-size: 0.82rem;
