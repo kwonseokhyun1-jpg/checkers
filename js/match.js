@@ -45,7 +45,12 @@ import { pickCoinFlipVictim, pickRandomTeleportDestination } from "./cardEffectH
 import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells } from "./cardEffectHandlers.js";
 import { isInDarknessZone } from "./gameMeta.js";
-import { saveMatchCheckpoint, clearMatchCheckpoint } from "./matchLifecycle.js";
+import {
+  saveMatchCheckpoint,
+  clearMatchCheckpoint,
+  consumeLeaveConfirmSkip,
+  clearPendingNavigationTab,
+} from "./matchLifecycle.js";
 import { createMatchAchievementTracker } from "./achievementTracker.js";
 import { recordSpellPlayed } from "./profileStats.js";
 import { saveProfile } from "./storage.js";
@@ -358,16 +363,22 @@ export class MatchSession {
     this.root.querySelector("#btn-end-cards")?.addEventListener("click", () => this.beginMovePhase());
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
     this.root.querySelector("#btn-leave-match")?.addEventListener("click", async () => {
+      const skipConfirm = consumeLeaveConfirmSkip();
       if (this.isPvp) {
-        if (!window.confirm("Leave this match? Your opponent wins automatically.")) return;
+        if (!skipConfirm && !window.confirm("Leave this match? Your opponent wins automatically.")) {
+          clearPendingNavigationTab();
+          return;
+        }
         await this.onPvpForfeit?.();
         this.onExit?.();
         return;
       }
-      if (window.confirm("Leave this match? Your progress is saved — you can resume when you return.")) {
-        saveMatchCheckpoint(this);
-        this.onExit?.();
+      if (!skipConfirm && !window.confirm("Leave this match? Your progress is saved — you can resume when you return.")) {
+        clearPendingNavigationTab();
+        return;
       }
+      saveMatchCheckpoint(this);
+      this.onExit?.();
     });
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
     this.$("pvp-history-prev")?.addEventListener("click", () => this.stepHistory(-1));

@@ -3,7 +3,7 @@ import { DECK_SIZE } from "./cardCatalog.js";
 import { COLORS } from "./board.js";
 import { MatchSession, isPvpTerminalBoard } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
-import { enterMatchMode, exitMatchMode, reconcileMatchShellState } from "./matchLifecycle.js";
+import { enterMatchMode, exitMatchMode, reconcileMatchShellState, consumePendingNavigationTab } from "./matchLifecycle.js";
 import {
   COSMETIC_BY_ID,
   cosmeticsWithPieceSkin,
@@ -50,7 +50,7 @@ function roomModeLabel(room) {
  * @param {() => object} opts.getProfile
  * @param {() => void} opts.openAuthModal
  */
-export function initPvpUI({ root, getProfile, openAuthModal }) {
+export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
   if (!root) return { render: () => {}, dispose: () => {} };
 
   let pvpService = null;
@@ -505,7 +505,9 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
           clearActivePvpMatchId();
           pvpService?.dispose();
           pvpService = null;
-          renderLobby();
+          const tab = consumePendingNavigationTab();
+          if (tab) onNavigateTab?.(tab);
+          else renderLobby();
         },
         null,
         {

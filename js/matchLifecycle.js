@@ -5,19 +5,73 @@ const CHECKPOINT_KEY = "cc_match_checkpoint";
 const CHECKPOINT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 let checkpointMeta = null;
+let pendingNavigationTab = null;
+let skipNextLeaveConfirm = false;
 
 export function isMatchActive() {
   return document.body.classList.contains("match-active");
 }
 
-/** True when the in-match board UI (with Leave match) is on screen. */
-export function isLiveMatchUiVisible() {
-  return Boolean(document.querySelector("#btn-leave-match"));
+function isVisibleShellElement(el) {
+  if (!el || !(el instanceof Element)) return false;
+  if (el.closest(".hidden")) return false;
+  const style = getComputedStyle(el);
+  if (style.display === "none" || style.visibility === "hidden") return false;
+  return true;
 }
 
-/** Drop stale match-active when the shell shows menus/decks but no live match UI. */
+/** True when the in-match board UI (with Leave match) is visible on screen. */
+export function isLiveMatchUiVisible() {
+  const leaveBtn = document.querySelector("#btn-leave-match");
+  if (!isVisibleShellElement(leaveBtn)) return false;
+  const matchView = document.getElementById("view-match");
+  const pvpView = document.getElementById("view-pvp");
+  if (matchView && !matchView.classList.contains("hidden") && matchView.contains(leaveBtn)) return true;
+  if (pvpView && !pvpView.classList.contains("hidden") && leaveBtn.closest("#view-pvp")) return true;
+  return false;
+}
+
+export function setPendingNavigationTab(tab) {
+  pendingNavigationTab = tab;
+}
+
+export function consumePendingNavigationTab() {
+  const tab = pendingNavigationTab;
+  pendingNavigationTab = null;
+  return tab;
+}
+
+export function clearPendingNavigationTab() {
+  pendingNavigationTab = null;
+}
+
+export function armLeaveConfirmSkip() {
+  skipNextLeaveConfirm = true;
+}
+
+export function consumeLeaveConfirmSkip() {
+  const armed = skipNextLeaveConfirm;
+  skipNextLeaveConfirm = false;
+  return armed;
+}
+
+function cleanupOrphanMatchDom() {
+  const matchView = document.getElementById("view-match");
+  if (matchView?.classList.contains("hidden") && matchView.innerHTML.trim()) {
+    matchView.innerHTML = "";
+  }
+  const pvpView = document.getElementById("view-pvp");
+  const pvpRoot = document.getElementById("pvp-match-root");
+  if (pvpRoot && pvpView?.classList.contains("hidden")) {
+    pvpRoot.remove();
+  }
+}
+
+/** Drop stale match-active when menus/decks show but no visible match UI. */
 export function reconcileMatchShellState() {
-  if (!isMatchActive() || isLiveMatchUiVisible()) return false;
+  if (!isMatchActive()) return false;
+  if (isLiveMatchUiVisible()) return false;
+  cleanupOrphanMatchDom();
   exitMatchMode({ clearCheckpoint: false });
   return true;
 }

@@ -70,10 +70,6 @@ body {
 
 
 
-body.match-active .game-nav.tabs {
-  opacity: 0.65;
-}
-
 body.match-active .game-main {
   padding-bottom: calc(0.75rem + var(--game-safe-bottom, 0px));
 }
