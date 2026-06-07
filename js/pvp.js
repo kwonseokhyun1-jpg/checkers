@@ -24,6 +24,62 @@ function isMissingRpc(error) {
   return code === "PGRST202" || msg.includes("Could not find the function");
 }
 
+function isMissingColumnError(error, columnName) {
+  const msg = String(error?.message || "");
+  return (
+    error?.code === "42703" ||
+    error?.code === "PGRST204" ||
+    msg.includes(`column pvp_matches.${columnName} does not exist`) ||
+    msg.includes(`Could not find the '${columnName}' column`)
+  );
+}
+
+/** null = unknown; true/false after first probe against live Supabase. */
+let _pieceSkinColumnsAvailable = null;
+
+const PVP_LIST_COLUMNS_BASE =
+  "id, host_id, host_display_name, created_at, status, guest_id, match_mode";
+
+async function probePieceSkinColumns(sb) {
+  if (_pieceSkinColumnsAvailable !== null) return _pieceSkinColumnsAvailable;
+  const { error } = await sb.from("pvp_matches").select("host_piece_skin").limit(0);
+  if (!error) {
+    _pieceSkinColumnsAvailable = true;
+    return true;
+  }
+  if (isMissingColumnError(error, "host_piece_skin")) {
+    _pieceSkinColumnsAvailable = false;
+    return false;
+  }
+  _pieceSkinColumnsAvailable = true;
+  return true;
+}
+
+function pvpListColumns(withSkins) {
+  return withSkins ? `${PVP_LIST_COLUMNS_BASE}, host_piece_skin` : PVP_LIST_COLUMNS_BASE;
+}
+
+function normalizeRoomRow(row, withSkins) {
+  if (withSkins) {
+    return { ...row, host_piece_skin: row.host_piece_skin || DEFAULT_PIECE_SKIN };
+  }
+  return { ...row, host_piece_skin: DEFAULT_PIECE_SKIN };
+}
+
+function guestJoinUpdateFields(userId, guestDeckIds, displayName, guestPieceSkin, withSkins) {
+  const fields = {
+    guest_id: userId,
+    guest_deck_ids: guestDeckIds,
+    guest_display_name: displayName,
+    status: "active",
+    turn: COLORS.RED,
+    version: 1,
+    updated_at: new Date().toISOString(),
+  };
+  if (withSkins) fields.guest_piece_skin = guestPieceSkin;
+  return fields;
+}
+
 /** Bumped when the client should run a one-time global waiting-room reset. */
 export const PVP_WAITING_RESET_KEY = "pvp_waiting_reset_v3";
 
@@ -99,21 +155,20 @@ export class PvpService {
       throw new Error("Select a valid 30-card deck first");
     }
 
+    const withSkins = await probePieceSkinColumns(sb);
     let code = randomCode();
     for (let attempt = 0; attempt < 5; attempt++) {
-      const { data, error } = await sb
-        .from("pvp_matches")
-        .insert({
-          code,
-          host_id: user.id,
-          host_deck_ids: mystery ? null : hostDeckIds,
-          host_display_name: displayName,
-          host_piece_skin: hostPieceSkin || DEFAULT_PIECE_SKIN,
-          status: "waiting",
-          match_mode: mystery ? PVP_MODE_MYSTERY : PVP_MODE_NORMAL,
-        })
-        .select()
-        .single();
+      const row = {
+        code,
+        host_id: user.id,
+        host_deck_ids: mystery ? null : hostDeckIds,
+        host_display_name: displayName,
+        status: "waiting",
+        match_mode: mystery ? PVP_MODE_MYSTERY : PVP_MODE_NORMAL,
+      };
+      if (withSkins) row.host_piece_skin = hostPieceSkin || DEFAULT_PIECE_SKIN;
+
+      const { data, error } = await sb.from("pvp_matches").insert(row).select().single();
       if (!error) {
         this.matchId = data.id;
         this.role = "host";
@@ -132,11 +187,10 @@ export class PvpService {
     const user = getCurrentUser();
     if (!sb || !user) return [];
 
+    const withSkins = await probePieceSkinColumns(sb);
     const { data, error } = await sb
       .from("pvp_matches")
-      .select(
-        "id, host_id, host_display_name, host_piece_skin, created_at, status, guest_id, match_mode"
-      )
+      .select(pvpListColumns(withSkins))
       .eq("host_id", user.id)
       .eq("status", "waiting")
       .is("guest_id", null)
@@ -144,7 +198,7 @@ export class PvpService {
       .limit(10);
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map((row) => normalizeRoomRow(row, withSkins));
   }
 
   async listOthersWaitingRooms() {
@@ -152,11 +206,10 @@ export class PvpService {
     const user = getCurrentUser();
     if (!sb || !user) return [];
 
+    const withSkins = await probePieceSkinColumns(sb);
     const { data, error } = await sb
       .from("pvp_matches")
-      .select(
-        "id, host_id, host_display_name, host_piece_skin, created_at, status, guest_id, match_mode"
-      )
+      .select(pvpListColumns(withSkins))
       .eq("status", "waiting")
       .is("guest_id", null)
       .neq("host_id", user.id)
@@ -164,7 +217,7 @@ export class PvpService {
       .limit(30);
 
     if (error) throw error;
-    return data || [];
+    return (data || []).map((row) => normalizeRoomRow(row, withSkins));
   }
 
   /** @deprecated use listMyWaitingRooms + listOthersWaitingRooms */
@@ -208,16 +261,19 @@ export class PvpService {
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
+    const withSkins = await probePieceSkinColumns(sb);
     const normalized = code.trim().toUpperCase();
     let data = null;
 
-    const rpc = await sb.rpc("pvp_join_by_code", {
+    const rpcArgs = {
       room_code: normalized,
       guest_deck_ids: guestDeckIds,
       guest_display_name: displayName,
       state_json: null,
-      guest_piece_skin: guestPieceSkin,
-    });
+    };
+    if (withSkins) rpcArgs.guest_piece_skin = guestPieceSkin;
+
+    const rpc = await sb.rpc("pvp_join_by_code", rpcArgs);
 
     if (!rpc.error && rpc.data) {
       data = rpc.data;
@@ -239,16 +295,7 @@ export class PvpService {
 
       const { data: updated, error } = await sb
         .from("pvp_matches")
-        .update({
-          guest_id: user.id,
-          guest_deck_ids: guestDeckIds,
-          guest_display_name: displayName,
-          guest_piece_skin: guestPieceSkin,
-          status: "active",
-          turn: COLORS.RED,
-          version: 1,
-          updated_at: new Date().toISOString(),
-        })
+        .update(guestJoinUpdateFields(user.id, guestDeckIds, displayName, guestPieceSkin, withSkins))
         .eq("id", row.id)
         .eq("status", "waiting")
         .select()
@@ -266,23 +313,26 @@ export class PvpService {
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
+    const withSkins = await probePieceSkinColumns(sb);
     const mystery = isMysteryMode(row);
     this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
     if (mystery) {
-      return this.joinMysteryRow(row, displayName, { guestPieceSkin });
+      return this.joinMysteryRow(row, displayName, { guestPieceSkin, withSkins });
     }
 
     if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
       throw new Error("Select a valid 30-card deck first");
     }
 
-    const rpc = await sb.rpc("pvp_join_by_code", {
+    const rpcArgs = {
       room_code: row.code,
       guest_deck_ids: guestDeckIds,
       guest_display_name: displayName,
       state_json: null,
-      guest_piece_skin: guestPieceSkin,
-    });
+    };
+    if (withSkins) rpcArgs.guest_piece_skin = guestPieceSkin;
+
+    const rpc = await sb.rpc("pvp_join_by_code", rpcArgs);
 
     let data = null;
     if (!rpc.error && rpc.data) {
@@ -292,16 +342,7 @@ export class PvpService {
     } else {
       const { data: updated, error } = await sb
         .from("pvp_matches")
-        .update({
-          guest_id: user.id,
-          guest_deck_ids: guestDeckIds,
-          guest_display_name: displayName,
-          guest_piece_skin: guestPieceSkin,
-          status: "active",
-          turn: COLORS.RED,
-          version: 1,
-          updated_at: new Date().toISOString(),
-        })
+        .update(guestJoinUpdateFields(user.id, guestDeckIds, displayName, guestPieceSkin, withSkins))
         .eq("id", row.id)
         .eq("status", "waiting")
         .select()
@@ -314,11 +355,16 @@ export class PvpService {
     return this.finalizeGuestJoin(data, guestDeckIds);
   }
 
-  async joinMysteryRow(row, displayName, { guestPieceSkin = DEFAULT_PIECE_SKIN } = {}) {
+  async joinMysteryRow(
+    row,
+    displayName,
+    { guestPieceSkin = DEFAULT_PIECE_SKIN, withSkins = null } = {}
+  ) {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
+    const skinsEnabled = withSkins ?? (await probePieceSkinColumns(sb));
     this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
 
     const hostDeckIds = buildMysteryDeck();
@@ -327,20 +373,22 @@ export class PvpService {
     state.turn = COLORS.RED;
     const stateJson = serializeMatchState(state);
 
+    const updateFields = {
+      guest_id: user.id,
+      guest_deck_ids: guestDeckIds,
+      host_deck_ids: hostDeckIds,
+      guest_display_name: displayName,
+      status: "active",
+      state_json: stateJson,
+      turn: COLORS.RED,
+      version: 1,
+      updated_at: new Date().toISOString(),
+    };
+    if (skinsEnabled) updateFields.guest_piece_skin = guestPieceSkin;
+
     const { data, error } = await sb
       .from("pvp_matches")
-      .update({
-        guest_id: user.id,
-        guest_deck_ids: guestDeckIds,
-        host_deck_ids: hostDeckIds,
-        guest_display_name: displayName,
-        guest_piece_skin: guestPieceSkin,
-        status: "active",
-        state_json: stateJson,
-        turn: COLORS.RED,
-        version: 1,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateFields)
       .eq("id", row.id)
       .eq("status", "waiting")
       .is("guest_id", null)
@@ -557,11 +605,20 @@ export function subscribeOpenRooms(onChange) {
 export async function probePvpBackend() {
   const sb = getSupabase();
   if (!sb) return { ok: false, reason: "Supabase not configured" };
+
+  const withSkins = await probePieceSkinColumns(sb);
+  const hints = [];
+  if (!withSkins) {
+    hints.push(
+      "Run supabase/migration_pvp_piece_skin.sql (or fix_pvp_rls.sql) in the SQL Editor for custom piece skins in PvP."
+    );
+  }
+
   const { error } = await sb.rpc("pvp_find_waiting_room");
   if (error && isMissingRpc(error)) {
-    // Join/quick match can still work via RLS after fix_pvp_rls.sql (SELECT policy only).
-    return { ok: true, hint: "Optional: run supabase/fix_pvp_rls.sql for quick-match RPCs." };
+    hints.push("Optional: run supabase/fix_pvp_rls.sql for quick-match RPCs.");
+    return { ok: true, hint: hints.join(" "), legacySchema: !withSkins };
   }
   if (error) return { ok: false, reason: error.message };
-  return { ok: true };
+  return hints.length ? { ok: true, hint: hints.join(" "), legacySchema: !withSkins } : { ok: true };
 }

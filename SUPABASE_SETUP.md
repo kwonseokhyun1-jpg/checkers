@@ -55,6 +55,8 @@ Commit `js/supabaseConfig.js` with your anon key, or inject it in CI from a repo
 
 Run `supabase/fix_pvp_rls.sql` in the [SQL Editor](https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/sql/new). This fixes row-level security so players can find/join waiting rooms and adds join/cancel/clear RPCs.
 
+If the PvP lobby shows **`column pvp_matches.host_piece_skin does not exist`**, run `supabase/migration_pvp_piece_skin.sql` in the same SQL Editor (or re-run the latest `fix_pvp_rls.sql`, which includes those columns). The game falls back to classic piece skins until that migration is applied.
+
 To grant **+1000 gems** to every signed-in player once, run `supabase/grant_gems_1000.sql` in the same SQL Editor.
 
 To delete every open waiting room immediately, run `supabase/clear_waiting_pvp_rooms.sql` in the same editor.
