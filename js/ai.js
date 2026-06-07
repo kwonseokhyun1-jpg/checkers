@@ -323,7 +323,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
         });
       }
     }
-    if (state.meta.pendingDouble?.[aiColor] && move.type === "step") {
+    if (state.meta.pendingDouble?.[aiColor]) {
       const extra = getAllMovesForColor(state.board, color, state).filter(
         (m) => m.from[0] === br && m.from[1] === bc && (m.type === "step" || m.type === "jump")
       );
