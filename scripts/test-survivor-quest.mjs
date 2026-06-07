@@ -5,7 +5,7 @@ import { COLORS } from "../js/board.js";
 import { createMatchState } from "../js/match.js";
 import { createMatchAchievementTracker } from "../js/achievementTracker.js";
 import { isAchievementComplete } from "../js/achievements.js";
-import { pieceSkinsConflict } from "../js/cosmetics.js";
+import { pieceSkinsConflict, effectiveHostPieceSkin } from "../js/cosmetics.js";
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
@@ -56,8 +56,28 @@ function testDefaultSkinJoinAllowed() {
   assert(!pieceSkinsConflict("skin_classic", "skin_ember"), "different skins should not conflict");
 }
 
+function testEffectiveHostPieceSkin() {
+  assert(
+    effectiveHostPieceSkin("skin_void", "skin_ember") === "skin_void",
+    "stored custom skin should win over profile"
+  );
+  assert(
+    effectiveHostPieceSkin("skin_classic", "skin_void") === "skin_void",
+    "profile skin should be used when row still has default"
+  );
+  assert(
+    effectiveHostPieceSkin("skin_classic", "skin_classic") === "skin_classic",
+    "classic profile should stay classic when row is default"
+  );
+  assert(
+    effectiveHostPieceSkin(null, "skin_frost") === "skin_frost",
+    "missing stored skin should fall back to profile"
+  );
+}
+
 testCloseCallWithOnePiece();
 testCloseCallVengeanceWin();
 testCloseCallDoesNotTriggerWithTwoPieces();
 testDefaultSkinJoinAllowed();
+testEffectiveHostPieceSkin();
 console.log("All survivor quest / PvP skin tests passed.");

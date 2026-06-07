@@ -7,6 +7,8 @@ import { buildMysteryDeck } from "./deckRules.js";
 import {
   DEFAULT_PIECE_SKIN,
   SAME_PIECE_SKIN_JOIN_MESSAGE,
+  effectiveHostPieceSkin,
+  pieceSkinFromProfileRow,
   pieceSkinsConflict,
 } from "./cosmetics.js";
 
@@ -64,6 +66,42 @@ function normalizeRoomRow(row, withSkins) {
     return { ...row, host_piece_skin: row.host_piece_skin || DEFAULT_PIECE_SKIN };
   }
   return { ...row, host_piece_skin: DEFAULT_PIECE_SKIN };
+}
+
+async function fetchProfilePieceSkins(sb, userIds) {
+  const uniqueIds = [...new Set(userIds.filter(Boolean))];
+  if (!uniqueIds.length) return new Map();
+
+  const { data, error } = await sb
+    .from("profiles")
+    .select("id, profile_json")
+    .in("id", uniqueIds);
+
+  if (error) throw error;
+
+  const skins = new Map();
+  for (const row of data || []) {
+    skins.set(row.id, pieceSkinFromProfileRow(row));
+  }
+  return skins;
+}
+
+async function enrichRoomRowsWithHostSkins(sb, rows, withSkins) {
+  const normalized = (rows || []).map((row) => normalizeRoomRow(row, withSkins));
+  const profileHostIds = normalized
+    .filter((row) => (row.host_piece_skin || DEFAULT_PIECE_SKIN) === DEFAULT_PIECE_SKIN)
+    .map((row) => row.host_id);
+  const profileSkins = await fetchProfilePieceSkins(sb, profileHostIds);
+
+  return normalized.map((row) => {
+    const stored = row.host_piece_skin || DEFAULT_PIECE_SKIN;
+    if (stored !== DEFAULT_PIECE_SKIN) return row;
+    const profileSkin = profileSkins.get(row.host_id);
+    return {
+      ...row,
+      host_piece_skin: effectiveHostPieceSkin(stored, profileSkin),
+    };
+  });
 }
 
 function guestJoinUpdateFields(userId, guestDeckIds, displayName, guestPieceSkin, withSkins) {
@@ -265,7 +303,7 @@ export class PvpService {
       .limit(10);
 
     if (error) throw error;
-    return (data || []).map((row) => normalizeRoomRow(row, withSkins));
+    return enrichRoomRowsWithHostSkins(sb, data, withSkins);
   }
 
   async listOthersWaitingRooms() {
@@ -284,7 +322,7 @@ export class PvpService {
       .limit(30);
 
     if (error) throw error;
-    return (data || []).map((row) => normalizeRoomRow(row, withSkins));
+    return enrichRoomRowsWithHostSkins(sb, data, withSkins);
   }
 
   /** @deprecated use listMyWaitingRooms + listOthersWaitingRooms */
@@ -312,7 +350,6 @@ export class PvpService {
     if (findErr) throw findErr;
     if (!row) throw new Error("That room is no longer available.");
     if (row.host_id === user.id) throw new Error("You cannot join your own room");
-    this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
 
     return this.joinWaitingRow(row, guestDeckIds, displayName, { guestPieceSkin });
   }
@@ -323,56 +360,35 @@ export class PvpService {
     }
   }
 
+  async resolveEffectiveHostPieceSkin(sb, row) {
+    const stored = row?.host_piece_skin || DEFAULT_PIECE_SKIN;
+    if (stored !== DEFAULT_PIECE_SKIN) return stored;
+
+    const skins = await fetchProfilePieceSkins(sb, [row?.host_id]);
+    const profileSkin = skins.get(row?.host_id);
+    return effectiveHostPieceSkin(stored, profileSkin);
+  }
+
   async joinRoom(code, guestDeckIds, displayName, { guestPieceSkin = DEFAULT_PIECE_SKIN } = {}) {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
-    const withSkins = await probePieceSkinColumns(sb);
     const normalized = code.trim().toUpperCase();
-    let data = null;
 
-    const rpcArgs = {
-      room_code: normalized,
-      guest_deck_ids: guestDeckIds,
-      guest_display_name: displayName,
-      state_json: null,
-    };
-    if (withSkins) rpcArgs.guest_piece_skin = guestPieceSkin;
+    const { data: waitingRow, error: findErr } = await sb
+      .from("pvp_matches")
+      .select("*")
+      .eq("code", normalized)
+      .eq("status", "waiting")
+      .is("guest_id", null)
+      .maybeSingle();
 
-    const rpc = await sb.rpc("pvp_join_by_code", rpcArgs);
+    if (findErr) throw findErr;
+    if (!waitingRow) throw new Error("Room not found or already full.");
+    if (waitingRow.host_id === user.id) throw new Error("You cannot join your own room");
 
-    if (!rpc.error && rpc.data) {
-      data = rpc.data;
-    } else if (rpc.error && !isMissingRpc(rpc.error)) {
-      throw rpc.error;
-    } else {
-      const { data: row, error: findErr } = await sb
-        .from("pvp_matches")
-        .select("*")
-        .eq("code", normalized)
-        .eq("status", "waiting")
-        .is("guest_id", null)
-        .maybeSingle();
-
-      if (findErr) throw findErr;
-      if (!row) throw new Error("Room not found or already full.");
-      if (row.host_id === user.id) throw new Error("You cannot join your own room");
-      this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
-
-      const { data: updated, error } = await sb
-        .from("pvp_matches")
-        .update(guestJoinUpdateFields(user.id, guestDeckIds, displayName, guestPieceSkin, withSkins))
-        .eq("id", row.id)
-        .eq("status", "waiting")
-        .select()
-        .single();
-
-      if (error) throw error;
-      data = updated;
-    }
-
-    return this.finalizeGuestJoin(data, guestDeckIds);
+    return this.joinWaitingRow(waitingRow, guestDeckIds, displayName, { guestPieceSkin });
   }
 
   async joinWaitingRow(row, guestDeckIds, displayName, { guestPieceSkin = DEFAULT_PIECE_SKIN } = {}) {
@@ -382,7 +398,9 @@ export class PvpService {
 
     const withSkins = await probePieceSkinColumns(sb);
     const mystery = isMysteryMode(row);
-    this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
+    const resolvedHostSkin = await this.resolveEffectiveHostPieceSkin(sb, row);
+    row = { ...row, host_piece_skin: resolvedHostSkin };
+    this.assertDistinctPieceSkins(resolvedHostSkin, guestPieceSkin);
     if (mystery) {
       return this.joinMysteryRow(row, displayName, { guestPieceSkin, withSkins });
     }
@@ -432,7 +450,8 @@ export class PvpService {
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
     const skinsEnabled = withSkins ?? (await probePieceSkinColumns(sb));
-    this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
+    const resolvedHostSkin = await this.resolveEffectiveHostPieceSkin(sb, row);
+    this.assertDistinctPieceSkins(resolvedHostSkin, guestPieceSkin);
 
     const hostDeckIds = buildMysteryDeck();
     const guestDeckIds = buildMysteryDeck();
