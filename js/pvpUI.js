@@ -5,7 +5,7 @@ import { MatchSession, isPvpTerminalBoard } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { getEquippedCosmetics, normalizeCosmetics } from "./cosmetics.js";
-import { PvpService, probePvpBackend, subscribeOpenRooms, isMysteryMode, PVP_MODE_MYSTERY } from "./pvp.js";
+import { PvpService, probePvpBackend, subscribeOpenRooms, isMysteryMode, PVP_MODE_MYSTERY, PVP_MODE_NORMAL } from "./pvp.js";
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 import { recordPvpWin } from "./profileStats.js";
 import { saveProfile } from "./storage.js";
@@ -98,26 +98,33 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
           <h2 class="panel-head__title">PvP Arena</h2>
           <p class="panel-head__desc">Host a room or join an open match below. You play red; your opponent plays black.</p>
         </header>
-        <label class="label-sm" for="pvp-deck-select">Your deck</label>
-        <select id="pvp-deck-select" class="select-input">
-          ${
-            decks.length
-              ? decks
-                  .map(
-                    (d) =>
-                      `<option value="${d.id}" ${d.id === selected?.id ? "selected" : ""}>${escapeHtml(d.name)}</option>`
-                  )
-                  .join("")
-              : '<option value="">No valid deck</option>'
-          }
-        </select>
+        <div class="pvp-setup-row">
+          <div class="pvp-setup-field">
+            <label class="label-sm" for="pvp-deck-select">Your deck</label>
+            <select id="pvp-deck-select" class="select-input">
+              ${
+                decks.length
+                  ? decks
+                      .map(
+                        (d) =>
+                          `<option value="${d.id}" ${d.id === selected?.id ? "selected" : ""}>${escapeHtml(d.name)}</option>`
+                      )
+                      .join("")
+                  : '<option value="">No valid deck</option>'
+              }
+            </select>
+          </div>
+          <div class="pvp-setup-field">
+            <label class="label-sm" for="pvp-mode-select">Mode</label>
+            <select id="pvp-mode-select" class="select-input">
+              <option value="${PVP_MODE_NORMAL}" selected>Normal</option>
+              <option value="${PVP_MODE_MYSTERY}">Mystery</option>
+            </select>
+          </div>
+        </div>
+        <p id="pvp-mode-hint" class="pvp-mode-hint hidden">Mystery — both players get a fully random deck, including spells you haven't unlocked.</p>
         <div class="pvp-actions">
           <button type="button" class="btn-primary btn-lg" id="pvp-host">Host a room</button>
-        </div>
-        <div class="pvp-mystery-section">
-          <h3 class="pvp-room-section__title">Mystery Mode</h3>
-          <p class="pvp-room-section__hint">Both players get a fully random deck — any spell from the game, even ones you haven't unlocked.</p>
-          <button type="button" class="btn-secondary btn-lg pvp-mystery-host" id="pvp-host-mystery">Host Mystery room</button>
         </div>
         <div class="pvp-room-section pvp-your-rooms">
           <h3 class="pvp-room-section__title">Your rooms</h3>
@@ -138,7 +145,8 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       </section>`;
 
     root.querySelector("#pvp-host")?.addEventListener("click", () => void hostRoom());
-    root.querySelector("#pvp-host-mystery")?.addEventListener("click", () => void hostMysteryRoom());
+    root.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
+    syncModeUi();
     startOpenRoomsSync();
 
     void probePvpBackend().then((probe) => {
@@ -229,6 +237,18 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         if (id) void cancelHostedRoom(id);
       });
     });
+  }
+
+  function getSelectedMode() {
+    return root.querySelector("#pvp-mode-select")?.value || PVP_MODE_NORMAL;
+  }
+
+  function syncModeUi() {
+    const mystery = getSelectedMode() === PVP_MODE_MYSTERY;
+    const deckSelect = root.querySelector("#pvp-deck-select");
+    const hint = root.querySelector("#pvp-mode-hint");
+    if (deckSelect) deckSelect.disabled = mystery;
+    hint?.classList.toggle("hidden", !mystery);
   }
 
   function getSelectedDeck() {
@@ -344,13 +364,20 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       return;
     }
 
-    if (row.status === "active" && row.state_json && !matchSession && !matchLaunching) {
-      stopOpenRoomsSync();
-      hideHosting();
-      matchLaunching = true;
-      void launchMatch(row).finally(() => {
-        if (!matchSession) matchLaunching = false;
-      });
+    if (row.status === "active" && !matchSession && !matchLaunching) {
+      if (row.state_json) {
+        stopOpenRoomsSync();
+        hideHosting();
+        matchLaunching = true;
+        void launchMatch(row).finally(() => {
+          if (!matchSession) matchLaunching = false;
+        });
+        return;
+      }
+      if (isMysteryMode(row) && pvpService?.role === "host") {
+        pvpService.startPolling(800);
+      }
+      return;
     }
   }
 
@@ -366,7 +393,18 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
 
   async function launchMatch(row) {
     const profile = getProfile();
-    const deckIds = localDeckIdsFromRow(row);
+    let deckIds = localDeckIdsFromRow(row);
+    if (!deckIds && isMysteryMode(row) && pvpService?.matchId) {
+      try {
+        const fresh = await pvpService.fetchMatch(pvpService.matchId);
+        if (fresh) {
+          row = fresh;
+          deckIds = localDeckIdsFromRow(row);
+        }
+      } catch {
+        /* retry below */
+      }
+    }
     if (!deckIds) {
       matchLaunching = false;
       setStatus(
@@ -473,38 +511,15 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     return pvpService;
   }
 
-  async function hostMysteryRoom() {
-    if (!getCurrentUser()) {
-      openAuthModal();
-      return;
-    }
-
-    pvpService?.dispose();
-    pvpService = null;
-
-    try {
-      setStatus("Opening Mystery room…");
-      const svc = ensurePvpService();
-      const row = await svc.createRoom(null, await getDisplayName(), { mode: PVP_MODE_MYSTERY });
-      renderRoomLists([row], []);
-      setStatus("Mystery room open — waiting under Your rooms.");
-      onMatchRow(row);
-      void refreshOpenRooms(row);
-    } catch (e) {
-      setStatus(e.message || "Could not host a Mystery room", true);
-      pvpService?.dispose();
-      pvpService = null;
-    }
-  }
-
   async function hostRoom() {
     if (!getCurrentUser()) {
       openAuthModal();
       return;
     }
 
+    const mystery = getSelectedMode() === PVP_MODE_MYSTERY;
     const deck = getSelectedDeck();
-    if (!deck || deck.cardIds.length !== DECK_SIZE) {
+    if (!mystery && (!deck || deck.cardIds.length !== DECK_SIZE)) {
       setStatus("Build a 30-card deck in Decks first.", true);
       return;
     }
@@ -513,11 +528,19 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     pvpService = null;
 
     try {
-      setStatus("Opening your room…");
+      setStatus(mystery ? "Opening Mystery room…" : "Opening your room…");
       const svc = ensurePvpService();
-      const row = await svc.createRoom(deck.cardIds, await getDisplayName());
+      const row = await svc.createRoom(
+        mystery ? null : deck.cardIds,
+        await getDisplayName(),
+        { matchMode: getSelectedMode() }
+      );
       renderRoomLists([row], []);
-      setStatus("Room open — waiting under Your rooms.");
+      setStatus(
+        mystery
+          ? "Mystery room open — waiting under Your rooms."
+          : "Room open — waiting under Your rooms."
+      );
       onMatchRow(row);
       void refreshOpenRooms(row);
     } catch (e) {
