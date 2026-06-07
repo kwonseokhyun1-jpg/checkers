@@ -198,11 +198,10 @@ export class PvpService {
       .eq("status", "active")
       .or(`host_id.eq.${user.id},guest_id.eq.${user.id}`)
       .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
 
     if (error) throw error;
-    return data;
+    return data?.[0] ?? null;
   }
 
   async createRoom(

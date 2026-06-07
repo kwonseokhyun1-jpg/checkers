@@ -192,6 +192,16 @@ function hideStageModal() {
   document.body.classList.remove("adventure-stage-open");
 }
 
+function focusPvpTab() {
+  activeTab = "pvp";
+  document.querySelectorAll(".tab-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.tab === "pvp");
+  });
+  document.querySelectorAll(".view").forEach((v) => {
+    v.classList.toggle("hidden", v.id !== "view-pvp");
+  });
+}
+
 function showTab(tab) {
   if (isMatchActive()) return;
   dismissTutorial({ persist: true, profile, saveProfile });
@@ -1720,7 +1730,6 @@ async function bootstrapAfterAuth() {
       updateCurrencyHeader();
       renderDeckList();
       renderStarsShop();
-      pvpController?.render();
     }
   } catch (e) {
     console.warn("Auth init failed", e);
@@ -1728,7 +1737,8 @@ async function bootstrapAfterAuth() {
   await refreshHeaderIdentity();
   if (!tryResumeSavedMatch()) {
     const resumedPvp = await pvpController?.tryResume?.();
-    if (!resumedPvp) showTab("deck");
+    if (resumedPvp) focusPvpTab();
+    else showTab("deck");
   }
 }
 

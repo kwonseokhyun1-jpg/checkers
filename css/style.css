@@ -4788,6 +4788,22 @@ body.chest-open-active {
   min-height: 1.5rem;
 }
 .pvp-status--error { color: var(--accent-red); }
+.pvp-resume-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--accent-gold);
+  border-radius: var(--radius-sm);
+  background: rgba(212, 175, 55, 0.08);
+}
+.pvp-resume-banner.hidden { display: none; }
+.pvp-resume-banner__text {
+  margin: 0;
+  font-weight: 600;
+}
 .pvp-waiting {
   margin-top: 1rem;
   padding: 1rem;

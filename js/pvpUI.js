@@ -55,8 +55,14 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
   let pvpService = null;
   let matchSession = null;
   let matchLaunching = false;
+  let resumeInFlight = false;
   let unsubscribeOpenRooms = null;
   let openRoomsPollId = null;
+
+  function onPageHide() {
+    if (pvpService?.matchId) saveActivePvpMatchId(pvpService.matchId);
+  }
+  window.addEventListener("pagehide", onPageHide);
 
   function stopOpenRoomsSync() {
     if (openRoomsPollId) {
@@ -157,14 +163,20 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
             <li class="pvp-open-empty">Loading…</li>
           </ul>
         </div>
+        <div id="pvp-resume-banner" class="pvp-resume-banner hidden" role="status">
+          <p class="pvp-resume-banner__text">You have a PvP match in progress.</p>
+          <button type="button" class="btn-primary" id="pvp-resume-btn">Resume match</button>
+        </div>
         <p id="pvp-status" class="pvp-status${isError ? " pvp-status--error" : ""}" role="status">${escapeHtml(message)}</p>
         <div id="pvp-waiting" class="pvp-waiting hidden"></div>
       </section>`;
 
     root.querySelector("#pvp-host")?.addEventListener("click", () => void hostRoom());
     root.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
+    root.querySelector("#pvp-resume-btn")?.addEventListener("click", () => void resumePvpMatch({ prompt: false }));
     syncModeUi();
     startOpenRoomsSync();
+    void updateResumeBanner();
 
     void probePvpBackend().then((probe) => {
       if (!probe.ok && probe.reason) {
@@ -431,6 +443,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
   }
 
   async function launchMatch(row, { resume = false } = {}) {
+    saveActivePvpMatchId(row.id);
     const profile = getProfile();
     let deckIds = localDeckIdsFromRow(row);
     if (!deckIds && isMysteryMode(row) && pvpService?.matchId) {
@@ -654,12 +667,11 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     });
   }
 
-  async function tryResumePvpMatch() {
-    if (matchSession || matchLaunching) return false;
+  async function findResumablePvpRow() {
     const user = getCurrentUser();
-    if (!user || !isAuthAvailable()) return false;
+    if (!user || !isAuthAvailable()) return null;
 
-    const svc = ensurePvpService();
+    const svc = pvpService ?? new PvpService();
     let row = null;
 
     const savedId = readActivePvpMatchId();
@@ -668,61 +680,103 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         const fetched = await svc.fetchMatch(savedId);
         if (fetched && isParticipant(fetched, user.id) && fetched.status !== "finished") {
           row = fetched;
-        } else {
+        } else if (fetched?.status === "finished") {
           clearActivePvpMatchId();
         }
-      } catch {
-        clearActivePvpMatchId();
+      } catch (e) {
+        if (e?.code === "PGRST116") clearActivePvpMatchId();
       }
     }
 
     if (!row) {
-      try {
-        row = await svc.listActiveMatchForUser();
-      } catch (e) {
-        setStatus(e.message || "Could not check for active PvP match", true);
-        return false;
-      }
+      row = await svc.listActiveMatchForUser();
     }
 
-    if (row?.status === "active") {
+    if (row?.status === "active") return row;
+
+    if (!row) {
+      const waiting = await svc.listMyWaitingRooms();
+      if (waiting.length) return { ...waiting[0], status: "waiting" };
+    }
+
+    return null;
+  }
+
+  async function updateResumeBanner() {
+    const banner = root.querySelector("#pvp-resume-banner");
+    if (!banner || matchSession || matchLaunching || resumeInFlight) return;
+    try {
+      const row = await findResumablePvpRow();
+      banner.classList.toggle("hidden", !row);
+    } catch {
+      banner.classList.add("hidden");
+    }
+  }
+
+  async function resumePvpMatch({ prompt = true } = {}) {
+    if (matchSession || matchLaunching || resumeInFlight) return false;
+    const user = getCurrentUser();
+    if (!user || !isAuthAvailable()) return false;
+
+    resumeInFlight = true;
+    try {
+      const row = await findResumablePvpRow();
+      if (!row) return false;
+
+      if (prompt) {
+        const waiting = row.status === "waiting";
+        const msg = waiting
+          ? "Resume waiting in your PvP room?"
+          : "Resume your PvP match where you left off?";
+        if (!window.confirm(msg)) {
+          clearActivePvpMatchId();
+          root.querySelector("#pvp-resume-banner")?.classList.add("hidden");
+          return false;
+        }
+      }
+
       showPvpView();
-      if (!row.state_json) {
-        svc.attachToMatch(row, user.id);
-        saveActivePvpMatchId(row.id);
-        svc.startPolling(800);
-        return true;
-      }
-      stopOpenRoomsSync();
-      hideHosting();
-      svc.attachToMatch(row, user.id);
-      matchLaunching = true;
-      try {
-        await launchMatch(row, { resume: true });
-        return !!matchSession;
-      } finally {
-        if (!matchSession) matchLaunching = false;
-      }
-    }
+      const svc = ensurePvpService();
+      root.querySelector("#pvp-resume-banner")?.classList.add("hidden");
 
-    if (!pvpService?.matchId) {
-      try {
-        const waiting = await svc.listMyWaitingRooms();
-        if (waiting.length) {
-          showPvpView();
-          const room = waiting[0];
-          svc.attachToMatch({ ...room, status: "waiting" }, user.id);
-          saveActivePvpMatchId(room.id);
-          onMatchRow(room);
-          void refreshOpenRooms(room);
+      if (row.status === "active") {
+        if (!row.state_json) {
+          svc.attachToMatch(row, user.id);
+          saveActivePvpMatchId(row.id);
+          svc.startPolling(800);
           return true;
         }
-      } catch {
-        /* lobby still usable */
+        stopOpenRoomsSync();
+        hideHosting();
+        svc.attachToMatch(row, user.id);
+        matchLaunching = true;
+        try {
+          await launchMatch(row, { resume: true });
+          return !!matchSession;
+        } finally {
+          if (!matchSession) matchLaunching = false;
+        }
       }
-    }
 
-    return false;
+      if (row.status === "waiting" && !pvpService?.matchId) {
+        svc.attachToMatch(row, user.id);
+        saveActivePvpMatchId(row.id);
+        onMatchRow(row);
+        void refreshOpenRooms(row);
+        return true;
+      }
+
+      return false;
+    } catch (e) {
+      setStatus(e.message || "Could not resume PvP match", true);
+      return false;
+    } finally {
+      resumeInFlight = false;
+    }
+  }
+
+  async function tryResumePvpMatch() {
+    return resumePvpMatch({ prompt: true });
   }
 
   async function cancelHostedRoom(matchId) {
@@ -752,11 +806,12 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     render() {
       if (!matchSession) {
         renderLobby();
-        void tryResumePvpMatch();
+        void updateResumeBanner();
       }
     },
     tryResume: tryResumePvpMatch,
     dispose() {
+      window.removeEventListener("pagehide", onPageHide);
       stopOpenRoomsSync();
       matchSession = null;
       clearActivePvpMatchId();
