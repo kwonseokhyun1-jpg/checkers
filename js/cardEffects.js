@@ -71,6 +71,40 @@ function emptyDark(state, r, c) {
   return isDarkSquare(r, c) && !at(state, r, c);
 }
 
+/** Single-target friendly spells that shield or protect a piece. */
+const FRONT_ROW_PROTECTION_EFFECTS = new Set([
+  "shield_1",
+  "shield_2",
+  "last_stand",
+  "fortify",
+  "deflect_1",
+  "mirror_shield",
+  "ghost_guard",
+  "bulwark",
+]);
+
+/** Most advanced row for this color (closest to the opponent). */
+function frontRowRank(state, color) {
+  let front = color === COLORS.RED ? Infinity : -Infinity;
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = at(state, r, c);
+      if (!p || p.color !== color) continue;
+      if (color === COLORS.RED) front = Math.min(front, r);
+      else front = Math.max(front, r);
+    }
+  }
+  return front === Infinity || front === -Infinity ? null : front;
+}
+
+/** Prefer pieces on the frontmost row when AI casts protection spells. */
+function prioritizeFrontRowTargets(state, color, card, targets) {
+  if (!FRONT_ROW_PROTECTION_EFFECTS.has(card.effect) || !targets.length) return targets;
+  const row = frontRowRank(state, color);
+  if (row == null) return targets;
+  const onFront = targets.filter(([r]) => r === row);
+  return onFront.length ? onFront : targets;
+}
 
 function fEmptyFirstPickTargets(state, color, card) {
   const friends = getValidTargets(state, color, { mode: "friendly" }, []);
@@ -312,7 +346,7 @@ export function playInstant(state, color, card) {
 }
 
 function* pickSequences(state, color, card, max = 24) {
-  const t0 = getValidTargets(state, color, card, []);
+  const t0 = prioritizeFrontRowTargets(state, color, card, getValidTargets(state, color, card, []));
   if (card.mode === "instant") {
     yield [];
     return;
