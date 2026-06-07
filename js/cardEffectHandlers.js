@@ -266,7 +266,7 @@ const EFFECTS = {
   snowball(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
-    if (!p) return fail();
+    if (!p || p.color === color) return fail();
     applyFreezeToPiece(state.board, state, r, c, 1);
     return ok(p.isClone ? "Snowball — clone destroyed." : "Snowball — frozen!");
   },
