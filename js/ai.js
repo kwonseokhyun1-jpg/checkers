@@ -4,7 +4,6 @@ import {
   applyMove,
   countPieces,
   squareName,
-  findPressExtraPiece,
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
@@ -124,10 +123,7 @@ export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
       if (!state.meta.bearBonusUsed) state.meta.bearBonusUsed = {};
       state.meta.bearBonusUsed[aiColor] = true;
     }
-    if (entry.pressExtra) {
-      const pressed = findPressExtraPiece(state.board, color);
-      if (pressed) pressed.pressExtraMove = false;
-    }
+    if (entry.pressExtra) state.meta.pendingPressMove[color] = false;
     if (entry.quickMarch) state.meta.pendingDouble[aiColor] = false;
     try {
       const piece = applyMove(
@@ -329,7 +325,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     }
     if (state.meta.pendingDouble?.[aiColor] && move.type === "step") {
       const extra = getAllMovesForColor(state.board, color, state).filter(
-        (m) => m.from[0] === move.to[0] && m.from[1] === move.to[1] && (m.type === "step" || m.type === "jump")
+        (m) => m.from[0] === br && m.from[1] === bc && (m.type === "step" || m.type === "jump")
       );
       if (extra.length) {
         const ex = extra[0];
@@ -343,38 +339,37 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
           quickMarch: true,
           text: `Quick follow-up ${squareName(ex.from[0], ex.from[1])} → ${squareName(ex.to[0], ex.to[1])}`,
         });
+        [br, bc] = ex.to;
       }
       state.meta.pendingDouble[aiColor] = false;
     }
+    if (state.meta.pendingPressMove?.[color]) {
+      state.meta.pendingPressMove[color] = false;
+      const pressMoves = getAllMovesForColor(state.board, color, state).filter(
+        (m) => m.from[0] === br && m.from[1] === bc
+      );
+      if (pressMoves.length) {
+        const bestPress = pressMoves.reduce((best, m) => {
+          const copy = state.board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+          applyMove(copy, m, state);
+          const sc = scoreBoard(copy, color) + (m.captures?.length || 0) * 8;
+          return sc > best.score ? { move: m, score: sc } : best;
+        }, { move: pressMoves[0], score: -Infinity }).move;
+        applyMove(state.board, bestPress, state);
+        log.push({
+          type: "move",
+          from: [...bestPress.from],
+          to: [...bestPress.to],
+          captures: bestPress.captures ? bestPress.captures.map((c) => [...c]) : [],
+          moveKind: bestPress.type,
+          pressExtra: true,
+          text: `Press — extra move ${squareName(bestPress.from[0], bestPress.from[1])} → ${squareName(bestPress.to[0], bestPress.to[1])}`,
+        });
+      }
+    }
   } else {
     log.push({ type: "message", text: `${opponentName} had no legal move.` });
-  }
-
-
-  const pressed = findPressExtraPiece(state.board, color);
-  if (pressed) {
-    pressed.pressExtraMove = false;
-    const pressMoves = getAllMovesForColor(state.board, color, state).filter(
-      (m) => m.from[0] === pressed.row && m.from[1] === pressed.col
-    );
-    if (pressMoves.length) {
-const bestPress = pressMoves.reduce((best, m) => {
-        const copy = state.board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
-        applyMove(copy, m, state);
-        const sc = scoreBoard(copy, color) + (m.captures?.length || 0) * 8;
-        return sc > best.score ? { move: m, score: sc } : best;
-      }, { move: pressMoves[0], score: -Infinity }).move;
-      applyMove(state.board, bestPress, state);
-      log.push({
-        type: "move",
-        from: [...bestPress.from],
-        to: [...bestPress.to],
-        captures: bestPress.captures ? bestPress.captures.map((c) => [...c]) : [],
-        moveKind: bestPress.type,
-        pressExtra: true,
-        text: `Press — extra move ${squareName(bestPress.from[0], bestPress.from[1])} → ${squareName(bestPress.to[0], bestPress.to[1])}`,
-      });
-    }
+    if (state.meta.pendingPressMove?.[color]) state.meta.pendingPressMove[color] = false;
   }
 
   return log;
