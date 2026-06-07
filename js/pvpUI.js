@@ -3,7 +3,13 @@ import { DECK_SIZE } from "./cardCatalog.js";
 import { COLORS } from "./board.js";
 import { MatchSession, isPvpTerminalBoard } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
-import { enterMatchMode, exitMatchMode, reconcileMatchShellState, consumePendingNavigationTab } from "./matchLifecycle.js";
+import {
+  enterMatchMode,
+  exitMatchMode,
+  reconcileMatchShellState,
+  consumePendingNavigationTab,
+  isLiveMatchUiVisible,
+} from "./matchLifecycle.js";
 import {
   COSMETIC_BY_ID,
   cosmeticsWithPieceSkin,
@@ -764,17 +770,37 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     }
   }
 
+  /** Drop in-memory PvP session when shell reconciliation removed the board DOM. */
+  function clearStalePvpSession() {
+    if (!matchSession || matchLaunching || isLiveMatchUiVisible()) return false;
+    matchSession = null;
+    exitMatchMode({ clearCheckpoint: false });
+    root.querySelector("#pvp-match-root")?.remove();
+    return true;
+  }
+
+  function renderPvpSurface() {
+    clearStalePvpSession();
+    if (matchLaunching || root.querySelector(".pvp-loading")) return;
+    if (!matchSession) {
+      renderLobby();
+      void tryResumePvpMatch();
+    }
+  }
+
+  const onShellReconciled = () => {
+    if (!root || root.classList.contains("hidden")) return;
+    renderPvpSurface();
+  };
+  window.addEventListener("cc-match-shell-reconciled", onShellReconciled);
+
   renderLobby();
 
   return {
-    render() {
-      if (!matchSession) {
-        renderLobby();
-        void tryResumePvpMatch();
-      }
-    },
+    render: renderPvpSurface,
     tryResume: tryResumePvpMatch,
     dispose() {
+      window.removeEventListener("cc-match-shell-reconciled", onShellReconciled);
       stopOpenRoomsSync();
       matchSession = null;
       clearActivePvpMatchId();
