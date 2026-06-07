@@ -3,7 +3,7 @@
  */
 import {
   SIZE, COLORS, LAST_STAND_SHIELD_TURNS, isDarkSquare, inBounds, movePiece, removePiece,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone,
 } from "./board.js";
@@ -672,13 +672,15 @@ const EFFECTS = {
     if (!caster || caster.color !== color) return fail();
     const t = at(state, r2, c2);
     if (!t || t.color === color) return fail("No enemy on that diagonal");
+    if (!isCryoBoltTarget(state.board, caster, r2, c2)) return fail("No enemy on that diagonal");
     if (t.frozenTurns > 0 || t.paralyzedTurns > 0) {
       t.shieldTurns = 0;
       if (!kill(state, r2, c2, color)) return fail();
       return ok("Cryo Bolt — shattered!");
     }
+    const wasClone = t.isClone;
     if (!applyFreezeToPiece(state.board, state, r2, c2, 1)) return fail();
-    return ok(t.isClone ? "Cryo Bolt — clone destroyed." : "Cryo Bolt — frozen!", { freezeCount: 1 });
+    return ok(wasClone ? "Cryo Bolt — clone destroyed." : "Cryo Bolt — frozen!", { freezeCount: wasClone ? 0 : 1 });
   },
   knights_charge(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||!(p.knightTurns > 0 || p.isKnight)) return fail(); p.knightCapture=true; return ok(); },
   shield_bash(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||p.shieldTurns<=0) return fail(); if(!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r2+dr,c2+dc); if(t&&t.color!==color) kill(state,r2+dr,c2+dc,color);} return ok(); },

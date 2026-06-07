@@ -19,6 +19,9 @@ import {
   applyFreezeToPiece,
   applyVenomToPiece,
   applyBurnToPiece,
+  getAllMovesForColor,
+  tickEndTurnEffects,
+  tickEffects,
 } from "../js/board.js";
 import { createMatchMeta, tryConsumeCounterspell, tryConsumeVengeance } from "../js/gameMeta.js";
 import { initCardState } from "../js/cardEffects.js";
@@ -297,6 +300,29 @@ for (const card of cards) {
   setPiece(s.board, 4, 1, copy3);
   if (!applyBurnToPiece(s.board, s, 4, 1, 2) || at(s, 4, 1)) throw new Error("Burn should destroy clone");
   console.log("Clone debuff fragility test: OK");
+}
+
+// Cryo Bolt — freezes normal enemies for one skipped turn
+{
+  const s = baseState();
+  place(s, COLOR, 5, 0);
+  place(s, OPP, 4, 1);
+  const cryo = cards.find((c) => c.id === "cryo_bolt");
+  const res = applyCard(s, COLOR, cryo, [[5, 0], [4, 1]]);
+  if (!res.success) throw new Error("Cryo Bolt failed: " + res.message);
+  const enemy = at(s, 4, 1);
+  if (!enemy || enemy.frozenTurns !== 1) throw new Error("Cryo Bolt should set frozenTurns=1");
+  const frozenMoves = getAllMovesForColor(s.board, OPP, s).length;
+  const s2 = baseState();
+  place(s2, OPP, 4, 1);
+  const normalMoves = getAllMovesForColor(s2.board, OPP, s2).length;
+  if (frozenMoves >= normalMoves) throw new Error("Cryo Bolt should block enemy moves while frozen");
+  tickEndTurnEffects(s.board, COLOR, s);
+  tickEffects(s.board, OPP, s);
+  if (getAllMovesForColor(s.board, OPP, s).length !== 0) throw new Error("Enemy should stay frozen through their turn start");
+  tickEndTurnEffects(s.board, OPP, s);
+  if (enemy.frozenTurns !== 0) throw new Error("Cryo freeze should expire after one enemy turn");
+  console.log("Cryo Bolt freeze test: OK");
 }
 
 // Pyromancy — burn enemy + tile
