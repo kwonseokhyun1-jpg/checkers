@@ -4,6 +4,7 @@
 import {
   SIZE,
   COLORS,
+  LAST_STAND_SHIELD_TURNS,
   isDarkSquare,
   createInitialBoard,
   getAllMovesForColor,
@@ -2112,7 +2113,11 @@ ${starLine}`;
               ? pieceSkinCssSuffix(this.cosmetics?.equipped?.pieceSkin)
               : "";
           el.className = `piece ${piece.color}${piece.king ? " king" : ""}${skinClass}`;
-          if (piece.shieldTurns > 0) el.classList.add("shielded");
+          if (piece.shieldTurns >= LAST_STAND_SHIELD_TURNS || piece.lastStand) {
+            el.classList.add("ultra-shielded");
+          } else if (piece.shieldTurns > 0) {
+            el.classList.add("shielded");
+          }
           if (piece.frozenTurns > 0) el.classList.add("frozen");
           if (piece.paralyzedTurns > 0) el.classList.add("paralyzed-mark");
           if (piece.knightTurns > 0 || piece.isKnight) el.classList.add("knight-mark");
@@ -2138,19 +2143,32 @@ ${starLine}`;
             el.classList.add("piece--spell-kill-victim");
           }
           sq.appendChild(el);
-          if (piece.shieldTurns > 0) {
+          if (piece.shieldTurns > 0 || piece.lastStand) {
+            const ultra =
+              piece.lastStand && piece.shieldTurns <= 0
+                ? true
+                : piece.shieldTurns >= LAST_STAND_SHIELD_TURNS;
+            const turns =
+              piece.lastStand && piece.shieldTurns <= 0
+                ? LAST_STAND_SHIELD_TURNS
+                : piece.shieldTurns;
+            const label = ultra
+              ? piece.lastStand && piece.shieldTurns <= 0
+                ? `Last Stand — ultra shield (${turns} turns on capture)`
+                : `Ultra shield — ${turns} turn${turns === 1 ? "" : "s"} left`
+              : `Shield — ${turns} turn${turns === 1 ? "" : "s"} left`;
             const shield = document.createElement("div");
-            shield.className = "shield-indicator";
-            shield.setAttribute("aria-label", `Shield — ${piece.shieldTurns} turn${piece.shieldTurns === 1 ? "" : "s"} left`);
+            shield.className = ultra ? "ultra-shield-indicator" : "shield-indicator";
+            shield.setAttribute("aria-label", label);
             const mark = document.createElement("span");
-            mark.className = "shield-indicator__mark";
+            mark.className = ultra ? "ultra-shield-indicator__mark" : "shield-indicator__mark";
             mark.textContent = "🛡";
             mark.setAttribute("aria-hidden", "true");
-            const turns = document.createElement("span");
-            turns.className = "shield-indicator__turns";
-            turns.textContent = String(piece.shieldTurns);
+            const turnsEl = document.createElement("span");
+            turnsEl.className = ultra ? "ultra-shield-indicator__turns" : "shield-indicator__turns";
+            turnsEl.textContent = String(turns);
             shield.appendChild(mark);
-            shield.appendChild(turns);
+            shield.appendChild(turnsEl);
             sq.appendChild(shield);
           }
           if (piece.venom > 0) {
