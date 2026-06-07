@@ -1938,15 +1938,11 @@ ${starLine}`;
       handEl.appendChild(el);
     }
 
-    const opp = this.$("hand-black");
-    if (opp) {
-      opp.innerHTML = "";
-      for (let i = 0; i < s.hands[this.opponentColor].length; i++) {
-        const div = document.createElement("div");
-        div.className = "card-mini";
-        div.textContent = "?";
-        opp.appendChild(div);
-      }
+    const enemyCountLabel = this.$("enemy-hand-count-label");
+    if (enemyCountLabel) {
+      const oppN = s.hands[this.opponentColor].length;
+      enemyCountLabel.textContent =
+        oppN === 1 ? "1 card in hand" : `${oppN} cards in hand`;
     }
   }
 
