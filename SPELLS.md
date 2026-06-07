@@ -44,7 +44,7 @@
 - **Gamble** — Pay 15 gems; draw 2 cards.
 - **Hex** — Marked enemy cannot receive buffs for 3 turns.
 - **Interest** — Gain gems equal to half your total (max 25).
-- **Last Stand** — If this piece would be captured this turn, it survives with shield for 1 turn instead.
+- **Last Stand** — If this piece would be captured, it survives with an ultra shield for 3 turns instead.
 - **Leapfrog** — Jump your piece over a friendly piece to land on the empty square beyond.
 - **Long Step** — Move one of your pieces 2 squares diagonally if the path is clear (no capture).
 - **Mass Nudge** — Move up to 2 friendly pieces 1 square each (adjacent empty).

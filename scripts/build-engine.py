@@ -47,7 +47,7 @@ function destroyAt(state, r, c, byColor, effectName = "") {
   }
   if (p.lastStand) {
     p.lastStand = false;
-    p.shieldTurns = 1;
+    p.shieldTurns = 3;
     return false;
   }
   state.captured[p.color].push({ ...p });

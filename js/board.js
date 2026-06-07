@@ -52,6 +52,8 @@ export function inBounds(row, col) {
 }
 
 export const SIGIL_MOVES = 2;
+/** Shield turns granted when Last Stand triggers on capture. */
+export const LAST_STAND_SHIELD_TURNS = 3;
 
 export function hasKnightSigil(piece) {
   return piece && (piece.knightTurns > 0 || piece.isKnight) && !piece.silenced;
