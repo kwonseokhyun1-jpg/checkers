@@ -12,7 +12,7 @@ const BUFF_RULES = [
   { key: "queenTurns", label: "Queen's Grace", turns: true },
   { key: "wraithTurns", label: "Wraith Step", turns: true },
   { key: "superMan", label: "Superman Leap", turns: true },
-  { key: "lastStand", label: "Last Stand", bool: true },
+  { key: "lastStand", label: "Last Stand (ultra shield on capture)", bool: true },
   { key: "mirrorShield", label: "Mirror Shield", bool: true },
   { key: "ghostGuard", label: "Ghost Guard", bool: true },
   { key: "bombArmed", label: "Bomb Armed", bool: true },

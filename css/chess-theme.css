@@ -207,6 +207,7 @@ body {
 .board-frame--local-flipped .barrier-indicator,
 .board-frame--local-flipped .sanctuary-indicator,
 .board-frame--local-flipped .shield-indicator,
+.board-frame--local-flipped .ultra-shield-indicator,
 .board-frame--local-flipped .poison-indicator,
 .board-frame--local-flipped .fire-indicator,
 .board-frame--local-flipped .fire-tile-indicator {
@@ -589,6 +590,39 @@ body {
   box-shadow:
     0 0 0 2px #5ce1e6,
     0 0 10px rgba(92, 225, 230, 0.55),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.ultra-shield-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.ultra-shield-indicator__mark {
+  font-size: clamp(0.54rem, 2.8vw, 0.74rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.95));
+}
+
+.ultra-shield-indicator__turns {
+  font-size: clamp(0.44rem, 2.1vw, 0.58rem);
+  font-weight: 800;
+  line-height: 1;
+  color: #fbbf24;
+  text-shadow: 0 0 5px rgba(251, 191, 36, 0.9);
+}
+
+.piece.ultra-shielded {
+  box-shadow:
+    0 0 0 2px #fbbf24,
+    0 0 14px rgba(251, 191, 36, 0.7),
     0 3px 8px rgba(0, 0, 0, 0.4);
 }
 

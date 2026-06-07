@@ -2,7 +2,7 @@
  * Spell effect implementations for Card Checkers
  */
 import {
-  SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece,
+  SIZE, COLORS, LAST_STAND_SHIELD_TURNS, isDarkSquare, inBounds, movePiece, removePiece,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone,
@@ -108,7 +108,11 @@ function kill(state, r, c, by, nonCap = true, opts = {}) {
   if (!opts.linkFate && p.cloneNoCaptureThisTurn) return false;
   if (!opts.berserkSlam && !opts.linkFate && p.shieldTurns > 0) { p.shieldTurns--; return false; }
   if (!opts.linkFate && p.king && state.meta.constitutionTurns[p.color] > 0 && nonCap) return false;
-  if (!opts.linkFate && p.lastStand) { p.lastStand = false; p.shieldTurns = 1; return false; }
+  if (!opts.linkFate && p.lastStand) {
+    p.lastStand = false;
+    p.shieldTurns = Math.max(p.shieldTurns, LAST_STAND_SHIELD_TURNS);
+    return false;
+  }
   if (!opts.linkFate && p.deflectTurns > 0) {
     p.deflectTurns = 0;
     const es = enemyPieces(state.board, by);
