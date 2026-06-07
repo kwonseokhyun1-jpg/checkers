@@ -201,6 +201,34 @@ export function pieceSkinsConflict(skinA, skinB) {
   return a === b;
 }
 
+/** Prefer a stored match-row skin; fall back to live profile when the row still has the default. */
+export function effectiveHostPieceSkin(storedSkin, profileSkin) {
+  const stored = storedSkin || DEFAULT_PIECE_SKIN;
+  if (stored !== DEFAULT_PIECE_SKIN) return stored;
+  return profileSkin || DEFAULT_PIECE_SKIN;
+}
+
+/** Read equipped piece skin from a Supabase profiles row. */
+export function pieceSkinFromProfileRow(profileRow) {
+  const raw = profileRow?.profile_json?.cosmetics;
+  return getEquippedPieceSkin(raw ? { cosmetics: raw } : null);
+}
+
+/** Override equipped piece skin (e.g. from a PvP match snapshot). */
+export function cosmeticsWithPieceSkin(cosmetics, skinId) {
+  const base =
+    cosmetics?.equipped && cosmetics?.owned
+      ? normalizeCosmetics(cosmetics)
+      : normalizeCosmetics(cosmetics);
+  if (!skinId || skinId === DEFAULT_PIECE_SKIN) return base;
+  const resolved = structuredClone(base);
+  if (!resolved.owned.pieceSkin.includes(skinId)) {
+    resolved.owned.pieceSkin = [...resolved.owned.pieceSkin, skinId];
+  }
+  resolved.equipped.pieceSkin = skinId;
+  return resolved;
+}
+
 /** CSS class suffix for an equipped piece skin, e.g. " piece-skin-ember". */
 export function pieceSkinCssSuffix(skinId) {
   if (!skinId || skinId === DEFAULT_PIECE_SKIN) return "";

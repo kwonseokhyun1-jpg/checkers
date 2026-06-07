@@ -6,6 +6,7 @@ import { getMatchHtml } from "./matchView.js";
 import { enterMatchMode, exitMatchMode, reconcileMatchShellState } from "./matchLifecycle.js";
 import {
   COSMETIC_BY_ID,
+  cosmeticsWithPieceSkin,
   getEquippedCosmetics,
   getEquippedPieceSkin,
   normalizeCosmetics,
@@ -461,10 +462,16 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     const localName = localNameFromRow(row);
     const user = getCurrentUser();
 
-    const [localCosmetics, opponentCosmetics] = await Promise.all([
+    const [localCosmeticsBase, opponentCosmeticsBase] = await Promise.all([
       cosmeticsForUser(user?.id, profile),
       cosmeticsForUser(opponentIdFromRow(row), profile),
     ]);
+
+    const isLocalHost = pvpService?.localColor === COLORS.RED;
+    const localMatchSkin = isLocalHost ? row.host_piece_skin : row.guest_piece_skin;
+    const opponentMatchSkin = isLocalHost ? row.guest_piece_skin : row.host_piece_skin;
+    const localCosmetics = cosmeticsWithPieceSkin(localCosmeticsBase, localMatchSkin);
+    const opponentCosmetics = cosmeticsWithPieceSkin(opponentCosmeticsBase, opponentMatchSkin);
 
     if (!resume) {
       await showPvpMatchLoading(root, {
