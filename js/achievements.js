@@ -78,17 +78,18 @@ export const ACHIEVEMENTS = [
   {
     id: "arcane_mastery",
     title: "Arcane Mastery",
-    description: "Collect 3 copies of every legendary spell card in your inventory.",
-    target: 1,
+    description: "Collect 3 copies of 50 spell cards in your inventory.",
+    target: 50,
     track: "state",
   },
 ];
 
 export const ACHIEVEMENT_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 
-const LEGENDARY_SPELL_IDS = getPlayableCards()
-  .filter((c) => c.rarity === "legendary")
-  .map((c) => c.id);
+const ARCANE_MASTERY_TARGET = 50;
+const ARCANE_MASTERY_COPIES = 3;
+
+const PLAYABLE_SPELL_IDS = getPlayableCards().map((c) => c.id);
 
 export const DEFAULT_ACHIEVEMENTS = {
   progress: {},
@@ -171,19 +172,22 @@ export function claimAchievement(profile, id) {
   };
 }
 
-export function hasArcaneMastery(profile) {
-  if (!LEGENDARY_SPELL_IDS.length) return false;
+export function countTripledSpells(profile) {
   const coll = profile.collection || {};
-  return LEGENDARY_SPELL_IDS.every((cardId) => (coll[cardId] || 0) >= 3);
+  return PLAYABLE_SPELL_IDS.filter((cardId) => (coll[cardId] || 0) >= ARCANE_MASTERY_COPIES).length;
+}
+
+export function hasArcaneMastery(profile) {
+  return countTripledSpells(profile) >= ARCANE_MASTERY_TARGET;
 }
 
 /** Sync arcane_mastery progress from collection; returns newly completed ids */
 export function syncArcaneMastery(profile) {
-  const complete = hasArcaneMastery(profile);
   profile.achievements = normalizeAchievements(profile.achievements);
+  const count = Math.min(ARCANE_MASTERY_TARGET, countTripledSpells(profile));
   const prev = profile.achievements.progress.arcane_mastery || 0;
-  profile.achievements.progress.arcane_mastery = complete ? 1 : 0;
-  if (complete && prev < 1) return ["arcane_mastery"];
+  profile.achievements.progress.arcane_mastery = count;
+  if (count >= ARCANE_MASTERY_TARGET && prev < ARCANE_MASTERY_TARGET) return ["arcane_mastery"];
   return [];
 }
 
@@ -196,8 +200,8 @@ export function progressLabel(profile, id) {
   const def = ACHIEVEMENT_BY_ID[id];
   if (!def) return "";
   if (id === "arcane_mastery") {
-    const owned = LEGENDARY_SPELL_IDS.filter((cid) => (profile.collection?.[cid] || 0) >= 3).length;
-    return `${owned} / ${LEGENDARY_SPELL_IDS.length} legendaries at 3×`;
+    const owned = Math.min(ARCANE_MASTERY_TARGET, countTripledSpells(profile));
+    return `${owned} / ${ARCANE_MASTERY_TARGET} spells at 3×`;
   }
   const cur = Math.min(def.target, getAchievementProgress(profile, id));
   return `${cur} / ${def.target}`;
