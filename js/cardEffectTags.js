@@ -5,7 +5,7 @@ const TAGS = {
   shield_2: ["Shield 2 turns — cannot be captured"],
   forward_bolt: ["Destroy first enemy on forward diagonal (Stab)"],
   trickster: ["Swap up to 6 random pieces (not on back ranks)"],
-  purify: ["Removes all shields, buffs, and debuffs board-wide"],
+  purify: ["Removes all debuffs from your pieces, including burn and freeze"],
   chain_lightning: ["Strike adjacent enemies only", "Up to 2 kills if enemies touch each other", "Your piece is paralyzed 2 turns"],
   pyromancy: ["Enemy piece + empty dark square — both burn 2 turns; fire tiles block enemies"],
   freeze_1: ["Enemy cannot move on their next turn"],
