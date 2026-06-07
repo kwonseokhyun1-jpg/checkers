@@ -7,7 +7,7 @@ import { normalizeAchievements, DEFAULT_ACHIEVEMENTS, syncArcaneMastery } from "
 
 const STORAGE_KEY = "cardCheckersProfile_v7";
 const LEGACY_STORAGE_KEY = "cardCheckersProfile_v5";
-export const STARTING_GEMS = 400;
+export const STARTING_GEMS = 200;
 export const STARTING_STARS = 0;
 export const TESTING_STARS = 30;
 /** @deprecated Use STARTING_GEMS — kept for migration only */
