@@ -387,6 +387,11 @@ export function getJumpMoves(board, piece, color, state = null) {
 }
 
 export function getAllMovesForColor(board, color, state = null) {
+  const panicked = findPanicPiece(board, color);
+  if (panicked) {
+    const panicMoves = getBackwardStepMoves(board, panicked, state);
+    if (panicMoves.length) return panicMoves;
+  }
   const jumps = [], steps = [];
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
@@ -516,6 +521,37 @@ export function findPressExtraPiece(board, color) {
   return null;
 }
 
+export function findPanicPiece(board, color) {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = board[r][c];
+      if (p && p.color === color && p.panicTurn) return p;
+    }
+  }
+  return null;
+}
+
+export function backwardDirs(piece) {
+  return piece.color === COLORS.RED
+    ? [[1, -1], [1, 1]]
+    : [[-1, -1], [-1, 1]];
+}
+
+/** Backward-diagonal step moves only (Panic). */
+export function getBackwardStepMoves(board, piece, state = null) {
+  const moves = [];
+  if (piece.cloneNoCaptureThisTurn) return moves;
+  if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
+  for (const [dr, dc] of backwardDirs(piece)) {
+    const nr = piece.row + dr, nc = piece.col + dc;
+    if (!inBounds(nr, nc) || !isDarkSquare(nr, nc) || squareBlocked(state, nr, nc, piece.color)) continue;
+    if (!board[nr][nc]) {
+      moves.push({ from: [piece.row, piece.col], to: [nr, nc], captures: [], type: "step" });
+    }
+  }
+  return moves;
+}
+
 export function countPieces(board, color) {
   let n = 0;
   for (let r = 0; r < SIZE; r++)
@@ -531,6 +567,7 @@ export function tickEndTurnEffects(board, color, state = null) {
       if (!p || p.color !== color) continue;
       if (p.rooted > 0) p.rooted--;
       if (p.cloneNoCaptureThisTurn) p.cloneNoCaptureThisTurn = false;
+      if (p.panicTurn) p.panicTurn = false;
     }
   }
   if (state?.squares) {
@@ -578,7 +615,6 @@ export function tickEffects(board, color, state = null) {
           p.mindControlTurns = 0;
         }
       }
-      if (p.panicTurn) { p.panicTurn = false; }
       if (p.promoteZone) p.promoteZone = false;
       if (p.revivedNoCapture) p.revivedNoCapture = false;
       if (p.berserkNoCapture) p.berserkNoCapture = false;

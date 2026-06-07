@@ -12,6 +12,8 @@ import {
   tickEffects,
   tickEndTurnEffects,
   findPressExtraPiece,
+  findPanicPiece,
+  getBackwardStepMoves,
 } from "./board.js";
 import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed } from "./gameMeta.js";
 import {
@@ -1848,6 +1850,17 @@ ${starLine}`;
     if (confused) {
       this.executeHumanMove(confused);
       return;
+    }
+    const panicked = findPanicPiece(s.board, this.localColor);
+    if (panicked) {
+      const panicMoves = getBackwardStepMoves(s.board, panicked, s);
+      if (panicMoves.length) {
+        this.selectedSquare = [panicked.row, panicked.col];
+        this.validMoves = panicMoves;
+        this.setMessage("Panic — step backward!");
+        this.render();
+        return;
+      }
     }
     const moves = getAllMovesForColor(s.board, this.localColor, s);
     if (!moves.length) {
