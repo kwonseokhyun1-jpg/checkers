@@ -103,7 +103,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       <section class="panel game-panel pvp-panel">
         <header class="panel-head">
           <h2 class="panel-head__title">PvP Arena</h2>
-          <p class="panel-head__desc">Host a room or join an open match below. Your piece colour comes from your equipped skin in Profile — you cannot join if both players use the same skin.</p>
+          <p class="panel-head__desc">Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.</p>
         </header>
         <div class="pvp-setup-row">
           <div class="pvp-setup-field">

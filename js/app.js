@@ -64,6 +64,7 @@ import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
 import { dismissTutorial, initTutorial } from "./tutorial.js";
 import { initPvpUI } from "./pvpUI.js";
+import { clearAllWaitingRoomsOnce } from "./pvp.js";
 import { getMatchHtml } from "./matchView.js";
 import {
   bindMatchVisibilityHandlers,
@@ -1689,6 +1690,8 @@ function init() {
       updateHeaderProfileBtn();
     },
   });
+
+  void clearAllWaitingRoomsOnce();
 
   pvpController = initPvpUI({
     root: document.getElementById("view-pvp"),

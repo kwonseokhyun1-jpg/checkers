@@ -183,7 +183,7 @@ export function cosmeticCssClass(item) {
 export const DEFAULT_PIECE_SKIN = "skin_classic";
 
 export const SAME_PIECE_SKIN_JOIN_MESSAGE =
-  "You and the host have the same piece skin. Equip a different skin in Profile to join.";
+  "You and the host have the same custom piece skin. Equip a different skin in Profile to join.";
 
 /** @param {object} [profileOrCosmetics] profile or normalized cosmetics */
 export function getEquippedPieceSkin(profileOrCosmetics) {
@@ -195,7 +195,10 @@ export function getEquippedPieceSkin(profileOrCosmetics) {
 }
 
 export function pieceSkinsConflict(skinA, skinB) {
-  return (skinA || DEFAULT_PIECE_SKIN) === (skinB || DEFAULT_PIECE_SKIN);
+  const a = skinA || DEFAULT_PIECE_SKIN;
+  const b = skinB || DEFAULT_PIECE_SKIN;
+  if (a === b && a === DEFAULT_PIECE_SKIN) return false;
+  return a === b;
 }
 
 /** CSS class suffix for an equipped piece skin, e.g. " piece-skin-ember". */

@@ -7,6 +7,7 @@ import {
   syncArcaneMastery,
   isAchievementComplete,
 } from "./achievements.js";
+import { saveProfile } from "./storage.js";
 
 function opponentColor(color) {
   return color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
@@ -23,12 +24,17 @@ export function createMatchAchievementTracker(profile, localColor) {
     kingsPromotedThisMatch: 0,
     spellCapturesThisTurn: 0,
     notifiedComplete: new Set(),
+    _ourPiecesBefore: null,
   };
 
   const persistIfNeeded = () => {
     if (!dirty) return;
     dirty = false;
-    import("./storage.js").then(({ saveProfile }) => saveProfile(profile)).catch(() => {});
+    try {
+      saveProfile(profile);
+    } catch {
+      /* quota / private mode */
+    }
   };
 
   const applyIncrements = (events) => {
@@ -50,10 +56,15 @@ export function createMatchAchievementTracker(profile, localColor) {
     return n;
   };
 
+  const snapshotOurPieces = (state) => {
+    session._ourPiecesBefore = countPieces(state.board, localColor);
+  };
+
   const onSpellBefore = (state) => {
     session._oppBefore = countPieces(state.board, opp);
     session._kingsBefore = countKings(state, localColor);
     session._spellKills = 0;
+    snapshotOurPieces(state);
   };
 
   const onSpellAfter = (state, effect, res) => {
@@ -99,6 +110,7 @@ export function createMatchAchievementTracker(profile, localColor) {
 
   const onMoveBefore = (state) => {
     session._kingsBefore = countKings(state, localColor);
+    snapshotOurPieces(state);
   };
 
   const onTrapTriggered = (trapOwner, victimColor) => {
@@ -125,7 +137,10 @@ export function createMatchAchievementTracker(profile, localColor) {
 
   const onVictory = (state) => {
     const remaining = countPieces(state.board, localColor);
-    if (remaining === 1) applyIncrements([["close_call", 1]]);
+    const hadOneBeforeWin = session._ourPiecesBefore === 1;
+    if (remaining === 1 || (remaining === 0 && hadOneBeforeWin)) {
+      applyIncrements([["close_call", 1]]);
+    }
     if (!session.opponentCapturedUs) applyIncrements([["no_mercy", 1]]);
     if (session.usedSacrificeOffering) applyIncrements([["calculated_sacrifice", 1]]);
     persistIfNeeded();
@@ -156,6 +171,10 @@ function parseFreezeCount(message) {
 export function refreshProfileAchievements(profile) {
   const ids = syncArcaneMastery(profile);
   if (ids.length) {
-    import("./storage.js").then(({ saveProfile }) => saveProfile(profile)).catch(() => {});
+    try {
+      saveProfile(profile);
+    } catch {
+      /* quota / private mode */
+    }
   }
 }

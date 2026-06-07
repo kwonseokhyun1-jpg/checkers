@@ -196,7 +196,11 @@ export class MatchSession {
     }
     this.bindEls();
     if (this.hasMoveHistory()) ensureStartHistory(this.state);
-    if (!(options.initialState && this.isPvp)) {
+    if (options.initialState && this.isPvp) {
+      if (this.state.turn === this.localColor && !this.state.gameOver) {
+        this.beginPlayerTurn();
+      }
+    } else if (!(options.initialState && this.isPvp)) {
       if (
         options.initialState &&
         !this.isPvp &&

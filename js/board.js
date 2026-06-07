@@ -436,7 +436,7 @@ export function applyMove(board, move, state = null) {
       const linkedPartner = cap.linkedFateId;
       if (cap && piece && tryConsumeVengeance(state, piece.color, cap.color)) {
         queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
-        state?.meta?.achievementHook?.trapTriggered?.(cap.color, piece.color);
+        state?.meta?.achievementHook?.onTrapTriggered?.(cap.color, piece.color);
         removePiece(board, piece.row, piece.col);
         piece = null;
       }
@@ -477,7 +477,7 @@ export function applyMove(board, move, state = null) {
     delete sq.hiddenQuicksand;
     if (piece) {
       applyFreezeToPiece(board, state, tr, tc, 1);
-      state?.meta?.achievementHook?.trapTriggered?.(qsOwner, piece.color);
+      state?.meta?.achievementHook?.onTrapTriggered?.(qsOwner, piece.color);
     }
   }
   if (sq?.hiddenMine) {
@@ -485,7 +485,7 @@ export function applyMove(board, move, state = null) {
     const mineOwner = getMineOwner(sq);
     if (mineOwner && mineOwner !== piece.color && piece) {
       queueBoardFx(state, "mine", tr, tc);
-      state?.meta?.achievementHook?.trapTriggered?.(mineOwner, piece.color);
+      state?.meta?.achievementHook?.onTrapTriggered?.(mineOwner, piece.color);
       removePiece(board, tr, tc);
       sq.mine = null;
       return null;
@@ -494,7 +494,7 @@ export function applyMove(board, move, state = null) {
     const mineOwner = getMineOwner(sq);
     if (mineOwner && mineOwner !== piece.color && piece) {
       queueBoardFx(state, "mine", tr, tc);
-      state?.meta?.achievementHook?.trapTriggered?.(mineOwner, piece.color);
+      state?.meta?.achievementHook?.onTrapTriggered?.(mineOwner, piece.color);
       removePiece(board, tr, tc);
       sq.mine = null;
       return null;
