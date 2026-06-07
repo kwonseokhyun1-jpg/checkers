@@ -36,7 +36,7 @@ export function getCardHint(card) {
     f_f_adj: "Click two adjacent friendly pieces.",
     diagonal: "Click your piece, then a strike target on its diagonal.",
     any_piece: "Click any piece, then a second piece to copy.",
-    snowball_hint: "Click any piece to freeze it.",
+    snowball_hint: "Click an enemy piece to freeze it.",
     any_square: "Click a square on the board.",
     column: "Tap a file letter (a–h) below the board.",
     row: "Tap a rank number (1–8) beside the board.",
@@ -83,6 +83,9 @@ const FRONT_ROW_PROTECTION_EFFECTS = new Set([
   "bulwark",
 ]);
 
+/** Enemy-targeting spells that should hit the opponent's front line first. */
+const ENEMY_FRONT_ROW_EFFECTS = new Set(["snowball"]);
+
 /** Most advanced row for this color (closest to the opponent). */
 function frontRowRank(state, color) {
   let front = color === COLORS.RED ? Infinity : -Infinity;
@@ -97,13 +100,23 @@ function frontRowRank(state, color) {
   return front === Infinity || front === -Infinity ? null : front;
 }
 
-/** Prefer pieces on the frontmost row when AI casts protection spells. */
+function preferRowTargets(targets, row) {
+  if (row == null || !targets.length) return targets;
+  const onRow = targets.filter(([r]) => r === row);
+  return onRow.length ? onRow : targets;
+}
+
+/** Prefer front-row targets for AI spell picks (friendly protection or enemy debuffs). */
 function prioritizeFrontRowTargets(state, color, card, targets) {
-  if (!FRONT_ROW_PROTECTION_EFFECTS.has(card.effect) || !targets.length) return targets;
-  const row = frontRowRank(state, color);
-  if (row == null) return targets;
-  const onFront = targets.filter(([r]) => r === row);
-  return onFront.length ? onFront : targets;
+  if (!targets.length) return targets;
+  if (FRONT_ROW_PROTECTION_EFFECTS.has(card.effect)) {
+    return preferRowTargets(targets, frontRowRank(state, color));
+  }
+  if (ENEMY_FRONT_ROW_EFFECTS.has(card.effect)) {
+    const opponent = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+    return preferRowTargets(targets, frontRowRank(state, opponent));
+  }
+  return targets;
 }
 
 function fEmptyFirstPickTargets(state, color, card) {
@@ -310,7 +323,10 @@ export function getValidTargets(state, color, card, picks) {
       if (card.effect === "snowball") {
         if (picks.length === 0) {
           for (let r = 0; r < SIZE; r++)
-            for (let c = 0; c < SIZE; c++) if (at(state, r, c)) res.push([r, c]);
+            for (let c = 0; c < SIZE; c++) {
+              const p = at(state, r, c);
+              if (p && p.color === o) res.push([r, c]);
+            }
         }
         return res;
       }
