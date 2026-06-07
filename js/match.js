@@ -892,9 +892,9 @@ export class MatchSession {
       el.title =
         s.phase === PHASE.MOVE
           ? "Spells skipped — select a piece to move"
-          : s.meta.shatterSilenced?.red
+          : s.meta.shatterSilenced?.[this.localColor]
             ? "Shatter backlash — no spells this turn"
-            : s.meta.blinded?.red
+            : s.meta.blinded?.[this.localColor]
               ? "Blinded — no spells this turn"
               : s.spellPlayed[this.localColor]
               ? "Already cast a spell this turn"
@@ -1053,6 +1053,21 @@ export class MatchSession {
     }, ms);
   }
 
+  tryQuickMarchMove(s, color, landR, landC) {
+    if (!s.meta.pendingDouble?.[color]) return false;
+    s.meta.pendingDouble[color] = false;
+    const extras = getAllMovesForColor(s.board, color, s).filter(
+      (m) => m.from[0] === landR && m.from[1] === landC && (m.type === "step" || m.type === "jump")
+    );
+    if (!extras.length) return false;
+    s.phase = PHASE.MOVE;
+    this.validMoves = extras;
+    this.selectedSquare = [landR, landC];
+    this.setMessage("Quick March — move again!");
+    this.render();
+    return true;
+  }
+
   tryBearBonusMove(s, color, landR, landC) {
     const landed = s.board[landR]?.[landC];
     if (!landed?.bearAwakened || s.meta.bearBonusUsed?.[color]) return false;
@@ -1079,7 +1094,7 @@ export class MatchSession {
     }
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
-    s.meta.lastMove.red = move;
+    s.meta.lastMove[this.localColor] = move;
     const capBefore = s.captured[this.localColor]?.length ?? 0;
     this.achievementTracker?.onMoveBefore(s);
     applyMove(s.board, move, s);
@@ -1092,19 +1107,7 @@ export class MatchSession {
       if (move.captures?.length && this.continueMultiJump(landR, landC)) return;
       this.selectedSquare = null;
       this.validMoves = [];
-      if (s.meta.pendingDouble.red && move.type === "step") {
-        s.meta.pendingDouble.red = false;
-        const extras = getAllMovesForColor(s.board, this.localColor, s).filter(
-          (m) => m.from[0] === landR && m.from[1] === landC && (m.type === "step" || m.type === "jump")
-        );
-        if (extras.length) {
-          this.validMoves = extras;
-          this.selectedSquare = [landR, landC];
-          this.setMessage("Quick March — move again!");
-          this.render();
-          return;
-        }
-      }
+      if (this.tryQuickMarchMove(s, this.localColor, landR, landC)) return;
       if (this.tryBearBonusMove(s, this.localColor, landR, landC)) return;
       if (this.tryPressExtraMove(s, this.localColor, landR, landC)) return;
       this.endHumanTurn();
