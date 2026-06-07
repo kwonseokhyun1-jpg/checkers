@@ -70,9 +70,8 @@ body {
 
 
 
-/* Full-screen match — hide bottom nav so tab switches cannot eject you */
 body.match-active .game-nav.tabs {
-  display: none !important;
+  opacity: 0.65;
 }
 
 body.match-active .game-main {
