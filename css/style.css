@@ -124,6 +124,24 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
+.piece-icon.piece-skin-ember {
+  background: radial-gradient(circle at 35% 30%, #ffb347, #c44 70%);
+  box-shadow: 0 0 6px rgba(255, 120, 40, 0.45);
+}
+.piece-icon.piece-skin-frost {
+  background: radial-gradient(circle at 30% 25%, #e8f8ff, #6ab4d4 55%, #2a5a7a);
+  box-shadow: 0 0 6px rgba(150, 220, 255, 0.4);
+}
+.piece-icon.piece-skin-arcane {
+  background: radial-gradient(circle at 30% 25%, #d4b8ff, #6b4fd4 60%, #2a1848);
+  box-shadow: 0 0 6px rgba(159, 122, 234, 0.45);
+}
+.piece-icon.piece-skin-void {
+  background: radial-gradient(circle at 35% 30%, #3a3560, #0a0814 85%);
+  box-shadow: 0 0 6px rgba(123, 92, 255, 0.45);
+  border-color: rgba(180, 160, 255, 0.35);
+}
+
 .stat {
   margin-bottom: 1rem;
 }
@@ -4841,6 +4859,8 @@ body.chest-open-active {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   width: 100%;
   padding: 0.75rem 1rem;
   border: 1px solid var(--card-border);
@@ -4857,9 +4877,26 @@ body.chest-open-active {
   background: rgba(80, 200, 180, 0.08);
 }
 .pvp-open-join__name { font-weight: 600; }
+.pvp-open-join__skin {
+  font-size: 0.78rem;
+  color: var(--text-muted, rgba(232, 236, 244, 0.55));
+}
+.pvp-open-item--blocked .pvp-open-join {
+  flex-direction: column;
+  align-items: flex-start;
+}
 .pvp-open-join__action {
   font-size: 0.85rem;
   color: var(--accent-gem);
+  margin-left: auto;
+}
+.pvp-open-join--disabled {
+  cursor: not-allowed;
+  opacity: 0.72;
+  border-style: dashed;
+}
+.pvp-open-item--blocked .pvp-open-join__skin {
+  color: var(--accent-red, #f87171);
 }
 .pvp-wait-hint strong { color: var(--accent-gold); }
 

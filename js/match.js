@@ -25,6 +25,7 @@ import {
 import { planAiTurnWork, runAiTurn, cloneMatchState, syncPlannedAiState, applyAiReplayEntry } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
+import { pieceSkinCssSuffix } from "./cosmetics.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview } from "./cardPreview.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
@@ -142,6 +143,7 @@ export class MatchSession {
    */
   constructor(deckCardIds, rootEl, onExit, onWin, options = {}) {
     this.cosmetics = options.cosmetics || null;
+    this.opponentCosmetics = options.opponentCosmetics || null;
     this.profile = options.profile || null;
     this.isPvp = !!options.pvp;
     this.localColor = options.localColor ?? COLORS.RED;
@@ -2064,13 +2066,17 @@ ${starLine}`;
         const piece = s.board[row][col];
         if (piece) {
           const el = document.createElement("span");
-          let skinClass = "";
-          if (piece.color === this.localColor && this.cosmetics?.equipped?.pieceSkin) {
-            const skinId = this.cosmetics.equipped.pieceSkin;
-            if (skinId && skinId !== "skin_classic") {
-              skinClass = ` piece-skin-${skinId.replace("skin_", "")}`;
-            }
-          }
+          const skinSource =
+            piece.color === this.localColor
+              ? this.cosmetics
+              : this.isPvp
+                ? this.opponentCosmetics
+                : null;
+          const skinClass = this.isPvp
+            ? pieceSkinCssSuffix(skinSource?.equipped?.pieceSkin)
+            : piece.color === this.localColor
+              ? pieceSkinCssSuffix(this.cosmetics?.equipped?.pieceSkin)
+              : "";
           el.className = `piece ${piece.color}${piece.king ? " king" : ""}${skinClass}`;
           if (piece.shieldTurns > 0) el.classList.add("shielded");
           if (piece.frozenTurns > 0) el.classList.add("frozen");
@@ -2291,9 +2297,11 @@ ${starLine}`;
   }
 
   updatePlayerPanels() {
+    const youSkin = this.isPvp ? pieceSkinCssSuffix(this.cosmetics?.equipped?.pieceSkin) : "";
+    const oppSkin = this.isPvp ? pieceSkinCssSuffix(this.opponentCosmetics?.equipped?.pieceSkin) : "";
     const youIcon = this.root.querySelector(".panel-player .piece-icon");
-    if (youIcon) youIcon.className = `piece-icon ${this.localColor}`;
+    if (youIcon) youIcon.className = `piece-icon ${this.localColor}${youSkin}`;
     const oppIcon = this.root.querySelector(".panel-opponent .piece-icon");
-    if (oppIcon) oppIcon.className = `piece-icon ${this.opponentColor}`;
+    if (oppIcon) oppIcon.className = `piece-icon ${this.opponentColor}${oppSkin}`;
   }
 }

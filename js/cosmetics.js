@@ -179,3 +179,27 @@ export function cosmeticCssClass(item) {
   if (!item) return "";
   return item.id.replace(/_/g, "-");
 }
+
+export const DEFAULT_PIECE_SKIN = "skin_classic";
+
+export const SAME_PIECE_SKIN_JOIN_MESSAGE =
+  "You and the host have the same piece skin. Equip a different skin in Profile to join.";
+
+/** @param {object} [profileOrCosmetics] profile or normalized cosmetics */
+export function getEquippedPieceSkin(profileOrCosmetics) {
+  const cosmetics =
+    profileOrCosmetics?.equipped && profileOrCosmetics?.owned
+      ? normalizeCosmetics(profileOrCosmetics)
+      : getEquippedCosmetics(profileOrCosmetics);
+  return cosmetics.equipped.pieceSkin || DEFAULT_PIECE_SKIN;
+}
+
+export function pieceSkinsConflict(skinA, skinB) {
+  return (skinA || DEFAULT_PIECE_SKIN) === (skinB || DEFAULT_PIECE_SKIN);
+}
+
+/** CSS class suffix for an equipped piece skin, e.g. " piece-skin-ember". */
+export function pieceSkinCssSuffix(skinId) {
+  if (!skinId || skinId === DEFAULT_PIECE_SKIN) return "";
+  return ` piece-skin-${skinId.replace("skin_", "")}`;
+}
