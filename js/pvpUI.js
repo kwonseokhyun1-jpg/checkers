@@ -4,7 +4,14 @@ import { COLORS } from "./board.js";
 import { MatchSession, isPvpTerminalBoard } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
-import { getEquippedCosmetics, normalizeCosmetics } from "./cosmetics.js";
+import {
+  COSMETIC_BY_ID,
+  getEquippedCosmetics,
+  getEquippedPieceSkin,
+  normalizeCosmetics,
+  pieceSkinsConflict,
+  SAME_PIECE_SKIN_JOIN_MESSAGE,
+} from "./cosmetics.js";
 import { PvpService, probePvpBackend, subscribeOpenRooms, isMysteryMode, PVP_MODE_MYSTERY, PVP_MODE_NORMAL } from "./pvp.js";
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 import { recordPvpWin } from "./profileStats.js";
@@ -96,7 +103,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       <section class="panel game-panel pvp-panel">
         <header class="panel-head">
           <h2 class="panel-head__title">PvP Arena</h2>
-          <p class="panel-head__desc">Host a room or join an open match below. You play red; your opponent plays black.</p>
+          <p class="panel-head__desc">Host a room or join an open match below. Your piece colour comes from your equipped skin in Profile — you cannot join if both players use the same skin.</p>
         </header>
         <div class="pvp-setup-row">
           <div class="pvp-setup-field">
@@ -186,10 +193,16 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
     }
   }
 
+  function pieceSkinLabel(skinId) {
+    return COSMETIC_BY_ID[skinId]?.name || "Classic Disc";
+  }
+
   function renderRoomLists(mine, others) {
     const yourList = root.querySelector("#pvp-your-list");
     const openList = root.querySelector("#pvp-open-list");
     if (!yourList || !openList) return;
+
+    const mySkin = getEquippedPieceSkin(getProfile());
 
     if (!mine.length) {
       yourList.innerHTML = `<li class="pvp-open-empty">No rooms yet — host one above.</li>`;
@@ -212,14 +225,26 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       openList.innerHTML = `<li class="pvp-open-empty">${hint}</li>`;
     } else {
       openList.innerHTML = others
-        .map(
-          (room) => `<li class="pvp-open-item">
+        .map((room) => {
+          const hostSkin = room.host_piece_skin || "skin_classic";
+          const sameSkin = pieceSkinsConflict(hostSkin, mySkin);
+          const skinLabel = pieceSkinLabel(hostSkin);
+          if (sameSkin) {
+            return `<li class="pvp-open-item pvp-open-item--blocked">
+              <div class="pvp-open-join pvp-open-join--disabled" title="${escapeHtml(SAME_PIECE_SKIN_JOIN_MESSAGE)}">
+                <span class="pvp-open-join__name">${escapeHtml(room.host_display_name || "Player")} ${roomModeLabel(room)}</span>
+                <span class="pvp-open-join__skin">${escapeHtml(skinLabel)} skin — same as yours</span>
+              </div>
+            </li>`;
+          }
+          return `<li class="pvp-open-item">
             <button type="button" class="pvp-open-join" data-join-room="${room.id}" data-mystery="${isMysteryMode(room) ? "1" : "0"}">
               <span class="pvp-open-join__name">${escapeHtml(room.host_display_name || "Player")} ${roomModeLabel(room)}</span>
+              <span class="pvp-open-join__skin">${escapeHtml(skinLabel)} skin</span>
               <span class="pvp-open-join__action">${isMysteryMode(room) ? "Join Mystery" : "Join match"}</span>
             </button>
-          </li>`
-        )
+          </li>`;
+        })
         .join("");
     }
 
@@ -465,6 +490,7 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
         initialState: row.state_json,
         opponentName,
         cosmetics: localCosmetics,
+        opponentCosmetics,
         onStateSync: async (state) => {
           const v = pvpService._lastVersion;
           const updated = await pvpService.pushState(state, v);
@@ -533,7 +559,10 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       const row = await svc.createRoom(
         mystery ? null : deck.cardIds,
         await getDisplayName(),
-        { matchMode: getSelectedMode() }
+        {
+          matchMode: getSelectedMode(),
+          hostPieceSkin: getEquippedPieceSkin(getProfile()),
+        }
       );
       renderRoomLists([row], []);
       setStatus(
@@ -572,7 +601,10 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       stopOpenRoomsSync();
       const svc = ensurePvpService();
       const guestDeckIds = mystery ? null : getSelectedDeck().cardIds;
-      const row = await svc.joinRoomById(matchId, guestDeckIds, await getDisplayName());
+      const guestPieceSkin = getEquippedPieceSkin(getProfile());
+      const row = await svc.joinRoomById(matchId, guestDeckIds, await getDisplayName(), {
+        guestPieceSkin,
+      });
       onMatchRow(row);
     } catch (e) {
       setStatus(e.message || "Could not join room", true);

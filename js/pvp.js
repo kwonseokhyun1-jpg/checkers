@@ -4,6 +4,11 @@ import { COLORS, createInitialBoard } from "./board.js";
 import { createMatchState } from "./match.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { buildMysteryDeck } from "./deckRules.js";
+import {
+  DEFAULT_PIECE_SKIN,
+  SAME_PIECE_SKIN_JOIN_MESSAGE,
+  pieceSkinsConflict,
+} from "./cosmetics.js";
 
 export const PVP_MODE_NORMAL = "normal";
 export const PVP_MODE_MYSTERY = "mystery";
@@ -77,7 +82,11 @@ export class PvpService {
     this.matchId = null;
   }
 
-  async createRoom(hostDeckIds, displayName, { matchMode = PVP_MODE_NORMAL } = {}) {
+  async createRoom(
+    hostDeckIds,
+    displayName,
+    { matchMode = PVP_MODE_NORMAL, hostPieceSkin = DEFAULT_PIECE_SKIN } = {}
+  ) {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
@@ -99,6 +108,7 @@ export class PvpService {
           host_id: user.id,
           host_deck_ids: mystery ? null : hostDeckIds,
           host_display_name: displayName,
+          host_piece_skin: hostPieceSkin || DEFAULT_PIECE_SKIN,
           status: "waiting",
           match_mode: mystery ? PVP_MODE_MYSTERY : PVP_MODE_NORMAL,
         })
@@ -124,7 +134,9 @@ export class PvpService {
 
     const { data, error } = await sb
       .from("pvp_matches")
-      .select("id, host_id, host_display_name, created_at, status, guest_id, match_mode")
+      .select(
+        "id, host_id, host_display_name, host_piece_skin, created_at, status, guest_id, match_mode"
+      )
       .eq("host_id", user.id)
       .eq("status", "waiting")
       .is("guest_id", null)
@@ -142,7 +154,9 @@ export class PvpService {
 
     const { data, error } = await sb
       .from("pvp_matches")
-      .select("id, host_id, host_display_name, created_at, status, guest_id, match_mode")
+      .select(
+        "id, host_id, host_display_name, host_piece_skin, created_at, status, guest_id, match_mode"
+      )
       .eq("status", "waiting")
       .is("guest_id", null)
       .neq("host_id", user.id)
@@ -162,7 +176,7 @@ export class PvpService {
     return [...mine, ...others];
   }
 
-  async joinRoomById(matchId, guestDeckIds, displayName) {
+  async joinRoomById(matchId, guestDeckIds, displayName, { guestPieceSkin = DEFAULT_PIECE_SKIN } = {}) {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
@@ -178,11 +192,18 @@ export class PvpService {
     if (findErr) throw findErr;
     if (!row) throw new Error("That room is no longer available.");
     if (row.host_id === user.id) throw new Error("You cannot join your own room");
+    this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
 
-    return this.joinWaitingRow(row, guestDeckIds, displayName);
+    return this.joinWaitingRow(row, guestDeckIds, displayName, { guestPieceSkin });
   }
 
-  async joinRoom(code, guestDeckIds, displayName) {
+  assertDistinctPieceSkins(hostPieceSkin, guestPieceSkin) {
+    if (pieceSkinsConflict(hostPieceSkin, guestPieceSkin)) {
+      throw new Error(SAME_PIECE_SKIN_JOIN_MESSAGE);
+    }
+  }
+
+  async joinRoom(code, guestDeckIds, displayName, { guestPieceSkin = DEFAULT_PIECE_SKIN } = {}) {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
@@ -195,6 +216,7 @@ export class PvpService {
       guest_deck_ids: guestDeckIds,
       guest_display_name: displayName,
       state_json: null,
+      guest_piece_skin: guestPieceSkin,
     });
 
     if (!rpc.error && rpc.data) {
@@ -213,6 +235,7 @@ export class PvpService {
       if (findErr) throw findErr;
       if (!row) throw new Error("Room not found or already full.");
       if (row.host_id === user.id) throw new Error("You cannot join your own room");
+      this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
 
       const { data: updated, error } = await sb
         .from("pvp_matches")
@@ -220,6 +243,7 @@ export class PvpService {
           guest_id: user.id,
           guest_deck_ids: guestDeckIds,
           guest_display_name: displayName,
+          guest_piece_skin: guestPieceSkin,
           status: "active",
           turn: COLORS.RED,
           version: 1,
@@ -237,14 +261,15 @@ export class PvpService {
     return this.finalizeGuestJoin(data, guestDeckIds);
   }
 
-  async joinWaitingRow(row, guestDeckIds, displayName) {
+  async joinWaitingRow(row, guestDeckIds, displayName, { guestPieceSkin = DEFAULT_PIECE_SKIN } = {}) {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
     const mystery = isMysteryMode(row);
+    this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
     if (mystery) {
-      return this.joinMysteryRow(row, displayName);
+      return this.joinMysteryRow(row, displayName, { guestPieceSkin });
     }
 
     if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
@@ -256,6 +281,7 @@ export class PvpService {
       guest_deck_ids: guestDeckIds,
       guest_display_name: displayName,
       state_json: null,
+      guest_piece_skin: guestPieceSkin,
     });
 
     let data = null;
@@ -270,6 +296,7 @@ export class PvpService {
           guest_id: user.id,
           guest_deck_ids: guestDeckIds,
           guest_display_name: displayName,
+          guest_piece_skin: guestPieceSkin,
           status: "active",
           turn: COLORS.RED,
           version: 1,
@@ -287,10 +314,12 @@ export class PvpService {
     return this.finalizeGuestJoin(data, guestDeckIds);
   }
 
-  async joinMysteryRow(row, displayName) {
+  async joinMysteryRow(row, displayName, { guestPieceSkin = DEFAULT_PIECE_SKIN } = {}) {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
+
+    this.assertDistinctPieceSkins(row.host_piece_skin, guestPieceSkin);
 
     const hostDeckIds = buildMysteryDeck();
     const guestDeckIds = buildMysteryDeck();
@@ -305,6 +334,7 @@ export class PvpService {
         guest_deck_ids: guestDeckIds,
         host_deck_ids: hostDeckIds,
         guest_display_name: displayName,
+        guest_piece_skin: guestPieceSkin,
         status: "active",
         state_json: stateJson,
         turn: COLORS.RED,
