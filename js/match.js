@@ -43,6 +43,8 @@ import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDark
 import { isInDarknessZone } from "./gameMeta.js";
 import { saveMatchCheckpoint, clearMatchCheckpoint } from "./matchLifecycle.js";
 import { createMatchAchievementTracker } from "./achievementTracker.js";
+import { recordSpellPlayed } from "./profileStats.js";
+import { saveProfile } from "./storage.js";
 import {
   appendHistoryEntry,
   buildViewState,
@@ -595,6 +597,12 @@ export class MatchSession {
     if (i >= 0) hand.splice(i, 1);
   }
 
+  recordSuccessfulSpellCast() {
+    if (!this.profile) return;
+    recordSpellPlayed(this.profile);
+    saveProfile(this.profile);
+  }
+
   updateSpellCastUI() {
     const bar = this.$("spell-cast-bar");
     if (!bar) return;
@@ -629,6 +637,7 @@ export class MatchSession {
     if (card) {
       this.recordPvpSpell(card, picks, replayExtras);
       this.removeCardFromHand(card);
+      this.recordSuccessfulSpellCast();
     }
     if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
     else this.state.meta.extraSpellCast[this.localColor] = false;
@@ -1528,6 +1537,7 @@ ${starLine}`;
         res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}
       );
       this.removeCardFromHand(card);
+      this.recordSuccessfulSpellCast();
       if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
       else this.state.meta.extraSpellCast[this.localColor] = false;
       if (card.effect === "counterspell") {

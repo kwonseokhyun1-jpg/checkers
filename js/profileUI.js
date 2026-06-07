@@ -71,33 +71,33 @@ function profileTitleBadgeHtml(profile) {
 
 const PROFILE_STAT_ICONS = {
   pvp: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M10 38l6-18 8 4-4 14H10z" fill="#e85d5d"/>
-    <path d="M38 38l-6-18-8 4 4 14h10z" fill="#5ce1e6"/>
-    <circle cx="24" cy="14" r="7" fill="#e8c547"/>
-    <path d="M24 8v12M20 12h8" stroke="#1a2438" stroke-width="2" stroke-linecap="round"/>
+    <path d="M14 10h20v6c0 6-4 10-10 10S14 22 14 16v-6z" fill="#e8c547"/>
+    <path d="M10 10h4v4c0 3-2 6-4 6V10zM34 10h4v10c-2 0-4-3-4-6v-4z" fill="#e8c547"/>
+    <rect x="18" y="26" width="12" height="4" rx="1" fill="#c9942a"/>
+    <rect x="16" y="30" width="16" height="4" rx="1" fill="#a67c1a"/>
+    <rect x="20" y="34" width="8" height="6" rx="1" fill="#8b6914"/>
   </svg>`,
   adventure: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M8 36l12-24 8 10 12-14 8 28H8z" fill="#4ade80"/>
-    <path d="M8 36h32" stroke="#166534" stroke-width="2" stroke-linecap="round"/>
-    <path d="M20 22l4 4 8-10" stroke="#dcfce7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="36" cy="12" r="5" fill="#e8c547"/>
-    <path d="M36 9v6M33 12h6" stroke="#1a2438" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M8 12l12 4 8-4 12 4v28l-12-4-8 4-12-4V12z" fill="#d4a574" stroke="#8b6914" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M20 12v28M28 8v28" stroke="#8b6914" stroke-width="1.5"/>
+    <circle cx="24" cy="22" r="3" fill="#e85d5d"/>
+    <path d="M24 25v6" stroke="#e85d5d" stroke-width="2" stroke-linecap="round"/>
   </svg>`,
   spells: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <rect x="10" y="8" width="22" height="30" rx="3" fill="#9f7aea"/>
-    <path d="M14 14h14M14 20h14M14 26h9" stroke="#ede9fe" stroke-width="2" stroke-linecap="round"/>
-    <path d="M32 10l10 10-4 18-14-4 8-24z" fill="#5ce1e6"/>
-    <circle cx="36" cy="16" r="2.5" fill="#fff"/>
-    <path d="M34 24l4-2 2 4" stroke="#1a2438" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M10 38l22-22 4 4-22 22-4-4z" fill="#8b6914"/>
+    <path d="M32 14l4-4 2 2-4 4-2-2z" fill="#e8c547"/>
+    <path d="M36 8l3-1 1 3-3 1-1-3z" fill="#5ce1e6"/>
+    <path d="M38 14l2 2M40 10l-2 2" stroke="#e8c547" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="12" cy="36" r="2" fill="#9f7aea"/>
   </svg>`,
 };
 
 function profileHeroStatsHtml(profile) {
   const stats = getProfileStats(profile);
   const cards = [
-    { key: "pvp", label: "PvP", value: stats.pvpWins },
-    { key: "adventure", label: "Adventure", value: stats.adventureStagesCleared },
-    { key: "spells", label: "Spells", value: stats.spellsUnlocked },
+    { key: "pvp", label: "PvP wins", value: stats.pvpWins },
+    { key: "adventure", label: "Stages cleared", value: stats.adventureStagesCleared },
+    { key: "spells", label: "Spells played", value: stats.spellsPlayed },
   ];
   return `
     <div class="profile-hero-stats" aria-label="Player statistics">

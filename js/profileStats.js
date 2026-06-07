@@ -17,6 +17,17 @@ export function countAdventureStagesCleared(profile) {
   return Object.values(progress.cleared || {}).filter(Boolean).length;
 }
 
+export function getSpellPlayCount(profile) {
+  const n = Number(profile?.spellsPlayed);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+export function recordSpellPlayed(profile) {
+  if (!profile) return 0;
+  profile.spellsPlayed = getSpellPlayCount(profile) + 1;
+  return profile.spellsPlayed;
+}
+
 export function countSpellsUnlocked(profile) {
   const collection = profile?.collection || {};
   const playableIds = new Set(getPlayableCards().map((c) => c.id));
@@ -31,6 +42,6 @@ export function getProfileStats(profile) {
   return {
     pvpWins: getPvpWinCount(profile),
     adventureStagesCleared: countAdventureStagesCleared(profile),
-    spellsUnlocked: countSpellsUnlocked(profile),
+    spellsPlayed: getSpellPlayCount(profile),
   };
 }
