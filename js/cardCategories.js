@@ -51,7 +51,6 @@ const ID_TO_CATEGORY = {
   earthquake: "special",
   execution: "attack",
   pyromancy: "attack",
-  fog: "defense",
   fusion: "movement",
   hex: "control",
   hibernation: "special",
@@ -113,7 +112,7 @@ export function getCardCategory(def) {
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
   if (/trap|mine|quicksand|counterspell|vengeance|darkness/.test(blob)) return "trap";
-  if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|fog|rally/.test(blob)) {
+  if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|rally/.test(blob)) {
     return "defense";
   }
   if (/move|nudge|teleport|recall|leap|step|displace|swap|scatter|retreat|bishop|rook|fusion|overrun|promote|pull|push|shift|earthquake|magnet|repel/.test(blob)) {
