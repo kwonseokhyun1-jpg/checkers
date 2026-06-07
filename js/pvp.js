@@ -83,6 +83,37 @@ function guestJoinUpdateFields(userId, guestDeckIds, displayName, guestPieceSkin
 /** Bumped when the client should run a one-time global waiting-room reset. */
 export const PVP_WAITING_RESET_KEY = "pvp_waiting_reset_v3";
 
+/** Fast path for reconnecting to an in-progress PvP match after refresh. */
+export const PVP_ACTIVE_MATCH_KEY = "cc_pvp_active_match";
+
+export function saveActivePvpMatchId(matchId) {
+  if (!matchId) return;
+  try {
+    sessionStorage.setItem(PVP_ACTIVE_MATCH_KEY, JSON.stringify({ matchId, savedAt: Date.now() }));
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+export function readActivePvpMatchId() {
+  try {
+    const raw = sessionStorage.getItem(PVP_ACTIVE_MATCH_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.matchId || null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearActivePvpMatchId() {
+  try {
+    sessionStorage.removeItem(PVP_ACTIVE_MATCH_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
 function randomCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let s = "";
@@ -136,6 +167,42 @@ export class PvpService {
       this.channel = null;
     }
     this.matchId = null;
+    this.role = null;
+  }
+
+  /** Reconnect to an existing match row after refresh (host, guest, or waiting host). */
+  attachToMatch(row, userId = getCurrentUser()?.id) {
+    if (!row?.id || !userId) throw new Error("Cannot attach to match");
+    if (row.host_id === userId) {
+      this.role = "host";
+      this.localColor = COLORS.RED;
+    } else if (row.guest_id === userId) {
+      this.role = "guest";
+      this.localColor = COLORS.BLACK;
+    } else {
+      throw new Error("You are not a participant in this match");
+    }
+    this.matchId = row.id;
+    this._lastVersion = row.version ?? -1;
+    this.subscribe(row.id);
+  }
+
+  async listActiveMatchForUser() {
+    const sb = getSupabase();
+    const user = getCurrentUser();
+    if (!sb || !user) return null;
+
+    const { data, error } = await sb
+      .from("pvp_matches")
+      .select("*")
+      .eq("status", "active")
+      .or(`host_id.eq.${user.id},guest_id.eq.${user.id}`)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
   }
 
   async createRoom(
