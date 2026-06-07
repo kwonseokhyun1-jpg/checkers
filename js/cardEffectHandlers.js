@@ -2,7 +2,7 @@
  * Spell effect implementations for Card Checkers
  */
 import {
-  SIZE, COLORS, LAST_STAND_SHIELD_TURNS, isDarkSquare, inBounds, movePiece, removePiece,
+  SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone,
@@ -103,41 +103,7 @@ function triggerLinkedFate(state, deadPiece, by) {
 }
 
 function kill(state, r, c, by, nonCap = true, opts = {}) {
-  const p = at(state, r, c);
-  if (!p) return false;
-  if (!opts.linkFate && p.cloneNoCaptureThisTurn) return false;
-  if (!opts.berserkSlam && !opts.linkFate && p.shieldTurns > 0) { p.shieldTurns--; return false; }
-  if (!opts.linkFate && p.king && ensureConstitutionTurns(state.meta)[p.color] > 0 && nonCap) return false;
-  if (!opts.linkFate && p.lastStand) {
-    p.lastStand = false;
-    p.shieldTurns = Math.max(p.shieldTurns, LAST_STAND_SHIELD_TURNS);
-    return false;
-  }
-  if (!opts.linkFate && p.deflectTurns > 0) {
-    p.deflectTurns = 0;
-    const es = enemyPieces(state.board, by);
-    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; removePiece(state.board, t.row, t.col); }
-    return false;
-  }
-  if (!opts.linkFate && p.mirrorShield) {
-    p.mirrorShield = false;
-    const es = enemyPieces(state.board, by);
-    if (es.length) { const t = es[Math.floor(Math.random() * es.length)]; removePiece(state.board, t.row, t.col); }
-    return false;
-  }
-  if (!state.captured[p.color]) state.captured[p.color] = [];
-  state.captured[p.color].push({ color: p.color, king: p.king });
-  const partnerId = p.linkedFateId;
-  removePiece(state.board, r, c);
-  if (p.ghostGuard) getSq(state, r, c).ghostBlock = 2;
-  if (partnerId && !opts.linkFate) {
-    const hit = findPieceById(state, partnerId);
-    if (hit) {
-      hit.p.linkedFateId = null;
-      kill(state, hit.r, hit.c, by, false, { linkFate: true });
-    }
-  }
-  return true;
+  return resolveCapture(state.board, state, r, c, by, { nonCap, ...opts });
 }
 
 function adjacentSquares(r, c) {
