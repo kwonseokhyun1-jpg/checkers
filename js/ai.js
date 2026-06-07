@@ -8,7 +8,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { tryAutoPlay, canAiPlay, applyCard } from "./cardEffects.js";
+import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell } from "./cardEffects.js";
 import { getCardDef } from "./cardCatalog.js";
 
 /** Deep copy for AI planning without mutating the live match state. */
@@ -246,6 +246,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
             cardMode: card.mode,
             picks: res.picks || [],
             text: res.message || `Cast ${card.name}`,
+            ...(isHiddenTrapSpell(card) ? { hidden: true } : {}),
             ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
           });
         }
