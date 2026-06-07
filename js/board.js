@@ -1,5 +1,5 @@
 /** Checkers board logic with card-effect modifiers */
-import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance } from "./gameMeta.js";
+import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance, ensureConstitutionTurns } from "./gameMeta.js";
 import { queueBoardFx } from "./boardFx.js";
 
 function sk(r, c) {
@@ -195,24 +195,71 @@ export function setPiece(board, row, col, piece) {
   board[row][col] = piece;
 }
 
-function removeLinkedFatePartner(board, state, deadPiece) {
-  const partnerId = deadPiece?.linkedFateId;
-  if (!partnerId) return;
-  deadPiece.linkedFateId = null;
-  for (let lr = 0; lr < SIZE; lr++) {
-    for (let lc = 0; lc < SIZE; lc++) {
-      const lp = board[lr][lc];
-      if (lp && lp.id === partnerId) {
-        lp.linkedFateId = null;
-        if (state) {
-          if (!state.captured[lp.color]) state.captured[lp.color] = [];
-          state.captured[lp.color].push({ king: lp.king });
-        }
-        board[lr][lc] = null;
-        return;
-      }
+function findPieceById(board, id) {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = board[r][c];
+      if (p && p.id === id) return { p, r, c };
     }
   }
+  return null;
+}
+
+/**
+ * Resolve killing or capturing a piece (shields, Last Stand, deflect, etc.).
+ * @returns {boolean} true if the piece was removed
+ */
+export function resolveCapture(board, state, r, c, byColor, { nonCap = true, berserkSlam = false, linkFate = false } = {}) {
+  const p = board[r]?.[c];
+  if (!p) return false;
+  if (!linkFate && p.cloneNoCaptureThisTurn) return false;
+  if (!berserkSlam && !linkFate && p.shieldTurns > 0) {
+    p.shieldTurns--;
+    return false;
+  }
+  if (!linkFate && p.king && state && ensureConstitutionTurns(state.meta)[p.color] > 0 && nonCap) return false;
+  if (!linkFate && p.lastStand) {
+    p.lastStand = false;
+    p.shieldTurns = Math.max(p.shieldTurns, LAST_STAND_SHIELD_TURNS);
+    return false;
+  }
+  if (!linkFate && p.deflectTurns > 0) {
+    p.deflectTurns = 0;
+    const es = enemyPieces(board, byColor);
+    if (es.length) {
+      const t = es[Math.floor(Math.random() * es.length)];
+      removePiece(board, t.row, t.col);
+    }
+    return false;
+  }
+  if (!linkFate && p.mirrorShield) {
+    p.mirrorShield = false;
+    const es = enemyPieces(board, byColor);
+    if (es.length) {
+      const t = es[Math.floor(Math.random() * es.length)];
+      removePiece(board, t.row, t.col);
+    }
+    return false;
+  }
+  if (state) {
+    if (!state.captured[p.color]) state.captured[p.color] = [];
+    state.captured[p.color].push({ color: p.color, king: p.king });
+    if (p.succession) {
+      const mates = piecesOfColor(board, p.color).filter((mate) => !mate.king && mate.id !== p.id);
+      if (mates.length) mates[0].king = true;
+    }
+  }
+  const partnerId = p.linkedFateId;
+  removePiece(board, r, c);
+  if (p.ghostGuard && state) getSq(state, r, c).ghostBlock = 2;
+  if (partnerId && !linkFate && state) {
+    const hit = findPieceById(board, partnerId);
+    if (hit) {
+      hit.p.linkedFateId = null;
+      resolveCapture(board, state, hit.r, hit.c, byColor, { nonCap: false, linkFate: true });
+    }
+  }
+  return true;
 }
 
 export function removePiece(board, row, col, { force = false, state = null } = {}) {
@@ -221,7 +268,17 @@ export function removePiece(board, row, col, { force = false, state = null } = {
   if (p && state) {
     if (!state.captured[p.color]) state.captured[p.color] = [];
     state.captured[p.color].push({ king: p.king });
-    if (p.linkedFateId) removeLinkedFatePartner(board, state, p);
+    if (p.linkedFateId) {
+      const partnerId = p.linkedFateId;
+      p.linkedFateId = null;
+      const hit = findPieceById(board, partnerId);
+      if (hit) {
+        hit.p.linkedFateId = null;
+        if (!state.captured[hit.p.color]) state.captured[hit.p.color] = [];
+        state.captured[hit.p.color].push({ king: hit.p.king });
+        board[hit.r][hit.c] = null;
+      }
+    }
   }
   board[row][col] = null;
   return true;
@@ -445,38 +502,15 @@ export function applyMove(board, move, state = null) {
   let piece = movePiece(board, fr, fc, tr, tc);
   for (const [cr, cc] of move.captures) {
     const cap = board[cr][cc];
-    if (cap) {
-      const linkedPartner = cap.linkedFateId;
-      if (cap && piece && tryConsumeVengeance(state, piece.color, cap.color)) {
-        queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
-        state?.meta?.achievementHook?.onTrapTriggered?.(cap.color, piece.color);
-        removePiece(board, piece.row, piece.col);
-        piece = null;
-      }
-      if (cap && state) {
-        if (!state.captured[cap.color]) state.captured[cap.color] = [];
-        state.captured[cap.color].push({ king: cap.king });
-        if (cap.succession) {
-          const mates = piecesOfColor(board, cap.color).filter((p) => !p.king);
-          if (mates.length) mates[0].king = true;
-        }
-      }
-      cap.linkedFateId = null;
-      removePiece(board, cr, cc);
-      if (linkedPartner && state) {
-        for (let lr = 0; lr < SIZE; lr++)
-          for (let lc = 0; lc < SIZE; lc++) {
-            const lp = board[lr][lc];
-            if (lp && lp.id === linkedPartner) {
-              lp.linkedFateId = null;
-              if (!state.captured[lp.color]) state.captured[lp.color] = [];
-              state.captured[lp.color].push({ king: lp.king });
-              removePiece(board, lr, lc);
-              break;
-            }
-          }
-      }
+    if (!cap || !piece) continue;
+    if (tryConsumeVengeance(state, piece.color, cap.color)) {
+      queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
+      state?.meta?.achievementHook?.onTrapTriggered?.(cap.color, piece.color);
+      removePiece(board, piece.row, piece.col);
+      piece = null;
+      continue;
     }
+    resolveCapture(board, state, cr, cc, piece.color, { nonCap: false });
   }
   if (!piece) return null;
   if (!piece.king && !(piece.rustedTurns > 0)) {
