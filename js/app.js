@@ -71,6 +71,7 @@ import {
   enterMatchMode,
   exitMatchMode,
   isMatchActive,
+  reconcileMatchShellState,
   clearMatchCheckpoint,
   readMatchCheckpoint,
   saveMatchCheckpoint,
@@ -193,6 +194,7 @@ function hideStageModal() {
 }
 
 function showTab(tab) {
+  reconcileMatchShellState();
   if (isMatchActive()) return;
   dismissTutorial({ persist: true, profile, saveProfile });
   if (tab !== "deck" && deckSubview === "edit") {
@@ -1438,15 +1440,6 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
   if (!root) return;
   root.innerHTML = getMatchHtml(opponentName);
 
-  enterMatchMode({
-    kind: "adventure",
-    deckId: deck.id,
-    deckCardIds: deck.cardIds,
-    aiDeckIds: enemyDeck,
-    opponentName,
-    levelId,
-  });
-
   const sessionOpts = {
     aiDeckIds: enemyDeck,
     opponentName,
@@ -1457,28 +1450,45 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
     sessionOpts.initialState = resumeState;
   }
 
-  matchSession = new MatchSession(
-    deck.cardIds,
-    root,
-    () => {
-      matchSession = null;
-      exitMatchMode();
-      root.innerHTML = "";
-      $("view-match")?.classList.add("hidden");
-      showTab("play");
-    },
-    (stars) => {
-      const { gems, stars: bestStars, starsGained } = recordLevelClear(profile, levelId, stars);
-      profile.gems += gems;
-      saveProfile(profile);
-      updateCurrencyHeader();
-      return {
-        message: `+${gems} gems! · Best: ${formatStars(bestStars)}`,
-        starsGained,
-      };
-    },
-    sessionOpts
-  );
+  try {
+    matchSession = new MatchSession(
+      deck.cardIds,
+      root,
+      () => {
+        matchSession = null;
+        exitMatchMode();
+        root.innerHTML = "";
+        $("view-match")?.classList.add("hidden");
+        showTab("play");
+      },
+      (stars) => {
+        const { gems, stars: bestStars, starsGained } = recordLevelClear(profile, levelId, stars);
+        profile.gems += gems;
+        saveProfile(profile);
+        updateCurrencyHeader();
+        return {
+          message: `+${gems} gems! · Best: ${formatStars(bestStars)}`,
+          starsGained,
+        };
+      },
+      sessionOpts
+    );
+  } catch (err) {
+    matchSession = null;
+    root.innerHTML = "";
+    $("view-match")?.classList.add("hidden");
+    showTab("play");
+    throw err;
+  }
+
+  enterMatchMode({
+    kind: "adventure",
+    deckId: deck.id,
+    deckCardIds: deck.cardIds,
+    aiDeckIds: enemyDeck,
+    opponentName,
+    levelId,
+  });
   if (winRewarded) matchSession.winRewarded = true;
   saveMatchCheckpoint(matchSession);
   matchSession.setMessage("Drag a spell onto the board or tap a card, then pick highlighted squares.");
@@ -1567,6 +1577,7 @@ function init() {
   });
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
+      reconcileMatchShellState();
       if (isMatchActive()) return;
       showTab(btn.dataset.tab);
     });
@@ -1574,6 +1585,7 @@ function init() {
 
   document.querySelectorAll(".vault-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
+      reconcileMatchShellState();
       if (isMatchActive()) return;
       showVaultTab(btn.dataset.vaultTab);
     });
@@ -1688,6 +1700,11 @@ function init() {
     onSignedOut: () => {
       headerDisplayUsername = "";
       updateHeaderProfileBtn();
+      pvpController?.dispose?.();
+      matchSession = null;
+      exitMatchMode({ clearCheckpoint: true });
+      reconcileMatchShellState();
+      showTab("deck");
     },
   });
 
@@ -1726,10 +1743,12 @@ async function bootstrapAfterAuth() {
     console.warn("Auth init failed", e);
   }
   await refreshHeaderIdentity();
+  reconcileMatchShellState();
   if (!tryResumeSavedMatch()) {
     const resumedPvp = await pvpController?.tryResume?.();
     if (!resumedPvp) showTab("deck");
   }
+  reconcileMatchShellState();
 }
 
 init();
