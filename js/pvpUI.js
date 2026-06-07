@@ -376,9 +376,14 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
       if (!matchSession._gameOverUiShown && finished && row.winner_id) {
         const user = getCurrentUser();
         const won = user?.id === row.winner_id;
+        const forfeited = !isPvpTerminalBoard(row.state_json, pvpService.localColor);
         void matchSession.showGameOver(
           won ? "Victory!" : "Defeat",
-          won ? "You won the match!" : "You lost the match."
+          won
+            ? forfeited
+              ? "Your opponent left the match."
+              : "You won the match!"
+            : "You lost the match."
         );
       }
       if (!matchSession._gameOverUiShown) {
@@ -495,6 +500,11 @@ export function initPvpUI({ root, getProfile, openAuthModal }) {
           const v = pvpService._lastVersion;
           const updated = await pvpService.pushState(state, v);
           if (updated) pvpService._lastVersion = updated.version;
+        },
+        onPvpForfeit: async () => {
+          if (!pvpService || matchSession?._gameOverUiShown) return;
+          const opponentId = opponentIdFromRow(row);
+          if (opponentId) await pvpService.finishMatch(opponentId);
         },
         onPvpWin: async (won) => {
           const currentUser = getCurrentUser();
