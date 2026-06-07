@@ -172,13 +172,19 @@ function scoreBoard(board, aiColor) {
   return score;
 }
 
-export function pickBestMove(board, color, state) {
-  const moves = getAllMovesForColor(board, color, state);
-  if (!moves.length) return null;
+function getChainJumpsFrom(board, color, state, fromR, fromC) {
+  return getAllMovesForColor(board, color, state).filter(
+    (m) => m.type === "jump" && m.from[0] === fromR && m.from[1] === fromC && m.captures?.length
+  );
+}
 
-  let best = moves[0];
+export function pickBestMove(board, color, state, moves = null) {
+  const pool = moves ?? getAllMovesForColor(board, color, state);
+  if (!pool.length) return null;
+
+  let best = pool[0];
   let bestScore = -Infinity;
-  for (const move of moves) {
+  for (const move of pool) {
     const copy = board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
     applyMove(copy, move, state);
     const total = scoreBoard(copy, color) + (move.captures?.length || 0) * 8 + Math.random() * 2;
@@ -276,7 +282,29 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
         : `Moved ${squareName(move.from[0], move.from[1])} → ${squareName(move.to[0], move.to[1])}`,
     });
     applyMove(state.board, move, state);
-    const [br, bc] = move.to;
+    let [br, bc] = move.to;
+    if (move.captures?.length) {
+      while (true) {
+        const chainJumps = getChainJumpsFrom(state.board, color, state, br, bc);
+        if (!chainJumps.length) break;
+        const next = pickBestMove(state.board, color, state, chainJumps);
+        if (!next) break;
+        const nextCap = next.captures?.length || 0;
+        log.push({
+          type: "move",
+          from: [...next.from],
+          to: [...next.to],
+          captures: next.captures ? next.captures.map((c) => [...c]) : [],
+          moveKind: next.type,
+          text: nextCap
+            ? `Continued ${squareName(next.from[0], next.from[1])} → ${squareName(next.to[0], next.to[1])} (captured ${nextCap})`
+            : `Continued ${squareName(next.from[0], next.from[1])} → ${squareName(next.to[0], next.to[1])}`,
+        });
+        if (!applyMove(state.board, next, state)) break;
+        [br, bc] = next.to;
+        move = next;
+      }
+    }
     const landed = state.board[br]?.[bc];
     if (landed?.bearAwakened && !state.meta.bearBonusUsed?.[aiColor]) {
       if (!state.meta.bearBonusUsed) state.meta.bearBonusUsed = {};
