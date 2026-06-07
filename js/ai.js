@@ -1,4 +1,13 @@
-import { COLORS, getAllMovesForColor, applyMove, countPieces, squareName, findPressExtraPiece } from "./board.js";
+import {
+  COLORS,
+  getAllMovesForColor,
+  applyMove,
+  countPieces,
+  squareName,
+  findPressExtraPiece,
+  findPanicPiece,
+  getBackwardStepMoves,
+} from "./board.js";
 import { tryAutoPlay, canAiPlay, applyCard } from "./cardEffects.js";
 import { getCardDef } from "./cardCatalog.js";
 
@@ -240,6 +249,8 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
 
   let move;
   let confused = false;
+  const panicked = findPanicPiece(state.board, color);
+  const panicForced = panicked && getBackwardStepMoves(state.board, panicked, state).length > 0;
   if (state.meta.confuseNext?.[color]) {
     confused = true;
     state.meta.confuseNext[color] = false;
@@ -248,6 +259,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     if (move) log.push({ type: "message", text: "Confusion — random move!" });
   } else {
     move = pickBestMove(state.board, color, state);
+    if (panicForced && move) log.push({ type: "message", text: "Panic — forced backward step!" });
   }
 
   if (move) {
