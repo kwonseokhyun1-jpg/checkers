@@ -41,7 +41,7 @@ const BOARD_SHAKE_EFFECTS = new Set([
 ]);
 
 const KILL_EFFECTS = new Set([
-  "snipe", "destroy_unshielded", "execution", "forward_bolt", "pyromancy", "cryo_bolt",
+  "snipe", "destroy_unshielded", "execution", "forward_bolt", "pyromancy",
   "coin_flip", "sacrifice", "backstab", "shatter",
 ]);
 
@@ -252,6 +252,32 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     return withVisual({ type: "cull", duration: CULL_ANIMATION_MS, label, squares: [] }, effect);
   }
 
+  if (effect === "cryo_bolt" && p.length >= 2) {
+    const dur = animDurationForEffect(effect);
+    const lineSquares = squaresBetween(p[0], p[1]);
+    if (extra.cryoShatter) {
+      return withVisual({
+        type: "kill",
+        duration: dur,
+        label,
+        squares: [p[1]],
+        from: p[0],
+        to: p[1],
+        lineSquares,
+      }, effect);
+    }
+    return finishSpec({
+      type: "debuff",
+      visual: "freeze",
+      duration: dur,
+      label,
+      squares: [p[1]],
+      from: p[0],
+      to: p[1],
+      lineSquares,
+    }, effect);
+  }
+
   if (META_EFFECTS.has(effect) && !p.length) {
     const overlay = metaOverlayForEffect(effect);
     const duration = overlay ? Math.max(MIN_SPELL_ANIM_MS, durationForVisual("meta", MIN_SPELL_ANIM_MS)) : MIN_SPELL_ANIM_MS;
@@ -260,7 +286,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
 
   if (KILL_EFFECTS.has(effect) && p.length) {
     const dur = animDurationForEffect(effect);
-    if (effect === "forward_bolt" || effect === "cryo_bolt") {
+    if (effect === "forward_bolt") {
       return withVisual({
         type: "kill",
         duration: dur,

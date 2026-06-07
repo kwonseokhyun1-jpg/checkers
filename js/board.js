@@ -686,6 +686,12 @@ export function getCryoBoltTarget(board, piece) {
   return targets;
 }
 
+/** True when (targetRow, targetCol) is the first enemy on a forward diagonal from the caster. */
+export function isCryoBoltTarget(board, caster, targetRow, targetCol) {
+  if (!caster) return false;
+  return getCryoBoltTarget(board, caster).some(([r, c]) => r === targetRow && c === targetCol);
+}
+
 /** First enemy directly ahead on a forward diagonal (Forward Bolt). */
 export function getAdjacentForwardBoltTarget(board, piece) {
   const dir = piece.color === COLORS.RED ? -1 : 1;
