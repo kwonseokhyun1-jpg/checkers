@@ -4,7 +4,7 @@
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget } from "./board.js";
 import { collapsedSquareKey } from "./gameMeta.js";
 import { sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, randomTeleportHasDestination } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
 export { applyCard, applyEffect };
@@ -342,7 +342,7 @@ export function getValidTargets(state, color, card, picks) {
     case "empty": {
       for (let r = 0; r < SIZE; r++)
         for (let c = 0; c < SIZE; c++)
-          if (emptyDark(state, r, c)) res.push([r, c]);
+          if (emptyDark(state, r, c) && (card.effect !== "revive" || reviveSquareAllowed(color, r))) res.push([r, c]);
       if (card.effect === "call_forward" && picks.length === 1) {
         const [er, ec] = picks[0];
         return res.filter(([r, c]) => callForwardMoveOk(state, er, ec, r, c));

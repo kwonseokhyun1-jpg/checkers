@@ -20,7 +20,7 @@ const TAGS = {
   quick_march: ["Same piece moves again; either step may capture"],
   offering: ["Sacrifice a friendly piece", "Draw 2 cards", "Cast another spell immediately"],
   destroy_unshielded: ["Destroy any unshielded enemy", "You cannot cast spells on your next turn"],
-  revive: ["Requires a captured friendly piece", "Place on any empty dark square", "Revived piece cannot capture this turn"],
+  revive: ["Requires a captured friendly piece", "Place on any empty dark square except your back rank", "Revived piece cannot capture this turn"],
   blink_2: ["Teleport within 2 squares"],
   random_teleport: ["Jump to a random empty dark square", "Crowned if you land on the back rank"],
   long_step: ["Epic: leap 2 squares diagonally (no capture)"],
