@@ -237,6 +237,25 @@ for (const card of cards) {
   console.log("Trickster back rank test: OK");
 }
 
+// Revive cannot place on your back rank
+{
+  const revive = cards.find((c) => c.id === "revive");
+  const s = baseState();
+  s.captured[COLOR] = [{ king: false }];
+  const targets = getValidTargets(s, COLOR, revive, []);
+  if (targets.some(([r]) => r === SIZE - 1)) throw new Error("Revive must not target red back rank");
+  const backRankDark = DARK.find(([r]) => r === SIZE - 1);
+  if (backRankDark) {
+    const failRes = applyCard(s, COLOR, revive, [backRankDark]);
+    if (failRes.success) throw new Error("Revive should fail on back rank");
+  }
+  const safe = targets[0];
+  if (!safe) throw new Error("Revive needs at least one valid square");
+  const okRes = applyCard(s, COLOR, revive, [safe]);
+  if (!okRes.success || !at(s, safe[0], safe[1])) throw new Error("Revive should succeed off back rank");
+  console.log("Revive back rank test: OK");
+}
+
 // Clone spawn pick
 {
   const s = baseState();

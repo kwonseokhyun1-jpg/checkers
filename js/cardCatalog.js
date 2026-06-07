@@ -74,6 +74,7 @@ export const REMOVED_CARD_IDS = new Set([
   "phase_walk",
   "pocket",
   "possession",
+  "promote_zone",
   "queens_crown",
   "ricochet",
   "rooks_sigil",

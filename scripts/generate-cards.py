@@ -54,7 +54,7 @@ SPELLS = [
     ("last_stand", "Last Stand", "If this piece would be captured this turn, it survives with shield for 1 turn instead.", "uncommon", 4, "friendly", "last_stand"),
     ("decoy", "Decoy", "Place a decoy on an empty dark square; blocks one enemy move then vanishes.", "common", 5, "empty", "decoy"),
     ("iron_will", "Iron Will", "A frozen or rooted friendly piece may move once (consumes debuff).", "common", 5, "friendly", "iron_will"),
-    ("revive", "Revive", "Return a captured man to any empty square in your back 3 rows.", "epic", 2, "empty", "revive"),
+    ("revive", "Revive", "Return a captured man to any empty dark square except your back rank.", "epic", 2, "empty", "revive"),
     ("ghost_guard", "Ghost Guard", "When a friendly piece is captured, its square blocks enemies for 2 turns.", "rare", 3, "friendly", "ghost_guard"),
     ("fortify", "Fortify", "Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.", "rare", 3, "friendly", "fortify"),
     # === CROWD CONTROL ===
@@ -72,7 +72,6 @@ SPELLS = [
     # === TRANSFORMATION ===
     ("bishops_sigil", "Bishop's Sigil", "Piece slides diagonally any distance over empties for 3 turns.", "rare", 3, "friendly", "bishop_3"),
     ("rooks_sigil", "Rook's Sigil", "Piece slides along rank/file over empties for 3 turns.", "rare", 3, "friendly", "rook_3"),    ("demote", "Demote", "Turn an enemy king back into a man.", "epic", 2, "enemy", "demote"),
-    ("promote_zone", "Promote Zone", "Treat your piece as on the promotion row for movement this turn.", "uncommon", 4, "friendly", "promote_zone"),
     ("twin_soul", "Twin Soul", "Split a man into two tokens on adjacent squares; linked fate.", "epic", 2, "friendly", "twin_soul"),
     ("fusion", "Fusion", "Merge two adjacent friendly men into one super-man (2-step non-capture).", "rare", 3, "f_f_adj", "fusion"),
     ("chameleon", "Chameleon", "Copy any piece's movement tags on the board for 2 turns.", "rare", 3, "any_piece", "chameleon"),

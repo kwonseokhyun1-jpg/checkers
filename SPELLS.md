@@ -53,7 +53,6 @@
 - **Obstacle** — Mark a light square as permanently impassable.
 - **Overrun** — After a capture this turn, slide 1 more square forward along the same diagonal if empty.
 - **Panic** — Force an enemy man to step backward on its owner's next turn if possible.
-- **Promote Zone** — Treat your piece as on the promotion row for movement this turn.
 - **Quicksand** — Hidden trap on an empty dark square; the next piece to end a turn there is frozen (invisible until it triggers).
 - **Rally** — All pieces adjacent to a friendly piece gain retreat for 1 turn.
 - **Recall** — Return one of your pieces to any empty dark square in its starting row.
@@ -143,7 +142,7 @@
 - **Mirror Shield** — Next enemy spell on this piece reflects to a random enemy.
 - **Mind Control** — Convert an enemy man to your color for 2 of your turns; it then reverts to the enemy.
 - **Queen's Crown** — Piece has king + knight movement for 2 turns.
-- **Revive** — Return a captured man to any empty square in your back 3 rows.
+- **Revive** — Return a captured man to any empty dark square except your back rank.
 - **Roulette** — Random card effect hits a random valid target.
 - **Shatter** — Destroy any enemy piece on the board (not shielded).
 - **Twin Soul** — Split a man into two tokens on adjacent squares; linked fate.

@@ -19,7 +19,6 @@ const BUFF_RULES = [
   { key: "hibernationTurns", label: "Hibernating", turns: true },
   { key: "bearAwakened", label: "Awoken Bear", bool: true },
   { key: "pawnZeal", label: "Pawn's Zeal", bool: true },
-  { key: "promoteZone", label: "Promotion Zone", bool: true },
   { key: "succession", label: "Succession", bool: true },
 ];
 
