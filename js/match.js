@@ -1529,6 +1529,25 @@ ${starLine}`;
       return finishSpellTrack(res);
     }
 
+    if (card.effect === "cryo_bolt" && animPicks.length >= 2) {
+      const [r2, c2] = animPicks[1];
+      const target = s.board[r2]?.[c2];
+      const cryoShatter =
+        target &&
+        target.color !== this.localColor &&
+        (target.frozenTurns > 0 || target.paralyzedTurns > 0);
+      extra.cryoShatter = cryoShatter;
+      if (cryoShatter) {
+        await this.runSpellAnimation(buildAnimSpec(card, animPicks, this.localColor, extra));
+        return finishSpellTrack(applyCard(this.state, this.localColor, card, picks));
+      }
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (!res.success) return finishSpellTrack(res);
+      this.render();
+      await this.runSpellAnimation(buildAnimSpec(card, animPicks, this.localColor, extra));
+      return finishSpellTrack(res);
+    }
+
     const spec = buildAnimSpec(card, animPicks, this.localColor, extra);
     await this.runSpellAnimation(spec);
     return finishSpellTrack(applyCard(this.state, this.localColor, card, picks));
@@ -1698,19 +1717,34 @@ ${starLine}`;
               const [cr, cc] = entry.cullTarget;
               await this.playCullAnimation(cr, cc, entry.cullVictim || null);
             } else {
-              const spec = buildAnimSpec(
-                {
-                  effect: entry.cardEffect,
-                  mode: entry.cardMode || def?.mode || "instant",
-                  name: cardName,
-                },
-                entry.picks || [],
-                oc,
-                this.buildAiSpellAnimExtra(entry)
-              );
+              const animExtra = this.buildAiSpellAnimExtra(entry);
+              const animCard = {
+                effect: entry.cardEffect,
+                mode: entry.cardMode || def?.mode || "instant",
+                name: cardName,
+              };
+              const animPicks = entry.picks || [];
+              let cryoApplied = false;
+              if (entry.cardEffect === "cryo_bolt" && animPicks.length >= 2) {
+                const [r2, c2] = animPicks[1];
+                const target = this.state.board[r2]?.[c2];
+                const cryoShatter =
+                  target &&
+                  target.color !== oc &&
+                  (target.frozenTurns > 0 || target.paralyzedTurns > 0);
+                animExtra.cryoShatter = cryoShatter;
+                if (!cryoShatter) {
+                  applyAiReplayEntry(this.state, entry, oc);
+                  cryoApplied = true;
+                  this.render();
+                }
+              }
+              const spec = buildAnimSpec(animCard, animPicks, oc, animExtra);
               await this.runSpellAnimation(spec);
+              if (!cryoApplied) {
+                applyAiReplayEntry(this.state, entry, oc);
+              }
             }
-            applyAiReplayEntry(this.state, entry, oc);
             this.recordHistoryFromReplayEntry(entry);
             this.render();
           } else {
