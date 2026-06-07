@@ -64,7 +64,6 @@ export const CARD_REGISTRY = [
   { id: "displacement", name: "Displacement", desc: "Move up to 2 friendly pieces 1 square each (adjacent empty).", rarity: "uncommon", weight: 4, mode: "instant", effect: "mass_nudge" },
   { id: "backrank_protection", name: "Backrank Protection", desc: "Shield all your pieces in your back row for 1 turn.", rarity: "uncommon", weight: 4, mode: "instant", effect: "sanctuary_pulse" },
   { id: "last_stand", name: "Last Stand", desc: "If this piece would be captured this turn, it survives with shield for 1 turn instead.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "last_stand" },
-  { id: "fog", name: "Fog", desc: "One friendly piece is harder for the AI to target for 2 turns.", rarity: "common", weight: 5, mode: "friendly", effect: "fog_2" },
   { id: "snowball", name: "Snowball", desc: "Freeze any piece of your choice — it cannot move on its owner's next turn.", rarity: "common", weight: 6, mode: "any_piece", effect: "snowball" },
   { id: "tangle", name: "Tangle", desc: "Swap two adjacent enemies and freeze both for 1 turn.", rarity: "rare", weight: 3, mode: "e_e_adj", effect: "tangle" },
   { id: "bishops_mark", name: "Bishop's Mark", desc: "For 2 turns, a piece may slide along either diagonal over empty dark squares.", rarity: "rare", weight: 3, mode: "friendly", effect: "bishop_2" },

@@ -67,7 +67,6 @@ SPELLS = [
     ("rust", "Rust", "Target enemy cannot be crowned for the rest of the game.", "uncommon", 4, "enemy", "rust"),
     ("hex", "Hex", "Marked enemy cannot receive buffs for 3 turns.", "uncommon", 4, "enemy", "hex_3"),
     ("tangle", "Tangle", "Swap two adjacent enemies and freeze both for 1 turn.", "rare", 3, "e_e_adj", "tangle"),
-    ("fog", "Fog", "One friendly piece is harder for the AI to target for 2 turns.", "common", 5, "friendly", "fog_2"),
     ("panic", "Panic", "Force an enemy man to step backward on its owner's next turn if possible.", "uncommon", 4, "enemy", "panic"),
     ("bribery", "Bribery", "Steal up to 15 gems from opponent.", "uncommon", 4, "instant", "bribery_15"),
     # === TRANSFORMATION ===

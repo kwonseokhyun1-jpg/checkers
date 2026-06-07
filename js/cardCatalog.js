@@ -49,6 +49,7 @@ export const REMOVED_CARD_IDS = new Set([
   "fireblast",
   "fireline",
   "flank",
+  "fog",
   "fortify",
   "frost",
   "gem_cache",
