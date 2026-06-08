@@ -244,6 +244,13 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
             text: res.message || `Cast ${card.name}`,
             ...(isHiddenTrapSpell(card) ? { hidden: true } : {}),
             ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
+            ...(res.coinFlipSquare
+              ? {
+                  coinFlipSquare: res.coinFlipSquare,
+                  coinFlipVictimColor: res.coinFlipVictimColor,
+                  coinFlipVictim: res.coinFlipVictim,
+                }
+              : {}),
           });
         }
       }
