@@ -15,7 +15,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns, takeTrapHistoryReveal } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -260,6 +260,30 @@ export class MatchSession {
     this.historyViewIndex = null;
   }
 
+  recordPendingTrapHistory() {
+    if (!this.hasMoveHistory()) return;
+    const trap = takeTrapHistoryReveal(this.state);
+    if (!trap) return;
+    appendHistoryEntry(this.state, {
+      label: trap.label,
+      type: "spell",
+      color: trap.color,
+      picks: trap.picks,
+      trapTriggered: true,
+    });
+    this.historyViewIndex = null;
+    const aiLog = this.$("ai-action-log");
+    if (aiLog) {
+      aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell">✦ Trap: <strong>${trap.label}</strong></div>`;
+      aiLog.scrollTop = aiLog.scrollHeight;
+    }
+  }
+
+  recordHistoryWithTrapFollowUp(label, type, extras = {}) {
+    this.recordHistoryEntry(label, type, extras);
+    this.recordPendingTrapHistory();
+  }
+
   setHistoryViewIndex(index) {
     if (!this.hasMoveHistory()) return;
     const max = (this.state.moveHistory?.length ?? 0) - 1;
@@ -338,18 +362,23 @@ export class MatchSession {
     if (entry.type === "spell") {
       const def = entry.cardId ? getCardDef(entry.cardId) : null;
       const cardName = entry.cardName || def?.name || "Spell";
-      this.recordHistoryEntry(cardName, "spell", {
+      const record = entry.countered ? this.recordHistoryEntry.bind(this) : this.recordHistoryWithTrapFollowUp.bind(this);
+      record(cardName, "spell", {
         color: oc,
         picks: entry.picks?.map((p) => [...p]) ?? [],
       });
     } else if (entry.type === "move") {
-      this.recordHistoryEntry(entry.text, "move", {
+      this.recordHistoryWithTrapFollowUp(entry.text, "move", {
         color: oc,
         from: entry.from ? [...entry.from] : undefined,
         to: entry.to ? [...entry.to] : undefined,
         captures: entry.captures?.map((c) => [...c]) ?? [],
       });
     }
+  }
+
+  shouldDeferTrapHistory(card) {
+    return card && isHiddenTrapSpell(card);
   }
 
   bindBoardFrame() {
@@ -716,7 +745,7 @@ export class MatchSession {
     this.endDrag();
     this.updateSpellCastUI();
     this.setMessage(msg || "Spell played (1 per turn).");
-    if (card && this.hasMoveHistory()) {
+    if (card && this.hasMoveHistory() && !this.shouldDeferTrapHistory(card)) {
       this.recordHistoryEntry(card.name, "spell", {
         color: this.localColor,
         picks: picks.map((p) => [...p]),
@@ -1214,7 +1243,7 @@ export class MatchSession {
     if (this._pendingHistoryMove && this.hasMoveHistory()) {
       const label =
         this._pendingHistoryLabel || formatPieceMoveLabel(this.state.board, this._pendingHistoryMove);
-      this.recordHistoryEntry(label, "move", {
+      this.recordHistoryWithTrapFollowUp(label, "move", {
         color: this.localColor,
         from: [...this._pendingHistoryMove.from],
         to: [...this._pendingHistoryMove.to],
@@ -1532,6 +1561,7 @@ ${starLine}`;
         color: this.localColor,
         picks: picks.map((p) => [...p]),
       });
+      this.recordPendingTrapHistory();
     }
     this.render();
     this.pushPvpState();
@@ -1696,7 +1726,7 @@ ${starLine}`;
       this.recordSuccessfulSpellCast();
       if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
       else this.state.meta.extraSpellCast[this.localColor] = false;
-      if (this.hasMoveHistory()) {
+      if (this.hasMoveHistory() && !this.shouldDeferTrapHistory(card)) {
         this.recordHistoryEntry(card.name, "spell", { color: this.localColor, picks: [] });
       }
       if (this.checkWin()) return;
@@ -1831,9 +1861,14 @@ ${starLine}`;
           if (applyEntries) {
             applyAiReplayEntry(this.state, entry, oc);
             this.recordHistoryFromReplayEntry(entry);
+            this.render();
+            await this.runCounterspellReveal();
+            this.recordPendingTrapHistory();
+          } else {
+            takeTrapHistoryReveal(this.state);
+            this.render();
+            await this.runCounterspellReveal();
           }
-          this.render();
-          await this.runCounterspellReveal();
           this.setMessage("Your Counterspell cancels their magic!");
         } else {
           if (aiLog) {
