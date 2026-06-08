@@ -18,6 +18,7 @@ function baseState() {
 assert.equal(isHiddenTrapSpell({ effect: "landmine" }), true);
 assert.equal(isHiddenTrapSpell({ effect: "quicksand" }), true);
 assert.equal(isHiddenTrapSpell({ effect: "counterspell" }), true);
+assert.equal(isHiddenTrapSpell({ effect: "last_stand" }), true);
 assert.equal(isHiddenTrapSpell({ effect: "fireball" }), false);
 
 const cs = baseState();

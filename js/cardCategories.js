@@ -60,7 +60,7 @@ const ID_TO_CATEGORY = {
   landmine: "trap",
   last_king: "special",
   link_fate: "special",
-  last_stand: "defense",
+  last_stand: "trap",
   leapfrog: "movement",
   long_step: "movement",
   magnet: "movement",
@@ -110,7 +110,7 @@ export function getCardCategory(def) {
   if (mapped) return mapped;
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
-  if (/trap|mine|quicksand|counterspell|vengeance|darkness/.test(blob)) return "trap";
+  if (/trap|mine|quicksand|counterspell|vengeance|last.?stand|darkness/.test(blob)) return "trap";
   if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|rally/.test(blob)) {
     return "defense";
   }

@@ -308,6 +308,13 @@ export function mountSpellOverlay(boardFrame, overlayKind) {
   return el;
 }
 
+/** @param {boolean} friendly */
+export function formatCoinFlipResult(friendly) {
+  const side = friendly ? "Tails" : "Heads";
+  const target = friendly ? "friendly piece destroyed" : "enemy piece destroyed";
+  return `${side} — ${target}!`;
+}
+
 /** @param {HTMLElement|null} overlay @param {{ friendly?: boolean, label?: string }} result */
 export function revealCoinFlipResult(overlay, result = {}) {
   if (!overlay) return;
@@ -318,9 +325,7 @@ export function revealCoinFlipResult(overlay, result = {}) {
     flipper.classList.add(result.friendly ? "spell-coin-flipper--tails" : "spell-coin-flipper--heads");
   }
   if (caption) {
-    const side = result.friendly ? "Tails" : "Heads";
-    const target = result.friendly ? "friendly piece" : "enemy piece";
-    caption.textContent = result.label || `${side} — ${target}!`;
+    caption.textContent = result.label || formatCoinFlipResult(!!result.friendly);
   }
 }
 

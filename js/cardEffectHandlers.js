@@ -4,7 +4,7 @@
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
-  createPiece, getAllMovesForColor, countPieces,
+  createPiece, getAllMovesForColor, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMeta.js";
@@ -104,6 +104,16 @@ function triggerLinkedFate(state, deadPiece, by) {
 
 function kill(state, r, c, by, nonCap = true, opts = {}) {
   return resolveCapture(state.board, state, r, c, by, { nonCap, ...opts });
+}
+
+/** Spell destroy: counts as spent if target is removed or Last Stand triggers. */
+function spellKill(state, r, c, by, nonCap = true, opts = {}) {
+  const t = at(state, r, c);
+  if (!t) return false;
+  const hadLastStand = !opts.linkFate && t.lastStand;
+  if (kill(state, r, c, by, nonCap, opts)) return true;
+  const survivor = at(state, r, c);
+  return !!(hadLastStand && survivor && !survivor.lastStand);
 }
 
 function adjacentSquares(r, c) {
@@ -220,7 +230,7 @@ const EFFECTS = {
   nudge(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   shield_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,1); return ok(); },
   shield_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,2); return ok(); },
-  forward_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!kill(state,r2,c2,color)) return fail(); return ok(); },
+  forward_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!spellKill(state,r2,c2,color)) return fail(); return ok(); },
   pyromancy(state, color, picks) {
     if (picks.length < 2) return fail("Pick an enemy, then an empty dark square");
     const [er, ec] = p0(picks);
@@ -248,7 +258,16 @@ const EFFECTS = {
   swap_friendly(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color!==color) return fail(); swapAt(state,r1,c1,r2,c2); return ok(); },
   quick_march(state, color, picks) { state.meta.pendingDouble[color]=true; return ok(); },
   gems_20(state, color, picks) { state.gems[color] += 20; return ok(); },
-  destroy_unshielded(state, color, picks) { const [r,c]=p0(picks); if(!kill(state,r,c,color)) return fail('Invalid or shielded'); state.meta.shatterSilenceNext[color]=true; return ok('Shatter — you cannot cast spells next turn.'); },
+  destroy_unshielded(state, color, picks) {
+    const [r,c]=p0(picks);
+    const t=at(state,r,c);
+    if(!t||t.color===color) return fail('Invalid target');
+    const hadLastStand=t.lastStand;
+    if(!spellKill(state,r,c,color)) return fail('Invalid or shielded');
+    state.meta.shatterSilenceNext[color]=true;
+    if(hadLastStand&&!t.lastStand) return ok('Last Stand — target survives with ultra shield. You cannot cast spells next turn.');
+    return ok('Shatter — you cannot cast spells next turn.');
+  },
   blink_2(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const d=Math.max(Math.abs(r2-r1),Math.abs(c2-c1)); if(d<1||d>2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   long_step(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(Math.abs(r2-r1)!==2||Math.abs(c2-c1)!==2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   sidestep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||r1!==r2||Math.abs(c2-c1)!==1||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
@@ -285,7 +304,15 @@ const EFFECTS = {
   bishop_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bishopTurns=2; return ok(); },
   pawn_zeal(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); p.pawnZeal=true; return ok(); },
   cross_bolt(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(const [tr,tc] of getBoltTarget(state.board,p)) kill(state,tr,tc,color); return ok(); },
-  snipe(state, color, picks) { const [r,c]=p0(picks); const t=at(state,r,c); if(!t||t.color===color) return fail(); if(!kill(state,r,c,color)) return fail(); return ok(); },
+  snipe(state, color, picks) {
+    const [r,c]=p0(picks);
+    const t=at(state,r,c);
+    if(!t||t.color===color) return fail();
+    const hadLastStand=t.lastStand;
+    if(!spellKill(state,r,c,color)) return fail();
+    if(hadLastStand&&!t.lastStand) return ok('Last Stand — target survives with ultra shield.');
+    return ok();
+  },
   landmine(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); if(sq.mine||sq.hiddenMine) return fail("Square already trapped"); placeMine(sq, color, true); return ok(); },
   bomb(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bombArmed=true; return ok("Bomb armed — explodes on next move."); },
   detonate(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r+dr,c+dc); if(t&&t.color!==color) kill(state,r+dr,c+dc,color);} return ok(); },
@@ -324,8 +351,8 @@ const EFFECTS = {
   },
   gravity_well(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); for(const t of en(state,color)){ const dr=Math.sign(r-t.row),dc=Math.sign(c-t.col); const nr=t.row+dr,nc=t.col+dc; if((nr!==r||nc!==c)&&emptyDark(state,nr,nc)) movePiece(state.board,t.row,t.col,nr,nc);} return ok(); },
   spear_thrust(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const dr=r1===r2?0:Math.sign(r2-r1), dc=c1===c2?0:Math.sign(c2-c1); if(dr&&dc) return fail(); let r=r1+dr,c=c1+dc; while(inBounds(r,c)){ const t=at(state,r,c); if(t){ if(t.color!==color) kill(state,r,c,color); break;} r+=dr; c+=dc;} markMove(state,color); return ok(); },
-  backstab(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?1:-1; for(const dc of [-1,1]){ const t=at(state,r+dir,c+dc); if(t&&t.color!==color){ kill(state,r+dir,c+dc,color); return ok();}} return fail(); },
-  sacrifice(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); removePiece(state.board,r1,c1); kill(state,r2,c2,color); return ok(); },
+  backstab(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?1:-1; for(const dc of [-1,1]){ const t=at(state,r+dir,c+dc); if(t&&t.color!==color){ const hadLastStand=t.lastStand; if(spellKill(state,r+dir,c+dc,color)) return ok(hadLastStand&&!t.lastStand?'Last Stand — target survives with ultra shield.':undefined);}} return fail(); },
+  sacrifice(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); const hadLastStand=b.lastStand; removePiece(state.board,r1,c1); if(!spellKill(state,r2,c2,color)) return fail(); if(hadLastStand&&!b.lastStand) return ok('Last Stand — target survives with ultra shield.'); return ok(); },
   bulwark(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let i=0;i<SIZE;i++){ const q=at(state,i,c-i+(p.col-p.row)); if(q&&q.color===color) q.shieldTurns=Math.max(q.shieldTurns,2);} return ok(); },
   mirror_shield(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.mirrorShield=true; return ok(); },
   phalanx(state, color, picks) { if(picks.length<2) return fail(); const a=at(state,...p0(picks)),b=at(state,...p1(picks)); if(!a||!b||a.color!==color||b.color!==color) return fail(); const gid=Date.now(); a.phalanxId=gid; b.phalanxId=gid; return ok(); },
@@ -340,7 +367,7 @@ const EFFECTS = {
     }
     return ok("Sanctuary — protected zone placed.", { sanctuaryCells: cells });
   },
-  last_stand(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.lastStand=true; return ok(); },
+  last_stand(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.lastStand=true; return ok("Last Stand armed — hidden."); },
   magnet(state, color, picks) {
     const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail();
     for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
@@ -543,7 +570,7 @@ const EFFECTS = {
     if (!isDarkSquare(r2, c2) || blocked(state, r2, c2)) return fail();
     const victim = at(state, r2, c2);
     if (victim && victim.color === color) return fail();
-    if (victim && victim.color !== color) kill(state, r2, c2, color, true, { berserkSlam: true });
+    if (victim && victim.color !== color) spellKill(state, r2, c2, color, true, { berserkSlam: true });
     if (at(state, r2, c2)) return fail("Square blocked");
     movePiece(state.board, r1, c1, r2, c2);
     const landed = at(state, r2, c2);
@@ -561,7 +588,7 @@ const EFFECTS = {
     return ok("Create Foe — enemy spawned!");
   },
   fireline(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?-1:1; for(const dc of [-1,1]){ let rr=p.row+dir,cc=p.col+dc; while(inBounds(rr,cc)&&isDarkSquare(rr,cc)){ const t=at(state,rr,cc); if(t){ if(t.color!==color) kill(state,rr,cc,color); break;} rr+=dir; cc+=dc;}} return ok(); },
-  sanctuary_pulse(state, color, picks) { const rows=backRow(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&rows.includes(r)) p.shieldTurns=Math.max(p.shieldTurns,1);} return ok(); },
+  sanctuary_pulse(state, color, picks) { const rank=ownBackRank(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&r===rank) p.shieldTurns=Math.max(p.shieldTurns,1);} return ok(); },
   mass_nudge(state, color, picks) { let n=0; for(const p of [...fri(state,color)]){ if(n>=2) break; const adj=getAdjacentEmpty(state.board,p); if(adj.length){ const [tr,tc]=adj[0]; movePiece(state.board,p.row,p.col,tr,tc); n++; markMove(state,color);} } return n?ok():fail('No targets'); },
   chain_lightning(state, color, picks) {
     const [r, c] = p0(picks);
@@ -571,7 +598,7 @@ const EFFECTS = {
     if (!chain.length) return fail("No adjacent enemies to chain");
     let hits = 0;
     for (const [tr, tc] of chain) {
-      if (kill(state, tr, tc, color)) hits++;
+      if (spellKill(state, tr, tc, color)) hits++;
     }
     if (hits) {
       p.paralyzedTurns = 2;
@@ -624,11 +651,25 @@ const EFFECTS = {
     }
     if (!t) return fail();
     const victimColor = t.color;
+    const coinFlipVictim = cullVictimSnapshot(t);
     kill(state, t.row, t.col, color);
-    return ok("Coin flip!", { victimSquare: [t.row, t.col], victimColor });
+    const friendly = victimColor === color;
+    const side = friendly ? "Tails" : "Heads";
+    const target = friendly ? "friendly piece destroyed" : "enemy piece destroyed";
+    return ok(`${side} — ${target}!`, {
+      victimSquare: [t.row, t.col],
+      victimColor,
+      coinFlipVictim,
+      coinFlipSquare: [t.row, t.col],
+      coinFlipVictimColor: victimColor,
+    });
   },
   butterfly(state, color, picks) { const cells=[[3,2],[3,4],[4,3],[4,5]]; const pieces=cells.map(([r,c])=>at(state,r,c)).filter(Boolean); const spots=cells.filter(([r,c])=>!at(state,r,c)); let i=0; for(const p of pieces){ if(i>=spots.length) break; const [r,c]=spots[i++]; movePiece(state.board,p.row,p.col,r,c);} return ok(); },
-  ignore(state, color, picks) { state.meta.optionalJumps[color]=true; return ok(); },
+  ignore(state, color, picks) {
+    if (!hasMandatoryJumps(state.board, color, state)) return fail("Ignore only when capture is mandatory.");
+    state.meta.optionalJumps[color] = true;
+    return ok();
+  },
   pocket(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); state.meta.pocket={piece:p,r,c}; state.meta.pocketReturnTurn=state.meta.turnNumber+2; return ok(); },
   uno_reverse(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); state.meta.forcedCapturePieceId=p.id; return ok(); },
   gems_5(state, color, picks) { state.gems[color] += 5; return ok(); },
@@ -644,7 +685,9 @@ const EFFECTS = {
     if (!isCryoBoltTarget(state.board, caster, r2, c2)) return fail("No enemy on that diagonal");
     if (t.frozenTurns > 0 || t.paralyzedTurns > 0) {
       t.shieldTurns = 0;
-      if (!kill(state, r2, c2, color)) return fail();
+      const hadLastStand = t.lastStand;
+      if (!spellKill(state, r2, c2, color)) return fail();
+      if (hadLastStand && !t.lastStand) return ok("Last Stand — target survives with ultra shield.");
       return ok("Cryo Bolt — shattered!");
     }
     const wasClone = t.isClone;

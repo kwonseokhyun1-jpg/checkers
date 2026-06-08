@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Star Chest: 50% cosmetics / 50% spells.
- * Run: node scripts/test-star-chest.mjs
+ * Small Mystery Box: 50% cosmetics / 50% spells.
+ * Run: node scripts/test-small-mystery-box.mjs
  */
-import { STAR_CHEST_COSMETIC_CHANCE, openMysteryBox } from "../js/mysteryBox.js";
+import { SMALL_MYSTERY_BOX_COSMETIC_CHANCE, openMysteryBox } from "../js/mysteryBox.js";
 import { DEFAULT_COSMETICS } from "../js/cosmetics.js";
 
-if (STAR_CHEST_COSMETIC_CHANCE !== 0.5) {
-  console.error(`Expected STAR_CHEST_COSMETIC_CHANCE 0.5, got ${STAR_CHEST_COSMETIC_CHANCE}`);
+if (SMALL_MYSTERY_BOX_COSMETIC_CHANCE !== 0.5) {
+  console.error(`Expected SMALL_MYSTERY_BOX_COSMETIC_CHANCE 0.5, got ${SMALL_MYSTERY_BOX_COSMETIC_CHANCE}`);
   process.exit(1);
 }
 
@@ -55,4 +55,4 @@ if (rate < 0.48 || rate > 0.52) {
   process.exit(1);
 }
 
-console.log(`Star Chest: ${(rate * 100).toFixed(1)}% cosmetics over ${trials} opens (expected 50%)`);
+console.log(`Small Mystery Box: ${(rate * 100).toFixed(1)}% cosmetics over ${trials} opens (expected 50%)`);

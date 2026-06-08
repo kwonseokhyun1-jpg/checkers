@@ -19,6 +19,7 @@ import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSqu
 import {
   initCardState,
   isInstant,
+  canCastInstant,
   isHiddenTrapSpell,
   getCardHint,
   getValidTargets,
@@ -40,7 +41,14 @@ import {
   buildAnimSpec,
   MIN_SPELL_ANIM_MS,
 } from "./spellAnimations.js";
-import { applySquareSpellFx, mountSpellOverlay, removeSpellOverlay, revealCoinFlipResult, animateCoinDropToSquare } from "./spellFx.js";
+import {
+  applySquareSpellFx,
+  mountSpellOverlay,
+  removeSpellOverlay,
+  revealCoinFlipResult,
+  animateCoinDropToSquare,
+  formatCoinFlipResult,
+} from "./spellFx.js";
 import { pickCoinFlipVictim, pickRandomTeleportDestination } from "./cardEffectHandlers.js";
 import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells } from "./cardEffectHandlers.js";
@@ -69,6 +77,10 @@ const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Extra time the top spell banner stays visible */
 const SPELL_BANNER_EXTRA_MS = 1000;
+
+const COIN_FLIP_SPIN_MS = 2700;
+const COIN_FLIP_REVEAL_MS = 450;
+const COIN_FLIP_VICTIM_MS = 1000;
 
 /** Enemy turn replay pacing (ms) */
 const AI_PACE = {
@@ -186,6 +198,7 @@ export class MatchSession {
     this._suppressClick = false;
     this.aiHighlight = null;
     this.cullAnimation = null;
+    this.coinFlipVictimAnim = null;
     this.spellAnimation = null;
     this.boardFx = null;
     this.selectedColumn = null;
@@ -482,7 +495,10 @@ export class MatchSession {
 
   showPieceInfo(piece, row, col) {
     const infoEl = this.$("piece-info");
-    const { buffs, curses } = getPieceStatus(piece);
+    let { buffs, curses } = getPieceStatus(piece);
+    if (piece.color !== this.localColor) {
+      buffs = buffs.filter((b) => b.label !== "Last Stand (ultra shield on capture)");
+    }
     if (piece.king) {
       const turns = ensureConstitutionTurns(this.state.meta)[piece.color];
       if (turns > 0) buffs.push({ label: "Constitution", turns });
@@ -605,6 +621,14 @@ export class MatchSession {
             cardMode: spell.cardMode,
             picks: spell.picks || [],
             countered: !!spell.countered,
+            hidden: !!spell.hidden,
+            ...(spell.coinFlipSquare
+              ? {
+                  coinFlipSquare: spell.coinFlipSquare,
+                  coinFlipVictimColor: spell.coinFlipVictimColor,
+                  coinFlipVictim: spell.coinFlipVictim,
+                }
+              : {}),
           },
         ],
         { applyEntries: false }
@@ -650,7 +674,15 @@ export class MatchSession {
       cardMode: card.mode,
       picks: (picks || []).map((p) => [...p]),
       countered: !!extras.countered,
+      hidden: !!extras.hidden || isHiddenTrapSpell(card),
       ...(extras.cullTarget ? { cullTarget: extras.cullTarget, cullVictim: extras.cullVictim } : {}),
+      ...(extras.coinFlipSquare
+        ? {
+            coinFlipSquare: extras.coinFlipSquare,
+            coinFlipVictimColor: extras.coinFlipVictimColor,
+            coinFlipVictim: extras.coinFlipVictim,
+          }
+        : {}),
     };
     this._lastPvpSpellSeq = seq;
   }
@@ -748,6 +780,10 @@ export class MatchSession {
     if (!this.canPlaySpells()) return false;
 
     if (isInstant(card)) {
+      if (!canCastInstant(this.state, this.localColor, card)) {
+        this.setMessage("Ignore only when capture is mandatory.");
+        return false;
+      }
       void this.castInstantSpell(card);
       return true;
     }
@@ -942,7 +978,9 @@ export class MatchSession {
 
   attachCardInput(el, card, canPlay) {
     const s = this.state;
-    const hasTargets = isInstant(card) || getValidTargets(s, this.localColor, card, []).length > 0;
+    const hasTargets =
+      (isInstant(card) && canCastInstant(s, this.localColor, card)) ||
+      getValidTargets(s, this.localColor, card, []).length > 0;
     const canCast = canPlay && this.canPlaySpells() && hasTargets;
     el.classList.toggle("disabled", !canCast);
     if (!canCast) {
@@ -956,7 +994,9 @@ export class MatchSession {
               : s.spellPlayed[this.localColor]
               ? "Already cast a spell this turn"
               : !hasTargets
-                ? "No valid targets for this spell"
+                ? card.effect === "ignore"
+                  ? "Ignore — only when you must capture"
+                  : "No valid targets for this spell"
                 : "Spells unavailable";
       return;
     }
@@ -1402,6 +1442,17 @@ ${starLine}`;
     if (banner) banner.className = "turn-banner";
   }
 
+  async runHiddenLastStandCast() {
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = "Last Stand armed — hidden.";
+      banner.className = "turn-banner spell-anim-instant";
+    }
+    this.render();
+    await delay(450 + SPELL_BANNER_EXTRA_MS);
+    if (banner) banner.className = "turn-banner";
+  }
+
   async runCounterspellReveal() {
     const frame = this.$("board")?.closest(".board-frame");
     frame?.classList.add("board-frame--counterspell");
@@ -1419,6 +1470,53 @@ ${starLine}`;
       banner.classList.remove("turn-banner--counterspell");
       banner.className = "turn-banner";
     }
+  }
+
+  async playCoinFlipAnimation(victimRow, victimCol, victimColor, cardName = "Coin Flip", victimSnap = null) {
+    const board = this.$("board");
+    const frame = board?.closest(".board-frame");
+    const friendly = victimColor === this.localColor;
+    const resultText = formatCoinFlipResult(friendly);
+    const coinOverlay = mountSpellOverlay(board, "coin");
+    frame?.classList.add("board-frame--fx-coin", "board-frame--spell-instant");
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = `${cardName}…`;
+      banner.className = "turn-banner spell-anim-instant";
+    }
+    this.render();
+    await delay(COIN_FLIP_SPIN_MS);
+    revealCoinFlipResult(coinOverlay, { friendly, label: resultText });
+    if (banner) {
+      banner.textContent = resultText;
+      banner.className = "turn-banner spell-anim-kill";
+    }
+    this.setMessage(resultText);
+    this.render();
+    await delay(COIN_FLIP_REVEAL_MS);
+    await animateCoinDropToSquare(coinOverlay, board, victimRow, victimCol);
+    const piece = this.state.board[victimRow]?.[victimCol];
+    const snap = victimSnap || (piece ? cullVictimSnapshot(piece) : null);
+    this.coinFlipVictimAnim = { row: victimRow, col: victimCol, victim: snap };
+    this.spellAnimation = {
+      type: "kill",
+      visual: "coin",
+      duration: COIN_FLIP_VICTIM_MS,
+      label: cardName,
+      squares: [[victimRow, victimCol]],
+      to: [victimRow, victimCol],
+    };
+    frame?.classList.add("board-frame--spell-impact");
+    board?.classList.add("board--spell-shake");
+    this.render();
+    await delay(COIN_FLIP_VICTIM_MS + 200);
+    this.coinFlipVictimAnim = null;
+    this.spellAnimation = null;
+    board?.classList.remove("board--spell-shake");
+    frame?.classList.remove("board-frame--spell-impact");
+    removeSpellOverlay(coinOverlay);
+    frame?.classList.remove("board-frame--fx-coin", "board-frame--spell-instant");
+    if (banner) banner.className = "turn-banner";
   }
 
   async playCullAnimation(row, col, victim = null) {
@@ -1507,6 +1605,12 @@ ${starLine}`;
       return finishSpellTrack(res);
     }
 
+    if (card.effect === "last_stand") {
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (res.success) await this.runHiddenLastStandCast();
+      return finishSpellTrack(res);
+    }
+
     const s = this.state;
     let extra = {};
     if (card.effect === "trickster") {
@@ -1551,45 +1655,17 @@ ${starLine}`;
       const victim = pickCoinFlipVictim(s, this.localColor);
       if (!victim) return finishSpellTrack({ success: false, message: "No valid targets" });
 
-      const victimSquare = [victim.row, victim.col];
-      const victimColor = victim.color;
-      s.meta.pendingCoinFlipSquare = victimSquare;
-
-      const spec = buildAnimSpec(card, [], this.localColor, extra);
-      const board = this.$("board");
-      const frame = board?.closest(".board-frame");
-      let coinOverlay = null;
-      if (spec.overlay) coinOverlay = mountSpellOverlay(board, spec.overlay);
-      this.spellAnimation = spec;
-      if (spec.visual) frame?.classList.add(`board-frame--fx-${spec.visual}`);
-      frame?.classList.add("board-frame--spell-instant");
-      const banner = this.$("turn-banner");
-      if (banner) {
-        banner.textContent = `${card.name}…`;
-        banner.className = "turn-banner spell-anim-instant";
-      }
-      this.render();
-      await delay(2700);
-      revealCoinFlipResult(coinOverlay, { friendly: victimColor === this.localColor });
-      await delay(450);
-      await animateCoinDropToSquare(coinOverlay, board, victim.row, victim.col);
+      s.meta.pendingCoinFlipSquare = [victim.row, victim.col];
+      const victimSnap = cullVictimSnapshot(victim);
+      await this.playCoinFlipAnimation(
+        victim.row,
+        victim.col,
+        victim.color,
+        card.name,
+        victimSnap
+      );
       const res = applyCard(this.state, this.localColor, card, picks);
       if (!res.success) s.meta.pendingCoinFlipSquare = null;
-      if (res.success && res.victimSquare) {
-        await this.runVictimSquareFlash({
-          type: "kill",
-          visual: "coin",
-          duration: 900,
-          label: card.name,
-          squares: [res.victimSquare],
-          to: res.victimSquare,
-        });
-      }
-      removeSpellOverlay(coinOverlay);
-      this.spellAnimation = null;
-      if (spec.visual) frame?.classList.remove(`board-frame--fx-${spec.visual}`);
-      frame?.classList.remove("board-frame--spell-instant");
-      if (banner) banner.className = "turn-banner";
       return finishSpellTrack(res);
     }
 
@@ -1620,6 +1696,10 @@ ${starLine}`;
   async castInstantSpell(card) {
     if (this.actionBusy || this.state.spellPlayed[this.localColor]) return;
     if (!this.canPlaySpells()) return;
+    if (!canCastInstant(this.state, this.localColor, card)) {
+      this.setMessage("Ignore only when capture is mandatory.");
+      return;
+    }
     this.actionBusy = true;
     this.cancelCardPlay();
     try {
@@ -1632,7 +1712,15 @@ ${starLine}`;
       this.recordPvpSpell(
         card,
         [],
-        res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}
+        res.cullTarget
+          ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim }
+          : res.coinFlipSquare
+            ? {
+                coinFlipSquare: res.coinFlipSquare,
+                coinFlipVictimColor: res.coinFlipVictimColor,
+                coinFlipVictim: res.coinFlipVictim,
+              }
+            : {}
       );
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
@@ -1652,6 +1740,8 @@ ${starLine}`;
           moveMsg = "Counterspell armed (hidden) — select a piece to move.";
         } else if (card.effect === "vengeance") {
           moveMsg = "Vengeance armed (hidden) — select a piece to move.";
+        } else if (card.effect === "last_stand") {
+          moveMsg = "Last Stand armed (hidden) — select a piece to move.";
         } else if (res.message) {
           moveMsg = `${res.message} Select a piece to move.`;
         }
@@ -1795,6 +1885,15 @@ ${starLine}`;
             if (entry.cardEffect === "cull" && entry.cullTarget) {
               const [cr, cc] = entry.cullTarget;
               await this.playCullAnimation(cr, cc, entry.cullVictim || null);
+            } else if (entry.cardEffect === "coin_flip" && entry.coinFlipSquare) {
+              const [vr, vc] = entry.coinFlipSquare;
+              await this.playCoinFlipAnimation(
+                vr,
+                vc,
+                entry.coinFlipVictimColor,
+                cardName,
+                entry.coinFlipVictim || null
+              );
             } else {
               const animExtra = this.buildAiSpellAnimExtra(entry);
               const animCard = {
@@ -1826,6 +1925,15 @@ ${starLine}`;
             }
             this.recordHistoryFromReplayEntry(entry);
             this.render();
+          } else if (entry.cardEffect === "coin_flip" && entry.coinFlipSquare) {
+            const [vr, vc] = entry.coinFlipSquare;
+            await this.playCoinFlipAnimation(
+              vr,
+              vc,
+              entry.coinFlipVictimColor,
+              cardName,
+              entry.coinFlipVictim || null
+            );
           } else {
             await delay(AI_PACE.spellAnimMax);
           }
@@ -1964,6 +2072,7 @@ ${starLine}`;
     } finally {
       this.aiHighlight = null;
       this.cullAnimation = null;
+      this.coinFlipVictimAnim = null;
       this.spellAnimation = null;
       this.boardFx = null;
       this.actionBusy = false;
@@ -2044,7 +2153,9 @@ ${starLine}`;
 
     for (const card of s.hands[this.localColor]) {
       const playable =
-        canPlay && (isInstant(card) || getValidTargets(s, this.localColor, card, []).length > 0);
+        canPlay &&
+        ((isInstant(card) && canCastInstant(s, this.localColor, card)) ||
+          getValidTargets(s, this.localColor, card, []).length > 0);
       const el = renderSpellCardEl(card, {
         button: true,
         compact: true,
@@ -2192,6 +2303,13 @@ ${starLine}`;
         ) {
           sq.classList.add("cull-execution", "spell-fx-shadow");
         }
+        if (
+          this.coinFlipVictimAnim &&
+          this.coinFlipVictimAnim.row === row &&
+          this.coinFlipVictimAnim.col === col
+        ) {
+          sq.classList.add("spell-fx-coin-victim");
+        }
 
         const animRole = this.squareInAnim(this.spellAnimation, row, col);
         if (animRole) {
@@ -2225,7 +2343,8 @@ ${starLine}`;
               ? pieceSkinCssSuffix(this.cosmetics?.equipped?.pieceSkin)
               : "";
           el.className = `piece ${piece.color}${piece.king ? " king" : ""}${skinClass}`;
-          if (piece.shieldTurns >= LAST_STAND_SHIELD_TURNS || piece.lastStand) {
+          const showArmedLastStand = piece.lastStand && piece.color === this.localColor;
+          if (piece.shieldTurns >= LAST_STAND_SHIELD_TURNS || showArmedLastStand) {
             el.classList.add("ultra-shielded");
           } else if (piece.shieldTurns > 0) {
             el.classList.add("shielded");
@@ -2251,22 +2370,28 @@ ${starLine}`;
             this.cullAnimation.col === col
           ) {
             el.classList.add("piece--cull-victim");
+          } else if (
+            this.coinFlipVictimAnim &&
+            this.coinFlipVictimAnim.row === row &&
+            this.coinFlipVictimAnim.col === col
+          ) {
+            el.classList.add("piece--spell-kill-victim");
           } else if (animRole === "kill" && this.spellAnimation?.type === "kill") {
             el.classList.add("piece--spell-kill-victim");
           }
           sq.appendChild(el);
-          if (piece.shieldTurns > 0 || piece.lastStand) {
+          if (piece.shieldTurns > 0 || showArmedLastStand) {
             const ultra =
-              piece.lastStand && piece.shieldTurns <= 0
+              showArmedLastStand && piece.shieldTurns <= 0
                 ? true
                 : piece.shieldTurns >= LAST_STAND_SHIELD_TURNS;
             const turns =
-              piece.lastStand && piece.shieldTurns <= 0
+              showArmedLastStand && piece.shieldTurns <= 0
                 ? LAST_STAND_SHIELD_TURNS
                 : piece.shieldTurns;
             const label = ultra
-              ? piece.lastStand && piece.shieldTurns <= 0
-                ? `Last Stand — ultra shield (${turns} turns on capture)`
+              ? showArmedLastStand && piece.shieldTurns <= 0
+                ? "Last Stand armed (hidden trap)"
                 : `Ultra shield — ${turns} turn${turns === 1 ? "" : "s"} left`
               : `Shield — ${turns} turn${turns === 1 ? "" : "s"} left`;
             const shield = document.createElement("div");
@@ -2396,6 +2521,16 @@ ${starLine}`;
           const v = this.cullAnimation.victim;
           const el = document.createElement("span");
           el.className = `piece ${v.color}${v.king ? " king" : ""} piece--cull-victim piece--cull-ghost`;
+          sq.appendChild(el);
+        } else if (
+          this.coinFlipVictimAnim &&
+          this.coinFlipVictimAnim.row === row &&
+          this.coinFlipVictimAnim.col === col &&
+          this.coinFlipVictimAnim.victim
+        ) {
+          const v = this.coinFlipVictimAnim.victim;
+          const el = document.createElement("span");
+          el.className = `piece ${v.color}${v.king ? " king" : ""} piece--spell-kill-victim piece--cull-ghost`;
           sq.appendChild(el);
         }
         sq.addEventListener("click", () => this.onSquareClick(row, col));
