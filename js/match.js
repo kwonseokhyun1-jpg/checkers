@@ -453,7 +453,10 @@ export class MatchSession {
 
   showPieceInfo(piece, row, col) {
     const infoEl = this.$("piece-info");
-    const { buffs, curses } = getPieceStatus(piece);
+    let { buffs, curses } = getPieceStatus(piece);
+    if (piece.color !== this.localColor) {
+      buffs = buffs.filter((b) => b.label !== "Last Stand (ultra shield on capture)");
+    }
     if (piece.king) {
       const turns = ensureConstitutionTurns(this.state.meta)[piece.color];
       if (turns > 0) buffs.push({ label: "Constitution", turns });
@@ -576,6 +579,7 @@ export class MatchSession {
             cardMode: spell.cardMode,
             picks: spell.picks || [],
             countered: !!spell.countered,
+            hidden: !!spell.hidden,
           },
         ],
         { applyEntries: false }
@@ -621,6 +625,7 @@ export class MatchSession {
       cardMode: card.mode,
       picks: (picks || []).map((p) => [...p]),
       countered: !!extras.countered,
+      hidden: !!extras.hidden || isHiddenTrapSpell(card),
       ...(extras.cullTarget ? { cullTarget: extras.cullTarget, cullVictim: extras.cullVictim } : {}),
     };
     this._lastPvpSpellSeq = seq;
@@ -1373,6 +1378,17 @@ ${starLine}`;
     if (banner) banner.className = "turn-banner";
   }
 
+  async runHiddenLastStandCast() {
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = "Last Stand armed — hidden.";
+      banner.className = "turn-banner spell-anim-instant";
+    }
+    this.render();
+    await delay(450 + SPELL_BANNER_EXTRA_MS);
+    if (banner) banner.className = "turn-banner";
+  }
+
   async runCounterspellReveal() {
     const frame = this.$("board")?.closest(".board-frame");
     frame?.classList.add("board-frame--counterspell");
@@ -1474,6 +1490,12 @@ ${starLine}`;
     if (card.effect === "vengeance") {
       const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success) await this.runHiddenVengeanceCast();
+      return finishSpellTrack(res);
+    }
+
+    if (card.effect === "last_stand") {
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (res.success) await this.runHiddenLastStandCast();
       return finishSpellTrack(res);
     }
 
@@ -1622,6 +1644,8 @@ ${starLine}`;
           moveMsg = "Counterspell armed (hidden) — select a piece to move.";
         } else if (card.effect === "vengeance") {
           moveMsg = "Vengeance armed (hidden) — select a piece to move.";
+        } else if (card.effect === "last_stand") {
+          moveMsg = "Last Stand armed (hidden) — select a piece to move.";
         } else if (res.message) {
           moveMsg = `${res.message} Select a piece to move.`;
         }
@@ -2190,7 +2214,8 @@ ${starLine}`;
               ? pieceSkinCssSuffix(this.cosmetics?.equipped?.pieceSkin)
               : "";
           el.className = `piece ${piece.color}${piece.king ? " king" : ""}${skinClass}`;
-          if (piece.shieldTurns >= LAST_STAND_SHIELD_TURNS || piece.lastStand) {
+          const showArmedLastStand = piece.lastStand && piece.color === this.localColor;
+          if (piece.shieldTurns >= LAST_STAND_SHIELD_TURNS || showArmedLastStand) {
             el.classList.add("ultra-shielded");
           } else if (piece.shieldTurns > 0) {
             el.classList.add("shielded");
@@ -2220,18 +2245,18 @@ ${starLine}`;
             el.classList.add("piece--spell-kill-victim");
           }
           sq.appendChild(el);
-          if (piece.shieldTurns > 0 || piece.lastStand) {
+          if (piece.shieldTurns > 0 || showArmedLastStand) {
             const ultra =
-              piece.lastStand && piece.shieldTurns <= 0
+              showArmedLastStand && piece.shieldTurns <= 0
                 ? true
                 : piece.shieldTurns >= LAST_STAND_SHIELD_TURNS;
             const turns =
-              piece.lastStand && piece.shieldTurns <= 0
+              showArmedLastStand && piece.shieldTurns <= 0
                 ? LAST_STAND_SHIELD_TURNS
                 : piece.shieldTurns;
             const label = ultra
-              ? piece.lastStand && piece.shieldTurns <= 0
-                ? `Last Stand — ultra shield (${turns} turns on capture)`
+              ? showArmedLastStand && piece.shieldTurns <= 0
+                ? "Last Stand armed (hidden trap)"
                 : `Ultra shield — ${turns} turn${turns === 1 ? "" : "s"} left`
               : `Shield — ${turns} turn${turns === 1 ? "" : "s"} left`;
             const shield = document.createElement("div");

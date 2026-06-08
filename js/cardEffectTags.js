@@ -39,7 +39,7 @@ const TAGS = {
   silence_3: ["Suppress special movement 3 turns"],
   poison_3: ["Enemy dies in 6 turns — 6-turn poison bar"],
   deflect_1: ["Next hit reflects to random enemy"],
-  last_stand: ["Ultra shield on capture — survives for 3 turns"],
+  last_stand: ["Hidden trap — ultra shield on capture or destroy for 3 turns"],
   clone: ["Your man, then adjacent empty square — copy cannot capture or be taken this turn; dies to freeze/poison/burn"],
   deport: ["Send an enemy back to its game-start square", "Destroys any piece already on that square"],
   link_fate: ["Link two enemies — when one is destroyed, the other dies too"],
