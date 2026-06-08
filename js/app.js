@@ -239,7 +239,7 @@ function showTab(tab) {
   if (tab === "profile") renderProfile();
   if (tab === "quests") renderQuests();
   if (tab === "play") showAdventureMap();
-  if (tab === "pvp") pvpController?.render();
+  if (tab === "pvp") pvpController?.render({ resume: true });
 }
 
 let headerDisplayUsername = "";
@@ -1752,17 +1752,13 @@ async function bootstrapAfterAuth() {
       updateCurrencyHeader();
       renderDeckList();
       renderStarsShop();
-      pvpController?.render();
     }
   } catch (e) {
     console.warn("Auth init failed", e);
   }
   await refreshHeaderIdentity();
   reconcileMatchShellState();
-  if (!tryResumeSavedMatch()) {
-    const resumedPvp = await pvpController?.tryResume?.();
-    if (!resumedPvp) showTab("deck");
-  }
+  if (!tryResumeSavedMatch()) showTab("deck");
   reconcileMatchShellState();
 }
 
