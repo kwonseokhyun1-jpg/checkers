@@ -779,18 +779,18 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     return true;
   }
 
-  function renderPvpSurface() {
+  function renderPvpSurface({ resume = false } = {}) {
     clearStalePvpSession();
     if (matchLaunching || root.querySelector(".pvp-loading")) return;
     if (!matchSession) {
       renderLobby();
-      void tryResumePvpMatch();
+      if (resume) void tryResumePvpMatch();
     }
   }
 
   const onShellReconciled = () => {
     if (!root || root.classList.contains("hidden")) return;
-    renderPvpSurface();
+    renderPvpSurface({ resume: true });
   };
   window.addEventListener("cc-match-shell-reconciled", onShellReconciled);
 
