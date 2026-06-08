@@ -71,7 +71,7 @@ export const CARD_REGISTRY = [
   { id: "call_forward", name: "Call Forward", desc: "Move an enemy up to 2 squares along a diagonal to an empty dark square with a clear path.", rarity: "rare", weight: 3, mode: "e_empty", effect: "call_forward" },
   { id: "blizzard", name: "Blizzard", desc: "Freeze all enemy men on a row of dark squares you choose.", rarity: "rare", weight: 3, mode: "row", effect: "blizzard" },
   { id: "bulwark", name: "Bulwark", desc: "All your pieces on one diagonal line gain shield for 2 turns.", rarity: "rare", weight: 3, mode: "friendly", effect: "bulwark" },
-  { id: "darkness", name: "Darkness", desc: "Pieces on nearby dark squares cannot be targeted by ranged spells or captured for 2 turns.", rarity: "rare", weight: 3, mode: "empty", effect: "darkness" },
+  { id: "darkness", name: "Darkness", desc: "Pieces on the 6 dark squares around a point cannot be captured, cannot capture, and cannot be targeted or destroyed for 2 turns.", rarity: "rare", weight: 3, mode: "empty", effect: "darkness" },
   { id: "stall", name: "Stall", desc: "Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.", rarity: "rare", weight: 3, mode: "friendly", effect: "fortify" },
   { id: "hibernation", name: "Hibernation", desc: "Your piece sleeps immobile for 2 turns, then awakens as a king with a bear mark — it may move twice each turn forever after.", rarity: "rare", weight: 3, mode: "friendly", effect: "hibernation" },
   { id: "vengeance", name: "Vengeance", desc: "Hidden trap: the next enemy capture of your piece destroys the capturer.", rarity: "rare", weight: 3, mode: "instant", effect: "vengeance" },

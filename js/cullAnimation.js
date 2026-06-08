@@ -1,10 +1,13 @@
 /** Cull — pick weakest enemy (fewest legal moves; non-kings preferred). */
 import { COLORS, enemyPieces, getAllMovesForColor } from "./board.js";
+import { isInDarknessZone } from "./gameMeta.js";
 
 export const CULL_ANIMATION_MS = 2000;
 
 export function findCullTarget(state, color) {
-  const enemies = enemyPieces(state.board, color);
+  const enemies = enemyPieces(state.board, color).filter(
+    (p) => !isInDarknessZone(state, p.row, p.col)
+  );
   const nonKings = enemies.filter((p) => !p.king);
   const pool = nonKings.length ? nonKings : enemies;
   if (!pool.length) return null;

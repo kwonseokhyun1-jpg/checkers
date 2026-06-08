@@ -139,6 +139,7 @@ export function destroyPieceIfClone(board, state, row, col) {
 }
 
 export function applyFreezeToPiece(board, state, row, col, turns, { deferEndTick = false } = {}) {
+  if (state && isInDarknessZone(state, row, col)) return false;
   if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
   if (!piece) return false;
@@ -157,6 +158,7 @@ function tickDeferredTurnDebuff(piece, turnsKey, deferKey) {
 }
 
 export function applyVenomToPiece(board, state, row, col, amount) {
+  if (state && isInDarknessZone(state, row, col)) return false;
   if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
   if (!piece) return false;
@@ -165,6 +167,7 @@ export function applyVenomToPiece(board, state, row, col, amount) {
 }
 
 export function applyBurnToPiece(board, state, row, col, turns) {
+  if (state && isInDarknessZone(state, row, col)) return false;
   if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
   if (!piece) return false;
@@ -212,6 +215,7 @@ function findPieceById(board, id) {
 export function resolveCapture(board, state, r, c, byColor, { nonCap = true, berserkSlam = false, linkFate = false } = {}) {
   const p = board[r]?.[c];
   if (!p) return false;
+  if (!linkFate && state && isInDarknessZone(state, r, c)) return false;
   if (!linkFate && p.cloneNoCaptureThisTurn) return false;
   if (!berserkSlam && !linkFate && p.shieldTurns > 0) {
     p.shieldTurns--;
@@ -329,13 +333,14 @@ const KNIGHT_OFFSETS = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]]
 
 export function getKnightMoves(board, piece, state, canCapture = false) {
   if (piece.revivedNoCapture || piece.cloneNoCaptureThisTurn || piece.berserkNoCapture) canCapture = false;
+  if (canCapture && state && isInDarknessZone(state, piece.row, piece.col)) canCapture = false;
   const moves = [];
   for (const [dr, dc] of KNIGHT_OFFSETS) {
     const nr = piece.row + dr, nc = piece.col + dc;
     if (!inBounds(nr, nc) || !isDarkSquare(nr, nc) || squareBlocked(state, nr, nc, piece.color)) continue;
     const t = board[nr][nc];
     if (!t) moves.push({ from: [piece.row, piece.col], to: [nr, nc], captures: [], type: "step" });
-    else if (canCapture && t.color !== piece.color && !isProtected(t))
+    else if (canCapture && t.color !== piece.color && !isProtected(t, state, nr, nc))
       moves.push({ from: [piece.row, piece.col], to: [nr, nc], captures: [[nr, nc]], type: "jump" });
   }
   return moves;
@@ -417,6 +422,7 @@ export function getStepMoves(board, piece, color, state = null) {
 
 export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
+  if (state && isInDarknessZone(state, piece.row, piece.col)) return moves;
   if (piece.cloneNoCaptureThisTurn) return moves;
   if (piece.revivedNoCapture || piece.berserkNoCapture) return moves;
   if (piece.reverseOnlyTurns > 0 || piece.noCaptureTurns > 0) return moves;
