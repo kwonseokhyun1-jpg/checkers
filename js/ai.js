@@ -8,6 +8,7 @@ import {
   getBackwardStepMoves,
 } from "./board.js";
 import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell } from "./cardEffects.js";
+import { queueTrapHistoryReveal } from "./gameMeta.js";
 import { getCardDef } from "./cardCatalog.js";
 
 /** Deep copy for AI planning without mutating the live match state. */
@@ -102,7 +103,10 @@ export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
       if (idx >= 0) hand.splice(idx, 1);
       state.spellPlayed[aiColor] = true;
       const human = aiColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
-      if (state.meta.counterspell?.[human]) state.meta.counterspell[human] = false;
+      if (state.meta.counterspell?.[human]) {
+        state.meta.counterspell[human] = false;
+        queueTrapHistoryReveal(state, { effect: "counterspell", color: human, picks: [] });
+      }
       return true;
     }
     const idx = hand.findIndex((c) => c.id === entry.cardId);

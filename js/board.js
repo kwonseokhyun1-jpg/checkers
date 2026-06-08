@@ -1,5 +1,5 @@
 /** Checkers board logic with card-effect modifiers */
-import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance, ensureConstitutionTurns } from "./gameMeta.js";
+import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance, ensureConstitutionTurns, queueTrapHistoryReveal } from "./gameMeta.js";
 import { queueBoardFx } from "./boardFx.js";
 
 function sk(r, c) {
@@ -510,6 +510,7 @@ export function applyMove(board, move, state = null) {
     const cap = board[cr][cc];
     if (!cap || !piece) continue;
     if (tryConsumeVengeance(state, piece.color, cap.color)) {
+      queueTrapHistoryReveal(state, { effect: "vengeance", color: cap.color, picks: [[cr, cc]] });
       queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
       state?.meta?.achievementHook?.onTrapTriggered?.(cap.color, piece.color);
       removePiece(board, piece.row, piece.col);
@@ -529,6 +530,7 @@ export function applyMove(board, move, state = null) {
     const qsOwner = sq.hiddenQuicksand.owner;
     delete sq.hiddenQuicksand;
     if (piece) {
+      queueTrapHistoryReveal(state, { effect: "quicksand", color: qsOwner, picks: [[tr, tc]] });
       applyFreezeToPiece(board, state, tr, tc, 1, { deferEndTick: true });
       state?.meta?.achievementHook?.onTrapTriggered?.(qsOwner, piece.color);
     }
@@ -537,6 +539,7 @@ export function applyMove(board, move, state = null) {
     revealMine(sq);
     const mineOwner = getMineOwner(sq);
     if (mineOwner && mineOwner !== piece.color && piece) {
+      queueTrapHistoryReveal(state, { effect: "landmine", color: mineOwner, picks: [[tr, tc]] });
       queueBoardFx(state, "mine", tr, tc);
       state?.meta?.achievementHook?.onTrapTriggered?.(mineOwner, piece.color);
       removePiece(board, tr, tc);

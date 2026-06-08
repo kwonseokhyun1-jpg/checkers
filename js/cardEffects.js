@@ -18,10 +18,10 @@ export function isInstant(card) {
   return card.mode === "instant" || card.mode === "discard_pick";
 }
 
-/** Traps armed in secret — opponent must not see which card was played. */
+/** Traps armed in secret — opponent must not see which card was played until it triggers. */
 export function isHiddenTrapSpell(card) {
   const effect = card?.effect || card?.id;
-  return effect === "counterspell" || effect === "vengeance";
+  return effect === "counterspell" || effect === "vengeance" || effect === "landmine" || effect === "quicksand";
 }
 
 export function getCardHint(card) {

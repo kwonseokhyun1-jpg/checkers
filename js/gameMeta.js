@@ -181,6 +181,30 @@ export function tickMeta(state, color) {
   }
 }
 
+export const TRAP_EFFECT_LABELS = {
+  counterspell: "Counterspell",
+  vengeance: "Vengeance",
+  landmine: "Landmine",
+  quicksand: "Quicksand",
+};
+
+/** Queue a trap spell for move history — logged after the action that triggered it. */
+export function queueTrapHistoryReveal(state, { effect, color, picks = [] }) {
+  if (!state || !effect || !color) return;
+  state.pendingTrapHistory = {
+    label: TRAP_EFFECT_LABELS[effect] || effect,
+    effect,
+    color,
+    picks: picks.map((p) => [...p]),
+  };
+}
+
+export function takeTrapHistoryReveal(state) {
+  const entry = state?.pendingTrapHistory ?? null;
+  if (state) state.pendingTrapHistory = null;
+  return entry;
+}
+
 export function tryConsumeCounterspell(state, casterColor) {
   if (!state.meta.counterspell) {
     state.meta.counterspell = { [COLORS.RED]: false, [COLORS.BLACK]: false };
@@ -188,6 +212,7 @@ export function tryConsumeCounterspell(state, casterColor) {
   const trapOwner = casterColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
   if (!state.meta.counterspell[trapOwner]) return null;
   state.meta.counterspell[trapOwner] = false;
+  queueTrapHistoryReveal(state, { effect: "counterspell", color: trapOwner, picks: [] });
   return { trapOwner };
 }
 
