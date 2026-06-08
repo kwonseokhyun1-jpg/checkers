@@ -250,7 +250,12 @@ function accountSectionHtml({ signedIn, username, email }) {
 function bindAchievementsGrid(profile, grid, { onTitleChanged } = {}) {
   if (!grid) return;
   grid.innerHTML = "";
-  for (const ach of ACHIEVEMENTS) {
+  const sortedAchievements = [...ACHIEVEMENTS].sort((a, b) => {
+    const aClaimable = canClaimAchievement(profile, a.id) ? 0 : 1;
+    const bClaimable = canClaimAchievement(profile, b.id) ? 0 : 1;
+    return aClaimable - bClaimable;
+  });
+  for (const ach of sortedAchievements) {
     const reward = achievementRewardTitle(ach.id);
     const complete = isAchievementComplete(profile, ach.id);
     const claimed = isAchievementClaimed(profile, ach.id);
@@ -263,7 +268,6 @@ function bindAchievementsGrid(profile, grid, { onTitleChanged } = {}) {
       complete ? "profile-achievement-card--complete" : "",
       claimed ? "profile-achievement-card--claimed" : "",
       canClaim ? "profile-achievement-card--claimable" : "",
-      reward ? TITLE_RARITY_CLASS[reward.rarity] || "" : "",
     ]
       .filter(Boolean)
       .join(" ");
