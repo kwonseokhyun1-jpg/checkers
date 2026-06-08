@@ -33,7 +33,7 @@ export const CARD_REGISTRY = [
   { id: "rally", name: "Rally", desc: "All pieces adjacent to a friendly piece gain retreat for 1 turn.", rarity: "common", weight: 6, mode: "friendly", effect: "rally" },
   { id: "coin_flip", name: "Coin Flip", desc: "50% destroy random enemy; 50% destroy random friendly.", rarity: "common", weight: 6, mode: "instant", effect: "coin_flip" },
   { id: "butterfly", name: "Butterfly Effect", desc: "Shuffle pieces on the 4 center dark squares randomly.", rarity: "common", weight: 6, mode: "instant", effect: "butterfly" },
-  { id: "ignore", name: "Ignore", desc: "Jumps are optional for you this turn (not mandatory).", rarity: "common", weight: 6, mode: "instant", effect: "ignore" },
+  { id: "ignore", name: "Ignore", desc: "Jumps are optional for you this turn — only playable when capture is mandatory.", rarity: "common", weight: 6, mode: "instant", effect: "ignore" },
   { id: "hex", name: "Hex", desc: "Marked enemy cannot receive buffs for 3 turns.", rarity: "common", weight: 6, mode: "enemy", effect: "hex_3" },
   { id: "rust", name: "Rust", desc: "Enemy cannot be crowned for 3 turns; when it ends, if on the far rank it becomes a king.", rarity: "common", weight: 6, mode: "enemy", effect: "rust" },
   { id: "iron_will", name: "Iron Will", desc: "A frozen or rooted friendly piece may move once (consumes debuff).", rarity: "common", weight: 5, mode: "friendly", effect: "iron_will" },

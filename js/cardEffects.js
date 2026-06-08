@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, hasMandatoryJumps } from "./board.js";
 import { collapsedSquareKey, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -16,6 +16,11 @@ export function initCardState(state) {
 
 export function isInstant(card) {
   return card.mode === "instant" || card.mode === "discard_pick";
+}
+
+export function canCastInstant(state, color, card) {
+  if (card.effect === "ignore") return hasMandatoryJumps(state.board, color, state);
+  return true;
 }
 
 /** Traps armed in secret — opponent must not see which card was played. */
@@ -381,13 +386,16 @@ export function playInstant(state, color, card) {
   if (card.mode === "discard_pick" && card.effect === "recycle") {
     return { success: false, message: "Select a card in hand to discard.", needsDiscard: true };
   }
+  if (!canCastInstant(state, color, card)) {
+    return { success: false, message: "Ignore only when capture is mandatory." };
+  }
   return applyCard(state, color, card, []);
 }
 
 function* pickSequences(state, color, card, max = 24) {
   const t0 = prioritizeFrontRowTargets(state, color, card, getValidTargets(state, color, card, []));
   if (card.mode === "instant") {
-    yield [];
+    if (canCastInstant(state, color, card)) yield [];
     return;
   }
   if (card.mode === "column" || card.mode === "row") {
@@ -454,7 +462,7 @@ export function tryAutoPlay(state, color, card) {
 }
 
 export function canAiPlay(state, color, card) {
-  if (isInstant(card)) return true;
+  if (isInstant(card)) return canCastInstant(state, color, card);
   for (const _ of pickSequences(state, color, card, 8)) return true;
   return false;
 }
