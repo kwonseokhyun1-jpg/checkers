@@ -124,14 +124,20 @@ function enemySquaresAdjacentTo(state, r, c, color) {
 }
 
 
-export function getSanctuaryCells(r, c, max = 6) {
+/** Hex ring on dark squares: center plus 6 neighbors (diagonals + two-square lateral). */
+const SANCTUARY_OFFSETS = [
+  [0, 0],
+  [-1, -1], [-1, 1], [1, -1], [1, 1],
+  [0, -2], [0, 2],
+];
+
+export function getSanctuaryCells(r, c) {
   const cells = [];
-  for (let dr = -2; dr <= 2; dr++)
-    for (let dc = -2; dc <= 2; dc++) {
-      const nr = r + dr, nc = c + dc;
-      if (inBounds(nr, nc) && isDarkSquare(nr, nc)) cells.push([nr, nc]);
-    }
-  return cells.slice(0, max);
+  for (const [dr, dc] of SANCTUARY_OFFSETS) {
+    const nr = r + dr, nc = c + dc;
+    if (inBounds(nr, nc) && isDarkSquare(nr, nc)) cells.push([nr, nc]);
+  }
+  return cells;
 }
 
 export function getDarknessZoneCells(r, c) {
