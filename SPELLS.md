@@ -120,7 +120,7 @@
 - **Rook's Sigil** — Piece slides along rank/file over empties for 3 turns.
 - **Royal Decree** — Instantly crown one of your pieces (king movement).
 - **Sanctified Tile** — Friendly pieces entering this dark square are crowned.
-- **Sanctuary** — Friendly pieces on 4 adjacent dark squares to a point cannot be captured for 1 turn.
+- **Sanctuary** — Friendly pieces on the target dark square and its 6 surrounding dark squares cannot be captured for 1 turn.
 - **Scatter** — Push every piece adjacent to a square 1 step away radially.
 - **Succession** — When your king is captured, a chosen man becomes king instantly.
 - **Tangle** — Swap two adjacent enemies and freeze both for 1 turn.
