@@ -196,6 +196,8 @@ export class MatchSession {
     this.validMoves = [];
     this.drag = null;
     this._suppressClick = false;
+    this._suppressScrollClickTimer = null;
+    this._handScrollBound = false;
     this.aiHighlight = null;
     this.cullAnimation = null;
     this.coinFlipVictimAnim = null;
@@ -427,12 +429,31 @@ export class MatchSession {
     this.$("pvp-history-next")?.addEventListener("click", () => this.stepHistory(1));
     this._onDocPointerMove = (e) => this.onDragMove(e);
     this._onDocPointerUp = (e) => this.onDragEnd(e);
+    this.bindHandScroll();
 
     document.addEventListener("keydown", this._onKeyDown);
   }
 
+  bindHandScroll() {
+    const handEl = this.$("hand-red");
+    if (!handEl || this._handScrollBound) return;
+    this._handScrollBound = true;
+    handEl.addEventListener(
+      "scroll",
+      () => {
+        this._suppressClick = true;
+        clearTimeout(this._suppressScrollClickTimer);
+        this._suppressScrollClickTimer = setTimeout(() => {
+          this._suppressClick = false;
+        }, 280);
+      },
+      { passive: true }
+    );
+  }
+
   dispose() {
     this.achievementTracker?.dispose();
+    clearTimeout(this._suppressScrollClickTimer);
     document.removeEventListener("keydown", this._onKeyDown);
     document.removeEventListener("pointermove", this._onDocPointerMove);
     document.removeEventListener("pointerup", this._onDocPointerUp);
@@ -1017,18 +1038,44 @@ export class MatchSession {
     el.classList.add("spell-card--draggable");
     el.addEventListener("pointerdown", (e) => {
       if (!this.canPlaySpells() || e.button !== 0) return;
+      const handEl = el.closest(".spell-hand");
       const startX = e.clientX;
       const startY = e.clientY;
+      const startScrollLeft = handEl?.scrollLeft ?? 0;
       let dragStarted = false;
+      let handScrolled = false;
+
+      const cleanup = () => {
+        document.removeEventListener("pointermove", onMove);
+        document.removeEventListener("pointerup", onUp);
+        document.removeEventListener("pointercancel", onUp);
+      };
+
+      const suppressClickBriefly = () => {
+        this._suppressClick = true;
+        clearTimeout(this._suppressScrollClickTimer);
+        this._suppressScrollClickTimer = setTimeout(() => {
+          this._suppressClick = false;
+        }, 280);
+      };
 
       const onMove = (ev) => {
+        if (handEl && Math.abs(handEl.scrollLeft - startScrollLeft) > 2) {
+          handScrolled = true;
+          cleanup();
+          suppressClickBriefly();
+          return;
+        }
         if (dragStarted) {
           this.onDragMove(ev);
           return;
         }
         const dx = ev.clientX - startX;
         const dy = ev.clientY - startY;
-        if (Math.hypot(dx, dy) < 14) return;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 22) return;
+        // Hand scrolls horizontally — sideways movement should scroll, not start a cast.
+        if (Math.abs(dx) >= Math.abs(dy)) return;
         dragStarted = true;
         ev.preventDefault();
         try { el.setPointerCapture(ev.pointerId); } catch (_) {}
@@ -1037,10 +1084,18 @@ export class MatchSession {
       };
 
       const onUp = (ev) => {
-        document.removeEventListener("pointermove", onMove);
-        document.removeEventListener("pointerup", onUp);
-        document.removeEventListener("pointercancel", onUp);
-        if (dragStarted) this.onDragEnd(ev);
+        cleanup();
+        if (handScrolled) {
+          suppressClickBriefly();
+          return;
+        }
+        if (!dragStarted) {
+          const dx = ev.clientX - startX;
+          const dy = ev.clientY - startY;
+          if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) suppressClickBriefly();
+          return;
+        }
+        this.onDragEnd(ev);
       };
 
       document.addEventListener("pointermove", onMove);
@@ -2150,6 +2205,8 @@ ${starLine}`;
     const canPlay = this.canPlaySpells();
     const castingId = this.cardPlay?.card?.instanceId;
     handEl.classList.toggle("spell-hand--locked", !canPlay);
+    handEl.classList.toggle("spell-hand--crowded", n >= 5);
+    this.bindHandScroll();
 
     for (const card of s.hands[this.localColor]) {
       const playable =
