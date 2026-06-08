@@ -310,7 +310,7 @@ for (const card of cards) {
   const copy2 = createPiece(OPP, 3, 4, false);
   copy2.isClone = true;
   setPiece(s.board, 3, 4, copy2);
-  if (!applyVenomToPiece(s.board, s, 3, 4, 6) || at(s, 3, 4)) throw new Error("Poison should destroy clone");
+  if (!applyVenomToPiece(s.board, s, 3, 4, 3) || at(s, 3, 4)) throw new Error("Poison should destroy clone");
   const copy3 = createPiece(OPP, 4, 1, false);
   copy3.isClone = true;
   setPiece(s.board, 4, 1, copy3);

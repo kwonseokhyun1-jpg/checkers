@@ -611,8 +611,8 @@ const EFFECTS = {
     const p = at(state, r, c);
     if (!p || p.color === color) return fail();
     const wasClone = p.isClone;
-    applyVenomToPiece(state.board, state, r, c, 6);
-    return ok(wasClone ? "Poison — clone destroyed." : "Poison — dies in 6 turns.");
+    applyVenomToPiece(state.board, state, r, c, 3);
+    return ok(wasClone ? "Poison — clone destroyed." : "Poison — dies in 3 turns.");
   },
   deflect_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.deflectTurns=1; return ok('Deflect — next hit reflects to a random enemy.'); },
   trickster(state, color, picks) {

@@ -251,9 +251,12 @@ function bindAchievementsGrid(profile, grid, { onTitleChanged } = {}) {
   if (!grid) return;
   grid.innerHTML = "";
   const sortedAchievements = [...ACHIEVEMENTS].sort((a, b) => {
-    const aClaimable = canClaimAchievement(profile, a.id) ? 0 : 1;
-    const bClaimable = canClaimAchievement(profile, b.id) ? 0 : 1;
-    return aClaimable - bClaimable;
+    const sortKey = (id) => {
+      if (canClaimAchievement(profile, id)) return 0;
+      if (isAchievementClaimed(profile, id)) return 2;
+      return 1;
+    };
+    return sortKey(a.id) - sortKey(b.id);
   });
   for (const ach of sortedAchievements) {
     const reward = achievementRewardTitle(ach.id);
