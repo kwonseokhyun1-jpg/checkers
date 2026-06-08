@@ -21,7 +21,7 @@ export function isInstant(card) {
 /** Traps armed in secret — opponent must not see which card was played. */
 export function isHiddenTrapSpell(card) {
   const effect = card?.effect || card?.id;
-  return effect === "counterspell" || effect === "vengeance";
+  return effect === "counterspell" || effect === "vengeance" || effect === "last_stand";
 }
 
 export function getCardHint(card) {
@@ -54,6 +54,9 @@ export function getCardHint(card) {
   }
   if (card.effect === "vengeance" || card.id === "vengeance") {
     return "Hidden trap — destroys the next enemy who captures your piece.";
+  }
+  if (card.effect === "last_stand" || card.id === "last_stand") {
+    return "Hidden trap — piece survives capture with an ultra shield for 3 turns.";
   }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
   if (card.effect === "snowball") return hints.snowball_hint;

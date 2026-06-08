@@ -62,7 +62,7 @@ export const CARD_REGISTRY = [
   { id: "scatter", name: "Scatter", desc: "Push every piece adjacent to a square 1 step away radially.", rarity: "uncommon", weight: 4, mode: "empty", effect: "scatter" },
   { id: "displacement", name: "Displacement", desc: "Move up to 2 friendly pieces 1 square each (adjacent empty).", rarity: "uncommon", weight: 4, mode: "instant", effect: "mass_nudge" },
   { id: "backrank_protection", name: "Backrank Protection", desc: "Shield all your pieces in your back row for 1 turn.", rarity: "uncommon", weight: 4, mode: "instant", effect: "sanctuary_pulse" },
-  { id: "last_stand", name: "Last Stand", desc: "If this piece would be captured, it survives with an ultra shield for 3 turns instead.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "last_stand" },
+  { id: "last_stand", name: "Last Stand", desc: "Hidden trap on a friendly piece — if it would be captured or destroyed, it survives with an ultra shield for 3 turns instead (invisible until it triggers).", rarity: "uncommon", weight: 4, mode: "friendly", effect: "last_stand" },
   { id: "snowball", name: "Snowball", desc: "Freeze an enemy piece — it cannot move on its owner's next turn.", rarity: "common", weight: 6, mode: "any_piece", effect: "snowball" },
   { id: "tangle", name: "Tangle", desc: "Swap two adjacent enemies and freeze both for 1 turn.", rarity: "rare", weight: 3, mode: "e_e_adj", effect: "tangle" },
   { id: "bishops_mark", name: "Bishop's Mark", desc: "For 2 turns, a piece may slide along either diagonal over empty dark squares.", rarity: "rare", weight: 3, mode: "friendly", effect: "bishop_2" },
