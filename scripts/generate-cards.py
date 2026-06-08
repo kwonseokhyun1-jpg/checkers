@@ -50,7 +50,7 @@ SPELLS = [
     ("bulwark", "Bulwark", "All your pieces on one diagonal line gain shield for 1 turn.", "rare", 3, "friendly", "bulwark"),
     ("mirror_shield", "Mirror Shield", "Next enemy spell on this piece reflects to a random enemy.", "epic", 2, "friendly", "mirror_shield"),
     ("phalanx", "Phalanx", "Two adjacent friendly pieces share protection — both must be jumped together.", "rare", 3, "f_f_adj", "phalanx"),
-    ("sanctuary", "Sanctuary", "Friendly pieces on 4 adjacent dark squares to a point cannot be captured for 1 turn.", "rare", 3, "empty", "sanctuary"),
+    ("sanctuary", "Sanctuary", "Friendly pieces on the target dark square and its 6 surrounding dark squares cannot be captured for 1 turn.", "rare", 3, "empty", "sanctuary"),
     ("last_stand", "Last Stand", "If this piece would be captured, it survives with an ultra shield for 3 turns instead.", "uncommon", 4, "friendly", "last_stand"),
     ("decoy", "Decoy", "Place a decoy on an empty dark square; blocks one enemy move then vanishes.", "common", 5, "empty", "decoy"),
     ("iron_will", "Iron Will", "A frozen or rooted friendly piece may move once (consumes debuff).", "common", 5, "friendly", "iron_will"),
