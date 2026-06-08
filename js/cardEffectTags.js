@@ -37,7 +37,7 @@ const TAGS = {
   hibernation: ["Sleep 2 turns (immobile)", "Wake as king + Awoken Bear", "Extra move every turn after"],
   root_2: ["Enemy cannot jump/capture next turn"],
   silence_3: ["Suppress special movement 3 turns"],
-  poison_3: ["Enemy dies in 6 turns — 6-turn poison bar"],
+  poison_3: ["Enemy dies in 3 turns — 3-turn poison bar"],
   deflect_1: ["Next hit reflects to random enemy"],
   last_stand: ["Hidden trap — ultra shield on capture or destroy for 3 turns"],
   clone: ["Your man, then adjacent empty square — copy cannot capture or be taken this turn; dies to freeze/poison/burn"],
