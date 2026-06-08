@@ -79,7 +79,7 @@ body.match-active #view-match:not(.hidden) {
   width: 100%;
 }
 
-/* Spell hand — allow vertical scroll without starting a cast */
+/* Spell hand — allow horizontal scroll without starting a cast */
 .hand.spell-hand {
   touch-action: pan-x;
   overscroll-behavior: contain;
