@@ -476,9 +476,27 @@ export function getAllMovesForColor(board, color, state = null) {
       steps.push(...getStepMoves(board, piece, color, state));
     }
   }
-  if (state?.meta?.optionalJumps?.[color]) return jumps.length ? jumps : steps;
+  if (state?.meta?.optionalJumps?.[color]) return jumps.length ? [...jumps, ...steps] : steps;
   if (jumps.length > 0) return jumps;
   return steps;
+}
+
+/** True when the player has jump captures and must take them (not optional). */
+export function hasMandatoryJumps(board, color, state = null) {
+  if (state?.meta?.optionalJumps?.[color]) return false;
+  const panicked = findPanicPiece(board, color);
+  if (panicked) {
+    const panicMoves = getBackwardStepMoves(board, panicked, state);
+    if (panicMoves.length) return false;
+  }
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const piece = board[r][c];
+      if (!piece || piece.color !== color) continue;
+      if (getJumpMoves(board, piece, color, state).length) return true;
+    }
+  }
+  return false;
 }
 
 function explodeBombAt(board, state, row, col) {

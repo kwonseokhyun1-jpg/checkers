@@ -19,6 +19,7 @@ import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSqu
 import {
   initCardState,
   isInstant,
+  canCastInstant,
   isHiddenTrapSpell,
   getCardHint,
   getValidTargets,
@@ -724,6 +725,10 @@ export class MatchSession {
     if (!this.canPlaySpells()) return false;
 
     if (isInstant(card)) {
+      if (!canCastInstant(this.state, this.localColor, card)) {
+        this.setMessage("Ignore only when capture is mandatory.");
+        return false;
+      }
       void this.castInstantSpell(card);
       return true;
     }
@@ -918,7 +923,9 @@ export class MatchSession {
 
   attachCardInput(el, card, canPlay) {
     const s = this.state;
-    const hasTargets = isInstant(card) || getValidTargets(s, this.localColor, card, []).length > 0;
+    const hasTargets =
+      (isInstant(card) && canCastInstant(s, this.localColor, card)) ||
+      getValidTargets(s, this.localColor, card, []).length > 0;
     const canCast = canPlay && this.canPlaySpells() && hasTargets;
     el.classList.toggle("disabled", !canCast);
     if (!canCast) {
@@ -932,7 +939,9 @@ export class MatchSession {
               : s.spellPlayed[this.localColor]
               ? "Already cast a spell this turn"
               : !hasTargets
-                ? "No valid targets for this spell"
+                ? card.effect === "ignore"
+                  ? "Ignore — only when you must capture"
+                  : "No valid targets for this spell"
                 : "Spells unavailable";
       return;
     }
@@ -1612,6 +1621,10 @@ ${starLine}`;
   async castInstantSpell(card) {
     if (this.actionBusy || this.state.spellPlayed[this.localColor]) return;
     if (!this.canPlaySpells()) return;
+    if (!canCastInstant(this.state, this.localColor, card)) {
+      this.setMessage("Ignore only when capture is mandatory.");
+      return;
+    }
     this.actionBusy = true;
     this.cancelCardPlay();
     try {
@@ -2033,7 +2046,9 @@ ${starLine}`;
 
     for (const card of s.hands[this.localColor]) {
       const playable =
-        canPlay && (isInstant(card) || getValidTargets(s, this.localColor, card, []).length > 0);
+        canPlay &&
+        ((isInstant(card) && canCastInstant(s, this.localColor, card)) ||
+          getValidTargets(s, this.localColor, card, []).length > 0);
       const el = renderSpellCardEl(card, {
         button: true,
         compact: true,
