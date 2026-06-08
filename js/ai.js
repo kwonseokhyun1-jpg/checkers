@@ -178,22 +178,38 @@ function getChainJumpsFrom(board, color, state, fromR, fromC) {
   );
 }
 
+function opponentColor(color) {
+  return color === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
+}
+
+/** True when the opponent has at least one jump capture on their next turn. */
+function opponentCanCapture(board, victimColor, state) {
+  const attacker = opponentColor(victimColor);
+  return getAllMovesForColor(board, attacker, state).some((m) => m.captures?.length);
+}
+
+function scoreMove(board, color, state, move) {
+  const sim = cloneMatchState(state);
+  sim.board = board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+  if (!applyMove(sim.board, move, sim)) return { score: -Infinity, safe: false };
+  const safe = !opponentCanCapture(sim.board, color, sim);
+  const score = scoreBoard(sim.board, color) + (move.captures?.length || 0) * 8 + Math.random() * 2;
+  return { score, safe };
+}
+
 export function pickBestMove(board, color, state, moves = null) {
   const pool = moves ?? getAllMovesForColor(board, color, state);
   if (!pool.length) return null;
 
-  let best = pool[0];
-  let bestScore = -Infinity;
-  for (const move of pool) {
-    const copy = board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
-    applyMove(copy, move, state);
-    const total = scoreBoard(copy, color) + (move.captures?.length || 0) * 8 + Math.random() * 2;
-    if (total > bestScore) {
-      bestScore = total;
-      best = move;
-    }
+  const rated = pool.map((move) => ({ move, ...scoreMove(board, color, state, move) }));
+  const safe = rated.filter((r) => r.safe);
+  const candidates = safe.length ? safe : rated;
+
+  let best = candidates[0];
+  for (const entry of candidates) {
+    if (entry.score > best.score) best = entry;
   }
-  return best;
+  return best.move;
 }
 
 /**
@@ -321,7 +337,8 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
         (m) => m.from[0] === br && m.from[1] === bc
       );
       if (extras.length) {
-        const extra = extras[Math.floor(Math.random() * extras.length)];
+        const extra = pickBestMove(state.board, aiColor, state, extras);
+        if (!extra) return log;
         applyMove(state.board, extra, state);
         log.push({
           type: "move",
@@ -339,7 +356,11 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
         (m) => m.from[0] === br && m.from[1] === bc && (m.type === "step" || m.type === "jump")
       );
       if (extra.length) {
-        const ex = extra[0];
+        const ex = pickBestMove(state.board, color, state, extra);
+        if (!ex) {
+          state.meta.pendingDouble[aiColor] = false;
+          return log;
+        }
         applyMove(state.board, ex, state);
         log.push({
           type: "move",
@@ -360,12 +381,8 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
         (m) => m.from[0] === br && m.from[1] === bc
       );
       if (pressMoves.length) {
-        const bestPress = pressMoves.reduce((best, m) => {
-          const copy = state.board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
-          applyMove(copy, m, state);
-          const sc = scoreBoard(copy, color) + (m.captures?.length || 0) * 8;
-          return sc > best.score ? { move: m, score: sc } : best;
-        }, { move: pressMoves[0], score: -Infinity }).move;
+        const bestPress = pickBestMove(state.board, color, state, pressMoves);
+        if (!bestPress) return log;
         applyMove(state.board, bestPress, state);
         log.push({
           type: "move",
