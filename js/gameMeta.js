@@ -1,6 +1,6 @@
 /** Global match state: gems modifiers, square terrain, turn flags */
 
-import { COLORS, SIZE } from "./board.js";
+import { COLORS, SIZE, inBounds, isDarkSquare } from "./board.js";
 
 export function createMatchMeta() {
   return {
@@ -226,13 +226,30 @@ export function setCollapsedSquare(meta, r, c, turnsLeft = COLLAPSE_DURATION_TUR
   meta.collapsedSquare = { square: `${r},${c}`, turnsLeft };
 }
 
-/** Dark squares in darkness aura (center + neighbors) */
+/** Six dark squares around a darkness core (hex ring; excludes center). */
+export const DARKNESS_ZONE_OFFSETS = [
+  [-1, -1], [-1, 1], [1, -1], [1, 1],
+  [0, -2], [0, 2],
+];
+
+export function getDarknessZoneCellsAround(r, c) {
+  const cells = [];
+  for (const [dr, dc] of DARKNESS_ZONE_OFFSETS) {
+    const nr = r + dr, nc = c + dc;
+    if (inBounds(nr, nc) && isDarkSquare(nr, nc)) cells.push([nr, nc]);
+  }
+  return cells;
+}
+
+/** True when (r,c) is a dark square cloaked by an active darkness core. */
 export function isInDarknessZone(state, r, c) {
   if (!state?.squares) return false;
-  for (let dr = -1; dr <= 1; dr++) {
-    for (let dc = -1; dc <= 1; dc++) {
-      const sq = state.squares[sk(r + dr, c + dc)];
-      if (sq?.darkness > 0) return true;
+  for (const key of Object.keys(state.squares)) {
+    const sq = state.squares[key];
+    if (!(sq?.darkness > 0)) continue;
+    const [cr, cc] = key.split(",").map(Number);
+    for (const [dr, dc] of DARKNESS_ZONE_OFFSETS) {
+      if (cr + dr === r && cc + dc === c) return true;
     }
   }
   return false;

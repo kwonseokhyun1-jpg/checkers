@@ -2,8 +2,7 @@
  * Card targeting UI + AI auto-play
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget } from "./board.js";
-import { collapsedSquareKey } from "./gameMeta.js";
-import { sk, handLimit } from "./gameMeta.js";
+import { collapsedSquareKey, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
@@ -75,6 +74,10 @@ function squareBlocked(state, r, c) {
 function emptyDark(state, r, c) {
   if (squareBlocked(state, r, c)) return false;
   return isDarkSquare(r, c) && !at(state, r, c);
+}
+
+function pieceCloakedByDarkness(state, r, c) {
+  return isInDarknessZone(state, r, c);
 }
 
 /** Single-target friendly spells that shield or protect a piece. */
@@ -167,6 +170,7 @@ function fEmptyFirstPickTargets(state, color, card) {
           if (!isDarkSquare(rr, cc) || squareBlocked(state, rr, cc)) continue;
           const t = at(state, rr, cc);
           if (t && t.color === color) continue;
+          if (t && t.color !== color && pieceCloakedByDarkness(state, rr, cc)) continue;
           return true;
         }
       }
@@ -193,6 +197,7 @@ export function getValidTargets(state, color, card, picks) {
         for (let c = 0; c < SIZE; c++) {
           const p = at(state, r, c);
           if (!p || p.color !== color) continue;
+          if (pieceCloakedByDarkness(state, r, c)) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
           res.push([r, c]);
@@ -203,6 +208,7 @@ export function getValidTargets(state, color, card, picks) {
         for (let c = 0; c < SIZE; c++) {
           const p = at(state, r, c);
           if (p && p.color === o) {
+            if (pieceCloakedByDarkness(state, r, c)) continue;
             if (card.effect === "snipe") {
               let found = false;
               for (const fp of piecesOfColor(state.board, color)) {
@@ -272,6 +278,7 @@ export function getValidTargets(state, color, card, picks) {
             if (!isDarkSquare(r, c) || squareBlocked(state, r, c)) continue;
             const t = at(state, r, c);
             if (t && t.color === color) continue;
+            if (t && t.color !== color && pieceCloakedByDarkness(state, r, c)) continue;
             spots.push([r, c]);
           }
         }
@@ -295,7 +302,7 @@ export function getValidTargets(state, color, card, picks) {
         for (let r = 0; r < SIZE; r++)
           for (let c = 0; c < SIZE; c++) {
             const p = at(state, r, c);
-            if (p && p.color === o && !(r === r0 && c === c0)) res.push([r, c]);
+            if (p && p.color === o && !(r === r0 && c === c0) && !pieceCloakedByDarkness(state, r, c)) res.push([r, c]);
           }
         return res;
       }
@@ -311,6 +318,7 @@ export function getValidTargets(state, color, card, picks) {
               c = c0 + dc;
             const p = at(state, r, c);
             if (!p) continue;
+            if (pieceCloakedByDarkness(state, r, c)) continue;
             if (card.mode === "e_e_adj" && p.color === o) res.push([r, c]);
             if (card.mode === "f_f_adj" && p.color === color) res.push([r, c]);
           }
@@ -321,9 +329,13 @@ export function getValidTargets(state, color, card, picks) {
       const [pr, pc] = picks[0];
       const p = at(state, pr, pc);
       if (!p) return [];
-      if (card.effect === "forward_bolt") return getAdjacentForwardBoltTarget(state.board, p);
-      if (card.effect === "cryo_bolt") return getCryoBoltTarget(state.board, p);
-      return getBoltTarget(state.board, p);
+      if (card.effect === "forward_bolt") {
+        return getAdjacentForwardBoltTarget(state.board, p).filter(([r, c]) => !pieceCloakedByDarkness(state, r, c));
+      }
+      if (card.effect === "cryo_bolt") {
+        return getCryoBoltTarget(state.board, p).filter(([r, c]) => !pieceCloakedByDarkness(state, r, c));
+      }
+      return getBoltTarget(state.board, p).filter(([r, c]) => !pieceCloakedByDarkness(state, r, c));
     }
     case "any_piece":
       if (card.effect === "snowball") {
@@ -331,14 +343,16 @@ export function getValidTargets(state, color, card, picks) {
           for (let r = 0; r < SIZE; r++)
             for (let c = 0; c < SIZE; c++) {
               const p = at(state, r, c);
-              if (p && p.color === o) res.push([r, c]);
+              if (p && p.color === o && !pieceCloakedByDarkness(state, r, c)) res.push([r, c]);
             }
         }
         return res;
       }
       if (picks.length === 0) {
         for (let r = 0; r < SIZE; r++)
-          for (let c = 0; c < SIZE; c++) if (at(state, r, c)) res.push([r, c]);
+          for (let c = 0; c < SIZE; c++) {
+            if (at(state, r, c) && !pieceCloakedByDarkness(state, r, c)) res.push([r, c]);
+          }
         return res;
       }
       return getValidTargets(state, color, { mode: "friendly" }, []);
