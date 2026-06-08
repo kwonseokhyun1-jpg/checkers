@@ -93,7 +93,7 @@
 - **Cross Bolt** — Destroy the first enemy on both forward diagonals from your piece (if any).
 - **Cryo Bolt** — Bolt along your diagonal: freezes a normal enemy, or destroys a frozen or paralyzed one (breaks shield).
 - **Cull** — Destroy the weakest enemy (non-king preferred, fewest escape squares).
-- **Darkness** — Pieces on 4 dark squares around a point cannot be targeted by ranged spells for 2 turns.
+- **Darkness** — Pieces on the 6 dark squares around a point cannot be captured, cannot capture, and cannot be targeted or destroyed for 2 turns.
 - **Detonate** — Destroy your own piece to also destroy all adjacent enemies (not shielded).
 - **Drift** — Slide a piece any number of empty squares along one diagonal until blocked.
 - **Echo** — Repeat the last card you played.

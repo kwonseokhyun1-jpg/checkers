@@ -12,7 +12,7 @@ import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
 import { cleanseFriendlyDebuffs } from "./pieceStatus.js";
-import { isSquareCollapsed, setCollapsedSquare, ensureConstitutionTurns } from "./gameMeta.js";
+import { isSquareCollapsed, setCollapsedSquare, ensureConstitutionTurns, getDarknessZoneCellsAround, isInDarknessZone } from "./gameMeta.js";
 
 const opp = (c) => (c === COLORS.RED ? COLORS.BLACK : COLORS.RED);
 const ok = (m = "Spell cast.", extra = {}) => ({ success: true, message: m, ...extra });
@@ -119,7 +119,7 @@ function adjacentSquares(r, c) {
 function enemySquaresAdjacentTo(state, r, c, color) {
   return adjacentSquares(r, c).filter(([ar, ac]) => {
     const t = at(state, ar, ac);
-    return t && t.color !== color;
+    return t && t.color !== color && !isInDarknessZone(state, ar, ac);
   });
 }
 
@@ -141,13 +141,7 @@ export function getSanctuaryCells(r, c) {
 }
 
 export function getDarknessZoneCells(r, c) {
-  const cells = [];
-  for (let dr = -1; dr <= 1; dr++)
-    for (let dc = -1; dc <= 1; dc++) {
-      const nr = r + dr, nc = c + dc;
-      if (inBounds(nr, nc) && isDarkSquare(nr, nc)) cells.push([nr, nc]);
-    }
-  return cells;
+  return getDarknessZoneCellsAround(r, c);
 }
 
 function isFurthestBackRow(piece) {
@@ -663,7 +657,9 @@ const EFFECTS = {
 };
 
 export function pickCoinFlipVictim(state, color) {
-  const pool = fri(state, color).concat(en(state, color));
+  const pool = fri(state, color).concat(en(state, color)).filter(
+    (p) => !isInDarknessZone(state, p.row, p.col)
+  );
   if (!pool.length) return null;
   return pool[Math.floor(Math.random() * pool.length)];
 }
