@@ -2478,8 +2478,8 @@ ${starLine}`;
             bar.setAttribute("aria-label", `Poison — ${piece.venom} turns left`);
             bar.setAttribute("aria-valuenow", String(piece.venom));
             bar.setAttribute("aria-valuemin", "0");
-            bar.setAttribute("aria-valuemax", "6");
-            for (let i = 0; i < 6; i++) {
+            bar.setAttribute("aria-valuemax", "3");
+            for (let i = 0; i < 3; i++) {
               const block = document.createElement("span");
               block.className =
                 "poison-indicator__block" + (i < piece.venom ? " poison-indicator__block--filled" : "");
