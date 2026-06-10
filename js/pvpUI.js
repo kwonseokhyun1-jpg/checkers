@@ -367,6 +367,38 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     }
   }
 
+  function applyPvpMatchRow(row) {
+    if (!matchSession || !row?.state_json) return;
+    const ver = row.version ?? 0;
+    const terminal = isPvpTerminalBoard(row.state_json, pvpService.localColor);
+    const finished = row.status === "finished";
+    if (!finished && ver <= (pvpService?._lastVersion ?? -1)) return;
+    if (terminal || finished) matchSession.actionBusy = false;
+    const isMyTurn = row.turn === pvpService.localColor;
+    const opponentName = opponentNameFromRow(row);
+    matchSession.opponentName = opponentName;
+    matchSession.importState(row.state_json);
+    if (ver > (pvpService?._lastVersion ?? -1)) pvpService._lastVersion = ver;
+    if (!matchSession._gameOverUiShown && finished && row.winner_id) {
+      const user = getCurrentUser();
+      const won = user?.id === row.winner_id;
+      const forfeited = !isPvpTerminalBoard(row.state_json, pvpService.localColor);
+      void matchSession.showGameOver(
+        won ? "Victory!" : "Defeat",
+        won
+          ? forfeited
+            ? "Your opponent left the match."
+            : "You won the match!"
+          : "You lost the match."
+      );
+    }
+    if (!matchSession._gameOverUiShown) {
+      matchSession.setMessage(
+        isMyTurn ? "Your turn — cast a spell or move." : `${opponentName} is acting…`
+      );
+    }
+  }
+
   function onMatchRow(row) {
     if (!row) return;
 
@@ -383,31 +415,11 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       const terminal = isPvpTerminalBoard(row.state_json, pvpService.localColor);
       const finished = row.status === "finished";
       if (!finished && ver <= (pvpService?._lastVersion ?? -1)) return;
-      if ((matchSession.actionBusy || matchSession._syncBusy) && !terminal && !finished) return;
-      if (terminal || finished) matchSession.actionBusy = false;
-      const isMyTurn = row.turn === pvpService.localColor;
-      const opponentName = opponentNameFromRow(row);
-      matchSession.opponentName = opponentName;
-      matchSession.importState(row.state_json);
-      if (ver > (pvpService?._lastVersion ?? -1)) pvpService._lastVersion = ver;
-      if (!matchSession._gameOverUiShown && finished && row.winner_id) {
-        const user = getCurrentUser();
-        const won = user?.id === row.winner_id;
-        const forfeited = !isPvpTerminalBoard(row.state_json, pvpService.localColor);
-        void matchSession.showGameOver(
-          won ? "Victory!" : "Defeat",
-          won
-            ? forfeited
-              ? "Your opponent left the match."
-              : "You won the match!"
-            : "You lost the match."
-        );
+      if ((matchSession.actionBusy || matchSession._syncBusy) && !terminal && !finished) {
+        matchSession.queuePvpRow(row);
+        return;
       }
-      if (!matchSession._gameOverUiShown) {
-        matchSession.setMessage(
-          isMyTurn ? "Your turn — cast a spell or move." : `${opponentName} is acting…`
-        );
-      }
+      applyPvpMatchRow(row);
       return;
     }
 
@@ -548,6 +560,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
                 : row.host_id;
             if (winnerId) await pvpService.finishMatch(winnerId);
           },
+          onPvpPendingRow: (pendingRow) => applyPvpMatchRow(pendingRow),
         }
       );
     } catch (err) {
