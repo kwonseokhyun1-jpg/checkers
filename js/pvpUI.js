@@ -64,21 +64,42 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
   let matchLaunching = false;
   let unsubscribeOpenRooms = null;
   let openRoomsPollId = null;
+  let openRoomsRefreshTimer = null;
+  let openRoomsRefreshPendingHost = null;
+  let hostWaitingSync = false;
+  let openRoomsRefreshInFlight = false;
 
   function stopOpenRoomsSync() {
     if (openRoomsPollId) {
       clearInterval(openRoomsPollId);
       openRoomsPollId = null;
     }
+    if (openRoomsRefreshTimer) {
+      clearTimeout(openRoomsRefreshTimer);
+      openRoomsRefreshTimer = null;
+    }
+    openRoomsRefreshPendingHost = null;
+    hostWaitingSync = false;
     unsubscribeOpenRooms?.();
     unsubscribeOpenRooms = null;
   }
 
+  function scheduleRefreshOpenRooms(pendingHostRow = null) {
+    if (pendingHostRow) openRoomsRefreshPendingHost = pendingHostRow;
+    if (openRoomsRefreshTimer) return;
+    openRoomsRefreshTimer = setTimeout(() => {
+      openRoomsRefreshTimer = null;
+      const pending = openRoomsRefreshPendingHost;
+      openRoomsRefreshPendingHost = null;
+      void refreshOpenRooms(pending);
+    }, 300);
+  }
+
   function startOpenRoomsSync() {
     stopOpenRoomsSync();
-    void refreshOpenRooms();
-    openRoomsPollId = setInterval(() => void refreshOpenRooms(), 4000);
-    unsubscribeOpenRooms = subscribeOpenRooms(() => void refreshOpenRooms());
+    scheduleRefreshOpenRooms();
+    openRoomsPollId = setInterval(() => scheduleRefreshOpenRooms(), 5000);
+    unsubscribeOpenRooms = subscribeOpenRooms(() => scheduleRefreshOpenRooms());
   }
 
   function renderLobby(message = "", isError = false) {
@@ -191,6 +212,11 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     const openList = root.querySelector("#pvp-open-list");
     const user = getCurrentUser();
     if (!yourList || !openList || !user || matchSession) return;
+    if (openRoomsRefreshInFlight) {
+      if (pendingHostRow) openRoomsRefreshPendingHost = pendingHostRow;
+      return;
+    }
+    openRoomsRefreshInFlight = true;
 
     try {
       const svc = pvpService ?? new PvpService();
@@ -207,6 +233,13 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       const err = `<li class="pvp-open-empty pvp-open-empty--error">${escapeHtml(e.message || "Could not load rooms")}</li>`;
       yourList.innerHTML = err;
       openList.innerHTML = err;
+    } finally {
+      openRoomsRefreshInFlight = false;
+      if (openRoomsRefreshPendingHost) {
+        const pending = openRoomsRefreshPendingHost;
+        openRoomsRefreshPendingHost = null;
+        scheduleRefreshOpenRooms(pending);
+      }
     }
   }
 
@@ -405,8 +438,11 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     if (row.status === "waiting" && pvpService?.role === "host") {
       setStatus("Your room is open — waiting for an opponent…");
       showHosting();
-      pvpService.startPolling();
-      void refreshOpenRooms();
+      if (!hostWaitingSync) {
+        hostWaitingSync = true;
+        pvpService.startPolling(4000);
+      }
+      scheduleRefreshOpenRooms();
       return;
     }
 
@@ -538,7 +574,12 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
           onStateSync: async (state) => {
             const v = pvpService._lastVersion;
             const updated = await pvpService.pushState(state, v);
-            if (updated) pvpService._lastVersion = updated.version;
+            if (updated) {
+              pvpService._lastVersion = updated.version;
+              return;
+            }
+            const fresh = await pvpService.fetchMatch(pvpService.matchId);
+            if (fresh) onMatchRow(fresh);
           },
           onPvpForfeit: async () => {
             if (!pvpService || matchSession?._gameOverUiShown) return;
@@ -586,7 +627,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     );
     matchSession.render();
     saveActivePvpMatchId(row.id);
-    pvpService.startPolling(2000);
+    pvpService.startPolling(1200);
     matchLaunching = false;
   }
 
@@ -634,7 +675,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       );
       saveActivePvpMatchId(row.id);
       onMatchRow(row);
-      void refreshOpenRooms(row);
+      scheduleRefreshOpenRooms(row);
     } catch (e) {
       setStatus(e.message || "Could not host a room", true);
       pvpService?.dispose();
@@ -751,7 +792,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
           svc.attachToMatch({ ...room, status: "waiting" }, user.id);
           saveActivePvpMatchId(room.id);
           onMatchRow(room);
-          void refreshOpenRooms(room);
+          scheduleRefreshOpenRooms(room);
           return true;
         }
       } catch {
@@ -777,7 +818,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       }
       hideHosting();
       setStatus("");
-      void refreshOpenRooms();
+      scheduleRefreshOpenRooms();
     } catch (e) {
       setStatus(e.message || "Could not cancel room", true);
     }
