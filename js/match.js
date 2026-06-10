@@ -176,6 +176,7 @@ export class MatchSession {
     this.onPvpForfeit = options.onPvpForfeit ?? null;
     this.onPvpPendingRow = options.onPvpPendingRow ?? null;
     this._syncBusy = false;
+    this._syncDirty = false;
     this._pendingPvpRow = null;
     this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
     if (options.initialState) {
@@ -606,7 +607,7 @@ export class MatchSession {
 
   /** Apply authoritative state from PvP sync (opponent moved). */
   importState(nextState) {
-    if (!nextState || this.actionBusy || this._syncBusy) return;
+    if (!nextState || this.actionBusy || this._syncBusy) return false;
     const prevTurn = this.state?.turn;
     const prevSpellSeq = this.state?.pvpLastSpell?.seq ?? this._lastPvpSpellSeq ?? 0;
     const incomingSpell = nextState.pvpLastSpell;
@@ -641,6 +642,7 @@ export class MatchSession {
     this.updateHistoryNavUI();
     this.render();
     if (replaySpell) void this.replayOpponentPvpSpell(incomingSpell);
+    return true;
   }
 
   async replayOpponentPvpSpell(spell) {
@@ -695,12 +697,29 @@ export class MatchSession {
 
   pushPvpState() {
     if (!this.isPvp || !this.onStateSync) return Promise.resolve();
+    this._syncDirty = true;
     if (this._syncBusy) return this._syncPromise ?? Promise.resolve();
+    return this._flushPvpState();
+  }
+
+  _flushPvpState() {
+    if (!this._syncDirty || !this.onStateSync) return Promise.resolve();
     this._syncBusy = true;
-    this._syncPromise = Promise.resolve(this.onStateSync(this.state)).finally(() => {
-      this._syncBusy = false;
-      this._syncPromise = null;
-    });
+    this._syncDirty = false;
+    const state = this.state;
+    this._syncPromise = Promise.resolve(this.onStateSync(state))
+      .catch((err) => console.error("PvP state sync failed:", err))
+      .finally(() => {
+        this._syncBusy = false;
+        this._syncPromise = null;
+        const pendingRow = this.flushPendingPvpRow();
+        if (pendingRow && this.onPvpPendingRow) {
+          this.onPvpPendingRow(pendingRow);
+        } else if (pendingRow?.state_json) {
+          this.importState(pendingRow.state_json);
+        }
+        if (this._syncDirty) void this._flushPvpState();
+      });
     return this._syncPromise;
   }
 
