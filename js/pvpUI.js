@@ -29,6 +29,8 @@ import {
   saveActivePvpMatchId,
   readActivePvpMatchId,
   clearActivePvpMatchId,
+  matchRowFingerprint,
+  shouldApplyPvpRow,
 } from "./pvp.js";
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 import { recordPvpWin } from "./profileStats.js";
@@ -67,6 +69,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
   let openRoomsRefreshTimer = null;
   let openRoomsRefreshPendingHost = null;
   let hostWaitingSync = false;
+  let hostLaunchSync = false;
   let openRoomsRefreshInFlight = false;
 
   function stopOpenRoomsSync() {
@@ -80,6 +83,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     }
     openRoomsRefreshPendingHost = null;
     hostWaitingSync = false;
+    hostLaunchSync = false;
     unsubscribeOpenRooms?.();
     unsubscribeOpenRooms = null;
   }
@@ -402,16 +406,19 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
 
   function applyPvpMatchRow(row) {
     if (!matchSession || !row?.state_json) return;
+    if (!shouldApplyPvpRow(row, pvpService, matchSession)) return;
     const ver = row.version ?? 0;
     const terminal = isPvpTerminalBoard(row.state_json, pvpService.localColor);
     const finished = row.status === "finished";
-    if (!finished && ver <= (pvpService?._lastVersion ?? -1)) return;
     if (terminal || finished) matchSession.actionBusy = false;
     const isMyTurn = row.turn === pvpService.localColor;
     const opponentName = opponentNameFromRow(row);
     matchSession.opponentName = opponentName;
     const applied = matchSession.importState(row.state_json);
-    if (applied && ver > (pvpService?._lastVersion ?? -1)) pvpService._lastVersion = ver;
+    if (applied) {
+      pvpService._lastAppliedFingerprint = matchRowFingerprint(row);
+      if (ver > (pvpService?._lastVersion ?? -1)) pvpService._lastVersion = ver;
+    }
     if (!matchSession._gameOverUiShown && finished && row.winner_id) {
       const user = getCurrentUser();
       const won = user?.id === row.winner_id;
@@ -447,10 +454,9 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     }
 
     if (matchSession && row.state_json && (row.status === "active" || row.status === "finished")) {
-      const ver = row.version ?? 0;
       const terminal = isPvpTerminalBoard(row.state_json, pvpService.localColor);
       const finished = row.status === "finished";
-      if (!finished && ver <= (pvpService?._lastVersion ?? -1)) return;
+      if (!finished && !shouldApplyPvpRow(row, pvpService, matchSession)) return;
       if ((matchSession.actionBusy || matchSession._syncBusy) && !terminal && !finished) {
         matchSession.queuePvpRow(row);
         return;
@@ -463,14 +469,16 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       if (row.state_json) {
         stopOpenRoomsSync();
         hideHosting();
+        hostLaunchSync = false;
         matchLaunching = true;
         void launchMatch(row).finally(() => {
           if (!matchSession) matchLaunching = false;
         });
         return;
       }
-      if (isMysteryMode(row) && pvpService?.role === "host") {
-        pvpService.startPolling(800);
+      if (!hostLaunchSync) {
+        hostLaunchSync = true;
+        pvpService.startPolling(600);
       }
       return;
     }
@@ -547,6 +555,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     matchRoot.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP", pvp: true });
 
     pvpService._lastVersion = row.version ?? 0;
+    pvpService._lastAppliedFingerprint = matchRowFingerprint(row);
 
     try {
       matchSession = new MatchSession(
@@ -576,6 +585,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
             const updated = await pvpService.pushState(state, v);
             if (updated) {
               pvpService._lastVersion = updated.version;
+              pvpService._lastAppliedFingerprint = matchRowFingerprint(updated);
               return;
             }
             const fresh = await pvpService.fetchMatch(pvpService.matchId);
@@ -627,7 +637,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     );
     matchSession.render();
     saveActivePvpMatchId(row.id);
-    pvpService.startPolling(1200);
+    pvpService.startPolling(800);
     matchLaunching = false;
   }
 
