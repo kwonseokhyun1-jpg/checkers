@@ -377,8 +377,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     const isMyTurn = row.turn === pvpService.localColor;
     const opponentName = opponentNameFromRow(row);
     matchSession.opponentName = opponentName;
-    matchSession.importState(row.state_json);
-    if (ver > (pvpService?._lastVersion ?? -1)) pvpService._lastVersion = ver;
+    const applied = matchSession.importState(row.state_json);
+    if (applied && ver > (pvpService?._lastVersion ?? -1)) pvpService._lastVersion = ver;
     if (!matchSession._gameOverUiShown && finished && row.winner_id) {
       const user = getCurrentUser();
       const won = user?.id === row.winner_id;
