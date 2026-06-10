@@ -121,7 +121,8 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Realtime
+-- Realtime (FULL so UPDATE events always carry state_json / version)
+alter table public.pvp_matches replica identity full;
 alter publication supabase_realtime add table public.pvp_matches;
 
 create policy "pvp_delete_host_waiting"
