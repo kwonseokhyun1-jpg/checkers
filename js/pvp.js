@@ -36,6 +36,17 @@ function isMissingColumnError(error, columnName) {
   );
 }
 
+function isRowNotFound(error) {
+  return error?.code === "PGRST116";
+}
+
+/** PostgREST returns PGRST116 when `.single()` matches 0 or 2+ rows — use with `.maybeSingle()`. */
+function unwrapMaybeSingle({ data, error }, fallbackMessage) {
+  if (error && !isRowNotFound(error)) throw error;
+  if (!data) throw new Error(fallbackMessage);
+  return data;
+}
+
 /** null = unknown; true/false after first probe against live Supabase. */
 let _pieceSkinColumnsAvailable = null;
 
@@ -68,20 +79,37 @@ function normalizeRoomRow(row, withSkins) {
   return { ...row, host_piece_skin: DEFAULT_PIECE_SKIN };
 }
 
+const _profileSkinCache = new Map();
+const PROFILE_SKIN_CACHE_MS = 60_000;
+
 async function fetchProfilePieceSkins(sb, userIds) {
   const uniqueIds = [...new Set(userIds.filter(Boolean))];
   if (!uniqueIds.length) return new Map();
 
-  const { data, error } = await sb
-    .from("profiles")
-    .select("id, profile_json")
-    .in("id", uniqueIds);
+  const staleIds = uniqueIds.filter((id) => {
+    const hit = _profileSkinCache.get(id);
+    return !hit || Date.now() - hit.at > PROFILE_SKIN_CACHE_MS;
+  });
 
-  if (error) throw error;
+  if (staleIds.length) {
+    const { data, error } = await sb
+      .from("profiles")
+      .select("id, profile_json")
+      .in("id", staleIds);
+
+    if (error) throw error;
+
+    for (const row of data || []) {
+      _profileSkinCache.set(row.id, {
+        skin: pieceSkinFromProfileRow(row),
+        at: Date.now(),
+      });
+    }
+  }
 
   const skins = new Map();
-  for (const row of data || []) {
-    skins.set(row.id, pieceSkinFromProfileRow(row));
+  for (const id of uniqueIds) {
+    skins.set(id, _profileSkinCache.get(id)?.skin ?? DEFAULT_PIECE_SKIN);
   }
   return skins;
 }
@@ -425,16 +453,16 @@ export class PvpService {
     } else if (rpc.error && !isMissingRpc(rpc.error)) {
       throw rpc.error;
     } else {
-      const { data: updated, error } = await sb
+      const result = await sb
         .from("pvp_matches")
         .update(guestJoinUpdateFields(user.id, guestDeckIds, displayName, guestPieceSkin, withSkins))
         .eq("id", row.id)
         .eq("status", "waiting")
+        .is("guest_id", null)
         .select()
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      data = updated;
+      data = unwrapMaybeSingle(result, "That room was just taken by another player.");
     }
 
     return this.finalizeGuestJoin(data, guestDeckIds);
@@ -472,16 +500,17 @@ export class PvpService {
     };
     if (skinsEnabled) updateFields.guest_piece_skin = guestPieceSkin;
 
-    const { data, error } = await sb
-      .from("pvp_matches")
-      .update(updateFields)
-      .eq("id", row.id)
-      .eq("status", "waiting")
-      .is("guest_id", null)
-      .select()
-      .single();
-
-    if (error) throw error;
+    const data = unwrapMaybeSingle(
+      await sb
+        .from("pvp_matches")
+        .update(updateFields)
+        .eq("id", row.id)
+        .eq("status", "waiting")
+        .is("guest_id", null)
+        .select()
+        .maybeSingle(),
+      "That room was just taken by another player."
+    );
 
     this.matchId = data.id;
     this.role = "guest";
@@ -510,21 +539,30 @@ export class PvpService {
       updatePayload.guest_deck_ids = resolvedGuestDeckIds;
     }
 
-    const { data: ready, error: stateErr } = await sb
-      .from("pvp_matches")
-      .update(updatePayload)
-      .eq("id", data.id)
-      .select()
-      .single();
-
-    if (stateErr) throw stateErr;
-    data = ready;
+    data = unwrapMaybeSingle(
+      await sb
+        .from("pvp_matches")
+        .update(updatePayload)
+        .eq("id", data.id)
+        .select()
+        .maybeSingle(),
+      "Could not start the match — try joining again."
+    );
 
     this.matchId = data.id;
     this.role = "guest";
     this.localColor = COLORS.BLACK;
     this.subscribe(data.id);
     return data;
+  }
+
+  _deliverMatchRow(row, { eventType = "UPDATE" } = {}) {
+    if (!row) return;
+    const ver = row.version ?? 0;
+    if (ver <= this._lastVersion && eventType !== "INSERT" && row.status !== "finished") {
+      return;
+    }
+    this.onMatchRow?.(row);
   }
 
   subscribe(matchId) {
@@ -541,15 +579,15 @@ export class PvpService {
         (payload) => {
           const row = payload.new;
           if (!row) return;
-          const ver = row.version ?? 0;
-          if (
-            ver <= this._lastVersion &&
-            payload.eventType !== "INSERT" &&
-            row.status !== "finished"
-          ) {
+          const needsFullRow =
+            (row.status === "active" || row.status === "finished") && row.state_json == null;
+          if (needsFullRow) {
+            void this.fetchMatch(matchId)
+              .then((full) => this._deliverMatchRow(full, { eventType: payload.eventType }))
+              .catch((e) => this.onError?.(e));
             return;
           }
-          this.onMatchRow?.(row);
+          this._deliverMatchRow(row, { eventType: payload.eventType });
         }
       )
       .subscribe(async (status) => {
@@ -565,7 +603,11 @@ export class PvpService {
 
   async fetchMatch(matchId) {
     const sb = getSupabase();
-    const { data, error } = await sb.from("pvp_matches").select("*").eq("id", matchId).single();
+    const { data, error } = await sb
+      .from("pvp_matches")
+      .select("*")
+      .eq("id", matchId)
+      .maybeSingle();
     if (error) throw error;
     return data;
   }
@@ -589,17 +631,18 @@ export class PvpService {
       .eq("id", this.matchId)
       .eq("version", expectedVersion ?? this._lastVersion)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
-      if (error.code === "PGRST116") {
-        const fresh = await this.fetchMatch(this.matchId);
-        if (fresh) {
-          this._lastVersion = fresh.version;
-          this.onMatchRow?.(fresh);
-        }
-      } else {
-        this.onError?.(error);
+      this.onError?.(error);
+      return null;
+    }
+
+    if (!data) {
+      const fresh = await this.fetchMatch(this.matchId);
+      if (fresh) {
+        this._lastVersion = fresh.version;
+        this.onMatchRow?.(fresh);
       }
       return null;
     }
@@ -679,7 +722,12 @@ export function subscribeOpenRooms(onChange) {
     .channel("pvp-open-rooms")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "pvp_matches" },
+      {
+        event: "*",
+        schema: "public",
+        table: "pvp_matches",
+        filter: "status=eq.waiting",
+      },
       () => onChange?.()
     )
     .subscribe();
