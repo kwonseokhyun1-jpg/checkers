@@ -174,7 +174,9 @@ export class MatchSession {
     this.onStateSync = options.onStateSync ?? null;
     this.onPvpWin = options.onPvpWin ?? null;
     this.onPvpForfeit = options.onPvpForfeit ?? null;
+    this.onPvpPendingRow = options.onPvpPendingRow ?? null;
     this._syncBusy = false;
+    this._pendingPvpRow = null;
     this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
     if (options.initialState) {
       this.state = options.initialState;
@@ -588,6 +590,20 @@ export class MatchSession {
     this.beginTurn(this.opponentColor);
   }
 
+  /** Keep the latest match row while spell replay blocks sync. */
+  queuePvpRow(row) {
+    if (!row?.state_json) return;
+    const ver = row.version ?? 0;
+    const pendingVer = this._pendingPvpRow?.version ?? -1;
+    if (ver >= pendingVer) this._pendingPvpRow = row;
+  }
+
+  flushPendingPvpRow() {
+    const row = this._pendingPvpRow;
+    this._pendingPvpRow = null;
+    return row;
+  }
+
   /** Apply authoritative state from PvP sync (opponent moved). */
   importState(nextState) {
     if (!nextState || this.actionBusy || this._syncBusy) return;
@@ -656,7 +672,14 @@ export class MatchSession {
       );
     } finally {
       this.actionBusy = false;
-      this.render();
+      const pendingRow = this.flushPendingPvpRow();
+      if (pendingRow && this.onPvpPendingRow) {
+        this.onPvpPendingRow(pendingRow);
+      } else if (pendingRow?.state_json) {
+        this.importState(pendingRow.state_json);
+      } else {
+        this.render();
+      }
     }
   }
 
