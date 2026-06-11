@@ -15,7 +15,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns, takeTrapHistoryReveal } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns, takeTrapHistoryReveal, flushPendingBountyMessage } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -1204,7 +1204,7 @@ export class MatchSession {
     this.render();
   }
 
-  continueMultiJump(fromR, fromC) {
+  continueMultiJump(fromR, fromC, prefixMsg = null) {
     const s = this.state;
     const piece = s.board[fromR]?.[fromC];
     const movePool = getAllMovesForColor(s.board, this.localColor, s);
@@ -1214,7 +1214,7 @@ export class MatchSession {
     if (!jumps.length) return false;
     this.validMoves = jumps;
     this.selectedSquare = [fromR, fromC];
-    this.setMessage("Continue jumping!");
+    this.setMessage(prefixMsg ? `${prefixMsg} Continue jumping!` : "Continue jumping!");
     this.render();
     return true;
   }
@@ -1298,15 +1298,17 @@ export class MatchSession {
     const capAfter = s.captured[this.localColor]?.length ?? 0;
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
     this.achievementTracker?.onMoveAfter(s);
+    const bountyMsg = flushPendingBountyMessage(s.meta, this.localColor);
 
     const finish = () => {
       const [landR, landC] = move.to;
-      if (move.captures?.length && this.continueMultiJump(landR, landC)) return;
+      if (move.captures?.length && this.continueMultiJump(landR, landC, bountyMsg)) return;
       this.selectedSquare = null;
       this.validMoves = [];
       if (this.tryQuickMarchMove(s, this.localColor, landR, landC)) return;
       if (this.tryBearBonusMove(s, this.localColor, landR, landC)) return;
       if (this.tryPressExtraMove(s, this.localColor, landR, landC)) return;
+      if (bountyMsg) this.setMessage(bountyMsg);
       this.endHumanTurn();
     };
 
@@ -2466,6 +2468,7 @@ ${starLine}`;
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
           if (piece.linkedFateId) el.classList.add("linked-fate");
+          if (piece.bountyBy) el.classList.add("bounty-mark");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (piece.isClone) el.classList.add("clone-mark");
           if (piece.berserkNoCapture) el.classList.add("berserk-mark");
