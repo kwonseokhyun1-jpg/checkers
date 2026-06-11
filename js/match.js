@@ -20,6 +20,7 @@ import {
   initCardState,
   isInstant,
   canCastInstant,
+  getInstantCastBlockReason,
   isHiddenTrapSpell,
   getCardHint,
   getValidTargets,
@@ -846,8 +847,9 @@ export class MatchSession {
     if (!this.canPlaySpells()) return false;
 
     if (isInstant(card)) {
-      if (!canCastInstant(this.state, this.localColor, card)) {
-        this.setMessage("Ignore only when capture is mandatory.");
+      const blockReason = getInstantCastBlockReason(this.state, this.localColor, card);
+      if (blockReason) {
+        this.setMessage(blockReason);
         return false;
       }
       void this.castInstantSpell(card);
@@ -1060,9 +1062,7 @@ export class MatchSession {
               : s.spellPlayed[this.localColor]
               ? "Already cast a spell this turn"
               : !hasTargets
-                ? card.effect === "ignore"
-                  ? "Ignore — only when you must capture"
-                  : "No valid targets for this spell"
+                ? getInstantCastBlockReason(s, this.localColor, card) || "No valid targets for this spell"
                 : "Spells unavailable";
       return;
     }
@@ -1796,8 +1796,9 @@ ${starLine}`;
   async castInstantSpell(card) {
     if (this.actionBusy || this.state.spellPlayed[this.localColor]) return;
     if (!this.canPlaySpells()) return;
-    if (!canCastInstant(this.state, this.localColor, card)) {
-      this.setMessage("Ignore only when capture is mandatory.");
+    const blockReason = getInstantCastBlockReason(this.state, this.localColor, card);
+    if (blockReason) {
+      this.setMessage(blockReason);
       return;
     }
     this.actionBusy = true;

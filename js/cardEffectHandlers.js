@@ -634,6 +634,7 @@ const EFFECTS = {
   coronation_day(state, color, picks) { const pr=promoRow(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&r===pr&&!p.king) p.king=true;} return ok(); },
   regicide(state, color, picks) { state.meta.pendingRegicide[color]=true; return ok(); },
   constitution(state, color, picks) {
+    if (!fri(state, color).some((p) => p.king)) return fail("Constitution requires at least one king.");
     ensureConstitutionTurns(state.meta)[color] = 5;
     return ok("Constitution — your kings are protected for 5 turns.");
   },
