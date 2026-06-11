@@ -1330,7 +1330,7 @@ export class MatchSession {
     return true;
   }
 
-  endHumanTurn() {
+  async endHumanTurn() {
     if (this.checkWin()) return;
     tickEndTurnEffects(this.state.board, this.localColor, this.state);
     tickMeta(this.state, this.localColor);
@@ -1352,7 +1352,7 @@ export class MatchSession {
     if (this.isPvp) {
       this.setMessage("Waiting for opponent…");
       this.render();
-      this.pushPvpState();
+      await this.pushPvpState();
       return;
     }
     this.beginAiTurn();
