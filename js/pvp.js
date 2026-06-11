@@ -191,6 +191,29 @@ export function serializeMatchState(state) {
   return JSON.parse(JSON.stringify(state));
 }
 
+/** Stable key for deduping match rows — version alone is not enough (stale polls vs pushes). */
+export function matchRowFingerprint(row) {
+  if (!row?.state_json) return `v${row?.version ?? 0}|nostate`;
+  const s = row.state_json;
+  const seq = s.pvpSpellSeq ?? 0;
+  const tr = s.turn ?? "";
+  const red = s.turnNumber?.red ?? 0;
+  const blk = s.turnNumber?.black ?? 0;
+  const hist = s.moveHistory?.length ?? 0;
+  return `v${row.version ?? 0}|${tr}|${seq}|${red}|${blk}|${hist}`;
+}
+
+export function shouldApplyPvpRow(row, pvpService, matchSession = null) {
+  if (!row?.state_json) return false;
+  if (row.status === "finished") return true;
+  const ver = row.version ?? 0;
+  const fp = matchRowFingerprint(row);
+  if (fp === pvpService?._lastAppliedFingerprint) return false;
+  if (matchSession?._syncBusy && ver < (pvpService?._lastVersion ?? 0)) return false;
+  if (ver < (pvpService?._lastVersion ?? 0)) return false;
+  return true;
+}
+
 export class PvpService {
   constructor() {
     this.matchId = null;
@@ -200,6 +223,7 @@ export class PvpService {
     this.onMatchRow = null;
     this.onError = null;
     this._lastVersion = -1;
+    this._lastAppliedFingerprint = "";
     this._pollId = null;
   }
 
@@ -250,6 +274,7 @@ export class PvpService {
     }
     this.matchId = row.id;
     this._lastVersion = row.version ?? -1;
+    this._lastAppliedFingerprint = matchRowFingerprint(row);
     this.subscribe(row.id);
   }
 
@@ -301,15 +326,17 @@ export class PvpService {
       };
       if (withSkins) row.host_piece_skin = hostPieceSkin || DEFAULT_PIECE_SKIN;
 
-      const { data, error } = await sb.from("pvp_matches").insert(row).select().single();
-      if (!error) {
+      const { data, error } = await sb.from("pvp_matches").insert(row).select().maybeSingle();
+      if (!error && data) {
         this.matchId = data.id;
         this.role = "host";
         this.localColor = COLORS.RED;
         this.subscribe(data.id);
         return data;
       }
-      if (error.code !== "23505") throw error;
+      if (error?.code !== "23505") {
+        throw error || new Error("Could not create room — try again");
+      }
       code = randomCode();
     }
     throw new Error("Could not create room — try again");
@@ -556,12 +583,8 @@ export class PvpService {
     return data;
   }
 
-  _deliverMatchRow(row, { eventType = "UPDATE" } = {}) {
+  _deliverMatchRow(row) {
     if (!row) return;
-    const ver = row.version ?? 0;
-    if (ver <= this._lastVersion && eventType !== "INSERT" && row.status !== "finished") {
-      return;
-    }
     this.onMatchRow?.(row);
   }
 
@@ -579,15 +602,13 @@ export class PvpService {
         (payload) => {
           const row = payload.new;
           if (!row) return;
-          const needsFullRow =
-            (row.status === "active" || row.status === "finished") && row.state_json == null;
-          if (needsFullRow) {
+          if (row.status === "active" || row.status === "finished") {
             void this.fetchMatch(matchId)
-              .then((full) => this._deliverMatchRow(full, { eventType: payload.eventType }))
+              .then((full) => this._deliverMatchRow(full))
               .catch((e) => this.onError?.(e));
             return;
           }
-          this._deliverMatchRow(row, { eventType: payload.eventType });
+          this._deliverMatchRow(row);
         }
       )
       .subscribe(async (status) => {
@@ -612,12 +633,22 @@ export class PvpService {
     return data;
   }
 
-  async pushState(state, expectedVersion) {
+  async _reconcileFromServer() {
+    const fresh = await this.fetchMatch(this.matchId);
+    if (fresh) {
+      this._lastVersion = fresh.version ?? this._lastVersion;
+      this.onMatchRow?.(fresh);
+    }
+    return fresh;
+  }
+
+  async pushState(state, expectedVersion, { retry = true } = {}) {
     const sb = getSupabase();
     const user = getCurrentUser();
-    if (!sb || !this.matchId || !user) return;
+    if (!sb || !this.matchId || !user) return null;
 
-    const nextVersion = (expectedVersion ?? this._lastVersion) + 1;
+    const baseVersion = expectedVersion ?? this._lastVersion;
+    const nextVersion = baseVersion + 1;
     const stateJson = serializeMatchState(state);
 
     const { data, error } = await sb
@@ -629,7 +660,7 @@ export class PvpService {
         updated_at: new Date().toISOString(),
       })
       .eq("id", this.matchId)
-      .eq("version", expectedVersion ?? this._lastVersion)
+      .eq("version", baseVersion)
       .select()
       .maybeSingle();
 
@@ -639,15 +670,19 @@ export class PvpService {
     }
 
     if (!data) {
-      const fresh = await this.fetchMatch(this.matchId);
-      if (fresh) {
-        this._lastVersion = fresh.version;
-        this.onMatchRow?.(fresh);
+      const fresh = await this._reconcileFromServer();
+      if (retry && fresh) {
+        const latest = fresh.version ?? this._lastVersion;
+        if (latest > baseVersion) {
+          this._lastVersion = latest;
+          return this.pushState(state, latest, { retry: false });
+        }
       }
       return null;
     }
 
     this._lastVersion = data.version;
+    this._lastAppliedFingerprint = matchRowFingerprint(data);
     return data;
   }
 
