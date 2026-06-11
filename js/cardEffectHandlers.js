@@ -427,6 +427,19 @@ const EFFECTS = {
   rook_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.rookTurns=2; return ok(); },
   queen_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.queenTurns=2; return ok(); },
   demote(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||!p.king) return fail(); p.king=false; return ok(); },
+  bounty(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color === color) return fail();
+    for (let rr = 0; rr < SIZE; rr++) {
+      for (let cc = 0; cc < SIZE; cc++) {
+        const ep = state.board[rr][cc];
+        if (ep?.bountyBy === color) ep.bountyBy = null;
+      }
+    }
+    p.bountyBy = color;
+    return ok("Bounty — marked for capture.");
+  },
   link_fate(state, color, picks) {
     if (picks.length < 2) return fail("Pick two enemies");
     const [r1, c1] = p0(picks), [r2, c2] = p1(picks);

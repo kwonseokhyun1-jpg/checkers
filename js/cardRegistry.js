@@ -101,6 +101,7 @@ export const CARD_REGISTRY = [
   { id: "hostile_swap", name: "Hostile Swap", desc: "Swap one of your pieces with an unshielded enemy.", rarity: "epic", weight: 2, mode: "f_e", effect: "hostile_swap" },
   { id: "purify", name: "Purify", desc: "Remove all debuffs from your pieces, including burn and freeze.", rarity: "epic", weight: 2, mode: "instant", effect: "purify" },
   { id: "trickster", name: "Trickster", desc: "Swap up to 6 random pieces (pieces on back ranks are unaffected).", rarity: "epic", weight: 2, mode: "instant", effect: "trickster" },
+  { id: "bounty", name: "Bounty", desc: "Mark an enemy — when you capture it with a jump, draw 2 cards.", rarity: "epic", weight: 2, mode: "enemy", effect: "bounty" },
   { id: "link_fate", name: "Link Fate", desc: "Link two enemy pieces — when either is destroyed, the other dies too.", rarity: "epic", weight: 2, mode: "e_e", effect: "link_fate" },
   { id: "clone", name: "Clone", desc: "Duplicate one of your men on an adjacent empty square (original stays). The copy cannot capture, be captured, or be sacrificed until your next turn. Clones are destroyed instantly by freeze, poison, or burn.", rarity: "epic", weight: 2, mode: "f_empty", effect: "clone" },
   { id: "constitution", name: "Constitution", desc: "Requires a king. Your kings cannot be destroyed by non-capture effects for 5 turns.", rarity: "epic", weight: 2, mode: "instant", effect: "constitution" },

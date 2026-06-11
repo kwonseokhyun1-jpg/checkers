@@ -24,6 +24,7 @@ const BUFF_RULES = [
 
 const CURSE_RULES = [
   { key: "linkedFateId", label: "Linked Fate", bool: true },
+  { key: "bountyBy", label: "Bounty (jump-capture to reward)", bool: true },
   { key: "frozenTurns", label: "Frozen", turns: true },
   { key: "paralyzedTurns", label: "Paralyzed", turns: true },
   { key: "rooted", label: "Rooted", turns: true },
@@ -102,6 +103,7 @@ export function cleanseDebuffs(piece) {
   piece.venom = 0;
   piece.blazeTurns = 0;
   piece.linkedFateId = null;
+  piece.bountyBy = null;
   piece.slowed = 0;
   piece.reverseOnlyTurns = 0;
   piece.stoneTurns = 0;

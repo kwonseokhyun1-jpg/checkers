@@ -1,6 +1,7 @@
 /** Global match state: gems modifiers, square terrain, turn flags */
 
 import { COLORS, SIZE, inBounds, isDarkSquare } from "./board.js";
+import { drawToHand } from "./deckPile.js";
 
 export function createMatchMeta() {
   return {
@@ -233,6 +234,27 @@ export function tryConsumeVengeance(state, capturerColor, victimColor) {
 
 export function hasVengeanceArmed(state, color) {
   return !!state.meta.vengeance?.[color];
+}
+
+export function payBountyOnCapture(state, victim, capturerColor) {
+  if (!state?.meta || !victim) return 0;
+  const owner = victim.bountyBy;
+  if (!owner || owner !== capturerColor) return 0;
+  victim.bountyBy = null;
+  const drawn = drawToHand(state, owner, 2);
+  if (!drawn) return 0;
+  if (!state.meta.pendingBountyDraw) {
+    state.meta.pendingBountyDraw = { [COLORS.RED]: 0, [COLORS.BLACK]: 0 };
+  }
+  state.meta.pendingBountyDraw[owner] += drawn;
+  return drawn;
+}
+
+export function flushPendingBountyMessage(meta, color) {
+  const n = meta?.pendingBountyDraw?.[color] || 0;
+  if (!n) return null;
+  meta.pendingBountyDraw[color] = 0;
+  return `Bounty — drew ${n} card${n === 1 ? "" : "s"}.`;
 }
 
 export function collapsedSquareKey(meta) {

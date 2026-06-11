@@ -166,6 +166,7 @@ export const EFFECT_ILLUSTRATIONS = {
   last_king: () => wrap(`${piece(32, 36, 7)} ${crown(32, 20)} ${shield(32, 34, 0.65)}`),
   revive: () => wrap(`${ghost(32, 40)} ${arrow(32, 44, 32, 34)} ${piece(32, 28, 5, 0.7)}<path d="M24 48 H40" stroke="currentColor" stroke-width="1.5" opacity="0.35"/>`),
   mind_control: () => wrap(`${enemy(44, 30, 6)}<circle cx="32" cy="32" r="9" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.7"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.85"/><path d="M32 20 V26 M32 38 V44 M20 32 H26 M38 32 H44" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`),
+  bounty: () => wrap(`${enemy(32, 32, 6)}<circle cx="32" cy="32" r="14" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.55"/><text x="26" y="20" font-size="10" fill="currentColor" opacity="0.85">$</text><rect x="42" y="40" width="12" height="16" rx="2" fill="currentColor" opacity="0.35"/><rect x="44" y="44" width="8" height="2" fill="currentColor" opacity="0.5"/>`),
   link_fate: () => wrap(`${enemy(22, 32, 5)} ${enemy(42, 32, 5)}<path d="M28 32 H36" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.6"/>`),
   bishop_2: () =>
     wrap(

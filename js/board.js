@@ -1,5 +1,5 @@
 /** Checkers board logic with card-effect modifiers */
-import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance, ensureConstitutionTurns, queueTrapHistoryReveal } from "./gameMeta.js";
+import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance, payBountyOnCapture, ensureConstitutionTurns, queueTrapHistoryReveal } from "./gameMeta.js";
 import { queueBoardFx } from "./boardFx.js";
 
 function sk(r, c) {
@@ -123,6 +123,7 @@ export function createPiece(color, row, col, king = false) {
     hibernationTurns: 0,
     bearAwakened: false,
     linkedFateId: null,
+    bountyBy: null,
     isClone: false,
     cloneNoCaptureThisTurn: false,
     freezeDeferEndTick: false,
@@ -536,7 +537,9 @@ export function applyMove(board, move, state = null) {
       piece = null;
       continue;
     }
-    resolveCapture(board, state, cr, cc, piece.color, { nonCap: false });
+    const bountyVictim = cap.bountyBy === piece.color ? cap : null;
+    const captured = resolveCapture(board, state, cr, cc, piece.color, { nonCap: false });
+    if (captured && bountyVictim) payBountyOnCapture(state, bountyVictim, piece.color);
   }
   if (!piece) return null;
   if (!piece.king && !(piece.rustedTurns > 0)) {

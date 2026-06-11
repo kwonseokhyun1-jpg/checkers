@@ -76,6 +76,7 @@ export const EFFECT_VISUAL = {
   snowball: "snowball",
   berserk: "berserk",
   magnet: "move",
+  bounty: "curse",
   link_fate: "curse",
 
   quicksand: "sink",
