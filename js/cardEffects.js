@@ -18,9 +18,18 @@ export function isInstant(card) {
   return card.mode === "instant" || card.mode === "discard_pick";
 }
 
+export function getInstantCastBlockReason(state, color, card) {
+  if (card.effect === "ignore" && !hasMandatoryJumps(state.board, color, state)) {
+    return "Ignore only when capture is mandatory.";
+  }
+  if (card.effect === "constitution" && !piecesOfColor(state.board, color).some((p) => p.king)) {
+    return "Constitution requires at least one king.";
+  }
+  return null;
+}
+
 export function canCastInstant(state, color, card) {
-  if (card.effect === "ignore") return hasMandatoryJumps(state.board, color, state);
-  return true;
+  return getInstantCastBlockReason(state, color, card) === null;
 }
 
 /** Traps armed in secret — opponent must not see which card was played until it triggers. */
@@ -392,8 +401,9 @@ export function playInstant(state, color, card) {
   if (card.mode === "discard_pick" && card.effect === "recycle") {
     return { success: false, message: "Select a card in hand to discard.", needsDiscard: true };
   }
-  if (!canCastInstant(state, color, card)) {
-    return { success: false, message: "Ignore only when capture is mandatory." };
+  const blockReason = getInstantCastBlockReason(state, color, card);
+  if (blockReason) {
+    return { success: false, message: blockReason };
   }
   return applyCard(state, color, card, []);
 }

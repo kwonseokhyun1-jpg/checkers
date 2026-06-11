@@ -397,13 +397,16 @@ for (const card of cards) {
   console.log("Vengeance test: OK");
 }
 
-// Constitution — protects kings from non-capture kills; works on legacy meta
+// Constitution — requires a king; protects kings from non-capture kills; works on legacy meta
 {
   const s = baseState();
   delete s.meta.constitutionTurns;
-  place(s, COLOR, 5, 0, true);
+  place(s, COLOR, 5, 0);
   place(s, OPP, 3, 2);
   const constitution = cards.find((c) => c.id === "constitution");
+  const blocked = applyCard(s, COLOR, constitution, []);
+  if (blocked.success) throw new Error("Constitution should fail without a king");
+  place(s, COLOR, 5, 0, true);
   const cast = applyCard(s, COLOR, constitution, []);
   if (!cast.success || ensureConstitutionTurns(s.meta)[COLOR] !== 5) {
     throw new Error("Constitution should arm on legacy meta: " + (cast.message || ""));
