@@ -4778,6 +4778,63 @@ body.chest-open-active {
   max-width: 380px;
   padding: 1.25rem;
 }
+body.public-profile-modal-open {
+  overflow: hidden;
+}
+.public-profile-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 520;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.public-profile-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 6, 12, 0.85);
+  backdrop-filter: blur(6px);
+}
+.public-profile-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  padding: 1rem 1rem 1.25rem;
+}
+.public-profile-modal__showcase {
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: var(--card-bg, #1a2030);
+}
+.public-profile-modal__hero .profile-avatar-stack {
+  width: 5.5rem;
+  height: 5.5rem;
+}
+.public-profile-modal__identity {
+  min-width: 0;
+  padding-bottom: 0.15rem;
+}
+.public-profile-modal__name {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+.public-profile-modal__title {
+  margin-top: 0.35rem;
+}
+.public-profile-modal__stats {
+  margin-top: 0;
+}
+.public-profile-modal__stats .profile-stat-card__icon {
+  display: none;
+}
+.public-profile-modal__loading {
+  margin: 2rem 0;
+  text-align: center;
+}
 .auth-modal-close {
   position: absolute;
   top: 0.5rem;
@@ -4876,21 +4933,78 @@ body.chest-open-active {
   color: var(--text-muted, #9aa3b2);
 }
 .pvp-open-empty--error { color: var(--accent-red); }
-.pvp-open-item--mine {
+.pvp-open-item {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem 0.75rem;
+  gap: 0.75rem;
+}
+.pvp-open-item--mine {
+  flex-wrap: wrap;
   padding: 0.75rem 1rem;
   border: 1px solid var(--accent-gold);
   border-radius: var(--radius-sm);
   background: rgba(212, 175, 55, 0.08);
 }
+.pvp-open-item__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
 .pvp-open-item__label { font-weight: 600; }
 .pvp-open-item__meta {
-  flex: 1;
   font-size: 0.85rem;
   color: var(--text-muted, #9aa3b2);
+}
+.pvp-room-host-profile {
+  flex-shrink: 0;
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+  border-radius: 4px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.pvp-room-host-profile--static {
+  cursor: default;
+  pointer-events: none;
+}
+.pvp-room-host-profile:not(.pvp-room-host-profile--static):hover {
+  transform: scale(1.05);
+}
+.pvp-room-host-profile:not(.pvp-room-host-profile--static):focus-visible {
+  outline: 2px solid var(--accent-gem);
+  outline-offset: 2px;
+}
+.pvp-room-host-profile__avatar {
+  width: 3rem;
+  height: 3rem;
+  padding: 3px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+}
+.pvp-room-host-profile__avatar .profile-avatar-inner svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.pvp-room-host-profile__avatar .profile-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-muted, #9aa3b2);
+}
+.pvp-room-host-profile__avatar.profile-frame--legend::after,
+.pvp-room-host-profile__avatar.profile-frame--silver::after {
+  font-size: 0.55rem;
+  top: -0.1rem;
 }
 .pvp-open-join {
   display: flex;
@@ -4898,7 +5012,8 @@ body.chest-open-active {
   justify-content: space-between;
   gap: 0.5rem;
   flex-wrap: wrap;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 0.75rem 1rem;
   border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
@@ -4918,9 +5033,19 @@ body.chest-open-active {
   font-size: 0.78rem;
   color: var(--text-muted, rgba(232, 236, 244, 0.55));
 }
+.pvp-open-item--blocked {
+  padding: 0.75rem 1rem;
+  border: 1px dashed var(--card-border);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.12);
+}
 .pvp-open-item--blocked .pvp-open-join {
   flex-direction: column;
   align-items: flex-start;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: not-allowed;
 }
 .pvp-open-join__action {
   font-size: 0.85rem;
