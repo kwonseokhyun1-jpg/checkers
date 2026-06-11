@@ -42,6 +42,7 @@ const TAGS = {
   last_stand: ["Hidden trap — ultra shield on capture or destroy for 3 turns"],
   clone: ["Your man, then adjacent empty square — copy cannot capture or be taken this turn; dies to freeze/poison/burn"],
   deport: ["Send an enemy back to its game-start square", "Destroys any piece already on that square"],
+  bounty: ["Mark an enemy piece", "When you jump-capture it, draw 2 cards", "Spell destroys do not count"],
   link_fate: ["Link two enemies — when one is destroyed, the other dies too"],
 };
 
