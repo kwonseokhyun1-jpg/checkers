@@ -35,6 +35,10 @@ import {
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 import { recordPvpWin } from "./profileStats.js";
 import { saveProfile } from "./storage.js";
+import {
+  bindPublicProfileViewButtons,
+  buildRoomHostAvatarHtml,
+} from "./userProfileModal.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -232,7 +236,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       if (pendingHostRow && !mine.some((r) => r.id === pendingHostRow.id)) {
         mergedMine = [pendingHostRow, ...mine];
       }
-      renderRoomLists(mergedMine, others);
+      const hostProfiles = await fetchHostProfilesMap([...mergedMine, ...others]);
+      renderRoomLists(mergedMine, others, hostProfiles);
     } catch (e) {
       const err = `<li class="pvp-open-empty pvp-open-empty--error">${escapeHtml(e.message || "Could not load rooms")}</li>`;
       yourList.innerHTML = err;
@@ -251,24 +256,90 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     return COSMETIC_BY_ID[skinId]?.name || "Classic Disc";
   }
 
-  function renderRoomLists(mine, others) {
+  function hostDisplayNameForRoom(room, hostProfiles) {
+    return (
+      hostProfiles?.get(room.host_id)?.displayName ||
+      room.host_display_name ||
+      "Player"
+    );
+  }
+
+  function hostAvatarForRoom(room, hostProfiles, { clickable = false } = {}) {
+    const displayName = hostDisplayNameForRoom(room, hostProfiles);
+    const cosmetics =
+      hostProfiles?.get(room.host_id)?.cosmetics || normalizeCosmetics(null);
+    return buildRoomHostAvatarHtml(cosmetics, displayName, {
+      clickable,
+      userId: room.host_id,
+    });
+  }
+
+  async function fetchHostProfilesMap(rooms) {
+    const user = getCurrentUser();
+    const profile = getProfile();
+    const ids = [...new Set(rooms.map((r) => r.host_id).filter(Boolean))];
+    const map = new Map();
+
+    await Promise.all(
+      ids.map(async (hostId) => {
+        if (hostId === user?.id) {
+          map.set(hostId, {
+            displayName: await getDisplayName(),
+            cosmetics: getEquippedCosmetics(profile),
+          });
+          return;
+        }
+
+        try {
+          const row = await fetchProfileRow(hostId);
+          const roomName = rooms.find((r) => r.host_id === hostId)?.host_display_name;
+          const displayName =
+            (row?.username && String(row.username).trim()) ||
+            (row?.display_name && String(row.display_name).trim()) ||
+            (roomName && String(roomName).trim()) ||
+            "Player";
+          const fromCloud = row?.profile_json?.cosmetics;
+          map.set(hostId, {
+            displayName,
+            cosmetics: fromCloud ? normalizeCosmetics(fromCloud) : normalizeCosmetics(null),
+          });
+        } catch {
+          const roomName = rooms.find((r) => r.host_id === hostId)?.host_display_name;
+          map.set(hostId, {
+            displayName: roomName || "Player",
+            cosmetics: normalizeCosmetics(null),
+          });
+        }
+      })
+    );
+
+    return map;
+  }
+
+  function renderRoomLists(mine, others, hostProfiles = new Map()) {
     const yourList = root.querySelector("#pvp-your-list");
     const openList = root.querySelector("#pvp-open-list");
     if (!yourList || !openList) return;
 
     const mySkin = getEquippedPieceSkin(getProfile());
+    const currentUserId = getCurrentUser()?.id;
 
     if (!mine.length) {
       yourList.innerHTML = `<li class="pvp-open-empty">No rooms yet — host one above.</li>`;
     } else {
       yourList.innerHTML = mine
-        .map(
-          (room) => `<li class="pvp-open-item pvp-open-item--mine">
-            <span class="pvp-open-item__label">${escapeHtml(room.host_display_name || "Your room")} ${roomModeLabel(room)}</span>
-            <span class="pvp-open-item__meta">${isMysteryMode(room) ? "Mystery — waiting for opponent…" : "Waiting for opponent…"}</span>
+        .map((room) => {
+          const displayName = hostDisplayNameForRoom(room, hostProfiles);
+          const avatar = hostAvatarForRoom(room, hostProfiles, { clickable: false });
+          return `<li class="pvp-open-item pvp-open-item--mine">
+            ${avatar}
+            <div class="pvp-open-item__body">
+              <span class="pvp-open-item__label">${escapeHtml(displayName)} ${roomModeLabel(room)}</span>
+              <span class="pvp-open-item__meta">${isMysteryMode(room) ? "Mystery — waiting for opponent…" : "Waiting for opponent…"}</span>
+            </div>
             <button type="button" class="btn-secondary pvp-open-cancel" data-cancel-room="${room.id}">Cancel</button>
-          </li>`
-        )
+          </li>`;
+        })
         .join("");
     }
 
@@ -283,17 +354,23 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
           const hostSkin = room.host_piece_skin || "skin_classic";
           const sameSkin = pieceSkinsConflict(hostSkin, mySkin);
           const skinLabel = pieceSkinLabel(hostSkin);
+          const displayName = hostDisplayNameForRoom(room, hostProfiles);
+          const avatar = hostAvatarForRoom(room, hostProfiles, {
+            clickable: room.host_id !== currentUserId,
+          });
           if (sameSkin) {
             return `<li class="pvp-open-item pvp-open-item--blocked">
+              ${avatar}
               <div class="pvp-open-join pvp-open-join--disabled" title="${escapeHtml(SAME_PIECE_SKIN_JOIN_MESSAGE)}">
-                <span class="pvp-open-join__name">${escapeHtml(room.host_display_name || "Player")} ${roomModeLabel(room)}</span>
+                <span class="pvp-open-join__name">${escapeHtml(displayName)} ${roomModeLabel(room)}</span>
                 <span class="pvp-open-join__skin">${escapeHtml(skinLabel)} skin — same as yours</span>
               </div>
             </li>`;
           }
           return `<li class="pvp-open-item">
+            ${avatar}
             <button type="button" class="pvp-open-join" data-join-room="${room.id}" data-mystery="${isMysteryMode(room) ? "1" : "0"}">
-              <span class="pvp-open-join__name">${escapeHtml(room.host_display_name || "Player")} ${roomModeLabel(room)}</span>
+              <span class="pvp-open-join__name">${escapeHtml(displayName)} ${roomModeLabel(room)}</span>
               <span class="pvp-open-join__skin">${escapeHtml(skinLabel)} skin</span>
               <span class="pvp-open-join__action">${isMysteryMode(room) ? "Join Mystery" : "Join match"}</span>
             </button>
@@ -301,6 +378,9 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
         })
         .join("");
     }
+
+    bindPublicProfileViewButtons(yourList);
+    bindPublicProfileViewButtons(openList);
 
     openList.querySelectorAll("[data-join-room]").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -677,7 +757,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
           hostPieceSkin: getEquippedPieceSkin(getProfile()),
         }
       );
-      renderRoomLists([row], []);
+      const hostProfiles = await fetchHostProfilesMap([row]);
+      renderRoomLists([row], [], hostProfiles);
       setStatus(
         mystery
           ? "Mystery room open — waiting under Your rooms."
