@@ -88,7 +88,7 @@
 - **Chameleon** — Copy any piece's movement tags on the board for 2 turns.
 - **Coin Flip** — 50% destroy random enemy; 50% destroy random friendly.
 - **Confusion** — On opponent's next turn, their move is chosen randomly.
-- **Constitution** — Your kings cannot be destroyed by non-capture effects for 5 turns.
+- **Constitution** — Requires a king. Your kings cannot be destroyed by non-capture effects for 5 turns.
 - **Corner Hop** — Teleport to any empty dark square in the opposite corner quadrant of the board.
 - **Cross Bolt** — Destroy the first enemy on both forward diagonals from your piece (if any).
 - **Cryo Bolt** — Bolt along your diagonal: freezes a normal enemy, or destroys a frozen or paralyzed one (breaks shield).

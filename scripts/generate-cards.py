@@ -125,7 +125,7 @@ SPELLS = [
     ("coronation_day", "Coronation Day", "All your men on the promotion row become kings.", "epic", 2, "instant", "coronation_day"),
     ("exile_king", "Exile King", "Teleport enemy king to a random empty square on their back row.", "epic", 2, "enemy", "exile_king"),
     ("regicide", "Regicide", "If you capture a king this turn, gain 30 gems.", "rare", 3, "instant", "regicide"),
-    ("constitution", "Constitution", "Your kings cannot be destroyed by non-capture effects for 5 turns.", "rare", 3, "instant", "constitution"),
+    ("constitution", "Constitution", "Requires a king. Your kings cannot be destroyed by non-capture effects for 5 turns.", "epic", 2, "instant", "constitution"),
     ("last_king", "Last King", "If you have only 1 piece, it becomes a king with shield for 2 turns.", "epic", 2, "instant", "last_king"),
     ("succession", "Succession", "When your king is captured, a chosen man becomes king instantly.", "rare", 3, "friendly", "succession"),
     # === CHAOS ===
