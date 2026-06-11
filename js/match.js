@@ -661,6 +661,9 @@ export class MatchSession {
             picks: spell.picks || [],
             countered: !!spell.countered,
             hidden: !!spell.hidden,
+            ...(spell.cullTarget
+              ? { cullTarget: spell.cullTarget, cullVictim: spell.cullVictim }
+              : {}),
             ...(spell.coinFlipSquare
               ? {
                   coinFlipSquare: spell.coinFlipSquare,
@@ -1982,6 +1985,7 @@ ${starLine}`;
             if (entry.cardEffect === "cull" && entry.cullTarget) {
               const [cr, cc] = entry.cullTarget;
               await this.playCullAnimation(cr, cc, entry.cullVictim || null);
+              applyAiReplayEntry(this.state, entry, oc);
             } else if (entry.cardEffect === "coin_flip" && entry.coinFlipSquare) {
               const [vr, vc] = entry.coinFlipSquare;
               await this.playCoinFlipAnimation(
@@ -1991,6 +1995,9 @@ ${starLine}`;
                 cardName,
                 entry.coinFlipVictim || null
               );
+              this.state.meta.pendingCoinFlipSquare = [...entry.coinFlipSquare];
+              applyAiReplayEntry(this.state, entry, oc);
+              this.state.meta.pendingCoinFlipSquare = null;
             } else {
               const animExtra = this.buildAiSpellAnimExtra(entry);
               const animCard = {
