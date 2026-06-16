@@ -6,6 +6,7 @@ import {
   claimAchievement,
   isAchievementClaimed,
   isAchievementComplete,
+  achievementProgressRatio,
   progressLabel,
 } from "./achievements.js";
 import {
@@ -256,7 +257,11 @@ function bindAchievementsGrid(profile, grid, { onTitleChanged } = {}) {
       if (isAchievementClaimed(profile, id)) return 2;
       return 1;
     };
-    return sortKey(a.id) - sortKey(b.id);
+    const keyDiff = sortKey(a.id) - sortKey(b.id);
+    if (keyDiff !== 0) return keyDiff;
+    const progressDiff = achievementProgressRatio(profile, b.id) - achievementProgressRatio(profile, a.id);
+    if (progressDiff !== 0) return progressDiff;
+    return a.title.localeCompare(b.title);
   });
   for (const ach of sortedAchievements) {
     const reward = achievementRewardTitle(ach.id);
