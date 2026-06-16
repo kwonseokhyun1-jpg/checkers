@@ -208,3 +208,13 @@ export function progressLabel(profile, id) {
   const cur = Math.min(def.target, getAchievementProgress(profile, id));
   return `${cur} / ${def.target}`;
 }
+
+/** @returns {number} Progress from 0 (not started) to 1 (complete). */
+export function achievementProgressRatio(profile, id) {
+  const def = ACHIEVEMENT_BY_ID[id];
+  if (!def?.target) return 0;
+  if (id === "arcane_mastery") {
+    return Math.min(1, countTripledSpells(profile) / def.target);
+  }
+  return Math.min(1, getAchievementProgress(profile, id) / def.target);
+}
