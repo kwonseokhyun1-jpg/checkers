@@ -30,6 +30,27 @@ function hasPendingSignupTutorial() {
   }
 }
 
+/** Clear stale per-device "done" flags when the signed-in profile has not completed that tutorial. */
+export function syncTutorialStorageWithProfile(profile) {
+  if (!profile) return;
+  const pairs = [
+    [INTERACTIVE_TUTORIAL_KEY, profile.interactiveTutorialDone || profile.tutorialDone],
+    [META_TUTORIAL_KEY, profile.metaTutorialDone || profile.tutorialDone],
+    [QUESTS_TUTORIAL_KEY, profile.questsTutorialDone],
+    [PVP_TUTORIAL_KEY, profile.pvpTutorialDone],
+    [COSMETICS_TUTORIAL_KEY, profile.cosmeticsTutorialDone],
+  ];
+  try {
+    for (const [key, done] of pairs) {
+      if (!done && localStorage.getItem(key) === "done") {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Reset tutorial completion so a brand-new account always gets the practice lesson. */
 export function prepareInteractiveTutorialForNewAccount(profile, saveProfile) {
   markPendingSignupTutorial();

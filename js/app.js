@@ -74,6 +74,7 @@ import {
   shouldShowPvpTutorial,
   shouldShowCosmeticsTutorial,
   prepareInteractiveTutorialForNewAccount,
+  syncTutorialStorageWithProfile,
 } from "./tutorial.js";
 import { startInteractiveTutorial } from "./tutorialMatch.js";
 import { startMetaTutorial, notifyMetaTutorial } from "./tutorialMeta.js";
@@ -156,6 +157,10 @@ let bypassQuestsPvpGate = false;
 let bypassCosmeticsGate = false;
 let pendingPostStage1Tutorials = false;
 let pendingPostStage5CosmeticsTutorial = false;
+/** @type {number|null} */
+let postStage1TutorialTimer = null;
+/** @type {number|null} */
+let postStage5CosmeticsTutorialTimer = null;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
 let selectedAdventureWorldId = 1;
@@ -1565,14 +1570,10 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
         $("view-match")?.classList.add("hidden");
         showTab(consumePendingNavigationTab() || "play");
         if (pendingPostStage1Tutorials) {
-          window.setTimeout(() => {
-            if (maybeStartPostStage1Tutorials()) pendingPostStage1Tutorials = false;
-          }, 600);
+          schedulePostStage1Tutorials();
         }
         if (pendingPostStage5CosmeticsTutorial) {
-          window.setTimeout(() => {
-            if (maybeStartPostStage5CosmeticsTutorial()) pendingPostStage5CosmeticsTutorial = false;
-          }, 600);
+          schedulePostStage5CosmeticsTutorial();
         }
       },
       (stars) => {
@@ -1584,6 +1585,7 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
         syncNavUnlockState();
         if (levelId === 1 && result.firstTime) {
           pendingPostStage1Tutorials = true;
+          schedulePostStage1Tutorials();
         }
         if (levelId === 5 && result.firstTime) {
           pendingPostStage5CosmeticsTutorial = true;
@@ -1812,6 +1814,7 @@ function init() {
     onSignedIn: () => {
       profile = loadProfile();
       repairProfile(profile);
+      syncTutorialStorageWithProfile(profile);
       updateCurrencyHeader();
       renderDeckList();
       renderStarsShop();
@@ -1856,6 +1859,66 @@ function init() {
   syncNavUnlockState();
 
   void bootstrapAfterAuth();
+}
+
+function schedulePostStage1Tutorials() {
+  if (!pendingPostStage1Tutorials) return;
+  if (postStage1TutorialTimer != null) return;
+
+  let attempts = 0;
+  const maxAttempts = 10;
+
+  const tryStart = () => {
+    postStage1TutorialTimer = null;
+    attempts += 1;
+    if (!pendingPostStage1Tutorials) return;
+    if (isLiveMatchUiVisible()) {
+      if (attempts < maxAttempts) {
+        postStage1TutorialTimer = window.setTimeout(tryStart, 400);
+      }
+      return;
+    }
+    syncTutorialStorageWithProfile(profile);
+    if (maybeStartPostStage1Tutorials()) {
+      pendingPostStage1Tutorials = false;
+      return;
+    }
+    if (attempts < maxAttempts) {
+      postStage1TutorialTimer = window.setTimeout(tryStart, 500);
+    }
+  };
+
+  postStage1TutorialTimer = window.setTimeout(tryStart, 350);
+}
+
+function schedulePostStage5CosmeticsTutorial() {
+  if (!pendingPostStage5CosmeticsTutorial) return;
+  if (postStage5CosmeticsTutorialTimer != null) return;
+
+  let attempts = 0;
+  const maxAttempts = 10;
+
+  const tryStart = () => {
+    postStage5CosmeticsTutorialTimer = null;
+    attempts += 1;
+    if (!pendingPostStage5CosmeticsTutorial) return;
+    if (isLiveMatchUiVisible()) {
+      if (attempts < maxAttempts) {
+        postStage5CosmeticsTutorialTimer = window.setTimeout(tryStart, 400);
+      }
+      return;
+    }
+    syncTutorialStorageWithProfile(profile);
+    if (maybeStartPostStage5CosmeticsTutorial()) {
+      pendingPostStage5CosmeticsTutorial = false;
+      return;
+    }
+    if (attempts < maxAttempts) {
+      postStage5CosmeticsTutorialTimer = window.setTimeout(tryStart, 500);
+    }
+  };
+
+  postStage5CosmeticsTutorialTimer = window.setTimeout(tryStart, 350);
 }
 
 function maybeStartPvpTutorial() {
@@ -1903,7 +1966,7 @@ function maybeStartPostStage5CosmeticsTutorial() {
 function maybeStartPostStage1Tutorials() {
   if (tutorialRunning || !getCurrentUser()) return false;
   if (!isQuestsAndPvpUnlocked(profile)) return false;
-  if (shouldShowInteractiveTutorial(profile) || shouldShowMetaTutorial(profile)) return false;
+  syncTutorialStorageWithProfile(profile);
   if (!shouldShowQuestsTutorial(profile)) return maybeStartPvpTutorial();
   tutorialRunning = true;
   showTab("play");
@@ -1987,6 +2050,7 @@ async function bootstrapAfterAuth() {
   } catch (e) {
     console.warn("Auth init failed", e);
   }
+  syncTutorialStorageWithProfile(profile);
   await refreshHeaderIdentity();
   reconcileMatchShellState();
 
