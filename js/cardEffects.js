@@ -40,7 +40,8 @@ export function isHiddenTrapSpell(card) {
     effect === "vengeance" ||
     effect === "landmine" ||
     effect === "quicksand" ||
-    effect === "last_stand"
+    effect === "last_stand" ||
+    effect === "deflect_1"
   );
 }
 
@@ -77,6 +78,9 @@ export function getCardHint(card) {
   }
   if (card.effect === "last_stand" || card.id === "last_stand") {
     return "Hidden trap — piece survives capture with an ultra shield for 3 turns.";
+  }
+  if (card.effect === "deflect_1" || card.id === "deflect") {
+    return "Hidden trap — next spell hit within 2 turns reflects to the closest enemy.";
   }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
   if (card.effect === "snowball") return hints.snowball_hint;

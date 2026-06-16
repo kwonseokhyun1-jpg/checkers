@@ -38,7 +38,7 @@ const TAGS = {
   root_2: ["Enemy cannot jump/capture next turn"],
   silence_3: ["Suppress special movement 3 turns"],
   poison_3: ["Enemy dies in 3 turns — 3-turn poison bar"],
-  deflect_1: ["Next hit reflects to random enemy"],
+  deflect_1: ["Hidden trap — spell hit within 2 turns kills closest enemy instead"],
   last_stand: ["Hidden trap — ultra shield on capture or destroy for 3 turns"],
   clone: ["Your man, then adjacent empty square — copy cannot capture or be taken this turn; dies to freeze/poison/burn"],
   deport: ["Send an enemy back to its game-start square", "Destroys any piece already on that square"],

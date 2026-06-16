@@ -1269,6 +1269,44 @@ export class MatchSession {
   }
 
 
+  clearDeflectArrow() {
+    this._deflectArrowEl?.remove();
+    this._deflectArrowEl = null;
+  }
+
+  mountDeflectArrow(from, to) {
+    this.clearDeflectArrow();
+    const board = this.$("board");
+    if (!board) return;
+    const fromSq = board.querySelector(`[data-row="${from[0]}"][data-col="${from[1]}"]`);
+    const toSq = board.querySelector(`[data-row="${to[0]}"][data-col="${to[1]}"]`);
+    if (!fromSq || !toSq) return;
+    const br = board.getBoundingClientRect();
+    const fr = fromSq.getBoundingClientRect();
+    const tr = toSq.getBoundingClientRect();
+    const x1 = fr.left + fr.width / 2 - br.left;
+    const y1 = fr.top + fr.height / 2 - br.top;
+    const x2 = tr.left + tr.width / 2 - br.left;
+    const y2 = tr.top + tr.height / 2 - br.top;
+    const layer = document.createElement("div");
+    layer.className = "deflect-arrow-layer";
+    layer.innerHTML = `<svg class="deflect-arrow-svg" viewBox="0 0 ${br.width} ${br.height}" aria-hidden="true"><defs><marker id="deflect-arrowhead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="currentColor"/></marker></defs><line class="deflect-arrow-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#deflect-arrowhead)"/></svg>`;
+    board.appendChild(layer);
+    this._deflectArrowEl = layer;
+  }
+
+  async flushTrapBoardFx(s) {
+    if (!s.boardFx?.squares?.length) return;
+    await new Promise((resolve) => this.playBoardFx(s, resolve));
+    this.recordPendingTrapHistory();
+  }
+
+  async applyCardWithTrapFx(card, picks) {
+    const res = applyCard(this.state, this.localColor, card, picks);
+    if (res.success) await this.flushTrapBoardFx(this.state);
+    return res;
+  }
+
   playBoardFx(s, onDone) {
     if (!s.boardFx?.squares?.length) {
       onDone?.();
@@ -1281,18 +1319,24 @@ export class MatchSession {
       bomb: "Bomb detonates — adjacent pieces destroyed!",
       mine: "Landmine explodes!",
       vengeance: "Vengeance — blood for blood!",
+      deflect: "Deflect — spell reflected!",
     };
     this.setMessage(labels[kind] || "Blast!");
     const frame = this.$("board")?.closest(".board-frame");
     frame?.classList.add(`board-frame--fx-${kind}`, "board-frame--spell-impact");
+    if (kind === "deflect") frame?.classList.add("board-frame--fx-deflect");
     this.$("board")?.classList.add("board--spell-shake");
     this.render();
+    if (kind === "deflect" && this.boardFx.from && this.boardFx.to) {
+      this.mountDeflectArrow(this.boardFx.from, this.boardFx.to);
+    }
     const ms = boardFxDuration(kind);
     setTimeout(() => {
+      this.clearDeflectArrow();
       this.boardFx = null;
       this.selectedColumn = null;
       this.selectedRow = null;
-      frame?.classList.remove(`board-frame--fx-${kind}`, "board-frame--spell-impact");
+      frame?.classList.remove(`board-frame--fx-${kind}`, "board-frame--spell-impact", "board-frame--fx-deflect");
       this.$("board")?.classList.remove("board--spell-shake");
       onDone?.();
       this.checkWin();
@@ -1619,6 +1663,17 @@ ${starLine}`;
     if (banner) banner.className = "turn-banner";
   }
 
+  async runHiddenDeflectCast() {
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = "Deflect armed — hidden.";
+      banner.className = "turn-banner spell-anim-instant";
+    }
+    this.render();
+    await delay(450 + SPELL_BANNER_EXTRA_MS);
+    if (banner) banner.className = "turn-banner";
+  }
+
   async runHiddenLastStandCast() {
     const banner = this.$("turn-banner");
     if (banner) {
@@ -1767,7 +1822,7 @@ ${starLine}`;
       if (!target) return finishSpellTrack({ success: false, message: "No enemy to cull." });
       const victim = cullVictimSnapshot(target);
       await this.playCullAnimation(target.row, target.col, victim);
-      return finishSpellTrack(applyCard(this.state, this.localColor, card, picks));
+      return finishSpellTrack(await this.applyCardWithTrapFx(card, picks));
     }
 
     if (card.effect === "counterspell") {
@@ -1785,6 +1840,12 @@ ${starLine}`;
     if (card.effect === "last_stand") {
       const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success) await this.runHiddenLastStandCast();
+      return finishSpellTrack(res);
+    }
+
+    if (card.effect === "deflect_1") {
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (res.success) await this.runHiddenDeflectCast();
       return finishSpellTrack(res);
     }
 
@@ -1841,7 +1902,7 @@ ${starLine}`;
         card.name,
         victimSnap
       );
-      const res = applyCard(this.state, this.localColor, card, picks);
+      const res = await this.applyCardWithTrapFx(card, picks);
       if (!res.success) s.meta.pendingCoinFlipSquare = null;
       return finishSpellTrack(res);
     }
@@ -1856,9 +1917,9 @@ ${starLine}`;
       extra.cryoShatter = cryoShatter;
       if (cryoShatter) {
         await this.runSpellAnimation(buildAnimSpec(card, animPicks, this.localColor, extra));
-        return finishSpellTrack(applyCard(this.state, this.localColor, card, picks));
+        return finishSpellTrack(await this.applyCardWithTrapFx(card, picks));
       }
-      const res = applyCard(this.state, this.localColor, card, picks);
+      const res = await this.applyCardWithTrapFx(card, picks);
       if (!res.success) return finishSpellTrack(res);
       this.render();
       await this.runSpellAnimation(buildAnimSpec(card, animPicks, this.localColor, extra));
@@ -1867,7 +1928,7 @@ ${starLine}`;
 
     const spec = buildAnimSpec(card, animPicks, this.localColor, extra);
     await this.runSpellAnimation(spec);
-    return finishSpellTrack(applyCard(this.state, this.localColor, card, picks));
+    return finishSpellTrack(await this.applyCardWithTrapFx(card, picks));
   }
 
   async castInstantSpell(card) {
@@ -1920,6 +1981,8 @@ ${starLine}`;
           moveMsg = "Vengeance armed (hidden) — select a piece to move.";
         } else if (card.effect === "last_stand") {
           moveMsg = "Last Stand armed (hidden) — select a piece to move.";
+        } else if (card.effect === "deflect_1") {
+          moveMsg = "Deflect armed (hidden) — select a piece to move.";
         } else if (res.message) {
           moveMsg = `${res.message} Select a piece to move.`;
         }
@@ -2107,6 +2170,10 @@ ${starLine}`;
             }
             this.recordHistoryFromReplayEntry(entry);
             this.render();
+            if (this.state.boardFx) {
+              await new Promise((resolve) => this.playBoardFx(this.state, resolve));
+              this.recordPendingTrapHistory();
+            }
           } else if (entry.cardEffect === "coin_flip" && entry.coinFlipSquare) {
             const [vr, vc] = entry.coinFlipSquare;
             await this.playCoinFlipAnimation(
@@ -2457,7 +2524,15 @@ ${starLine}`;
           sq.classList.add("ai-capture");
         }
         if (this.boardFx?.squares?.some(([r, c]) => r === row && c === col)) {
-          sq.classList.add(`board-fx-${this.boardFx.kind}`, "board-fx-blast");
+          if (this.boardFx.kind === "deflect") {
+            const [fr, fc] = this.boardFx.from || [];
+            const [tr, tc] = this.boardFx.to || [];
+            if (row === fr && col === fc) sq.classList.add("board-fx-deflect-from", "board-fx-blast");
+            else if (row === tr && col === tc) sq.classList.add("board-fx-deflect-to", "board-fx-blast");
+            else sq.classList.add("board-fx-deflect", "board-fx-blast");
+          } else {
+            sq.classList.add(`board-fx-${this.boardFx.kind}`, "board-fx-blast");
+          }
         } else if (this.explosionFlash?.[0] === row && this.explosionFlash?.[1] === col) {
           sq.classList.add("explosion-flash");
         }

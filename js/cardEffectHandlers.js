@@ -109,14 +109,17 @@ function kill(state, r, c, by, nonCap = true, opts = {}) {
   return resolveCapture(state.board, state, r, c, by, { nonCap, ...opts });
 }
 
-/** Spell destroy: counts as spent if target is removed or Last Stand triggers. */
+/** Spell destroy: counts as spent if target is removed or Last Stand / Deflect triggers. */
 function spellKill(state, r, c, by, nonCap = true, opts = {}) {
   const t = at(state, r, c);
   if (!t) return false;
   const hadLastStand = !opts.linkFate && t.lastStand;
+  const deflectBefore = !opts.linkFate && nonCap ? (t.deflectTurns || 0) : 0;
   if (kill(state, r, c, by, nonCap, opts)) return true;
   const survivor = at(state, r, c);
-  return !!(hadLastStand && survivor && !survivor.lastStand);
+  if (hadLastStand && survivor && !survivor.lastStand) return true;
+  if (deflectBefore > 0 && survivor && (survivor.deflectTurns || 0) < deflectBefore) return true;
+  return false;
 }
 
 function adjacentSquares(r, c) {
@@ -631,7 +634,13 @@ const EFFECTS = {
     applyVenomToPiece(state.board, state, r, c, 3);
     return ok(wasClone ? "Poison — clone destroyed." : "Poison — dies in 3 turns.");
   },
-  deflect_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.deflectTurns=1; return ok('Deflect — next hit reflects to a random enemy.'); },
+  deflect_1(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color !== color) return fail();
+    p.deflectTurns = 2;
+    return ok("Deflect armed — hidden.");
+  },
   trickster(state, color, picks) {
     let plan = state.meta.pendingTrickster;
     if (!plan) plan = planTrickster(state);

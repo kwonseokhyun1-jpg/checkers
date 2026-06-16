@@ -50,7 +50,7 @@ export const CARD_REGISTRY = [
   { id: "ward", name: "Ward", desc: "Shield a friendly piece for 1 turn — blocks one capture or spell hit (shields can be burned off).", rarity: "common", weight: 6, mode: "friendly", effect: "shield_1" },
   { id: "aegis", name: "Aegis", desc: "Shield a piece — it cannot be captured for 2 turns.", rarity: "uncommon", weight: 6, mode: "friendly", effect: "shield_2" },
   { id: "poison", name: "Poison", desc: "Mark an enemy — they die in 3 turns unless cleansed.", rarity: "uncommon", weight: 5, mode: "enemy", effect: "poison_3" },
-  { id: "deflect", name: "Deflect", desc: "Friendly piece reflects the next spell hit to a random enemy.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "deflect_1" },
+  { id: "deflect", name: "Deflect", desc: "Hidden trap on a friendly piece — if a spell would destroy it within 2 turns, the closest enemy dies instead (captures still work; invisible until it triggers).", rarity: "uncommon", weight: 4, mode: "friendly", effect: "deflect_1" },
   { id: "stab", name: "Stab", desc: "Destroy an enemy on an adjacent forward diagonal.", rarity: "uncommon", weight: 6, mode: "diagonal", effect: "forward_bolt" },
   { id: "crown", name: "Royal Decree", desc: "Instantly crown one of your pieces (king movement).", rarity: "uncommon", weight: 4, mode: "friendly", effect: "crown" },
   { id: "teleport", name: "Blink", desc: "Teleport your piece to any empty dark square within 2 steps (Chebyshev).", rarity: "uncommon", weight: 4, mode: "f_empty", effect: "blink_2" },
