@@ -213,6 +213,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
         }
 
         const data = await signUp(identifier, password, chosenUsername, chosenUsername);
+        onNewAccount?.();
         const user = data.session?.user ?? getCurrentUser();
 
         if (user) {
@@ -247,11 +248,10 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
 
           try {
             await pullCloudProfile();
-            onNewAccount?.();
-            onSignedIn?.();
           } catch (err) {
             console.warn("Profile sync after signup failed", err);
           }
+          onSignedIn?.();
           forced = false;
           closeBtn?.classList.remove("hidden");
           backdrop?.classList.remove("auth-modal-backdrop--locked");
@@ -273,10 +273,10 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
       }
       try {
         await pullCloudProfile();
-        onSignedIn?.();
       } catch (err) {
         console.warn("Profile sync after sign-in failed", err);
       }
+      onSignedIn?.();
       forced = false;
       closeBtn?.classList.remove("hidden");
       backdrop?.classList.remove("auth-modal-backdrop--locked");
@@ -315,10 +315,10 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
     if (user) {
       try {
         await pullCloudProfile();
-        onSignedIn?.();
       } catch (err) {
         console.warn("Profile sync failed", err);
       }
+      onSignedIn?.();
       forced = false;
       closeBtn?.classList.remove("hidden");
       backdrop?.classList.remove("auth-modal-backdrop--locked");
