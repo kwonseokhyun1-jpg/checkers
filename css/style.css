@@ -608,6 +608,13 @@ body {
   color: var(--bg-deep);
   border-color: transparent;
 }
+.tab-btn--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tab-btn--locked:not(.active) {
+  filter: grayscale(0.35);
+}
 .view.hidden { display: none; }
 .hidden { display: none !important; }
 .header-gems {
