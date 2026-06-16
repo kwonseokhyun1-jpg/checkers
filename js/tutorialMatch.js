@@ -230,8 +230,8 @@ function overlayHtml() {
         <h3 id="tutorial-match-title" class="tutorial-match-title"></h3>
         <p id="tutorial-match-body" class="tutorial-match-body"></p>
         <div class="tutorial-match-actions">
-          <button type="button" id="tutorial-match-skip" class="btn-text">Skip tutorial</button>
           <button type="button" id="tutorial-match-continue" class="btn-primary hidden">Continue</button>
+          <button type="button" id="tutorial-match-skip" class="btn-text tutorial-skip-btn">Skip tutorial</button>
         </div>
       </div>
     </div>`;
