@@ -63,8 +63,13 @@ import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
 import { initAuthGate, requiresAuthGate } from "./authGate.js";
-import { shouldShowInteractiveTutorial, prepareInteractiveTutorialForNewAccount } from "./tutorial.js";
+import {
+  shouldShowInteractiveTutorial,
+  shouldShowMetaTutorial,
+  prepareInteractiveTutorialForNewAccount,
+} from "./tutorial.js";
 import { startInteractiveTutorial } from "./tutorialMatch.js";
+import { startMetaTutorial, notifyMetaTutorial } from "./tutorialMeta.js";
 import { initPvpUI } from "./pvpUI.js";
 import { clearAllWaitingRoomsOnce } from "./pvp.js";
 import { getMatchHtml } from "./matchView.js";
@@ -167,6 +172,7 @@ function removeOneFromDeck(cardId) {
   if (i < 0) return;
   workingDeck.splice(i, 1);
   renderDeckEditor();
+  notifyMetaTutorial("card-removed-from-deck", { cardId });
 }
 
 function autoFinishDeck() {
@@ -233,6 +239,7 @@ function showTab(tab) {
   document.querySelectorAll(".view").forEach((v) => {
     v.classList.toggle("hidden", v.id !== `view-${tab}`);
   });
+  notifyMetaTutorial("tab-changed", { tab });
   if (tab === "chests") {
     showVaultTab(activeVaultTab);
     renderChests();
@@ -653,6 +660,8 @@ function renderChests(options = {}) {
         pulls: res.pulls,
       });
 
+      notifyMetaTutorial("chest-opened", { chestId: chest.id });
+
       if (log) {
         log.textContent = `Got ${res.pulls.length} new cards from ${chest.name}.`;
         log.classList.remove("chest-log--error");
@@ -750,6 +759,7 @@ function addCardToWorkingDeck(cardId) {
   clearCardNew(profile, cardId);
   saveProfile(profile);
   renderDeckEditor();
+  notifyMetaTutorial("card-added-to-deck", { cardId });
   return true;
 }
 
@@ -966,6 +976,7 @@ function openDeckEdit(deckId) {
   const nameInput = $("deck-name-input");
   if (nameInput) nameInput.value = deck.name;
   showDeckSubview("edit");
+  notifyMetaTutorial("deck-edit-opened", { deckId });
 }
 
 function renderDeckList() {
@@ -1131,6 +1142,7 @@ function saveWorkingDeck() {
   upsertDeck(profile, deck);
   profile.selectedDeckId = deck.id;
   saveProfile(profile);
+  notifyMetaTutorial("deck-saved", { deckId: deck.id });
   editingDeckId = null;
   workingDeck = [];
   showDeckSubview("list");
@@ -1724,7 +1736,7 @@ function init() {
         if (activeTab === "quests") renderQuests();
       });
       pvpController?.render();
-      if (!maybeStartInteractiveTutorial()) {
+      if (!maybeStartInteractiveTutorial() && !maybeStartMetaTutorial()) {
         showTab(activeTab);
       }
     },
@@ -1770,6 +1782,28 @@ function maybeStartInteractiveTutorial() {
       updateCurrencyHeader();
       renderDeckList();
       renderStarsShop();
+      if (!maybeStartMetaTutorial()) {
+        showTab("deck");
+      }
+    },
+  });
+  return true;
+}
+
+function maybeStartMetaTutorial() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!shouldShowMetaTutorial(profile)) return false;
+  tutorialRunning = true;
+  startMetaTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      updateCurrencyHeader();
+      renderDeckList();
+      renderStarsShop();
       showTab("deck");
     },
   });
@@ -1804,6 +1838,7 @@ async function bootstrapAfterAuth() {
   authGate?.hide();
 
   if (maybeStartInteractiveTutorial()) return;
+  if (maybeStartMetaTutorial()) return;
   if (!tryResumeSavedMatch()) showTab("deck");
   reconcileMatchShellState();
 }
