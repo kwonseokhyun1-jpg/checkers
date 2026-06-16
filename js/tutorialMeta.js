@@ -136,6 +136,7 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     highlightEl?.classList.remove("tutorial-meta-highlight");
     highlightEl = null;
     spotlight?.classList.add("hidden");
+    overlay?.classList.remove("tutorial-meta-overlay--card-top");
   }
 
   function positionSpotlight() {
@@ -148,6 +149,26 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     spotlight.style.width = `${rect.width + pad * 2}px`;
     spotlight.style.height = `${rect.height + pad * 2}px`;
     spotlight.classList.remove("hidden");
+    positionTutorialCard(rect);
+  }
+
+  function positionTutorialCard(highlightRect) {
+    if (!overlay) return;
+    const card = overlay.querySelector(".tutorial-meta-card");
+    if (!card) return;
+
+    if (!highlightRect) {
+      overlay.classList.remove("tutorial-meta-overlay--card-top");
+      return;
+    }
+
+    const cardHeight = card.offsetHeight + 28;
+    const viewHeight = window.innerHeight;
+    const spaceBelow = viewHeight - highlightRect.bottom;
+    const spaceAbove = highlightRect.top;
+    const preferTop = spaceBelow < cardHeight + 16 || spaceBelow < spaceAbove;
+
+    overlay.classList.toggle("tutorial-meta-overlay--card-top", preferTop);
   }
 
   function scheduleSpotlight() {
