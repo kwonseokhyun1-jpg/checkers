@@ -182,6 +182,8 @@ export class MatchSession {
     this._syncBusy = false;
     this._syncDirty = false;
     this._pendingPvpRow = null;
+    /** Last server turn key we ran beginPlayerTurn for in PvP (`${turn}_${turnNumber[local]}`). */
+    this._pvpLocalTurnKey = null;
     this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
     if (options.initialState) {
       this.state = options.initialState;
@@ -228,7 +230,7 @@ export class MatchSession {
     if (this.hasMoveHistory()) ensureStartHistory(this.state);
     if (options.initialState && this.isPvp) {
       if (this.state.turn === this.localColor && !this.state.gameOver) {
-        this.beginPlayerTurn();
+        this._beginLocalPvpTurnIfNeeded(this.state);
       }
     } else if (!(options.initialState && this.isPvp)) {
       if (
@@ -569,6 +571,42 @@ export class MatchSession {
     this.beginTurn(this.localColor);
   }
 
+  _pvpLocalTurnKeyFor(state) {
+    return `${state.turn}_${state.turnNumber?.[this.localColor] ?? 0}`;
+  }
+
+  /** Run PvP turn-start cleanup once per authoritative server turn (spell flags, meta, draws). */
+  _beginLocalPvpTurnIfNeeded(state, { prevTurn = null } = {}) {
+    if (!this.isPvp || !state || state.gameOver || state.turn !== this.localColor) return false;
+    const key = this._pvpLocalTurnKeyFor(state);
+    if (key === this._pvpLocalTurnKey) {
+      if (
+        prevTurn === this.opponentColor &&
+        (state.spellPlayed[this.localColor] ||
+          (state.meta.shatterSilenced?.[this.localColor] &&
+            !state.meta.shatterSilenceNext?.[this.localColor]))
+      ) {
+        this._resetLocalPvpTurnFlags();
+        return true;
+      }
+      return false;
+    }
+    this._pvpLocalTurnKey = key;
+    this.beginPlayerTurn();
+    return true;
+  }
+
+  /** Clear per-turn spell gates without advancing turn counters (stale synced state). */
+  _resetLocalPvpTurnFlags() {
+    const s = this.state;
+    const color = this.localColor;
+    s.spellPlayed[color] = false;
+    s.phase = PHASE.CARDS;
+    this.actionBusy = false;
+    this.cardPlay = null;
+    startTurnMeta(s, color);
+  }
+
   beginTurn(color) {
     const s = this.state;
     tickEffects(s.board, color, s);
@@ -637,13 +675,8 @@ export class MatchSession {
     this.selectedColumn = null;
     this.selectedRow = null;
     this.endDrag();
-    if (
-      this.isPvp &&
-      !nextState.gameOver &&
-      prevTurn !== this.localColor &&
-      nextState.turn === this.localColor
-    ) {
-      this.beginPlayerTurn();
+    if (this.isPvp && !nextState.gameOver && nextState.turn === this.localColor) {
+      this._beginLocalPvpTurnIfNeeded(nextState, { prevTurn });
     }
     this.updateSpellCastUI();
     this.applyPvpOutcomeFromBoard();
@@ -1367,6 +1400,9 @@ export class MatchSession {
     tickMeta(this.state, this.localColor);
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
+    if (this.isPvp) {
+      this.state.spellPlayed[this.opponentColor] = false;
+    }
     if (!this.isPvp && !this.skipCheckpoint) saveMatchCheckpoint(this);
     if (this._pendingHistoryMove && this.hasMoveHistory()) {
       const label =
