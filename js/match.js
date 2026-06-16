@@ -587,7 +587,7 @@ export class MatchSession {
       this.achievementTracker?.onTurnStart();
     }
     if (color === this.localColor && s.meta.shatterSilenced?.[color]) {
-      this.setMessage("Shatter backlash — no spells this turn. Select a piece to move.");
+      this.setMessage("Spell backlash — no spells this turn. Select a piece to move.");
     } else if (color === this.localColor && s.meta.blinded?.[color]) {
       this.setMessage("You are blinded — no spells this turn. Select a piece to move.");
     } else if (color === this.localColor && s.meta.pendingPressMove?.[color]) {
@@ -1066,7 +1066,7 @@ export class MatchSession {
         s.phase === PHASE.MOVE
           ? "Spells skipped — select a piece to move"
           : s.meta.shatterSilenced?.[this.localColor]
-            ? "Shatter backlash — no spells this turn"
+            ? "Spell backlash — no spells this turn"
             : s.meta.blinded?.[this.localColor]
               ? "Blinded — no spells this turn"
               : s.spellPlayed[this.localColor]
@@ -2697,7 +2697,7 @@ ${starLine}`;
       } else if (s.gameOver) banner.textContent = "Game over";
       else if (s.turn === this.localColor) {
         const spellNote = s.meta.shatterSilenced?.[this.localColor]
-          ? "No spells (Shatter backlash) · "
+          ? "No spells (backlash) · "
           : s.meta.blinded?.[this.localColor]
             ? "No spells (Blinded) · "
             : s.spellPlayed[this.localColor]

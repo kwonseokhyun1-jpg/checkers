@@ -242,7 +242,8 @@ const EFFECTS = {
     const sq = getSq(state, tr, tc);
     sq.fireTurns = 2;
     sq.fireOwner = color;
-    return ok("Pyromancy — burns for 2 turns!", { pyromancySquares: [[er, ec], [tr, tc]] });
+    state.meta.shatterSilenceNext[color] = true;
+    return ok("Pyromancy — burns for 2 turns! You cannot cast spells next turn.", { pyromancySquares: [[er, ec], [tr, tc]] });
   },
   freeze_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); applyFreezeToPiece(state.board, state, r, c, 1); return ok(); },
   snowball(state, color, picks) {

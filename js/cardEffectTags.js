@@ -7,7 +7,7 @@ const TAGS = {
   trickster: ["Swap up to 6 random pieces (not on back ranks)"],
   purify: ["Removes all debuffs from your pieces, including burn and freeze"],
   chain_lightning: ["Strike adjacent enemies only", "Up to 2 kills if enemies touch each other", "Your piece is paralyzed 2 turns"],
-  pyromancy: ["Enemy piece + empty dark square — both burn 2 turns; fire tiles block enemies"],
+  pyromancy: ["Enemy piece + empty dark square — both burn 2 turns; fire tiles block enemies", "You cannot cast spells on your next turn"],
   freeze_1: ["Enemy cannot move on their next turn"],
   snowball: ["Freeze an enemy piece — cannot move on its owner's next turn"],
   freeze_2: ["Enemy cannot move on their next turn"],
