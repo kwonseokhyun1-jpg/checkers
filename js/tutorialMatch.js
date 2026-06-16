@@ -112,10 +112,10 @@ const STEPS = [
     hint: "Jump over the first piece, then keep jumping.",
     buildState() {
       const board = emptyBoard();
-      place(board, 5, 0, COLORS.RED);
-      place(board, 4, 1, COLORS.BLACK);
-      place(board, 2, 3, COLORS.BLACK);
-      place(board, 0, 5, COLORS.BLACK);
+      place(board, 5, 2, COLORS.RED);
+      place(board, 4, 3, COLORS.BLACK);
+      place(board, 2, 5, COLORS.BLACK);
+      place(board, 0, 7, COLORS.BLACK);
       return baseTutorialState({ board, phase: PHASE.MOVE, spellPlayedRed: true });
     },
     validateTurnEnd(session) {
@@ -237,8 +237,8 @@ function overlayHtml() {
     </div>`;
 }
 
-function renderOverlay(root, stepIndex, step, { showContinue = false } = {}) {
-  const overlay = root.querySelector("#tutorial-match-overlay");
+function renderOverlay(stepIndex, step, { showContinue = false } = {}) {
+  const overlay = document.getElementById("tutorial-match-overlay");
   if (!overlay) return;
   const stepEl = overlay.querySelector("#tutorial-match-step");
   const titleEl = overlay.querySelector("#tutorial-match-title");
@@ -268,16 +268,19 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
   }
   root.classList.remove("hidden");
   root.innerHTML = getMatchHtml("Training dummy", { exitLabel: "Skip tutorial" });
-  root.insertAdjacentHTML("beforeend", overlayHtml());
+  document.body.insertAdjacentHTML("beforeend", overlayHtml());
+  document.body.classList.add("tutorial-match-active");
 
-  const skipBtn = root.querySelector("#tutorial-match-skip");
-  const continueBtn = root.querySelector("#tutorial-match-continue");
+  const skipBtn = document.getElementById("tutorial-match-skip");
+  const continueBtn = document.getElementById("tutorial-match-continue");
 
   function finishTutorial() {
     dismissInteractiveTutorial({ persist: true, profile, saveProfile });
     matchSession?.dispose?.();
     matchSession = null;
     exitMatchMode({ clearCheckpoint: true });
+    document.getElementById("tutorial-match-overlay")?.remove();
+    document.body.classList.remove("tutorial-match-active");
     root.innerHTML = "";
     root.classList.add("hidden");
     onComplete?.();
@@ -302,10 +305,10 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
 
     spellValidated = false;
     lastMove = null;
-    renderOverlay(root, index, step);
+    renderOverlay(index, step);
 
     if (step.autoAdvance) {
-      renderOverlay(root, index, step, { showContinue: true });
+      renderOverlay(index, step, { showContinue: true });
       return;
     }
 
