@@ -218,6 +218,10 @@ function hideStageModal() {
 }
 
 function showTab(tab) {
+  const matchView = document.getElementById("view-match");
+  if (tutorialRunning && matchView && !matchView.classList.contains("hidden")) {
+    return;
+  }
   reconcileMatchShellState();
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
@@ -1736,7 +1740,9 @@ function init() {
         if (activeTab === "quests") renderQuests();
       });
       pvpController?.render();
-      if (!maybeStartInteractiveTutorial() && !maybeStartMetaTutorial()) {
+      maybeStartInteractiveTutorial();
+      maybeStartMetaTutorial();
+      if (!tutorialRunning) {
         showTab(activeTab);
       }
     },
@@ -1794,6 +1800,7 @@ function maybeStartMetaTutorial() {
   if (tutorialRunning || !getCurrentUser()) return false;
   if (!shouldShowMetaTutorial(profile)) return false;
   tutorialRunning = true;
+  showTab("deck");
   startMetaTutorial({
     profile,
     saveProfile,
@@ -1839,6 +1846,7 @@ async function bootstrapAfterAuth() {
 
   if (maybeStartInteractiveTutorial()) return;
   if (maybeStartMetaTutorial()) return;
+  if (tutorialRunning) return;
   if (!tryResumeSavedMatch()) showTab("deck");
   reconcileMatchShellState();
 }
