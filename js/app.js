@@ -63,7 +63,7 @@ import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
 import { initAuthGate, requiresAuthGate } from "./authGate.js";
-import { shouldShowInteractiveTutorial } from "./tutorial.js";
+import { shouldShowInteractiveTutorial, prepareInteractiveTutorialForNewAccount } from "./tutorial.js";
 import { startInteractiveTutorial } from "./tutorialMatch.js";
 import { initPvpUI } from "./pvpUI.js";
 import { clearAllWaitingRoomsOnce } from "./pvp.js";
@@ -1708,6 +1708,10 @@ function init() {
   authUI = initAuthUI({
     authBtn,
     modal: authModal,
+    onNewAccount: () => {
+      profile = loadProfile();
+      prepareInteractiveTutorialForNewAccount(profile, saveProfile);
+    },
     onSignedIn: () => {
       profile = loadProfile();
       repairProfile(profile);
