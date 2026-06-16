@@ -40,6 +40,8 @@ import {
   getNextPlayableLevelId,
   repairAdventureProgress,
   getWorldForLevel,
+  isQuestsAndPvpUnlocked,
+  QUESTS_PVP_UNLOCK_MESSAGE,
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
@@ -66,10 +68,13 @@ import { initAuthGate, requiresAuthGate } from "./authGate.js";
 import {
   shouldShowInteractiveTutorial,
   shouldShowMetaTutorial,
+  shouldShowQuestsTutorial,
+  shouldShowPvpTutorial,
   prepareInteractiveTutorialForNewAccount,
 } from "./tutorial.js";
 import { startInteractiveTutorial } from "./tutorialMatch.js";
 import { startMetaTutorial, notifyMetaTutorial } from "./tutorialMeta.js";
+import { startQuestsTutorial, startPvpTutorial, notifyUnlockTutorial } from "./tutorialUnlocks.js";
 import { initPvpUI } from "./pvpUI.js";
 import { clearAllWaitingRoomsOnce } from "./pvp.js";
 import { getMatchHtml } from "./matchView.js";
@@ -144,6 +149,8 @@ let authGate = null;
 /** @type {ReturnType<typeof initAuthUI> | null} */
 let authUI = null;
 let tutorialRunning = false;
+let bypassQuestsPvpGate = false;
+let pendingPostStage1Tutorials = false;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
 let selectedAdventureWorldId = 1;
@@ -217,9 +224,36 @@ function hideStageModal() {
   document.body.classList.remove("adventure-stage-open");
 }
 
+function showUnlockHint() {
+  const hint = $("adventure-world-hint");
+  if (hint) hint.textContent = QUESTS_PVP_UNLOCK_MESSAGE;
+}
+
+function syncNavUnlockState() {
+  const unlocked = isQuestsAndPvpUnlocked(profile);
+  for (const tab of ["quests", "pvp"]) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if (!btn) continue;
+    btn.classList.toggle("tab-btn--locked", !unlocked);
+    btn.title = unlocked ? "" : QUESTS_PVP_UNLOCK_MESSAGE;
+    btn.setAttribute("aria-disabled", unlocked ? "false" : "true");
+  }
+}
+
 function showTab(tab) {
   const matchView = document.getElementById("view-match");
   if (tutorialRunning && matchView && !matchView.classList.contains("hidden")) {
+    return;
+  }
+  if (
+    !bypassQuestsPvpGate &&
+    (tab === "quests" || tab === "pvp") &&
+    !isQuestsAndPvpUnlocked(profile)
+  ) {
+    showUnlockHint();
+    bypassQuestsPvpGate = true;
+    showTab("play");
+    bypassQuestsPvpGate = false;
     return;
   }
   reconcileMatchShellState();
@@ -244,6 +278,7 @@ function showTab(tab) {
     v.classList.toggle("hidden", v.id !== `view-${tab}`);
   });
   notifyMetaTutorial("tab-changed", { tab });
+  notifyUnlockTutorial("tab-changed", { tab });
   if (tab === "chests") {
     showVaultTab(activeVaultTab);
     renderChests();
@@ -1230,6 +1265,7 @@ function getMapSceneryMarkup(theme) {
 
 function renderAdventureMap() {
   updateCurrencyHeader();
+  syncNavUnlockState();
   const progress = repairAdventureProgress(profile.adventure);
   profile.adventure = progress;
   const nextId = getNextPlayableLevelId(progress);
@@ -1501,12 +1537,21 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
         root.innerHTML = "";
         $("view-match")?.classList.add("hidden");
         showTab(consumePendingNavigationTab() || "play");
+        if (pendingPostStage1Tutorials) {
+          pendingPostStage1Tutorials = false;
+          window.setTimeout(() => maybeStartPostStage1Tutorials(), 600);
+        }
       },
       (stars) => {
-        const { gems, stars: bestStars, starsGained } = recordLevelClear(profile, levelId, stars);
+        const result = recordLevelClear(profile, levelId, stars);
+        const { gems, stars: bestStars, starsGained } = result;
         profile.gems += gems;
         saveProfile(profile);
         updateCurrencyHeader();
+        syncNavUnlockState();
+        if (levelId === 1 && result.firstTime) {
+          pendingPostStage1Tutorials = true;
+        }
         return {
           message: `+${gems} gems! · Best: ${formatStars(bestStars)}`,
           starsGained,
@@ -1742,6 +1787,7 @@ function init() {
       pvpController?.render();
       maybeStartInteractiveTutorial();
       maybeStartMetaTutorial();
+      maybeStartPostStage1Tutorials();
       if (!tutorialRunning) {
         showTab(activeTab);
       }
@@ -1770,8 +1816,49 @@ function init() {
   bindMatchVisibilityHandlers(() => matchSession);
   repairProfile(profile);
   syncCollectionFilterControls();
+  syncNavUnlockState();
 
   void bootstrapAfterAuth();
+}
+
+function maybeStartPvpTutorial() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!isQuestsAndPvpUnlocked(profile)) return false;
+  if (!shouldShowPvpTutorial(profile)) return false;
+  tutorialRunning = true;
+  startPvpTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      syncNavUnlockState();
+      showTab("play");
+    },
+  });
+  return true;
+}
+
+function maybeStartPostStage1Tutorials() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!isQuestsAndPvpUnlocked(profile)) return false;
+  if (shouldShowInteractiveTutorial(profile) || shouldShowMetaTutorial(profile)) return false;
+  if (!shouldShowQuestsTutorial(profile)) return maybeStartPvpTutorial();
+  tutorialRunning = true;
+  showTab("play");
+  startQuestsTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      syncNavUnlockState();
+      maybeStartPvpTutorial();
+    },
+  });
+  return true;
 }
 
 function maybeStartInteractiveTutorial() {
@@ -1846,6 +1933,7 @@ async function bootstrapAfterAuth() {
 
   if (maybeStartInteractiveTutorial()) return;
   if (maybeStartMetaTutorial()) return;
+  if (maybeStartPostStage1Tutorials()) return;
   if (tutorialRunning) return;
   if (!tryResumeSavedMatch()) showTab("deck");
   reconcileMatchShellState();

@@ -1,6 +1,8 @@
 const TUTORIAL_KEY = "arcane_checkers_tutorial_v1";
 const INTERACTIVE_TUTORIAL_KEY = "arcane_checkers_interactive_tutorial_v1";
 const META_TUTORIAL_KEY = "arcane_checkers_meta_tutorial_v1";
+const QUESTS_TUTORIAL_KEY = "arcane_checkers_quests_tutorial_v1";
+const PVP_TUTORIAL_KEY = "arcane_checkers_pvp_tutorial_v1";
 const PENDING_SIGNUP_TUTORIAL_KEY = "arcane_checkers_pending_signup_tutorial_v1";
 
 export function markPendingSignupTutorial() {
@@ -33,6 +35,8 @@ export function prepareInteractiveTutorialForNewAccount(profile, saveProfile) {
   try {
     localStorage.removeItem(INTERACTIVE_TUTORIAL_KEY);
     localStorage.removeItem(META_TUTORIAL_KEY);
+    localStorage.removeItem(QUESTS_TUTORIAL_KEY);
+    localStorage.removeItem(PVP_TUTORIAL_KEY);
     localStorage.removeItem(TUTORIAL_KEY);
   } catch {
     /* ignore */
@@ -40,6 +44,8 @@ export function prepareInteractiveTutorialForNewAccount(profile, saveProfile) {
   if (profile) {
     delete profile.interactiveTutorialDone;
     delete profile.metaTutorialDone;
+    delete profile.questsTutorialDone;
+    delete profile.pvpTutorialDone;
     delete profile.tutorialDone;
     saveProfile?.(profile);
   }
@@ -117,6 +123,59 @@ export function shouldShowMetaTutorial(profile) {
   }
   try {
     return localStorage.getItem(META_TUTORIAL_KEY) !== "done";
+  } catch {
+    return true;
+  }
+}
+
+export function dismissQuestsTutorial(opts = {}) {
+  if (opts.persist) {
+    try {
+      localStorage.setItem(QUESTS_TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.questsTutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function dismissPvpTutorial(opts = {}) {
+  if (opts.persist) {
+    try {
+      localStorage.setItem(PVP_TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.pvpTutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function shouldShowQuestsTutorial(profile) {
+  if (profile?.questsTutorialDone) return false;
+  try {
+    return localStorage.getItem(QUESTS_TUTORIAL_KEY) !== "done";
+  } catch {
+    return true;
+  }
+}
+
+export function shouldShowPvpTutorial(profile) {
+  if (profile?.pvpTutorialDone) return false;
+  if (!profile?.questsTutorialDone) {
+    try {
+      if (localStorage.getItem(QUESTS_TUTORIAL_KEY) !== "done") return false;
+    } catch {
+      return false;
+    }
+  }
+  try {
+    return localStorage.getItem(PVP_TUTORIAL_KEY) !== "done";
   } catch {
     return true;
   }
