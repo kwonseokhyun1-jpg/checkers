@@ -2798,6 +2798,20 @@ ${starLine}`;
             rook.appendChild(bar);
             sq.appendChild(rook);
           }
+          if (piece.linkedFateId) {
+            const link = document.createElement("div");
+            link.className = "linked-fate-indicator";
+            link.setAttribute(
+              "aria-label",
+              "Linked Fate — when one falls, the other follows"
+            );
+            const mark = document.createElement("span");
+            mark.className = "linked-fate-indicator__mark";
+            mark.textContent = "⛓";
+            mark.setAttribute("aria-hidden", "true");
+            link.appendChild(mark);
+            sq.appendChild(link);
+          }
         } else if (
           this.cullAnimation &&
           this.cullAnimation.row === row &&
@@ -2822,6 +2836,46 @@ ${starLine}`;
         sq.addEventListener("click", () => this.onSquareClick(row, col));
         boardEl.appendChild(sq);
       }
+    }
+
+    const linkedPairs = [];
+    const linkedSeen = new Set();
+    for (let row = 0; row < SIZE; row++) {
+      for (let col = 0; col < SIZE; col++) {
+        const piece = s.board[row][col];
+        if (!piece?.linkedFateId) continue;
+        const pairKey =
+          piece.id < piece.linkedFateId
+            ? `${piece.id}-${piece.linkedFateId}`
+            : `${piece.linkedFateId}-${piece.id}`;
+        if (linkedSeen.has(pairKey)) continue;
+        linkedSeen.add(pairKey);
+        for (let r = 0; r < SIZE; r++) {
+          for (let c = 0; c < SIZE; c++) {
+            const partner = s.board[r][c];
+            if (partner?.id === piece.linkedFateId) {
+              linkedPairs.push({ r1: row, c1: col, r2: r, c2: c });
+              break;
+            }
+          }
+        }
+      }
+    }
+    if (linkedPairs.length) {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.classList.add("linked-fate-overlay");
+      svg.setAttribute("viewBox", "0 0 100 100");
+      svg.setAttribute("preserveAspectRatio", "none");
+      svg.setAttribute("aria-hidden", "true");
+      for (const { r1, c1, r2, c2 } of linkedPairs) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", String(((c1 + 0.5) / SIZE) * 100));
+        line.setAttribute("y1", String(((r1 + 0.5) / SIZE) * 100));
+        line.setAttribute("x2", String(((c2 + 0.5) / SIZE) * 100));
+        line.setAttribute("y2", String(((r2 + 0.5) / SIZE) * 100));
+        svg.appendChild(line);
+      }
+      boardEl.appendChild(svg);
     }
   }
 

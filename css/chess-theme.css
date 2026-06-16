@@ -211,7 +211,8 @@ body {
 .board-frame--local-flipped .poison-indicator,
 .board-frame--local-flipped .fire-indicator,
 .board-frame--local-flipped .blood-indicator,
-.board-frame--local-flipped .fire-tile-indicator {
+.board-frame--local-flipped .fire-tile-indicator,
+.board-frame--local-flipped .linked-fate-indicator {
   transform: rotate(180deg);
 }
 
@@ -325,7 +326,45 @@ body {
 }
 
 .piece.linked-fate {
-  box-shadow: 0 0 0 2px #e85d5d, 0 0 12px rgba(232, 93, 93, 0.45);
+  box-shadow:
+    0 0 0 2px #e85d5d,
+    0 0 12px rgba(232, 93, 93, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.linked-fate-indicator {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.linked-fate-indicator__mark {
+  font-size: clamp(0.48rem, 2.5vw, 0.66rem);
+  line-height: 1;
+  color: #ff9a9a;
+  text-shadow:
+    0 0 4px rgba(232, 93, 93, 0.95),
+    0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.linked-fate-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  overflow: visible;
+}
+
+.linked-fate-overlay line {
+  stroke: rgba(232, 93, 93, 0.8);
+  stroke-width: 0.9;
+  stroke-dasharray: 3 2.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px rgba(232, 93, 93, 0.75));
 }
 
 .piece.bounty-mark {
