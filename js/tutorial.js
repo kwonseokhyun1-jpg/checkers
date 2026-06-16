@@ -3,6 +3,7 @@ const INTERACTIVE_TUTORIAL_KEY = "arcane_checkers_interactive_tutorial_v1";
 const META_TUTORIAL_KEY = "arcane_checkers_meta_tutorial_v1";
 const QUESTS_TUTORIAL_KEY = "arcane_checkers_quests_tutorial_v1";
 const PVP_TUTORIAL_KEY = "arcane_checkers_pvp_tutorial_v1";
+const COSMETICS_TUTORIAL_KEY = "arcane_checkers_cosmetics_tutorial_v1";
 const PENDING_SIGNUP_TUTORIAL_KEY = "arcane_checkers_pending_signup_tutorial_v1";
 
 export function markPendingSignupTutorial() {
@@ -37,6 +38,7 @@ export function prepareInteractiveTutorialForNewAccount(profile, saveProfile) {
     localStorage.removeItem(META_TUTORIAL_KEY);
     localStorage.removeItem(QUESTS_TUTORIAL_KEY);
     localStorage.removeItem(PVP_TUTORIAL_KEY);
+    localStorage.removeItem(COSMETICS_TUTORIAL_KEY);
     localStorage.removeItem(TUTORIAL_KEY);
   } catch {
     /* ignore */
@@ -46,6 +48,7 @@ export function prepareInteractiveTutorialForNewAccount(profile, saveProfile) {
     delete profile.metaTutorialDone;
     delete profile.questsTutorialDone;
     delete profile.pvpTutorialDone;
+    delete profile.cosmeticsTutorialDone;
     delete profile.tutorialDone;
     saveProfile?.(profile);
   }
@@ -176,6 +179,29 @@ export function shouldShowPvpTutorial(profile) {
   }
   try {
     return localStorage.getItem(PVP_TUTORIAL_KEY) !== "done";
+  } catch {
+    return true;
+  }
+}
+
+export function dismissCosmeticsTutorial(opts = {}) {
+  if (opts.persist) {
+    try {
+      localStorage.setItem(COSMETICS_TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.cosmeticsTutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function shouldShowCosmeticsTutorial(profile) {
+  if (profile?.cosmeticsTutorialDone) return false;
+  try {
+    return localStorage.getItem(COSMETICS_TUTORIAL_KEY) !== "done";
   } catch {
     return true;
   }

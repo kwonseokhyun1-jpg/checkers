@@ -42,6 +42,8 @@ import {
   getWorldForLevel,
   isQuestsAndPvpUnlocked,
   QUESTS_PVP_UNLOCK_MESSAGE,
+  isCosmeticsUnlocked,
+  COSMETICS_UNLOCK_MESSAGE,
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
@@ -70,11 +72,12 @@ import {
   shouldShowMetaTutorial,
   shouldShowQuestsTutorial,
   shouldShowPvpTutorial,
+  shouldShowCosmeticsTutorial,
   prepareInteractiveTutorialForNewAccount,
 } from "./tutorial.js";
 import { startInteractiveTutorial } from "./tutorialMatch.js";
 import { startMetaTutorial, notifyMetaTutorial } from "./tutorialMeta.js";
-import { startQuestsTutorial, startPvpTutorial, notifyUnlockTutorial } from "./tutorialUnlocks.js";
+import { startQuestsTutorial, startPvpTutorial, startCosmeticsTutorial, notifyUnlockTutorial } from "./tutorialUnlocks.js";
 import { initPvpUI } from "./pvpUI.js";
 import { clearAllWaitingRoomsOnce } from "./pvp.js";
 import { getMatchHtml } from "./matchView.js";
@@ -150,7 +153,9 @@ let authGate = null;
 let authUI = null;
 let tutorialRunning = false;
 let bypassQuestsPvpGate = false;
+let bypassCosmeticsGate = false;
 let pendingPostStage1Tutorials = false;
+let pendingPostStage5CosmeticsTutorial = false;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
 let selectedAdventureWorldId = 1;
@@ -224,9 +229,9 @@ function hideStageModal() {
   document.body.classList.remove("adventure-stage-open");
 }
 
-function showUnlockHint() {
+function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
   const hint = $("adventure-world-hint");
-  if (hint) hint.textContent = QUESTS_PVP_UNLOCK_MESSAGE;
+  if (hint) hint.textContent = message;
 }
 
 function syncNavUnlockState() {
@@ -237,6 +242,14 @@ function syncNavUnlockState() {
     btn.classList.toggle("tab-btn--locked", !unlocked);
     btn.title = unlocked ? "" : QUESTS_PVP_UNLOCK_MESSAGE;
     btn.setAttribute("aria-disabled", unlocked ? "false" : "true");
+  }
+
+  const cosmeticsUnlocked = isCosmeticsUnlocked(profile);
+  const cosmeticsTab = document.querySelector('.vault-tab[data-vault-tab="cosmetics"]');
+  if (cosmeticsTab) {
+    cosmeticsTab.classList.toggle("vault-tab--locked", !cosmeticsUnlocked);
+    cosmeticsTab.title = cosmeticsUnlocked ? "" : COSMETICS_UNLOCK_MESSAGE;
+    cosmeticsTab.setAttribute("aria-disabled", cosmeticsUnlocked ? "false" : "true");
   }
 }
 
@@ -330,6 +343,7 @@ async function refreshHeaderIdentity() {
 
 function openProfileTab(section) {
   showTab("profile");
+  notifyUnlockTutorial("profile-opened", { section });
   if (section) renderProfile({ initialSection: section });
 }
 
@@ -602,6 +616,17 @@ function renderStarsShop() {
 }
 
 function showVaultTab(tab) {
+  if (
+    !bypassCosmeticsGate &&
+    tab === "cosmetics" &&
+    !isCosmeticsUnlocked(profile)
+  ) {
+    showUnlockHint(COSMETICS_UNLOCK_MESSAGE);
+    bypassCosmeticsGate = true;
+    showVaultTab("cards");
+    bypassCosmeticsGate = false;
+    return;
+  }
   activeVaultTab = tab;
   document.querySelectorAll(".vault-tab").forEach((btn) => {
     const on = btn.dataset.vaultTab === tab;
@@ -613,12 +638,14 @@ function showVaultTab(tab) {
     panel.classList.toggle("hidden", !on);
     panel.hidden = !on;
   });
+  notifyUnlockTutorial("vault-tab-changed", { tab });
 }
 
 function renderCosmeticsShop() {
   renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
     logEl: $("cosmetic-box-log"),
     onGemsChange: updateGemHeader,
+    cosmeticsUnlocked: isCosmeticsUnlocked(profile),
     onOpened: () => {
       if (activeTab === "profile") renderProfile();
       if (activeTab === "quests") renderQuests();
@@ -1538,8 +1565,14 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
         $("view-match")?.classList.add("hidden");
         showTab(consumePendingNavigationTab() || "play");
         if (pendingPostStage1Tutorials) {
-          pendingPostStage1Tutorials = false;
-          window.setTimeout(() => maybeStartPostStage1Tutorials(), 600);
+          window.setTimeout(() => {
+            if (maybeStartPostStage1Tutorials()) pendingPostStage1Tutorials = false;
+          }, 600);
+        }
+        if (pendingPostStage5CosmeticsTutorial) {
+          window.setTimeout(() => {
+            if (maybeStartPostStage5CosmeticsTutorial()) pendingPostStage5CosmeticsTutorial = false;
+          }, 600);
         }
       },
       (stars) => {
@@ -1551,6 +1584,9 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
         syncNavUnlockState();
         if (levelId === 1 && result.firstTime) {
           pendingPostStage1Tutorials = true;
+        }
+        if (levelId === 5 && result.firstTime) {
+          pendingPostStage5CosmeticsTutorial = true;
         }
         return {
           message: `+${gems} gems! · Best: ${formatStars(bestStars)}`,
@@ -1788,6 +1824,7 @@ function init() {
       maybeStartInteractiveTutorial();
       maybeStartMetaTutorial();
       maybeStartPostStage1Tutorials();
+      maybeStartPostStage5CosmeticsTutorial();
       if (!tutorialRunning) {
         showTab(activeTab);
       }
@@ -1835,6 +1872,29 @@ function maybeStartPvpTutorial() {
       repairProfile(profile);
       syncNavUnlockState();
       showTab("play");
+      maybeStartPostStage5CosmeticsTutorial();
+    },
+  });
+  return true;
+}
+
+function maybeStartPostStage5CosmeticsTutorial() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!isCosmeticsUnlocked(profile)) return false;
+  if (shouldShowInteractiveTutorial(profile) || shouldShowMetaTutorial(profile)) return false;
+  if (shouldShowQuestsTutorial(profile) || shouldShowPvpTutorial(profile)) return false;
+  if (!shouldShowCosmeticsTutorial(profile)) return false;
+  tutorialRunning = true;
+  showTab("play");
+  startCosmeticsTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      syncNavUnlockState();
+      showTab("play");
     },
   });
   return true;
@@ -1856,6 +1916,7 @@ function maybeStartPostStage1Tutorials() {
       repairProfile(profile);
       syncNavUnlockState();
       maybeStartPvpTutorial();
+      maybeStartPostStage5CosmeticsTutorial();
     },
   });
   return true;
@@ -1878,6 +1939,8 @@ function maybeStartInteractiveTutorial() {
       if (!maybeStartMetaTutorial()) {
         showTab("deck");
       }
+      maybeStartPostStage1Tutorials();
+      maybeStartPostStage5CosmeticsTutorial();
     },
   });
   return true;
@@ -1899,6 +1962,8 @@ function maybeStartMetaTutorial() {
       renderDeckList();
       renderStarsShop();
       showTab("deck");
+      maybeStartPostStage1Tutorials();
+      maybeStartPostStage5CosmeticsTutorial();
     },
   });
   return true;
@@ -1934,6 +1999,7 @@ async function bootstrapAfterAuth() {
   if (maybeStartInteractiveTutorial()) return;
   if (maybeStartMetaTutorial()) return;
   if (maybeStartPostStage1Tutorials()) return;
+  if (maybeStartPostStage5CosmeticsTutorial()) return;
   if (tutorialRunning) return;
   if (!tryResumeSavedMatch()) showTab("deck");
   reconcileMatchShellState();

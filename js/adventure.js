@@ -372,9 +372,17 @@ export function isLevelCleared(progress, levelId) {
 export const QUESTS_PVP_UNLOCK_LEVEL = 1;
 export const QUESTS_PVP_UNLOCK_MESSAGE = "Clear Adventure stage 1 to unlock";
 
+export const COSMETICS_UNLOCK_LEVEL = 5;
+export const COSMETICS_UNLOCK_MESSAGE = "Clear Adventure stage 5 to unlock";
+
 export function isQuestsAndPvpUnlocked(profile) {
   const progress = repairAdventureProgress(profile?.adventure);
   return isLevelCleared(progress, QUESTS_PVP_UNLOCK_LEVEL);
+}
+
+export function isCosmeticsUnlocked(profile) {
+  const progress = repairAdventureProgress(profile?.adventure);
+  return isLevelCleared(progress, COSMETICS_UNLOCK_LEVEL);
 }
 
 export function unlockNextLevel(progress, clearedLevelId) {
