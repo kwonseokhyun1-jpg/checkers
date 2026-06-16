@@ -182,7 +182,7 @@ export class MatchSession {
     this._syncBusy = false;
     this._syncDirty = false;
     this._pendingPvpRow = null;
-    /** Last server turn key we ran beginPlayerTurn for in PvP (`${turn}_${turnNumber[local]}`). */
+    /** Last server turn key we ran beginPlayerTurn for in PvP (`${turn}_${turnNumber[local]}_${moveHistory.length}`). */
     this._pvpLocalTurnKey = null;
     this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
     if (options.initialState) {
@@ -572,7 +572,9 @@ export class MatchSession {
   }
 
   _pvpLocalTurnKeyFor(state) {
-    return `${state.turn}_${state.turnNumber?.[this.localColor] ?? 0}`;
+    const n = state.turnNumber?.[this.localColor] ?? 0;
+    const hist = state.moveHistory?.length ?? 0;
+    return `${state.turn}_${n}_${hist}`;
   }
 
   /** Run PvP turn-start cleanup once per authoritative server turn (spell flags, meta, draws). */
@@ -662,8 +664,12 @@ export class MatchSession {
       incomingSpell &&
       incomingSpell.seq > prevSpellSeq &&
       incomingSpell.caster === this.opponentColor;
+    const prevLocalTurnNum = this.isPvp ? this.state?.turnNumber?.[this.localColor] ?? 0 : 0;
 
     this.state = nextState;
+    if (this.isPvp && prevLocalTurnNum > (this.state.turnNumber?.[this.localColor] ?? 0)) {
+      this.state.turnNumber[this.localColor] = prevLocalTurnNum;
+    }
     if (incomingSpell?.seq) this._lastPvpSpellSeq = incomingSpell.seq;
     if (this.isPvp) ensureStartHistory(this.state);
     this.historyViewIndex = null;
@@ -675,8 +681,8 @@ export class MatchSession {
     this.selectedColumn = null;
     this.selectedRow = null;
     this.endDrag();
-    if (this.isPvp && !nextState.gameOver && nextState.turn === this.localColor) {
-      this._beginLocalPvpTurnIfNeeded(nextState, { prevTurn });
+    if (this.isPvp && !this.state.gameOver && this.state.turn === this.localColor) {
+      this._beginLocalPvpTurnIfNeeded(this.state, { prevTurn });
     }
     this.updateSpellCastUI();
     this.applyPvpOutcomeFromBoard();
