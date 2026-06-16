@@ -32,6 +32,7 @@ const CURSE_RULES = [
   { key: "hexed", label: "Hexed", turns: true },
   { key: "venom", label: "Venom", turns: true },
   { key: "blazeTurns", label: "Burning", turns: true },
+  { key: "bloodTurns", label: "Vengeance Blood", turns: true },
   { key: "slowed", label: "Slowed", turns: true },
   { key: "reverseOnlyTurns", label: "Reverse March", turns: true },
   { key: "stoneTurns", label: "Stone", turns: true },

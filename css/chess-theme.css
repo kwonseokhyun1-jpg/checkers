@@ -210,6 +210,7 @@ body {
 .board-frame--local-flipped .ultra-shield-indicator,
 .board-frame--local-flipped .poison-indicator,
 .board-frame--local-flipped .fire-indicator,
+.board-frame--local-flipped .blood-indicator,
 .board-frame--local-flipped .fire-tile-indicator {
   transform: rotate(180deg);
 }
@@ -427,6 +428,56 @@ body {
   background: linear-gradient(180deg, #fdba74 0%, #ea580c 100%);
   border-color: rgba(253, 186, 116, 0.9);
   box-shadow: 0 0 4px rgba(249, 115, 22, 0.75);
+}
+
+.piece.vengeance-mark {
+  box-shadow:
+    0 0 0 2px rgba(185, 28, 28, 0.85),
+    0 0 14px rgba(160, 20, 40, 0.55);
+  animation: piece-blood-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes piece-blood-pulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.12); }
+}
+
+.blood-indicator {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.blood-indicator__mark {
+  font-size: clamp(0.45rem, 2.4vw, 0.62rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 4px rgba(185, 28, 28, 0.9));
+}
+
+.blood-indicator__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.blood-indicator__block {
+  width: clamp(5px, 2.2vw, 7px);
+  height: clamp(5px, 2.2vw, 7px);
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(185, 28, 28, 0.25);
+}
+
+.blood-indicator__block--filled {
+  background: linear-gradient(180deg, #fca5a5 0%, #b91c1c 100%);
+  border-color: rgba(252, 165, 165, 0.9);
+  box-shadow: 0 0 4px rgba(185, 28, 28, 0.75);
 }
 
 .square.has-fire-tile {

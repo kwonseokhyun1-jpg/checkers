@@ -33,7 +33,7 @@ const TAGS = {
   press: ["Opponent must move again after their normal move on their next turn"],
   mind_control: ["Convert an enemy man to your color for 2 of your turns", "Reverts to the enemy afterward"],
   barrier: ["Place on any dark square", "Blocks enemies for 2 turn cycles"],
-  vengeance: ["Hidden trap — destroys the next enemy who captures your piece"],
+  vengeance: ["Hidden trap — destroys the next enemy who captures your piece", "Your piece survives 2 turns (blood counters), then dies"],
   hibernation: ["Sleep 2 turns (immobile)", "Wake as king + Awoken Bear", "Extra move every turn after"],
   root_2: ["Enemy cannot jump/capture next turn"],
   silence_3: ["Suppress special movement 3 turns"],
