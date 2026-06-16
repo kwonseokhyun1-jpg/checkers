@@ -49,7 +49,7 @@ export const EFFECT_VISUAL = {
   bulwark: "shield",
   last_stand: "shield",
   anchor_2: "shield",
-  deflect_1: "shield",
+  deflect_1: "deflect-arm",
   fortify: "shield",
   fog_2: "shield",
   rally: "shield",

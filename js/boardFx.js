@@ -24,13 +24,19 @@ export function queueBoardFx(state, kind, centerRow, centerCol, extraSquares = n
     seen.add(k);
     return true;
   });
-  state.boardFx = { kind, center: [centerRow, centerCol], squares };
+  const fx = { kind, center: [centerRow, centerCol], squares };
+  if (kind === "deflect" && squares.length >= 2) {
+    fx.from = squares[0];
+    fx.to = squares[1];
+  }
+  state.boardFx = fx;
 }
 
 export const BOARD_FX_MS = {
   bomb: 1200,
   mine: 1000,
   vengeance: 1100,
+  deflect: 1200,
 };
 
 export function boardFxDuration(kind) {

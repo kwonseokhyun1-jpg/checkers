@@ -188,6 +188,7 @@ export const TRAP_EFFECT_LABELS = {
   landmine: "Landmine",
   quicksand: "Quicksand",
   last_stand: "Last Stand",
+  deflect_1: "Deflect",
 };
 
 /** Queue a trap spell for move history — logged after the action that triggered it. */

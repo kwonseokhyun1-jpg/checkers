@@ -42,7 +42,7 @@ const ID_TO_CATEGORY = {
   cull: "attack",
   darkness: "defense",
   deep_freeze: "control",
-  deflect: "defense",
+  deflect: "trap",
   demote: "control",
   deport: "movement",
   displacement: "movement",

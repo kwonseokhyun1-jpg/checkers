@@ -229,13 +229,20 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
     queueTrapHistoryReveal(state, { effect: "last_stand", color: p.color, picks: [[r, c]] });
     return false;
   }
-  if (!linkFate && p.deflectTurns > 0) {
+  if (!linkFate && nonCap && p.deflectTurns > 0) {
     p.deflectTurns = 0;
-    const es = enemyPieces(board, byColor);
-    if (es.length) {
-      const t = es[Math.floor(Math.random() * es.length)];
-      removePiece(board, t.row, t.col);
+    const redirect = findClosestEnemySquare(board, r, c, p.color, [r, c]);
+    if (state) {
+      queueTrapHistoryReveal(state, { effect: "deflect_1", color: p.color, picks: [[r, c]] });
+      queueBoardFx(
+        state,
+        "deflect",
+        r,
+        c,
+        redirect ? [[r, c], redirect] : [[r, c]]
+      );
     }
+    if (redirect) resolveCapture(board, state, redirect[0], redirect[1], p.color, { nonCap: true });
     return false;
   }
   if (!linkFate && p.mirrorShield) {
@@ -839,4 +846,21 @@ export function piecesOfColor(board, color) {
 
 export function enemyPieces(board, color) {
   return piecesOfColor(board, color === COLORS.RED ? COLORS.BLACK : COLORS.RED);
+}
+
+/** Closest enemy to a square (Manhattan); ties keep first found. */
+export function findClosestEnemySquare(board, row, col, attackerColor, exclude = null) {
+  const foes = enemyPieces(board, attackerColor);
+  if (!foes.length) return null;
+  let best = null;
+  let bestDist = Infinity;
+  for (const e of foes) {
+    if (exclude && e.row === exclude[0] && e.col === exclude[1]) continue;
+    const d = Math.abs(e.row - row) + Math.abs(e.col - col);
+    if (d < bestDist) {
+      bestDist = d;
+      best = [e.row, e.col];
+    }
+  }
+  return best;
 }
