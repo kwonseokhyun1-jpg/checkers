@@ -253,7 +253,12 @@ function startSpotlightTutorial({ steps, skipMessage, dismiss, profile, saveProf
 
     const cardHeight = card.offsetHeight + 28;
     const viewHeight = window.innerHeight;
-    const spaceBelow = viewHeight - highlightRect.bottom;
+    const rootStyle = getComputedStyle(document.documentElement);
+    const navPx =
+      (parseFloat(rootStyle.getPropertyValue("--nav-height")) || 4.25) *
+      (parseFloat(rootStyle.fontSize) || 16);
+    const bottomChrome = navPx + 16;
+    const spaceBelow = viewHeight - highlightRect.bottom - bottomChrome;
     const spaceAbove = highlightRect.top;
     const preferTop = spaceBelow < cardHeight + 16 || spaceBelow < spaceAbove;
 
@@ -327,6 +332,7 @@ function startSpotlightTutorial({ steps, skipMessage, dismiss, profile, saveProf
     const target = e.target;
     if (!(target instanceof Element)) return;
     if (target.closest("#tutorial-meta-overlay")) return;
+    if (target.closest(".card-preview-modal")) return;
 
     if (isAllowedTarget(target)) {
       if (e.type === "click" && proxyActionClick(target)) {

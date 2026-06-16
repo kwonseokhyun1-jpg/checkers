@@ -249,6 +249,25 @@ function renderOverlay(stepIndex, step, { showContinue = false } = {}) {
   if (titleEl) titleEl.textContent = step.title;
   if (bodyEl) bodyEl.textContent = step.body;
   continueBtn?.classList.toggle("hidden", !showContinue);
+  updateOverlayLayout(step);
+}
+
+function updateOverlayLayout(step) {
+  const overlay = document.getElementById("tutorial-match-overlay");
+  if (!overlay) return;
+  const preferTop = !!step?.validateSpell;
+  overlay.classList.toggle("tutorial-match-overlay--card-top", preferTop);
+  syncMatchTutorialInset();
+}
+
+function syncMatchTutorialInset() {
+  const overlay = document.getElementById("tutorial-match-overlay");
+  if (!overlay) return;
+  const atBottom =
+    !overlay.classList.contains("tutorial-match-overlay--card-top") &&
+    !document.body.classList.contains("card-preview-open");
+  const inset = atBottom ? overlay.getBoundingClientRect().height : 0;
+  document.documentElement.style.setProperty("--tutorial-match-inset", `${Math.ceil(inset)}px`);
 }
 
 /**
@@ -273,12 +292,22 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
 
   const skipBtn = document.getElementById("tutorial-match-skip");
   const continueBtn = document.getElementById("tutorial-match-continue");
+  const onLayoutChange = () => syncMatchTutorialInset();
+  window.addEventListener("resize", onLayoutChange);
+  window.addEventListener("card-preview-change", onLayoutChange);
+  const insetObserver = new ResizeObserver(onLayoutChange);
+  const overlayEl = document.getElementById("tutorial-match-overlay");
+  if (overlayEl) insetObserver.observe(overlayEl);
 
   function finishTutorial() {
     dismissInteractiveTutorial({ persist: true, profile, saveProfile });
     matchSession?.dispose?.();
     matchSession = null;
     exitMatchMode({ clearCheckpoint: true });
+    window.removeEventListener("resize", onLayoutChange);
+    window.removeEventListener("card-preview-change", onLayoutChange);
+    insetObserver.disconnect();
+    document.documentElement.style.removeProperty("--tutorial-match-inset");
     document.getElementById("tutorial-match-overlay")?.remove();
     document.body.classList.remove("tutorial-match-active");
     root.innerHTML = "";

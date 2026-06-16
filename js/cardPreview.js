@@ -7,8 +7,14 @@ function $(id) {
   return document.getElementById(id);
 }
 
+function setPreviewBodyState(open) {
+  document.body.classList.toggle("card-preview-open", open);
+  window.dispatchEvent(new CustomEvent("card-preview-change", { detail: { open } }));
+}
+
 export function closeCardPreview() {
   $("card-preview-modal")?.classList.add("hidden");
+  setPreviewBodyState(false);
 }
 
 /**
@@ -95,6 +101,7 @@ export function showCardPreview(def, opts = {}) {
   }
 
   modal.classList.remove("hidden");
+  setPreviewBodyState(true);
 }
 
 export function bindCardPreviewModal() {
