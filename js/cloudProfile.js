@@ -14,7 +14,10 @@ function isEmptyRemoteProfile(json) {
   const hasProgress =
     (Array.isArray(cleared) ? cleared.length : Object.keys(cleared || {}).length) > 0;
   const hasCurrency = typeof json.gems === "number" || typeof json.stars === "number";
-  return !(hasCollection || hasDecks || hasProgress || hasCurrency);
+  const hasStats =
+    (typeof json.pvpWins === "number" && json.pvpWins > 0) ||
+    (typeof json.spellsPlayed === "number" && json.spellsPlayed > 0);
+  return !(hasCollection || hasDecks || hasProgress || hasCurrency || hasStats);
 }
 
 function applyRemoteProfile(remote) {

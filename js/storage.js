@@ -270,6 +270,15 @@ function normalizeLoadedProfile(parsed) {
   const stub = { adventure: adv };
   migrateAdventureDecks(stub);
 
+  const pvpWins =
+    typeof parsed.pvpWins === "number" && Number.isFinite(parsed.pvpWins)
+      ? Math.max(0, Math.floor(parsed.pvpWins))
+      : undefined;
+  const spellsPlayed =
+    typeof parsed.spellsPlayed === "number" && Number.isFinite(parsed.spellsPlayed)
+      ? Math.max(0, Math.floor(parsed.spellsPlayed))
+      : undefined;
+
   return {
     gems: typeof parsed.gems === "number" ? parsed.gems : STARTING_GEMS,
     stars: typeof parsed.stars === "number" ? parsed.stars : STARTING_STARS,
@@ -281,6 +290,8 @@ function normalizeLoadedProfile(parsed) {
     adventure: stub.adventure,
     savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : undefined,
     newCardIds: parsed.newCardIds && typeof parsed.newCardIds === "object" ? parsed.newCardIds : undefined,
+    ...(pvpWins !== undefined ? { pvpWins } : {}),
+    ...(spellsPlayed !== undefined ? { spellsPlayed } : {}),
     ...tutorialFlagsFromParsed(parsed),
   };
 }
