@@ -40,7 +40,7 @@ const ID_TO_CATEGORY = {
   crown: "special",
   cryo_bolt: "attack",
   cull: "attack",
-  darkness: "trap",
+  darkness: "defense",
   deep_freeze: "control",
   deflect: "defense",
   demote: "control",
@@ -111,8 +111,8 @@ export function getCardCategory(def) {
   if (mapped) return mapped;
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
-  if (/trap|mine|quicksand|counterspell|vengeance|last.?stand|darkness/.test(blob)) return "trap";
-  if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|rally/.test(blob)) {
+  if (/trap|mine|quicksand|counterspell|vengeance|last.?stand/.test(blob)) return "trap";
+  if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|rally|darkness/.test(blob)) {
     return "defense";
   }
   if (/move|nudge|teleport|recall|leap|step|displace|swap|scatter|retreat|bishop|rook|fusion|overrun|promote|pull|push|shift|earthquake|magnet|repel/.test(blob)) {
