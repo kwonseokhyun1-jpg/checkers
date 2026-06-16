@@ -23,7 +23,7 @@ import {
   tickEndTurnEffects,
   tickEffects,
 } from "../js/board.js";
-import { createMatchMeta, tryConsumeCounterspell, tryConsumeVengeance, ensureConstitutionTurns } from "../js/gameMeta.js";
+import { createMatchMeta, tryConsumeCounterspell, tryConsumeVengeance, ensureConstitutionTurns, startTurnMeta } from "../js/gameMeta.js";
 import { initCardState } from "../js/cardEffects.js";
 
 const handlerKeys = new Set(
@@ -356,6 +356,11 @@ for (const card of cards) {
   const sq = s.squares["3,3"] || s.squares["4,3"];
   const key = Object.keys(s.squares).find((k) => s.squares[k]?.fireTurns === 2);
   if (!key) throw new Error("Pyromancy should ignite empty dark tile");
+  if (!s.meta.shatterSilenceNext[COLOR]) throw new Error("Pyromancy should set spell silence for next turn");
+  startTurnMeta(s, OPP);
+  if (!s.meta.shatterSilenceNext[COLOR]) throw new Error("Pyromancy silence should persist through opponent turn");
+  startTurnMeta(s, COLOR);
+  if (!s.meta.shatterSilenced[COLOR]) throw new Error("Pyromancy should block spells on caster's next turn");
   console.log("Pyromancy test: OK");
 }
 
