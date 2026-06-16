@@ -5011,31 +5011,53 @@ body.public-profile-modal-open {
   outline: 2px solid var(--accent-gem);
   outline-offset: 2px;
 }
-.pvp-room-host-profile__avatar {
-  width: 3rem;
-  height: 3rem;
+.pvp-room-host-profile .profile-avatar-stack {
+  position: relative;
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 3px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
-.pvp-room-host-profile__avatar .profile-avatar-inner svg {
+.pvp-room-host-profile .profile-avatar-inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.pvp-room-host-profile .profile-avatar-inner svg {
   width: 100%;
   height: 100%;
   display: block;
 }
-.pvp-room-host-profile__avatar .profile-avatar-fallback {
+.pvp-room-host-profile .profile-avatar-fallback {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-muted, #9aa3b2);
 }
-.pvp-room-host-profile__avatar.profile-frame--legend::after,
-.pvp-room-host-profile__avatar.profile-frame--silver::after {
-  font-size: 0.55rem;
-  top: -0.1rem;
+.pvp-room-host-profile .profile-frame--legend {
+  animation: none;
+  box-shadow: 0 0 10px rgba(159, 122, 234, 0.45);
+}
+.pvp-room-host-profile .profile-frame--legend::after {
+  inset: 3px;
+}
+.pvp-room-host-profile .profile-frame--silver::after {
+  font-size: 0.4rem;
+  top: -0.08rem;
+}
+.pvp-room-host-profile .profile-frame--gold::before {
+  font-size: 0.5rem;
+  top: -0.22rem;
+}
+.pvp-room-host-profile .profile-frame--bronze::before {
+  inset: 3px;
+  border-width: 1px;
 }
 .pvp-open-join {
   display: flex;
