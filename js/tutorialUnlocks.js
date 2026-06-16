@@ -134,8 +134,8 @@ function overlayHtml() {
         <p id="tutorial-meta-body" class="tutorial-meta-body"></p>
         <p id="tutorial-meta-hint" class="tutorial-meta-hint hidden"></p>
         <div class="tutorial-meta-actions">
-          <button type="button" id="tutorial-meta-skip" class="btn-text">Skip tutorial</button>
           <button type="button" id="tutorial-meta-continue" class="btn-primary hidden">Continue</button>
+          <button type="button" id="tutorial-meta-skip" class="btn-text tutorial-skip-btn">Skip tutorial</button>
         </div>
       </div>
     </div>`;
