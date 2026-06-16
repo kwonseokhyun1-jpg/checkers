@@ -59,7 +59,7 @@ function baseTutorialState(overrides = {}) {
   return state;
 }
 
-/** @typedef {{ id: string, title: string, body: string, hint?: string, buildState: () => object, validateTurnEnd?: (session: import('./match.js').MatchSession, lastMove?: object) => boolean, validateSpell?: (session: import('./match.js').MatchSession, card: object, picks: number[][]) => boolean, skipOpponentTurn?: boolean, autoAdvance?: boolean }} TutorialStep */
+/** @typedef {{ id: string, title: string, body: string, hint?: string, buildState: () => object, validateTurnEnd?: (session: import('./match.js').MatchSession, lastMove?: object, ctx?: { promoted?: boolean }) => boolean | "accept", validateSpell?: (session: import('./match.js').MatchSession, card: object, picks: number[][]) => boolean, skipOpponentTurn?: boolean, autoAdvance?: boolean }} TutorialStep */
 
 /** @type {TutorialStep[]} */
 const STEPS = [
@@ -126,22 +126,26 @@ const STEPS = [
   {
     id: "king",
     title: "Crown a king",
-    body: "Reach the far row to promote your piece to a king. Kings can move and capture backward too.",
-    hint: "Move your piece to the back rank.",
+    body: "Reach the far row to promote your piece to a king. Then step backward — kings can move and capture in both directions.",
+    hint: "Move to the back rank, then step your king backward.",
     buildState() {
       const board = emptyBoard();
       place(board, 1, 4, COLORS.RED);
       place(board, 0, 1, COLORS.BLACK);
       return baseTutorialState({ board, phase: PHASE.MOVE, spellPlayedRed: true });
     },
-    validateTurnEnd(session) {
+    validateTurnEnd(session, lastMove, { promoted = false } = {}) {
+      let hasKing = false;
       for (let r = 0; r < SIZE; r++) {
         for (let c = 0; c < SIZE; c++) {
           const p = session.state.board[r][c];
-          if (p?.color === COLORS.RED && p.king) return true;
+          if (p?.color === COLORS.RED && p.king) hasKing = true;
         }
       }
-      return false;
+      if (!hasKing) return false;
+      if (!promoted) return "accept";
+      if (!lastMove) return false;
+      return lastMove.to[0] > lastMove.from[0];
     },
     skipOpponentTurn: true,
   },
@@ -278,6 +282,7 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
   let matchSession = null;
   let lastMove = null;
   let spellValidated = false;
+  let kingStepPromoted = false;
 
   document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
   const root = document.getElementById("view-match");
@@ -334,6 +339,7 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
 
     spellValidated = false;
     lastMove = null;
+    kingStepPromoted = false;
     renderOverlay(index, step);
 
     if (step.autoAdvance) {
@@ -356,9 +362,15 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
       },
       beforeEndHumanTurn(session) {
         if (step.validateSpell) return "continue";
-        if (step.validateTurnEnd?.(session, lastMove)) {
+        const verdict = step.validateTurnEnd?.(session, lastMove, { promoted: kingStepPromoted });
+        if (verdict === true) {
           setTimeout(() => advanceStep(), 400);
           return "advance";
+        }
+        if (verdict === "accept") {
+          kingStepPromoted = true;
+          session.setMessage("Crowned! Now step your king backward.");
+          return "continue";
         }
         session.setMessage(step.hint || "Try again — follow the lesson hint above.");
         return "block";
