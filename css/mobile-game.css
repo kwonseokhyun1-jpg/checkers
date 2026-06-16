@@ -74,6 +74,16 @@ body.match-active .game-main {
   padding-bottom: calc(0.75rem + var(--game-safe-bottom, 0px));
 }
 
+@media (max-width: 768px) {
+  body.match-active .game-nav.tabs {
+    display: none;
+  }
+
+  body.match-active .game-shell {
+    padding-bottom: calc(0.75rem + var(--game-safe-bottom));
+  }
+}
+
 body.match-active #view-match:not(.hidden) {
   display: block;
   width: 100%;
