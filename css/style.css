@@ -1197,6 +1197,9 @@ body {
   max-width: 120px;
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.55));
 }
+body.tutorial-match-active .spell-drag-ghost {
+  z-index: 530;
+}
 .hand.spell-hand .spell-card:not(.disabled) {
   pointer-events: auto;
 }
@@ -1767,6 +1770,13 @@ body {
   align-items: center;
   justify-content: center;
   padding: 1rem;
+}
+/* Above tutorial overlays so Cast spell / deck actions stay clickable */
+body.tutorial-meta-active .card-preview-modal {
+  z-index: 420;
+}
+body.tutorial-match-active .card-preview-modal {
+  z-index: 520;
 }
 .card-preview-modal.hidden { display: none; }
 .card-preview-backdrop {
@@ -6014,6 +6024,13 @@ body.auth-gate-active .game-shell {
 .tutorial-match-active {
   overscroll-behavior: none;
 }
+body.tutorial-match-active #view-match:not(.hidden) {
+  padding-bottom: var(--tutorial-match-inset, 0px);
+}
+body.tutorial-match-active.card-preview-open #view-match:not(.hidden),
+body.tutorial-match-active:has(.tutorial-match-overlay--card-top) #view-match:not(.hidden) {
+  padding-bottom: 0;
+}
 .tutorial-match-overlay {
   position: fixed;
   left: 0;
@@ -6023,11 +6040,27 @@ body.auth-gate-active .game-shell {
   padding: 0.75rem;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
   pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.tutorial-match-overlay--card-top,
+body.tutorial-match-active.card-preview-open .tutorial-match-overlay {
+  top: 0;
+  bottom: auto;
+  justify-content: flex-start;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-bottom: 0.75rem;
+}
+.tutorial-match-overlay--card-top .tutorial-match-card,
+body.tutorial-match-active.card-preview-open .tutorial-match-card {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
 }
 .tutorial-match-card {
   pointer-events: auto;
   max-width: 28rem;
   margin: 0 auto;
+  width: 100%;
   padding: 1rem 1.1rem;
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
@@ -6077,7 +6110,7 @@ body.auth-gate-active .game-shell {
   flex-direction: column;
   justify-content: flex-end;
   padding: 0.75rem;
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  padding-bottom: max(calc(var(--nav-height, 4.25rem) + 0.5rem), env(safe-area-inset-bottom));
 }
 .tutorial-meta-shield {
   position: fixed;

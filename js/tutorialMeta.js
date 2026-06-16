@@ -74,8 +74,8 @@ const STEPS = [
       ".deck-collection-row__action--buy",
       ".deck-collection-row__main",
       ".deck-collection-row__thumb",
-      ".card-preview-overlay",
-      ".card-preview-overlay *",
+      ".card-preview-modal",
+      ".card-preview-modal *",
     ],
     actionSelector: ".deck-collection-row__action--add, .deck-collection-row__action--buy",
   },
@@ -220,7 +220,12 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
 
     const cardHeight = card.offsetHeight + 28;
     const viewHeight = window.innerHeight;
-    const spaceBelow = viewHeight - highlightRect.bottom;
+    const rootStyle = getComputedStyle(document.documentElement);
+    const navPx =
+      (parseFloat(rootStyle.getPropertyValue("--nav-height")) || 4.25) *
+      (parseFloat(rootStyle.fontSize) || 16);
+    const bottomChrome = navPx + 16;
+    const spaceBelow = viewHeight - highlightRect.bottom - bottomChrome;
     const spaceAbove = highlightRect.top;
     const preferTop = spaceBelow < cardHeight + 16 || spaceBelow < spaceAbove;
 
@@ -294,6 +299,7 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     const target = e.target;
     if (!(target instanceof Element)) return;
     if (target.closest("#tutorial-meta-overlay")) return;
+    if (target.closest(".card-preview-modal")) return;
 
     if (isAllowedTarget(target)) {
       if (e.type === "click" && proxyActionClick(target)) {
