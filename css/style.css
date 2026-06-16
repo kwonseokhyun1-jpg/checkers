@@ -6026,7 +6026,12 @@ body.auth-gate-active .game-shell {
 
 /* Meta tutorial — shop & deck building */
 .tutorial-meta-active {
-  overflow: hidden;
+  overscroll-behavior: none;
+}
+.tutorial-meta-active .game-main {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100dvh - var(--nav-height, 4.25rem) - 5.5rem - var(--game-safe-top, 0px));
 }
 .tutorial-meta-overlay {
   position: fixed;
@@ -6038,6 +6043,17 @@ body.auth-gate-active .game-shell {
   justify-content: flex-end;
   padding: 0.75rem;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+.tutorial-meta-shield {
+  position: fixed;
+  inset: 0;
+  z-index: 414;
+  pointer-events: auto;
+  background: transparent;
+  touch-action: none;
+}
+.tutorial-meta-shield.hidden {
+  display: none;
 }
 .tutorial-meta-overlay--card-top {
   justify-content: flex-start;
@@ -6112,6 +6128,14 @@ body.auth-gate-active .game-shell {
   outline-offset: 3px;
   border-radius: 10px;
   animation: tutorial-meta-pulse 1.4s ease-in-out infinite;
+}
+.tutorial-meta-highlight.chest-open,
+.tutorial-meta-highlight.chest-card__btn {
+  box-shadow: 0 0 0 3px rgba(92, 225, 230, 0.35), 0 6px 24px rgba(92, 225, 230, 0.25);
+}
+.tutorial-meta-highlight.tab-btn,
+.tutorial-meta-highlight.deck-row {
+  cursor: pointer;
 }
 @keyframes tutorial-meta-pulse {
   0%, 100% { outline-color: var(--accent-gem); }
