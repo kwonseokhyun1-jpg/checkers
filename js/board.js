@@ -54,6 +54,7 @@ export function inBounds(row, col) {
 export const SIGIL_MOVES = 2;
 /** Shield turns granted when Last Stand triggers on capture. */
 export const LAST_STAND_SHIELD_TURNS = 3;
+export const VENGEANCE_BLOOD_TURNS = 2;
 
 export function hasKnightSigil(piece) {
   return piece && (piece.knightTurns > 0 || piece.isKnight) && !piece.silenced;
@@ -128,6 +129,7 @@ export function createPiece(color, row, col, king = false) {
     cloneNoCaptureThisTurn: false,
     freezeDeferEndTick: false,
     paralyzeDeferEndTick: false,
+    bloodTurns: 0,
   };
 }
 
@@ -532,15 +534,21 @@ function explodeBombAt(board, state, row, col) {
 export function applyMove(board, move, state = null) {
   const [fr, fc] = move.from;
   const [tr, tc] = move.to;
+  const captureTargets = move.captures.map(([cr, cc]) => ({
+    cr,
+    cc,
+    cap: board[cr]?.[cc] ?? null,
+  }));
   let piece = movePiece(board, fr, fc, tr, tc);
-  for (const [cr, cc] of move.captures) {
-    const cap = board[cr][cc];
+  for (const { cr, cc, cap } of captureTargets) {
     if (!cap || !piece) continue;
     if (tryConsumeVengeance(state, piece.color, cap.color)) {
       queueTrapHistoryReveal(state, { effect: "vengeance", color: cap.color, picks: [[cr, cc]] });
       queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
       state?.meta?.achievementHook?.onTrapTriggered?.(cap.color, piece.color);
-      removePiece(board, piece.row, piece.col);
+      removePiece(board, piece.row, piece.col, { state });
+      cap.bloodTurns = VENGEANCE_BLOOD_TURNS;
+      setPiece(board, cr, cc, cap);
       piece = null;
       continue;
     }
@@ -682,6 +690,10 @@ export function tickEffects(board, color, state = null) {
       if (p.blazeTurns > 0) {
         p.blazeTurns--;
         if (p.blazeTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
+      }
+      if (p.bloodTurns > 0) {
+        p.bloodTurns--;
+        if (p.bloodTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
       }
       if (p.mindControlTurns > 0) {
         p.mindControlTurns--;

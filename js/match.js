@@ -5,6 +5,7 @@ import {
   SIZE,
   COLORS,
   LAST_STAND_SHIELD_TURNS,
+  VENGEANCE_BLOOD_TURNS,
   isDarkSquare,
   createInitialBoard,
   getAllMovesForColor,
@@ -2624,6 +2625,7 @@ ${starLine}`;
           if (piece.berserkNoCapture) el.classList.add("berserk-mark");
           if (piece.venom > 0) el.classList.add("poisoned");
           if (piece.blazeTurns > 0) el.classList.add("burning");
+          if (piece.bloodTurns > 0) el.classList.add("vengeance-mark");
           if (
             this.cullAnimation &&
             this.cullAnimation.row === row &&
@@ -2715,6 +2717,30 @@ ${starLine}`;
             fire.appendChild(mark);
             fire.appendChild(bar);
             sq.appendChild(fire);
+          }
+          if (piece.bloodTurns > 0) {
+            const blood = document.createElement("div");
+            blood.className = "blood-indicator";
+            const mark = document.createElement("span");
+            mark.className = "blood-indicator__mark";
+            mark.textContent = "🩸";
+            mark.setAttribute("aria-hidden", "true");
+            const bar = document.createElement("div");
+            bar.className = "blood-indicator__bar";
+            bar.setAttribute("role", "meter");
+            bar.setAttribute("aria-label", `Vengeance blood — ${piece.bloodTurns} turn${piece.bloodTurns === 1 ? "" : "s"} left`);
+            bar.setAttribute("aria-valuenow", String(piece.bloodTurns));
+            bar.setAttribute("aria-valuemin", "0");
+            bar.setAttribute("aria-valuemax", String(VENGEANCE_BLOOD_TURNS));
+            for (let i = 0; i < VENGEANCE_BLOOD_TURNS; i++) {
+              const block = document.createElement("span");
+              block.className =
+                "blood-indicator__block" + (i < piece.bloodTurns ? " blood-indicator__block--filled" : "");
+              bar.appendChild(block);
+            }
+            blood.appendChild(mark);
+            blood.appendChild(bar);
+            sq.appendChild(blood);
           }
           if (piece.bishopTurns > 0) {
             const bishop = document.createElement("div");
