@@ -62,7 +62,9 @@ import {
 import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
-import { dismissTutorial, initTutorial } from "./tutorial.js";
+import { initAuthGate, requiresAuthGate } from "./authGate.js";
+import { shouldShowInteractiveTutorial } from "./tutorial.js";
+import { startInteractiveTutorial } from "./tutorialMatch.js";
 import { initPvpUI } from "./pvpUI.js";
 import { clearAllWaitingRoomsOnce } from "./pvp.js";
 import { getMatchHtml } from "./matchView.js";
@@ -132,6 +134,11 @@ function sortCollectionCards(cards) {
 }
 let matchSession = null;
 let pvpController = null;
+/** @type {ReturnType<typeof initAuthGate> | null} */
+let authGate = null;
+/** @type {ReturnType<typeof initAuthUI> | null} */
+let authUI = null;
+let tutorialRunning = false;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
 let selectedAdventureWorldId = 1;
@@ -215,7 +222,6 @@ function showTab(tab) {
     document.querySelector("#btn-leave-match")?.click();
     return;
   }
-  dismissTutorial({ persist: true, profile, saveProfile });
   if (tab !== "deck" && deckSubview === "edit") {
     unlockBodyScrollForDeckEdit();
     document.body.classList.remove("deck-editing");
@@ -1691,11 +1697,15 @@ function init() {
   const authModal = document.getElementById("auth-modal");
   const authBtn = document.getElementById("auth-header-btn");
   const profileBtn = document.getElementById("header-profile-btn");
-  initTutorial({ profile, saveProfile });
 
   profileBtn?.addEventListener("click", () => openProfileTab());
 
-  const authUI = initAuthUI({
+  authGate = initAuthGate({
+    onSignIn: () => authUI?.open("signin", { forced: true }),
+    onSignUp: () => authUI?.open("signup", { forced: true }),
+  });
+
+  authUI = initAuthUI({
     authBtn,
     modal: authModal,
     onSignedIn: () => {
@@ -1704,12 +1714,15 @@ function init() {
       updateCurrencyHeader();
       renderDeckList();
       renderStarsShop();
+      authGate?.hide();
       void refreshHeaderIdentity().then(() => {
         if (activeTab === "profile") renderProfile();
         if (activeTab === "quests") renderQuests();
       });
       pvpController?.render();
-      showTab(activeTab);
+      if (!maybeStartInteractiveTutorial()) {
+        showTab(activeTab);
+      }
     },
     onSignedOut: () => {
       headerDisplayUsername = "";
@@ -1718,6 +1731,7 @@ function init() {
       matchSession = null;
       exitMatchMode({ clearCheckpoint: true });
       reconcileMatchShellState();
+      authGate?.show();
       showTab("deck");
     },
   });
@@ -1727,7 +1741,7 @@ function init() {
   pvpController = initPvpUI({
     root: document.getElementById("view-pvp"),
     getProfile: () => profile,
-    openAuthModal: () => authUI.open("signin"),
+    openAuthModal: () => authUI?.open("signin", { forced: true }),
     onNavigateTab: showTab,
   });
 
@@ -1736,6 +1750,26 @@ function init() {
   syncCollectionFilterControls();
 
   void bootstrapAfterAuth();
+}
+
+function maybeStartInteractiveTutorial() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!shouldShowInteractiveTutorial(profile)) return false;
+  tutorialRunning = true;
+  startInteractiveTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      updateCurrencyHeader();
+      renderDeckList();
+      renderStarsShop();
+      showTab("deck");
+    },
+  });
+  return true;
 }
 
 async function bootstrapAfterAuth() {
@@ -1758,6 +1792,14 @@ async function bootstrapAfterAuth() {
   }
   await refreshHeaderIdentity();
   reconcileMatchShellState();
+
+  if (requiresAuthGate()) {
+    authGate?.show();
+    return;
+  }
+  authGate?.hide();
+
+  if (maybeStartInteractiveTutorial()) return;
   if (!tryResumeSavedMatch()) showTab("deck");
   reconcileMatchShellState();
 }

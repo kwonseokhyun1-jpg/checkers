@@ -4771,6 +4771,9 @@ body.chest-open-active {
   background: rgba(4, 6, 12, 0.85);
   backdrop-filter: blur(6px);
 }
+.auth-modal-backdrop--locked {
+  cursor: default;
+}
 .auth-modal-dialog {
   position: relative;
   z-index: 1;
@@ -5929,6 +5932,96 @@ body.adventure-stage-open {
   gap: 0.75rem;
   align-items: center;
   justify-content: space-between;
+}
+
+/* Auth gate — required sign-in for new players */
+body.auth-gate-active .game-shell {
+  visibility: hidden;
+  pointer-events: none;
+}
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 480;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+    max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120, 90, 200, 0.22), transparent 60%),
+    linear-gradient(165deg, #12141c 0%, #0a0c12 55%, #06080e 100%);
+}
+.auth-gate.hidden { display: none; }
+.auth-gate__inner {
+  width: 100%;
+  max-width: 22rem;
+  text-align: center;
+}
+.auth-gate__brand {
+  margin-bottom: 2rem;
+}
+.auth-gate__title {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+.auth-gate__notice {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+.auth-gate__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.auth-gate__btn {
+  width: 100%;
+}
+
+/* In-match interactive tutorial overlay */
+.tutorial-match-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 420;
+  padding: 0.75rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+.tutorial-match-card {
+  pointer-events: auto;
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+}
+.tutorial-match-step {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-gem);
+}
+.tutorial-match-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.1rem;
+}
+.tutorial-match-body {
+  margin: 0 0 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+.tutorial-match-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
 }
 
 /* —— Mage titles & quests —— */

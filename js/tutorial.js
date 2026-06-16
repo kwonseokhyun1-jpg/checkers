@@ -1,34 +1,9 @@
 const TUTORIAL_KEY = "arcane_checkers_tutorial_v1";
+const INTERACTIVE_TUTORIAL_KEY = "arcane_checkers_interactive_tutorial_v1";
 
-const STEPS = [
-  {
-    title: "Welcome to Arcane Checkers",
-    body: "Build decks, cast spells, and capture every enemy piece. This quick tour covers cards and the shop.",
-  },
-  {
-    title: "Playing spells in battle",
-    body: "On your turn, drag a spell from your hand onto the board or tap highlighted squares. One spell per turn — then move a piece. Tap End spell phase to skip casting.",
-  },
-  {
-    title: "Shop for cards",
-    body: "Earn gems from adventure wins. Open the Shop tab to buy spell chests with gems. New cards go to your collection for deck building.",
-  },
-  {
-    title: "Save your progress",
-    body: "Progress saves automatically on this device. Sign in from the header to sync decks, stars, and collection to the cloud.",
-  },
-];
-
-function isTutorialVisible() {
-  const modal = document.getElementById("tutorial-modal");
-  return !!modal && !modal.classList.contains("hidden");
-}
-
-/** @param {{ persist?: boolean, profile?: object, saveProfile?: (p: object) => void }} [opts] */
 export function dismissTutorial(opts = {}) {
   const modal = document.getElementById("tutorial-modal");
-  if (!modal) return;
-  modal.classList.add("hidden");
+  if (modal) modal.classList.add("hidden");
 
   if (opts.persist) {
     try {
@@ -36,86 +11,43 @@ export function dismissTutorial(opts = {}) {
     } catch {
       /* ignore */
     }
-    if (opts.profile) opts.profile.tutorialDone = true;
+    if (opts.profile) {
+      opts.profile.tutorialDone = true;
+      opts.profile.interactiveTutorialDone = true;
+    }
     opts.saveProfile?.(opts.profile);
   }
 }
 
-export function shouldShowTutorial(profile) {
-  if (profile?.tutorialDone) return false;
+export function dismissInteractiveTutorial(opts = {}) {
+  if (opts.persist) {
+    try {
+      localStorage.setItem(INTERACTIVE_TUTORIAL_KEY, "done");
+      localStorage.setItem(TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.interactiveTutorialDone = true;
+      opts.profile.tutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function shouldShowInteractiveTutorial(profile) {
+  if (profile?.interactiveTutorialDone || profile?.tutorialDone) return false;
   try {
-    return localStorage.getItem(TUTORIAL_KEY) !== "done";
+    return localStorage.getItem(INTERACTIVE_TUTORIAL_KEY) !== "done";
   } catch {
     return true;
   }
 }
 
-export function initTutorial({ profile, saveProfile, onDone }) {
-  const modal = document.getElementById("tutorial-modal");
-  if (!modal || !shouldShowTutorial(profile)) return;
-
-  const titleEl = modal.querySelector("#tutorial-title");
-  const bodyEl = modal.querySelector("#tutorial-body");
-  const stepEl = modal.querySelector("#tutorial-step");
-  const nextBtn = modal.querySelector("#tutorial-next");
-  const skipBtn = modal.querySelector("#tutorial-skip");
-  const backdrop = modal.querySelector(".tutorial-modal-backdrop");
-  let index = 0;
-
-  function render() {
-    const step = STEPS[index];
-    if (titleEl) titleEl.textContent = step.title;
-    if (bodyEl) bodyEl.textContent = step.body;
-    if (stepEl) stepEl.textContent = `${index + 1} / ${STEPS.length}`;
-    if (nextBtn) nextBtn.textContent = index >= STEPS.length - 1 ? "Got it" : "Next";
-  }
-
-  function finish() {
-    dismissTutorial({ persist: true, profile, saveProfile });
-    onDone?.();
-  }
-
-  function isMainUiClick(target) {
-    if (!(target instanceof Element)) return false;
-    return !!(
-      target.closest(".game-nav") ||
-      target.closest("#auth-header-btn") ||
-      target.closest("#header-profile-btn") ||
-      target.closest("#pvp-sign-in") ||
-      target.closest(".adventure-stage-row") ||
-      target.closest(".adventure-map-pin")
-    );
-  }
-
-  nextBtn?.addEventListener("click", () => {
-    if (index >= STEPS.length - 1) finish();
-    else {
-      index += 1;
-      render();
-    }
-  });
-  skipBtn?.addEventListener("click", finish);
-  backdrop?.addEventListener("click", finish);
-
-  document.addEventListener(
-    "click",
-    (e) => {
-      if (!isTutorialVisible()) return;
-      if (isMainUiClick(e.target)) finish();
-    },
-    true
-  );
-
-  document.addEventListener(
-    "touchend",
-    (e) => {
-      if (!isTutorialVisible()) return;
-      const target = e.target;
-      if (isMainUiClick(target)) finish();
-    },
-    { capture: true, passive: true }
-  );
-
-  render();
-  modal.classList.remove("hidden");
+/** @deprecated Legacy modal tutorial — replaced by interactive practice match. */
+export function shouldShowTutorial(profile) {
+  return false;
 }
+
+/** @deprecated Legacy modal tutorial — replaced by interactive practice match. */
+export function initTutorial() {}
