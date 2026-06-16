@@ -1,5 +1,6 @@
 import { drawChestCard } from "./chests.js";
 import { drawCosmeticItem } from "./cosmetics.js";
+import { isCosmeticsUnlocked } from "./adventure.js";
 import { addToCollection, saveProfile } from "./storage.js";
 
 export const MYSTERY_BOX_COST = 10;
@@ -63,7 +64,8 @@ export function openMysteryBox(profile) {
   }
   profile.stars = (profile.stars ?? 0) - MYSTERY_BOX_COST;
 
-  const isCosmetic = Math.random() < SMALL_MYSTERY_BOX_COSMETIC_CHANCE;
+  const cosmeticsAllowed = isCosmeticsUnlocked(profile);
+  const isCosmetic = cosmeticsAllowed && Math.random() < SMALL_MYSTERY_BOX_COSMETIC_CHANCE;
   if (!isCosmetic) {
     const tier = pickTier(CARD_TIERS);
     const pulls = grantCardTier(profile, tier);
@@ -84,19 +86,26 @@ export function openBigMysteryBox(profile) {
   profile.stars = (profile.stars ?? 0) - BIG_MYSTERY_BOX_COST;
 
   const cardTier = pickTier(CARD_TIERS, { premium: true });
-  const cosTier = pickTier(COS_TIERS, { premium: true });
   const cardPulls = grantCardTier(profile, cardTier);
-  const { pulls: cosPulls, bonusGems } = grantCosmeticTier(profile, cosTier);
+  let cosPulls = [];
+  let bonusGems = 0;
+  let cosTier = null;
+  if (isCosmeticsUnlocked(profile)) {
+    cosTier = pickTier(COS_TIERS, { premium: true });
+    ({ pulls: cosPulls, bonusGems } = grantCosmeticTier(profile, cosTier));
+  }
   saveProfile(profile);
 
   return {
     success: true,
-    kind: "both",
+    kind: cosPulls.length ? "both" : "card",
     cardTier,
     cardPulls,
     cosTier,
     cosPulls,
     bonusGems,
-    message: `Big haul: ${cardPulls.length} spells + ${cosPulls.length} cosmetics`,
+    message: cosPulls.length
+      ? `Big haul: ${cardPulls.length} spells + ${cosPulls.length} cosmetics`
+      : `Cards from ${cardTier.name}`,
   };
 }

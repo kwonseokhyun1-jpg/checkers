@@ -1,7 +1,7 @@
 /**
- * Post–stage-1 unlock tutorials for Quests and PvP.
+ * Post–stage unlock tutorials for Quests, PvP, and Cosmetics.
  */
-import { dismissQuestsTutorial, dismissPvpTutorial } from "./tutorial.js";
+import { dismissQuestsTutorial, dismissPvpTutorial, dismissCosmeticsTutorial } from "./tutorial.js";
 
 /** @typedef {{ id: string, title: string, body: string, hint?: string, autoAdvance?: boolean, highlight?: string, allowed?: string[], actionSelector?: string }} UnlockStep */
 
@@ -51,6 +51,72 @@ const PVP_STEPS = [
     id: "pvp-lobby",
     title: "PvP Arena",
     body: "Pick your deck, host a room, or join an open match below. Battle other mages online!",
+    autoAdvance: true,
+  },
+];
+
+/** @type {UnlockStep[]} */
+const COSMETICS_STEPS = [
+  {
+    id: "intro",
+    title: "Cosmetics unlocked!",
+    body: "Customize your avatar, frame, banner, and piece skin. Open cosmetic boxes in the Shop, then equip your favorites in Profile.",
+    autoAdvance: true,
+  },
+  {
+    id: "shop-tab",
+    title: "Open the Shop",
+    body: "Tap the Shop tab to browse cosmetic boxes.",
+    hint: "Tap Shop in the menu below.",
+    highlight: '[data-tab="chests"]',
+    allowed: ['[data-tab="chests"]'],
+    actionSelector: '[data-tab="chests"]',
+  },
+  {
+    id: "cosmetics-vault-tab",
+    title: "Cosmetic boxes",
+    body: "Switch to the Cosmetics tab to see vanity boxes — avatars, frames, banners, and piece skins.",
+    hint: "Tap Cosmetics in the shop tabs.",
+    highlight: '[data-vault-tab="cosmetics"]',
+    allowed: ['[data-vault-tab="cosmetics"]'],
+    actionSelector: '[data-vault-tab="cosmetics"]',
+  },
+  {
+    id: "open-cosmetic",
+    title: "Open a cosmetic box",
+    body: "Spend gems on a Bronze Cosmetic Box — you will unlock new profile items.",
+    hint: "Tap Open on the Bronze Cosmetic Box.",
+    highlight: '#cosmetic-box-list .cosmetic-box-card--bronze .btn-open-cosmetic',
+    allowed: [
+      '#cosmetic-box-list .cosmetic-box-card--bronze',
+      '#cosmetic-box-list .cosmetic-box-card--bronze *',
+      ".cosmetic-open-overlay",
+      ".cosmetic-open-overlay *",
+    ],
+    actionSelector: '#cosmetic-box-list .cosmetic-box-card--bronze .btn-open-cosmetic',
+  },
+  {
+    id: "profile-btn",
+    title: "Open Profile",
+    body: "Tap your portrait in the header to open Profile and equip your new cosmetics.",
+    hint: "Tap your avatar in the top corner.",
+    highlight: "#header-profile-btn",
+    allowed: ["#header-profile-btn", "#header-profile-btn *"],
+    actionSelector: "#header-profile-btn",
+  },
+  {
+    id: "equip-cosmetic",
+    title: "Equip a cosmetic",
+    body: "Tap any unlocked item to equip it — your avatar, frame, banner, and piece skin show in battle and PvP.",
+    hint: "Tap Equip on a cosmetic you unlocked.",
+    highlight: ".profile-cosmetic-card:not(.profile-cosmetic-card--equipped)",
+    allowed: [".profile-cosmetic-card", ".profile-cosmetic-card *"],
+    actionSelector: ".profile-cosmetic-card:not(.profile-cosmetic-card--equipped)",
+  },
+  {
+    id: "done",
+    title: "Looking great!",
+    body: "Your style is saved. Keep opening boxes for more looks — good luck in Adventure!",
     autoAdvance: true,
   },
 ];
@@ -393,5 +459,25 @@ export function startPvpTutorial(opts) {
     dismiss: dismissPvpTutorial,
     onEventMap: (step, event, data) =>
       step.id === "pvp-tab" && event === "tab-changed" && data?.tab === "pvp",
+  });
+}
+
+/**
+ * @param {{ profile: object, saveProfile: (p: object) => void, onComplete: () => void }} opts
+ */
+export function startCosmeticsTutorial(opts) {
+  startSpotlightTutorial({
+    ...opts,
+    steps: COSMETICS_STEPS,
+    skipMessage: "Skip the cosmetics tutorial? You can open cosmetic boxes in the Shop anytime.",
+    dismiss: dismissCosmeticsTutorial,
+    onEventMap: (step, event, data) => {
+      if (step.id === "shop-tab" && event === "tab-changed" && data?.tab === "chests") return true;
+      if (step.id === "cosmetics-vault-tab" && event === "vault-tab-changed" && data?.tab === "cosmetics") return true;
+      if (step.id === "open-cosmetic" && event === "cosmetic-box-opened") return true;
+      if (step.id === "profile-btn" && event === "profile-opened") return true;
+      if (step.id === "equip-cosmetic" && event === "cosmetic-equipped") return true;
+      return false;
+    },
   });
 }

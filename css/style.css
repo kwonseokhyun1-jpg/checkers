@@ -4637,6 +4637,17 @@ body.chest-open-active {
 .vault-tab-panel.hidden {
   display: none;
 }
+.vault-tab--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.vault-tab--locked:not(.active) {
+  filter: grayscale(0.35);
+}
+.vault-locked-msg {
+  padding: 1.25rem 0;
+  text-align: center;
+}
 .vault-section-title {
   font-family: var(--font-display, "Fraunces", serif);
   font-size: 1.05rem;
