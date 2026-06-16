@@ -1,5 +1,6 @@
 const TUTORIAL_KEY = "arcane_checkers_tutorial_v1";
 const INTERACTIVE_TUTORIAL_KEY = "arcane_checkers_interactive_tutorial_v1";
+const META_TUTORIAL_KEY = "arcane_checkers_meta_tutorial_v1";
 const PENDING_SIGNUP_TUTORIAL_KEY = "arcane_checkers_pending_signup_tutorial_v1";
 
 export function markPendingSignupTutorial() {
@@ -31,12 +32,14 @@ export function prepareInteractiveTutorialForNewAccount(profile, saveProfile) {
   markPendingSignupTutorial();
   try {
     localStorage.removeItem(INTERACTIVE_TUTORIAL_KEY);
+    localStorage.removeItem(META_TUTORIAL_KEY);
     localStorage.removeItem(TUTORIAL_KEY);
   } catch {
     /* ignore */
   }
   if (profile) {
     delete profile.interactiveTutorialDone;
+    delete profile.metaTutorialDone;
     delete profile.tutorialDone;
     saveProfile?.(profile);
   }
@@ -55,6 +58,7 @@ export function dismissTutorial(opts = {}) {
     if (opts.profile) {
       opts.profile.tutorialDone = true;
       opts.profile.interactiveTutorialDone = true;
+      opts.profile.metaTutorialDone = true;
     }
     opts.saveProfile?.(opts.profile);
   }
@@ -65,12 +69,26 @@ export function dismissInteractiveTutorial(opts = {}) {
   if (opts.persist) {
     try {
       localStorage.setItem(INTERACTIVE_TUTORIAL_KEY, "done");
-      localStorage.setItem(TUTORIAL_KEY, "done");
     } catch {
       /* ignore */
     }
     if (opts.profile) {
       opts.profile.interactiveTutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function dismissMetaTutorial(opts = {}) {
+  if (opts.persist) {
+    try {
+      localStorage.setItem(META_TUTORIAL_KEY, "done");
+      localStorage.setItem(TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.metaTutorialDone = true;
       opts.profile.tutorialDone = true;
     }
     opts.saveProfile?.(opts.profile);
@@ -79,9 +97,26 @@ export function dismissInteractiveTutorial(opts = {}) {
 
 export function shouldShowInteractiveTutorial(profile) {
   if (hasPendingSignupTutorial()) return true;
-  if (profile?.interactiveTutorialDone || profile?.tutorialDone) return false;
+  if (profile?.interactiveTutorialDone) return false;
+  if (profile?.tutorialDone) return false;
   try {
     return localStorage.getItem(INTERACTIVE_TUTORIAL_KEY) !== "done";
+  } catch {
+    return true;
+  }
+}
+
+export function shouldShowMetaTutorial(profile) {
+  if (profile?.metaTutorialDone || profile?.tutorialDone) return false;
+  if (!profile?.interactiveTutorialDone) {
+    try {
+      if (localStorage.getItem(INTERACTIVE_TUTORIAL_KEY) !== "done") return false;
+    } catch {
+      return false;
+    }
+  }
+  try {
+    return localStorage.getItem(META_TUTORIAL_KEY) !== "done";
   } catch {
     return true;
   }
