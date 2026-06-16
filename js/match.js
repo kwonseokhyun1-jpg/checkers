@@ -176,6 +176,9 @@ export class MatchSession {
     this.onPvpWin = options.onPvpWin ?? null;
     this.onPvpForfeit = options.onPvpForfeit ?? null;
     this.onPvpPendingRow = options.onPvpPendingRow ?? null;
+    this.skipCheckpoint = !!options.skipCheckpoint;
+    /** @type {import('./tutorialMatch.js').TutorialHooks | null} */
+    this.tutorialHooks = options.tutorialHooks ?? null;
     this._syncBusy = false;
     this._syncDirty = false;
     this._pendingPvpRow = null;
@@ -411,6 +414,10 @@ export class MatchSession {
     this.root.querySelector("#btn-end-cards")?.addEventListener("click", () => this.beginMovePhase());
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
     this.root.querySelector("#btn-leave-match")?.addEventListener("click", async () => {
+      if (this.tutorialHooks?.onLeaveRequest) {
+        this.tutorialHooks.onLeaveRequest();
+        return;
+      }
       const skipConfirm = consumeLeaveConfirmSkip();
       if (this.isPvp) {
         if (!skipConfirm && !window.confirm("Leave this match? Your opponent wins automatically.")) {
@@ -425,7 +432,7 @@ export class MatchSession {
         clearPendingNavigationTab();
         return;
       }
-      saveMatchCheckpoint(this);
+      if (!this.skipCheckpoint) saveMatchCheckpoint(this);
       this.onExit?.();
     });
     this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
@@ -817,6 +824,9 @@ export class MatchSession {
         color: this.localColor,
         picks: picks.map((p) => [...p]),
       });
+    }
+    if (card && this.tutorialHooks?.onSpellPlayed) {
+      this.tutorialHooks.onSpellPlayed(this, card, picks);
     }
     this.render();
     if (this.checkWin()) return;
@@ -1283,6 +1293,7 @@ export class MatchSession {
 
   executeHumanMove(move) {
     const s = this.state;
+    const preMoveSnap = this.tutorialHooks ? cloneMatchState(s) : null;
     this._pendingHistoryMove = move;
     this._pendingHistoryLabel = formatPieceMoveLabel(s.board, move);
     if (s.turn === this.localColor && s.meta.confuseNext?.[this.localColor]) {
@@ -1299,6 +1310,7 @@ export class MatchSession {
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
     this.achievementTracker?.onMoveAfter(s);
     const bountyMsg = flushPendingBountyMessage(s.meta, this.localColor);
+    this.tutorialHooks?.onHumanMove?.(move);
 
     const finish = () => {
       const [landR, landC] = move.to;
@@ -1309,6 +1321,20 @@ export class MatchSession {
       if (this.tryBearBonusMove(s, this.localColor, landR, landC)) return;
       if (this.tryPressExtraMove(s, this.localColor, landR, landC)) return;
       if (bountyMsg) this.setMessage(bountyMsg);
+      if (this.tutorialHooks?.beforeEndHumanTurn) {
+        const verdict = this.tutorialHooks.beforeEndHumanTurn(this, move);
+        if (verdict === "block" && preMoveSnap) {
+          const restored = cloneMatchState(preMoveSnap);
+          for (const key of Object.keys(restored)) {
+            if (key in s) s[key] = restored[key];
+          }
+          this.selectedSquare = null;
+          this.validMoves = [];
+          this.render();
+          return;
+        }
+        if (verdict === "advance") return;
+      }
       this.endHumanTurn();
     };
 
@@ -1341,7 +1367,7 @@ export class MatchSession {
     tickMeta(this.state, this.localColor);
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
-    if (!this.isPvp) saveMatchCheckpoint(this);
+    if (!this.isPvp && !this.skipCheckpoint) saveMatchCheckpoint(this);
     if (this._pendingHistoryMove && this.hasMoveHistory()) {
       const label =
         this._pendingHistoryLabel || formatPieceMoveLabel(this.state.board, this._pendingHistoryMove);
@@ -1360,6 +1386,12 @@ export class MatchSession {
       await this.pushPvpState();
       return;
     }
+    if (this.tutorialHooks?.skipOpponentTurn) {
+      this.state.turn = this.localColor;
+      this.beginPlayerTurn();
+      this.render();
+      return;
+    }
     this.beginAiTurn();
     this.render();
     setTimeout(() => {
@@ -1372,6 +1404,7 @@ export class MatchSession {
   }
 
   checkWin() {
+    if (this.tutorialHooks) return false;
     const s = this.state;
     if (countPieces(s.board, this.opponentColor) === 0) {
       this.showGameOver("Victory!", this.isPvp ? "You won the match!" : "You captured all enemy pieces.");

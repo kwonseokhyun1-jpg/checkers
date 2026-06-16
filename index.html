@@ -246,6 +246,24 @@
     </footer>
   </div>
 
+  <div id="auth-gate" class="auth-gate hidden" role="dialog" aria-modal="true" aria-labelledby="auth-gate-title">
+    <div class="auth-gate__inner">
+      <div class="auth-gate__brand">
+        <div class="logo-mark" aria-hidden="true">
+          <span class="logo-mark__piece logo-mark__piece--red"></span>
+          <span class="logo-mark__piece logo-mark__piece--black"></span>
+          <span class="logo-mark__spark">✦</span>
+        </div>
+        <h2 id="auth-gate-title" class="auth-gate__title">Arcane Checkers</h2>
+        <p id="auth-gate-notice" class="auth-gate__notice">Sign in to play. Your progress saves to the cloud.</p>
+      </div>
+      <div class="auth-gate__actions">
+        <button type="button" id="auth-gate-signup" class="btn-primary btn-lg auth-gate__btn">Create account</button>
+        <button type="button" id="auth-gate-signin" class="btn-secondary auth-gate__btn">Sign in</button>
+      </div>
+    </div>
+  </div>
+
   <div id="tutorial-modal" class="tutorial-modal hidden" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
     <div class="tutorial-modal-backdrop"></div>
     <div class="tutorial-modal-dialog panel game-panel">
