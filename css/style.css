@@ -6039,6 +6039,11 @@ body.auth-gate-active .game-shell {
   padding: 0.75rem;
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
+.tutorial-meta-overlay--card-top {
+  justify-content: flex-start;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-bottom: 0.75rem;
+}
 .tutorial-meta-spotlight {
   position: fixed;
   border-radius: 12px;
@@ -6051,7 +6056,7 @@ body.auth-gate-active .game-shell {
   display: none;
 }
 .tutorial-meta-card {
-  pointer-events: auto;
+  pointer-events: none;
   max-width: 28rem;
   margin: 0 auto;
   width: 100%;
@@ -6060,6 +6065,13 @@ body.auth-gate-active .game-shell {
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
   position: relative;
   z-index: 417;
+}
+.tutorial-meta-overlay--card-top .tutorial-meta-card {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+.tutorial-meta-actions,
+.tutorial-meta-actions * {
+  pointer-events: auto;
 }
 .tutorial-meta-step {
   margin: 0 0 0.25rem;

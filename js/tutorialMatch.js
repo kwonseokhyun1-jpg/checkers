@@ -101,7 +101,7 @@ const STEPS = [
       return baseTutorialState({ board, phase: PHASE.MOVE, spellPlayedRed: true });
     },
     validateTurnEnd(session) {
-      return (session.state.captured[COLORS.RED]?.length ?? 0) >= 1;
+      return (session.state.captured[COLORS.BLACK]?.length ?? 0) >= 1;
     },
     skipOpponentTurn: true,
   },
@@ -119,7 +119,7 @@ const STEPS = [
       return baseTutorialState({ board, phase: PHASE.MOVE, spellPlayedRed: true });
     },
     validateTurnEnd(session) {
-      return (session.state.captured[COLORS.RED]?.length ?? 0) >= 2;
+      return (session.state.captured[COLORS.BLACK]?.length ?? 0) >= 2;
     },
     skipOpponentTurn: true,
   },
@@ -207,7 +207,7 @@ const STEPS = [
       });
     },
     validateTurnEnd(session) {
-      return (session.state.captured[COLORS.RED]?.length ?? 0) >= 1;
+      return (session.state.captured[COLORS.BLACK]?.length ?? 0) >= 1;
     },
     skipOpponentTurn: true,
   },
