@@ -40,6 +40,8 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
   let mode = "signin";
   let usernameCheckTimer = null;
   let forced = false;
+  /** Suppress duplicate onSignedIn from onAuthChange while the form handler runs. */
+  let handlingAuthForm = false;
 
   function syncAuthFields() {
     form?.querySelectorAll(".auth-field-signup").forEach((el) => {
@@ -188,6 +190,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
 
     if (submitBtn) submitBtn.disabled = true;
 
+    handlingAuthForm = true;
     try {
       if (mode === "signup") {
         if (!identifier.includes("@")) {
@@ -212,8 +215,8 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
           return;
         }
 
-        const data = await signUp(identifier, password, chosenUsername, chosenUsername);
         onNewAccount?.();
+        const data = await signUp(identifier, password, chosenUsername, chosenUsername);
         const user = data.session?.user ?? getCurrentUser();
 
         if (user) {
@@ -306,6 +309,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
         setError(msg);
       }
     } finally {
+      handlingAuthForm = false;
       if (submitBtn) submitBtn.disabled = false;
     }
   });
@@ -313,6 +317,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
   onAuthChange(async (user) => {
     updateHeaderBtn(user);
     if (user) {
+      if (handlingAuthForm) return;
       try {
         await pullCloudProfile();
       } catch (err) {
