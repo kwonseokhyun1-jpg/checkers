@@ -80,6 +80,7 @@ export function getCardHint(card) {
   }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
   if (card.effect === "snowball") return hints.snowball_hint;
+  if (card.effect === "barrier") return "Click a dark square — enemies cannot enter it next turn.";
   return hints[card.mode] || "Click valid targets on the board.";
 }
 
@@ -97,6 +98,11 @@ function squareBlocked(state, r, c) {
 function emptyDark(state, r, c) {
   if (squareBlocked(state, r, c)) return false;
   return isDarkSquare(r, c) && !at(state, r, c);
+}
+
+function darkSquare(state, r, c) {
+  if (squareBlocked(state, r, c)) return false;
+  return isDarkSquare(r, c);
 }
 
 function pieceCloakedByDarkness(state, r, c) {
@@ -383,9 +389,13 @@ export function getValidTargets(state, color, card, picks) {
       if (picks.length === 0) return getValidTargets(state, color, { mode: "empty" }, []);
       return getValidTargets(state, color, { mode: "empty" }, []);
     case "empty": {
+      const squareOk =
+        card.effect === "barrier"
+          ? (r, c) => darkSquare(state, r, c)
+          : (r, c) => emptyDark(state, r, c) && (card.effect !== "revive" || reviveSquareAllowed(color, r));
       for (let r = 0; r < SIZE; r++)
         for (let c = 0; c < SIZE; c++)
-          if (emptyDark(state, r, c) && (card.effect !== "revive" || reviveSquareAllowed(color, r))) res.push([r, c]);
+          if (squareOk(r, c)) res.push([r, c]);
       if (card.effect === "call_forward" && picks.length === 1) {
         const [er, ec] = picks[0];
         return res.filter(([r, c]) => callForwardMoveOk(state, er, ec, r, c));
