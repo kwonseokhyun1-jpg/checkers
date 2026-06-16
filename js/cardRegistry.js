@@ -41,7 +41,7 @@ export const CARD_REGISTRY = [
   { id: "stone_form", name: "Stone Form", desc: "Piece becomes a king immediately but cannot capture for 2 turns.", rarity: "common", weight: 6, mode: "friendly", effect: "stone_form" },
   { id: "quicksand", name: "Quicksand", desc: "Hidden trap on an empty dark square — the next piece to end a turn there is frozen (trap invisible until it triggers).", rarity: "common", weight: 6, mode: "empty", effect: "quicksand" },
   { id: "create_foe", name: "Create Foe", desc: "Spawn an enemy man on any empty dark square.", rarity: "common", weight: 5, mode: "empty", effect: "create_foe" },
-  { id: "barrier", name: "Barrier", desc: "Summon a barrier on an empty dark square; enemies cannot enter it for 2 turn cycles.", rarity: "common", weight: 5, mode: "empty", effect: "barrier" },
+  { id: "barrier", name: "Barrier", desc: "Summon a barrier on a dark square; enemies cannot enter it for 2 turn cycles (can be placed on occupied squares).", rarity: "common", weight: 5, mode: "empty", effect: "barrier" },
   { id: "duel", name: "Duel", desc: "Choose your piece and an adjacent enemy; both are destroyed unless shielded.", rarity: "common", weight: 5, mode: "f_e_adj", effect: "duel" },
   { id: "panic", name: "Panic", desc: "Force an enemy man to step backward on its owner's next turn if possible.", rarity: "common", weight: 5, mode: "enemy", effect: "panic" },
   { id: "shadow_swap", name: "Shadow Swap", desc: "Swap positions of two of your pieces.", rarity: "common", weight: 5, mode: "f_f", effect: "swap_friendly" },

@@ -32,7 +32,7 @@ const TAGS = {
   bomb: ["Arm friendly piece", "On next move: explodes", "Kills all adjacent pieces"],
   press: ["Opponent must move again after their normal move on their next turn"],
   mind_control: ["Convert an enemy man to your color for 2 of your turns", "Reverts to the enemy afterward"],
-  barrier: ["Blocks enemies for 1 turn"],
+  barrier: ["Place on any dark square", "Blocks enemies for 2 turn cycles"],
   vengeance: ["Hidden trap — destroys the next enemy who captures your piece"],
   hibernation: ["Sleep 2 turns (immobile)", "Wake as king + Awoken Bear", "Extra move every turn after"],
   root_2: ["Enemy cannot jump/capture next turn"],
