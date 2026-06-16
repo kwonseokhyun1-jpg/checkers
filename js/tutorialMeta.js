@@ -3,7 +3,7 @@
  */
 import { dismissMetaTutorial } from "./tutorial.js";
 
-/** @typedef {{ id: string, title: string, body: string, hint?: string, autoAdvance?: boolean, highlight?: string, allowed?: string[], onEnter?: () => void }} MetaStep */
+/** @typedef {{ id: string, title: string, body: string, hint?: string, autoAdvance?: boolean, highlight?: string, allowed?: string[], actionSelector?: string, onEnter?: () => void }} MetaStep */
 
 /** @type {MetaStep[]} */
 const STEPS = [
@@ -20,14 +20,21 @@ const STEPS = [
     hint: "Tap Shop in the menu below.",
     highlight: '[data-tab="chests"]',
     allowed: ['[data-tab="chests"]'],
+    actionSelector: '[data-tab="chests"]',
   },
   {
     id: "open-chest",
     title: "Open a spell chest",
     body: "Spend gems on a Bronze Chest — you will get three new spells for your collection.",
     hint: "Tap Open on the Bronze Chest.",
-    highlight: ".chest-card--bronze",
-    allowed: [".chest-card--bronze", ".chest-card--bronze *", ".chest-open-overlay", ".chest-open-overlay *"],
+    highlight: '#chest-list .chest-card--bronze .chest-open[data-id="bronze"]',
+    allowed: [
+      '#chest-list .chest-card--bronze',
+      '#chest-list .chest-card--bronze *',
+      ".chest-open-overlay",
+      ".chest-open-overlay *",
+    ],
+    actionSelector: '#chest-list .chest-card--bronze .chest-open[data-id="bronze"]',
   },
   {
     id: "deck-tab",
@@ -36,6 +43,7 @@ const STEPS = [
     hint: "Tap Decks in the menu below.",
     highlight: '[data-tab="deck"]',
     allowed: ['[data-tab="deck"]'],
+    actionSelector: '[data-tab="deck"]',
   },
   {
     id: "open-deck",
@@ -44,6 +52,7 @@ const STEPS = [
     hint: "Tap the Starter Deck row.",
     highlight: ".deck-row",
     allowed: [".deck-row", ".deck-row *"],
+    actionSelector: ".deck-row",
   },
   {
     id: "remove-card",
@@ -52,6 +61,7 @@ const STEPS = [
     hint: "Tap × on a card in your deck strip.",
     highlight: ".deck-slot-remove--visible",
     allowed: [".deck-slot-remove", ".deck-slot-remove--visible", ".deck-slot-wrap", ".deck-slot-wrap *"],
+    actionSelector: ".deck-slot-remove--visible, .deck-slot-remove",
   },
   {
     id: "add-card",
@@ -67,6 +77,7 @@ const STEPS = [
       ".card-preview-overlay",
       ".card-preview-overlay *",
     ],
+    actionSelector: ".deck-collection-row__action--add, .deck-collection-row__action--buy",
   },
   {
     id: "save-deck",
@@ -75,6 +86,7 @@ const STEPS = [
     hint: "Tap Save in the deck editor.",
     highlight: "#btn-save-deck, #btn-save-deck-bottom",
     allowed: ["#btn-save-deck", "#btn-save-deck-bottom"],
+    actionSelector: "#btn-save-deck, #btn-save-deck-bottom",
   },
   {
     id: "done",
@@ -84,9 +96,12 @@ const STEPS = [
   },
 ];
 
+const HIGHLIGHT_PAD = 8;
+
 function overlayHtml() {
   return `
     <div id="tutorial-meta-overlay" class="tutorial-meta-overlay" role="dialog" aria-live="polite">
+      <div id="tutorial-meta-shield" class="tutorial-meta-shield hidden" aria-hidden="true"></div>
       <div id="tutorial-meta-spotlight" class="tutorial-meta-spotlight hidden" aria-hidden="true"></div>
       <div class="tutorial-meta-card panel game-panel">
         <p id="tutorial-meta-step" class="tutorial-meta-step"></p>
@@ -124,6 +139,7 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
   document.body.classList.add("tutorial-meta-active");
 
   const overlay = document.getElementById("tutorial-meta-overlay");
+  const shield = document.getElementById("tutorial-meta-shield");
   const spotlight = document.getElementById("tutorial-meta-spotlight");
   const stepEl = document.getElementById("tutorial-meta-step");
   const titleEl = document.getElementById("tutorial-meta-title");
@@ -136,19 +152,59 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     highlightEl?.classList.remove("tutorial-meta-highlight");
     highlightEl = null;
     spotlight?.classList.add("hidden");
+    shield?.classList.add("hidden");
     overlay?.classList.remove("tutorial-meta-overlay--card-top");
   }
 
-  function positionSpotlight() {
-    if (!highlightEl || !spotlight) return;
+  function getHighlightRect() {
+    if (!highlightEl) return null;
     const rect = highlightEl.getBoundingClientRect();
-    if (rect.width < 1 || rect.height < 1) return;
-    const pad = 6;
-    spotlight.style.left = `${Math.max(0, rect.left - pad)}px`;
-    spotlight.style.top = `${Math.max(0, rect.top - pad)}px`;
-    spotlight.style.width = `${rect.width + pad * 2}px`;
-    spotlight.style.height = `${rect.height + pad * 2}px`;
+    if (rect.width < 1 || rect.height < 1) return null;
+    return rect;
+  }
+
+  function updateShieldHole(rect) {
+    if (!shield) return;
+    if (!rect) {
+      shield.classList.add("hidden");
+      return;
+    }
+
+    const left = Math.max(0, rect.left - HIGHLIGHT_PAD);
+    const top = Math.max(0, rect.top - HIGHLIGHT_PAD);
+    const right = Math.min(window.innerWidth, rect.right + HIGHLIGHT_PAD);
+    const bottom = Math.min(window.innerHeight, rect.bottom + HIGHLIGHT_PAD);
+
+    shield.style.clipPath = `polygon(
+      0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%,
+      ${left}px ${top}px,
+      ${left}px ${bottom}px,
+      ${right}px ${bottom}px,
+      ${right}px ${top}px,
+      ${left}px ${top}px
+    )`;
+    shield.classList.remove("hidden");
+  }
+
+  function positionSpotlight() {
+    const rect = getHighlightRect();
+    if (!rect || !spotlight) {
+      spotlight?.classList.add("hidden");
+      shield?.classList.add("hidden");
+      return;
+    }
+
+    const left = Math.max(0, rect.left - HIGHLIGHT_PAD);
+    const top = Math.max(0, rect.top - HIGHLIGHT_PAD);
+    const width = rect.width + HIGHLIGHT_PAD * 2;
+    const height = rect.height + HIGHLIGHT_PAD * 2;
+
+    spotlight.style.left = `${left}px`;
+    spotlight.style.top = `${top}px`;
+    spotlight.style.width = `${width}px`;
+    spotlight.style.height = `${height}px`;
     spotlight.classList.remove("hidden");
+    updateShieldHole(rect);
     positionTutorialCard(rect);
   }
 
@@ -179,6 +235,13 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     });
   }
 
+  function scrollHighlightIntoView() {
+    if (!highlightEl) return;
+    highlightEl.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+    window.setTimeout(scheduleSpotlight, 280);
+    window.setTimeout(scheduleSpotlight, 520);
+  }
+
   function applyHighlight(selector) {
     clearHighlight();
     if (!selector) return;
@@ -186,7 +249,13 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     if (!el) return;
     highlightEl = el;
     highlightEl.classList.add("tutorial-meta-highlight");
+    scrollHighlightIntoView();
     scheduleSpotlight();
+  }
+
+  function findActionElement(step) {
+    if (!step?.actionSelector) return null;
+    return document.querySelector(step.actionSelector);
   }
 
   function isAllowedTarget(target) {
@@ -199,12 +268,41 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     return allowed.some((sel) => target.closest(sel));
   }
 
+  function proxyActionClick(target) {
+    const step = STEPS[stepIndex];
+    if (!step?.actionSelector || step.autoAdvance) return false;
+    if (!isAllowedTarget(target)) return false;
+
+    const action = findActionElement(step);
+    if (!action || action.disabled) return false;
+    if (target.closest(step.actionSelector)) return false;
+
+    action.click();
+    return true;
+  }
+
+  function onShieldPointer(e) {
+    if (!controller?.active) return;
+    const step = STEPS[stepIndex];
+    if (step?.autoAdvance) return;
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
   function onCapturePointer(e) {
     if (!controller?.active) return;
     const target = e.target;
     if (!(target instanceof Element)) return;
     if (target.closest("#tutorial-meta-overlay")) return;
-    if (isAllowedTarget(target)) return;
+
+    if (isAllowedTarget(target)) {
+      if (e.type === "click" && proxyActionClick(target)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      return;
+    }
+
     e.preventDefault();
     e.stopPropagation();
   }
@@ -215,9 +313,11 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     clearHighlight();
     document.body.classList.remove("tutorial-meta-active");
     document.removeEventListener("click", onCapturePointer, true);
-    document.removeEventListener("touchend", onCapturePointer, true);
+    document.removeEventListener("pointerup", onCapturePointer, true);
     window.removeEventListener("resize", scheduleSpotlight);
     window.removeEventListener("scroll", scheduleSpotlight, true);
+    shield?.removeEventListener("click", onShieldPointer);
+    shield?.removeEventListener("pointerup", onShieldPointer);
     overlay?.remove();
   }
 
@@ -266,12 +366,13 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
       hintEl.classList.toggle("hidden", !step.hint);
     }
     continueBtn?.classList.toggle("hidden", !step.autoAdvance);
+
+    step.onEnter?.();
     applyHighlight(step.highlight);
     if (step.highlight) {
-      setTimeout(() => applyHighlight(step.highlight), 120);
-      setTimeout(() => applyHighlight(step.highlight), 400);
+      window.setTimeout(() => applyHighlight(step.highlight), 120);
+      window.setTimeout(() => applyHighlight(step.highlight), 400);
     }
-    step.onEnter?.();
     scheduleSpotlight();
   }
 
@@ -280,19 +381,19 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     if (!step) return;
 
     if (step.id === "shop-tab" && event === "tab-changed" && data?.tab === "chests") {
-      setTimeout(advanceStep, 300);
+      window.setTimeout(advanceStep, 300);
     } else if (step.id === "open-chest" && event === "chest-opened") {
-      setTimeout(advanceStep, 500);
+      window.setTimeout(advanceStep, 500);
     } else if (step.id === "deck-tab" && event === "tab-changed" && data?.tab === "deck") {
-      setTimeout(advanceStep, 300);
+      window.setTimeout(advanceStep, 300);
     } else if (step.id === "open-deck" && event === "deck-edit-opened") {
-      setTimeout(advanceStep, 300);
+      window.setTimeout(advanceStep, 300);
     } else if (step.id === "remove-card" && event === "card-removed-from-deck") {
-      setTimeout(advanceStep, 400);
+      window.setTimeout(advanceStep, 400);
     } else if (step.id === "add-card" && event === "card-added-to-deck") {
-      setTimeout(advanceStep, 400);
+      window.setTimeout(advanceStep, 400);
     } else if (step.id === "save-deck" && event === "deck-saved") {
-      setTimeout(advanceStep, 400);
+      window.setTimeout(advanceStep, 400);
     }
   }
 
@@ -304,8 +405,10 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
 
   skipBtn?.addEventListener("click", askSkip);
   continueBtn?.addEventListener("click", advanceStep);
+  shield?.addEventListener("click", onShieldPointer);
+  shield?.addEventListener("pointerup", onShieldPointer);
   document.addEventListener("click", onCapturePointer, true);
-  document.addEventListener("touchend", onCapturePointer, true);
+  document.addEventListener("pointerup", onCapturePointer, true);
   window.addEventListener("resize", scheduleSpotlight);
   window.addEventListener("scroll", scheduleSpotlight, true);
 
