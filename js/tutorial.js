@@ -30,7 +30,7 @@ function hasPendingSignupTutorial() {
   }
 }
 
-/** Clear stale per-device "done" flags when the signed-in profile has not completed that tutorial. */
+/** Keep per-device tutorial keys aligned with the signed-in profile. */
 export function syncTutorialStorageWithProfile(profile) {
   if (!profile) return;
   const pairs = [
@@ -42,7 +42,9 @@ export function syncTutorialStorageWithProfile(profile) {
   ];
   try {
     for (const [key, done] of pairs) {
-      if (!done && localStorage.getItem(key) === "done") {
+      if (done) {
+        localStorage.setItem(key, "done");
+      } else if (localStorage.getItem(key) === "done") {
         localStorage.removeItem(key);
       }
     }
