@@ -254,6 +254,17 @@ function stripKnightCards(profile) {
   return profile;
 }
 
+function tutorialFlagsFromParsed(parsed) {
+  const flags = {};
+  if (parsed.interactiveTutorialDone || parsed.tutorialDone) flags.interactiveTutorialDone = true;
+  if (parsed.metaTutorialDone || parsed.tutorialDone) flags.metaTutorialDone = true;
+  if (parsed.tutorialDone) flags.tutorialDone = true;
+  if (parsed.questsTutorialDone) flags.questsTutorialDone = true;
+  if (parsed.pvpTutorialDone) flags.pvpTutorialDone = true;
+  if (parsed.cosmeticsTutorialDone) flags.cosmeticsTutorialDone = true;
+  return flags;
+}
+
 function normalizeLoadedProfile(parsed) {
   const adv = repairAdventureProgress(parsed.adventure);
   const stub = { adventure: adv };
@@ -268,6 +279,9 @@ function normalizeLoadedProfile(parsed) {
     cosmetics: normalizeCosmetics(parsed.cosmetics),
     achievements: normalizeAchievements(parsed.achievements),
     adventure: stub.adventure,
+    savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : undefined,
+    newCardIds: parsed.newCardIds && typeof parsed.newCardIds === "object" ? parsed.newCardIds : undefined,
+    ...tutorialFlagsFromParsed(parsed),
   };
 }
 
