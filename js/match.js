@@ -732,16 +732,7 @@ export class MatchSession {
             picks: spell.picks || [],
             countered: !!spell.countered,
             hidden: !!spell.hidden,
-            ...(spell.cullTarget
-              ? { cullTarget: spell.cullTarget, cullVictim: spell.cullVictim }
-              : {}),
-            ...(spell.coinFlipSquare
-              ? {
-                  coinFlipSquare: spell.coinFlipSquare,
-                  coinFlipVictimColor: spell.coinFlipVictimColor,
-                  coinFlipVictim: spell.coinFlipVictim,
-                }
-              : {}),
+            ...this.pvpSpellReplayFields(spell),
           },
         ],
         { applyEntries: false }
@@ -797,6 +788,45 @@ export class MatchSession {
     return this._syncPromise;
   }
 
+  copyPvpSquares(arr) {
+    return (arr || []).map((p) => [...p]);
+  }
+
+  collectPvpAnimExtras(extra = {}, animPicks = null) {
+    const out = {};
+    if (extra.chainSquares?.length) out.chainSquares = this.copyPvpSquares(extra.chainSquares);
+    if (extra.pyromancySquares?.length) out.pyromancySquares = this.copyPvpSquares(extra.pyromancySquares);
+    if (extra.sanctuaryCells?.length) out.sanctuaryCells = this.copyPvpSquares(extra.sanctuaryCells);
+    if (extra.darknessCells?.length) out.darknessCells = this.copyPvpSquares(extra.darknessCells);
+    if (extra.tricksterSquares?.length) out.tricksterSquares = this.copyPvpSquares(extra.tricksterSquares);
+    if (extra.backstabTo) out.backstabTo = [...extra.backstabTo];
+    if (extra.cryoShatter != null) out.cryoShatter = extra.cryoShatter;
+    if (animPicks?.length > 1) out.animPicks = this.copyPvpSquares(animPicks);
+    return out;
+  }
+
+  pvpSpellReplayFields(spell) {
+    if (!spell) return {};
+    return {
+      ...(spell.cullTarget ? { cullTarget: spell.cullTarget, cullVictim: spell.cullVictim } : {}),
+      ...(spell.coinFlipSquare
+        ? {
+            coinFlipSquare: spell.coinFlipSquare,
+            coinFlipVictimColor: spell.coinFlipVictimColor,
+            coinFlipVictim: spell.coinFlipVictim,
+          }
+        : {}),
+      ...(spell.chainSquares ? { chainSquares: spell.chainSquares } : {}),
+      ...(spell.pyromancySquares ? { pyromancySquares: spell.pyromancySquares } : {}),
+      ...(spell.sanctuaryCells ? { sanctuaryCells: spell.sanctuaryCells } : {}),
+      ...(spell.darknessCells ? { darknessCells: spell.darknessCells } : {}),
+      ...(spell.tricksterSquares ? { tricksterSquares: spell.tricksterSquares } : {}),
+      ...(spell.backstabTo ? { backstabTo: spell.backstabTo } : {}),
+      ...(spell.cryoShatter != null ? { cryoShatter: spell.cryoShatter } : {}),
+      ...(spell.animPicks ? { animPicks: spell.animPicks } : {}),
+    };
+  }
+
   recordPvpSpell(card, picks = [], extras = {}) {
     if (!this.isPvp || !card) return;
     const seq = (this.state.pvpSpellSeq || 0) + 1;
@@ -812,14 +842,7 @@ export class MatchSession {
       picks: (picks || []).map((p) => [...p]),
       countered: !!extras.countered,
       hidden: !!extras.hidden || isHiddenTrapSpell(card),
-      ...(extras.cullTarget ? { cullTarget: extras.cullTarget, cullVictim: extras.cullVictim } : {}),
-      ...(extras.coinFlipSquare
-        ? {
-            coinFlipSquare: extras.coinFlipSquare,
-            coinFlipVictimColor: extras.coinFlipVictimColor,
-            coinFlipVictim: extras.coinFlipVictim,
-          }
-        : {}),
+      ...this.pvpSpellReplayFields(extras),
     };
     this._lastPvpSpellSeq = seq;
   }
@@ -1030,7 +1053,18 @@ export class MatchSession {
         this.render();
         return;
       }
-      this.finishCardPlay(res.message);
+      const replayExtras = {
+        ...(res.pvpAnimExtras || {}),
+        ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
+        ...(res.coinFlipSquare
+          ? {
+              coinFlipSquare: res.coinFlipSquare,
+              coinFlipVictimColor: res.coinFlipVictimColor,
+              coinFlipVictim: res.coinFlipVictim,
+            }
+          : {}),
+      };
+      this.finishCardPlay(res.message, replayExtras);
     });
   }
 
@@ -1829,9 +1863,13 @@ ${starLine}`;
   }
 
   async applySpellWithAnimation(card, picks) {
+    let extra = {};
+    let animPicks = picks;
     const finishSpellTrack = (res) => {
       this.achievementTracker?.onSpellAfter(this.state, card.effect, res);
-      return res;
+      const pvpAnimExtras = this.collectPvpAnimExtras(extra, animPicks);
+      if (!Object.keys(pvpAnimExtras).length) return res;
+      return { ...res, pvpAnimExtras };
     };
     this.achievementTracker?.onSpellBefore(this.state);
 
@@ -1874,7 +1912,6 @@ ${starLine}`;
     }
 
     const s = this.state;
-    let extra = {};
     if (card.effect === "trickster") {
       const plan = planTrickster(s);
       if (!plan) return finishSpellTrack({ success: false, message: "Need at least 4 pieces on the board." });
@@ -1905,7 +1942,6 @@ ${starLine}`;
     if (card.effect === "darkness" && picks.length) {
       extra.darknessCells = getDarknessZoneCells(picks[0][0], picks[0][1]);
     }
-    let animPicks = picks;
     if (card.effect === "random_teleport" && picks.length) {
       const [r, c] = picks[0];
       const dest = pickRandomTeleportDestination(s, r, c);
@@ -1975,15 +2011,17 @@ ${starLine}`;
       this.recordPvpSpell(
         card,
         [],
-        res.cullTarget
-          ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim }
-          : res.coinFlipSquare
+        {
+          ...(res.pvpAnimExtras || {}),
+          ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
+          ...(res.coinFlipSquare
             ? {
                 coinFlipSquare: res.coinFlipSquare,
                 coinFlipVictimColor: res.coinFlipVictimColor,
                 coinFlipVictim: res.coinFlipVictim,
               }
-            : {}
+            : {}),
+        }
       );
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
@@ -2059,24 +2097,70 @@ ${starLine}`;
     const picks = entry.picks || [];
     const s = this.state;
     const oc = this.opponentColor;
-    if (entry.cardEffect === "chain_lightning" && picks.length) {
+    if (entry.chainSquares?.length) extra.chainSquares = entry.chainSquares;
+    else if (entry.cardEffect === "chain_lightning" && picks.length) {
       const [pr, pc] = picks[0];
       extra.chainSquares = getChainLightningAnimSquares(s, pr, pc, oc);
     }
-    if (entry.cardEffect === "pyromancy" && picks.length >= 2) {
+    if (entry.pyromancySquares?.length) extra.pyromancySquares = entry.pyromancySquares;
+    else if (entry.cardEffect === "pyromancy" && picks.length >= 2) {
       extra.pyromancySquares = picks.slice(0, 2);
     }
-    if (entry.cardEffect === "sanctuary" && picks.length) {
+    if (entry.sanctuaryCells?.length) extra.sanctuaryCells = entry.sanctuaryCells;
+    else if (entry.cardEffect === "sanctuary" && picks.length) {
       extra.sanctuaryCells = getSanctuaryCells(picks[0][0], picks[0][1]);
     }
-    if (entry.cardEffect === "darkness" && picks.length) {
+    if (entry.darknessCells?.length) extra.darknessCells = entry.darknessCells;
+    else if (entry.cardEffect === "darkness" && picks.length) {
       extra.darknessCells = getDarknessZoneCells(picks[0][0], picks[0][1]);
     }
-    if (entry.cardEffect === "trickster") {
+    if (entry.tricksterSquares?.length) extra.tricksterSquares = entry.tricksterSquares;
+    else if (entry.cardEffect === "trickster") {
       const plan = planTrickster(s);
       if (plan?.squares) extra.tricksterSquares = plan.squares;
     }
+    if (entry.backstabTo) extra.backstabTo = entry.backstabTo;
+    else if (entry.cardEffect === "backstab" && picks.length) {
+      const [r, c] = picks[0];
+      const dir = oc === COLORS.RED ? 1 : -1;
+      for (const dc of [-1, 1]) {
+        const t = s.board[r + dir]?.[c + dc];
+        if (t && t.color !== oc) {
+          extra.backstabTo = [r + dir, c + dc];
+          break;
+        }
+      }
+    }
+    if (entry.cryoShatter != null) extra.cryoShatter = entry.cryoShatter;
     return extra;
+  }
+
+  async playSpellEntryVisual(entry, { cardName, def, oc }) {
+    if (entry.cardEffect === "cull" && entry.cullTarget) {
+      const [cr, cc] = entry.cullTarget;
+      await this.playCullAnimation(cr, cc, entry.cullVictim || null);
+      return;
+    }
+    if (entry.cardEffect === "coin_flip" && entry.coinFlipSquare) {
+      const [vr, vc] = entry.coinFlipSquare;
+      await this.playCoinFlipAnimation(
+        vr,
+        vc,
+        entry.coinFlipVictimColor,
+        cardName,
+        entry.coinFlipVictim || null
+      );
+      return;
+    }
+    const animExtra = this.buildAiSpellAnimExtra(entry);
+    const animCard = {
+      effect: entry.cardEffect,
+      mode: entry.cardMode || def?.mode || "instant",
+      name: cardName,
+    };
+    const animPicks = entry.animPicks || entry.picks || [];
+    const spec = buildAnimSpec(animCard, animPicks, oc, animExtra);
+    await this.runSpellAnimation(spec);
   }
 
   /** Replay AI log: announce + apply each step (PvP can pass applyEntries: false). */
@@ -2147,32 +2231,16 @@ ${starLine}`;
           this.render();
 
           if (applyEntries) {
-            if (entry.cardEffect === "cull" && entry.cullTarget) {
-              const [cr, cc] = entry.cullTarget;
-              await this.playCullAnimation(cr, cc, entry.cullVictim || null);
-              applyAiReplayEntry(this.state, entry, oc);
-            } else if (entry.cardEffect === "coin_flip" && entry.coinFlipSquare) {
-              const [vr, vc] = entry.coinFlipSquare;
-              await this.playCoinFlipAnimation(
-                vr,
-                vc,
-                entry.coinFlipVictimColor,
-                cardName,
-                entry.coinFlipVictim || null
-              );
+            if (entry.cardEffect === "coin_flip" && entry.coinFlipSquare) {
+              await this.playSpellEntryVisual(entry, { cardName, def, oc });
               this.state.meta.pendingCoinFlipSquare = [...entry.coinFlipSquare];
               applyAiReplayEntry(this.state, entry, oc);
               this.state.meta.pendingCoinFlipSquare = null;
-            } else {
+            } else if (entry.cardEffect === "cryo_bolt" && (entry.picks || []).length >= 2) {
+              const animPicks = entry.animPicks || entry.picks || [];
               const animExtra = this.buildAiSpellAnimExtra(entry);
-              const animCard = {
-                effect: entry.cardEffect,
-                mode: entry.cardMode || def?.mode || "instant",
-                name: cardName,
-              };
-              const animPicks = entry.picks || [];
               let cryoApplied = false;
-              if (entry.cardEffect === "cryo_bolt" && animPicks.length >= 2) {
+              if (entry.cryoShatter == null) {
                 const [r2, c2] = animPicks[1];
                 const target = this.state.board[r2]?.[c2];
                 const cryoShatter =
@@ -2186,11 +2254,19 @@ ${starLine}`;
                   this.render();
                 }
               }
+              const animCard = {
+                effect: entry.cardEffect,
+                mode: entry.cardMode || def?.mode || "instant",
+                name: cardName,
+              };
               const spec = buildAnimSpec(animCard, animPicks, oc, animExtra);
               await this.runSpellAnimation(spec);
               if (!cryoApplied) {
                 applyAiReplayEntry(this.state, entry, oc);
               }
+            } else {
+              await this.playSpellEntryVisual(entry, { cardName, def, oc });
+              applyAiReplayEntry(this.state, entry, oc);
             }
             this.recordHistoryFromReplayEntry(entry);
             this.render();
@@ -2198,17 +2274,8 @@ ${starLine}`;
               await new Promise((resolve) => this.playBoardFx(this.state, resolve));
               this.recordPendingTrapHistory();
             }
-          } else if (entry.cardEffect === "coin_flip" && entry.coinFlipSquare) {
-            const [vr, vc] = entry.coinFlipSquare;
-            await this.playCoinFlipAnimation(
-              vr,
-              vc,
-              entry.coinFlipVictimColor,
-              cardName,
-              entry.coinFlipVictim || null
-            );
           } else {
-            await delay(AI_PACE.spellAnimMax);
+            await this.playSpellEntryVisual(entry, { cardName, def, oc });
           }
         }
 
