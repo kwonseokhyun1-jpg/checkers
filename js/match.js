@@ -596,6 +596,7 @@ export class MatchSession {
     }
     this._pvpLocalTurnKey = key;
     this.beginPlayerTurn();
+    if (this.isPvp) void this.pushPvpState();
     return true;
   }
 
@@ -665,11 +666,33 @@ export class MatchSession {
       incomingSpell &&
       incomingSpell.seq > prevSpellSeq &&
       incomingSpell.caster === this.opponentColor;
-    const prevLocalTurnNum = this.isPvp ? this.state?.turnNumber?.[this.localColor] ?? 0 : 0;
+    const prevLocalPvpDeck = this.isPvp
+      ? {
+          turnNumber: this.state?.turnNumber?.[this.localColor] ?? 0,
+          hand: this.state?.hands?.[this.localColor],
+          drawPile: this.state?.drawPile?.[this.localColor],
+          discardPile: this.state?.discardPile?.[this.localColor],
+        }
+      : null;
 
     this.state = nextState;
-    if (this.isPvp && prevLocalTurnNum > (this.state.turnNumber?.[this.localColor] ?? 0)) {
-      this.state.turnNumber[this.localColor] = prevLocalTurnNum;
+    if (
+      this.isPvp &&
+      prevLocalPvpDeck &&
+      prevLocalPvpDeck.turnNumber > (this.state.turnNumber?.[this.localColor] ?? 0)
+    ) {
+      this.state.turnNumber[this.localColor] = prevLocalPvpDeck.turnNumber;
+      if (prevLocalPvpDeck.hand) this.state.hands[this.localColor] = prevLocalPvpDeck.hand;
+      if (prevLocalPvpDeck.drawPile) this.state.drawPile[this.localColor] = prevLocalPvpDeck.drawPile;
+      if (prevLocalPvpDeck.discardPile) {
+        this.state.discardPile[this.localColor] = prevLocalPvpDeck.discardPile;
+      }
+    } else if (this.isPvp && this._syncDirty && prevLocalPvpDeck && this.state.turn === this.localColor) {
+      if (prevLocalPvpDeck.hand) this.state.hands[this.localColor] = prevLocalPvpDeck.hand;
+      if (prevLocalPvpDeck.drawPile) this.state.drawPile[this.localColor] = prevLocalPvpDeck.drawPile;
+      if (prevLocalPvpDeck.discardPile) {
+        this.state.discardPile[this.localColor] = prevLocalPvpDeck.discardPile;
+      }
     }
     if (incomingSpell?.seq) this._lastPvpSpellSeq = incomingSpell.seq;
     if (this.isPvp) ensureStartHistory(this.state);

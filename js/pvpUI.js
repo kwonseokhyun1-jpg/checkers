@@ -537,7 +537,11 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       const terminal = isPvpTerminalBoard(row.state_json, pvpService.localColor);
       const finished = row.status === "finished";
       if (!finished && !shouldApplyPvpRow(row, pvpService, matchSession)) return;
-      if ((matchSession.actionBusy || matchSession._syncBusy) && !terminal && !finished) {
+      if (
+        (matchSession.actionBusy || matchSession._syncBusy || matchSession._syncDirty) &&
+        !terminal &&
+        !finished
+      ) {
         matchSession.queuePvpRow(row);
         return;
       }
