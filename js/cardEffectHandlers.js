@@ -444,7 +444,6 @@ const EFFECTS = {
   blind(state, color, picks) { state.meta.blindNext[opp(color)]=true; return ok(); },
   confusion(state, color, picks) { state.meta.confuseNext[opp(color)]=true; return ok(); },
   silence_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.silenced=3; return ok(); },
-  rust(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.rustedTurns=3; p.rusted=false; return ok(); },
   tangle(state, color, picks) {
     if (picks.length < 2) return fail();
     const [r1, c1] = p0(picks), [r2, c2] = p1(picks);

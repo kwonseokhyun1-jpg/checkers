@@ -36,7 +36,6 @@ const CURSE_RULES = [
   { key: "slowed", label: "Slowed", turns: true },
   { key: "reverseOnlyTurns", label: "Reverse March", turns: true },
   { key: "anchored", label: "Anchored", turns: true },
-  { key: "rusted", label: "Rusted", bool: true },
   { key: "panicTurn", label: "Panic", bool: true },
   { key: "revivedNoCapture", label: "Revived (no capture)", bool: true },
   { key: "berserkNoCapture", label: "Berserk (no capture)", bool: true },
@@ -107,8 +106,6 @@ export function cleanseDebuffs(piece) {
   piece.slowed = 0;
   piece.reverseOnlyTurns = 0;
   piece.anchored = 0;
-  piece.rusted = false;
-  piece.rustedTurns = 0;
   piece.noCaptureTurns = 0;
   piece.panicTurn = false;
   piece.revivedNoCapture = false;

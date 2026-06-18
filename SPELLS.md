@@ -1,6 +1,6 @@
 # Card Checkers — Spell Compendium
 
-**83 spells** in the draw pool.
+**82 spells** in the draw pool.
 
 ## Common
 
@@ -59,7 +59,6 @@
 - **Retreat** — Grant a piece backward movement for 3 turns.
 - **Root** — Enemy cannot jump or capture for 2 turns (can still step).
 - **Rules Lawyer** — Jumps are optional for you this turn (not mandatory).
-- **Rust** — Target enemy cannot be crowned for the rest of the game.
 - **Sacrifice** — Destroy one of your men to destroy any enemy man (not kings).
 - **Sanctuary Pulse** — Shield all your pieces in your back row for 1 turn.
 - **Scout** — Look at 3 random cards from the pool; add one to your hand.

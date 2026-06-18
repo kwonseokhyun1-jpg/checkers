@@ -64,7 +64,6 @@ export const EFFECT_VISUAL = {
   create_foe: "summon",
 
   poison_3: "poison",
-  rust: "curse",
   demote: "curse",
   panic: "curse",
   press: "curse",
