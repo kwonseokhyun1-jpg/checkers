@@ -2955,6 +2955,20 @@ ${starLine}`;
             link.appendChild(mark);
             sq.appendChild(link);
           }
+          if (piece.bountyBy) {
+            const bounty = document.createElement("div");
+            bounty.className = "bounty-indicator";
+            bounty.setAttribute(
+              "aria-label",
+              "Bounty — jump-capture this piece to draw 2 cards"
+            );
+            const mark = document.createElement("span");
+            mark.className = "bounty-indicator__mark";
+            mark.textContent = "🎯";
+            mark.setAttribute("aria-hidden", "true");
+            bounty.appendChild(mark);
+            sq.appendChild(bounty);
+          }
         } else if (
           this.cullAnimation &&
           this.cullAnimation.row === row &&
