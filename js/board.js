@@ -814,6 +814,33 @@ export function getCryoBoltTarget(board, piece) {
   return targets;
 }
 
+/** Every dark square on either diagonal through (r, c), excluding the center. */
+export function getDiagonalThroughSquares(r, c) {
+  const res = [];
+  const seen = new Set();
+  const add = (nr, nc) => {
+    if (!inBounds(nr, nc) || !isDarkSquare(nr, nc)) return;
+    const key = `${nr},${nc}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    res.push([nr, nc]);
+  };
+  for (let i = -SIZE + 1; i < SIZE; i++) {
+    if (i === 0) continue;
+    add(r + i, c + i);
+    add(r + i, c - i);
+  }
+  return res;
+}
+
+/** Unit diagonal step from center (r, c) toward (tr, tc), or null if not on a diagonal. */
+export function diagonalDirectionFromPick(r, c, tr, tc) {
+  const dr = Math.sign(tr - r);
+  const dc = Math.sign(tc - c);
+  if (!dr || !dc || Math.abs(tr - r) !== Math.abs(tc - c)) return null;
+  return [dr, dc];
+}
+
 /** True when (targetRow, targetCol) is the first enemy on a forward diagonal from the caster. */
 export function isCryoBoltTarget(board, caster, targetRow, targetCol) {
   if (!caster) return false;

@@ -437,6 +437,19 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
+  if (effect === "deep_freeze" && p.length >= 2) {
+    return finishSpec({
+      type: "debuff",
+      visual: "freeze",
+      duration: animDurationForEffect("deep_freeze"),
+      label,
+      squares: p.slice(0, 2),
+      from: p[0],
+      to: p[1],
+      lineSquares: squaresBetween(p[0], p[1]),
+    }, effect);
+  }
+
   if (p.length === 1) {
     if (mode === "enemy" || DEBUFF_EFFECTS.has(effect)) {
       return finishSpec({ type: "debuff", duration: MIN_SPELL_ANIM_MS, label, squares: p }, effect);

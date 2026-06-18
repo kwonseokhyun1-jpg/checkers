@@ -58,7 +58,7 @@ SPELLS = [
     ("ghost_guard", "Ghost Guard", "When a friendly piece is captured, its square blocks enemies for 2 turns.", "rare", 3, "friendly", "ghost_guard"),
     ("fortify", "Fortify", "Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.", "rare", 3, "friendly", "fortify"),
     # === CROWD CONTROL ===
-    ("deep_freeze", "Deep Freeze", "Freeze every enemy on one diagonal through your piece for 2 turns.", "uncommon", 4, "friendly", "deep_freeze"),
+    ("deep_freeze", "Deep Freeze", "Freeze every enemy on one diagonal through your piece for 2 turns.", "uncommon", 4, "diagonal", "deep_freeze"),
     ("root", "Root", "Enemy cannot jump or capture for 2 turns (can still step).", "uncommon", 4, "enemy", "root_2"),
     ("slow", "Slow", "Enemy kings move like men for 2 turns.", "uncommon", 4, "enemy", "slow_2"),
     ("blind", "Blind", "Opponent cannot play cards on their next turn.", "rare", 3, "instant", "blind"),

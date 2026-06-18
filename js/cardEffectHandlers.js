@@ -3,7 +3,7 @@
  */
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece, resolveCapture,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, pieceHasLegalMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone,
   tryPromoteOnFarRow,
@@ -409,13 +409,21 @@ const EFFECTS = {
   reverse_only_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.reverseOnlyTurns=2; p.noCaptureTurns=2; return ok(); },
   freeze_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); applyFreezeToPiece(state.board, state, r, c, 1); return ok(); },
   deep_freeze(state, color, picks) {
+    if (picks.length < 2) return fail("Pick your piece, then a square on the diagonal to freeze");
     const [r, c] = p0(picks);
+    const [tr, tc] = p1(picks);
     const p = at(state, r, c);
     if (!p || p.color !== color) return fail();
+    const dir = diagonalDirectionFromPick(r, c, tr, tc);
+    if (!dir) return fail("Pick a square on a diagonal through your piece");
+    const [dr, dc] = dir;
     let n = 0;
     for (let i = -SIZE + 1; i < SIZE; i++) {
-      const t = at(state, r + i, c + i);
-      if (t && t.color !== color && applyFreezeToPiece(state.board, state, r + i, c + i, 2)) n++;
+      if (i === 0) continue;
+      const er = r + dr * i;
+      const ec = c + dc * i;
+      const t = at(state, er, ec);
+      if (t && t.color !== color && applyFreezeToPiece(state.board, state, er, ec, 2)) n++;
     }
     return n ? ok(`Deep Freeze — ${n} frozen.`, { freezeCount: n }) : fail("No enemies on that diagonal");
   },

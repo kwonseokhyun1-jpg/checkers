@@ -95,7 +95,7 @@ export const CARD_REGISTRY = [
   { id: "blind", name: "Blind", desc: "Opponent cannot play cards on their next turn.", rarity: "rare", weight: 3, mode: "instant", effect: "blind" },
   { id: "confusion", name: "Confusion", desc: "On opponent's next turn, their move is chosen randomly.", rarity: "epic", weight: 2, mode: "instant", effect: "confusion" },
   { id: "counterspell", name: "Counterspell", desc: "Hidden trap: the next enemy spell is cancelled when they cast it.", rarity: "epic", weight: 2, mode: "instant", effect: "counterspell" },
-  { id: "deep_freeze", name: "Deep Freeze", desc: "Freeze every enemy on one diagonal through your piece for 2 turns.", rarity: "epic", weight: 2, mode: "friendly", effect: "deep_freeze" },
+  { id: "deep_freeze", name: "Deep Freeze", desc: "Freeze every enemy on one diagonal through your piece for 2 turns.", rarity: "epic", weight: 2, mode: "diagonal", effect: "deep_freeze" },
   { id: "earthquake", name: "Earthquake", desc: "All pieces shift 1 square toward board center if possible.", rarity: "legendary", weight: 1, mode: "instant", effect: "earthquake" },
   { id: "berserk", name: "Berserk", desc: "Teleport one of your pieces anywhere except the enemy back rank. Landing on an enemy destroys it; you cannot capture this turn.", rarity: "legendary", weight: 1, mode: "f_empty", effect: "berserk" },
   { id: "hostile_swap", name: "Hostile Swap", desc: "Swap one of your pieces with an unshielded enemy.", rarity: "epic", weight: 2, mode: "f_e", effect: "hostile_swap" },

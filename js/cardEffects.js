@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, hasMandatoryJumps, pieceHasLegalMoves } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDiagonalThroughSquares, hasMandatoryJumps, pieceHasLegalMoves } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, longStepOk, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -84,6 +84,7 @@ export function getCardHint(card) {
   }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
   if (card.effect === "snowball") return hints.snowball_hint;
+  if (card.effect === "deep_freeze") return "Click your piece, then any square on the diagonal to freeze.";
   if (card.effect === "barrier") return "Click a dark square — enemies cannot enter it next turn.";
   return hints[card.mode] || "Click valid targets on the board.";
 }
@@ -111,6 +112,15 @@ function darkSquare(state, r, c) {
 
 function pieceCloakedByDarkness(state, r, c) {
   return isInDarknessZone(state, r, c);
+}
+
+function deepFreezeHasEnemyOnDiagonal(state, color, r, c) {
+  const o = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  for (const [er, ec] of getDiagonalThroughSquares(r, c)) {
+    const t = at(state, er, ec);
+    if (t && t.color === o && !pieceCloakedByDarkness(state, er, ec)) return true;
+  }
+  return false;
 }
 
 function berserkEnemyBackRows(color) {
@@ -381,10 +391,17 @@ export function getValidTargets(state, color, card, picks) {
         return res;
       }
     case "diagonal": {
-      if (picks.length === 0) return getValidTargets(state, color, { mode: "friendly" }, []);
+      if (picks.length === 0) {
+        const friends = getValidTargets(state, color, { mode: "friendly" }, []);
+        if (card.effect === "deep_freeze") {
+          return friends.filter(([r, c]) => deepFreezeHasEnemyOnDiagonal(state, color, r, c));
+        }
+        return friends;
+      }
       const [pr, pc] = picks[0];
       const p = at(state, pr, pc);
       if (!p) return [];
+      if (card.effect === "deep_freeze") return getDiagonalThroughSquares(pr, pc);
       if (card.effect === "forward_bolt") {
         return getAdjacentForwardBoltTarget(state.board, p).filter(([r, c]) => !pieceCloakedByDarkness(state, r, c));
       }
