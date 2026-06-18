@@ -1744,12 +1744,42 @@ ${starLine}`;
     if (banner) banner.className = "turn-banner";
   }
 
-  async runCounterspellReveal() {
+  showTrapSpellBanner(cardName, cardDesc, { label = "Trap triggered" } = {}) {
+    const banner = this.$("ai-spell-banner");
+    const labelEl = this.root.querySelector(".ai-spell-banner__label");
+    const title = this.$("ai-spell-banner-title");
+    const desc = this.$("ai-spell-banner-desc");
+    if (labelEl) labelEl.textContent = label;
+    if (title) title.textContent = cardName || "Spell";
+    if (desc) desc.textContent = cardDesc || "";
+    banner?.classList.remove("hidden");
+  }
+
+  resetTrapSpellBanner() {
+    const labelEl = this.root.querySelector(".ai-spell-banner__label");
+    if (labelEl) labelEl.textContent = "Enemy spell";
+    this.$("ai-spell-banner")?.classList.add("hidden");
+  }
+
+  async runCounterspellReveal({ trapOwner } = {}) {
+    const def = getCardDef("counterspell");
+    const cardName = def?.name || "Counterspell";
+    const cardDesc =
+      def?.desc || "Hidden trap: the next enemy spell is cancelled when they cast it.";
+    const label =
+      trapOwner == null
+        ? "Trap triggered"
+        : trapOwner === this.localColor
+          ? "Your trap"
+          : "Enemy trap";
+
+    this.showTrapSpellBanner(cardName, cardDesc, { label });
+
     const frame = this.$("board")?.closest(".board-frame");
     frame?.classList.add("board-frame--counterspell");
     const banner = this.$("turn-banner");
     if (banner) {
-      banner.textContent = "Counterspell!";
+      banner.textContent = `${cardName}!`;
       banner.className = "turn-banner turn-banner--counterspell";
     }
     this.root.querySelector(".match-wrap")?.classList.add("match-wrap--counterspell");
@@ -1761,6 +1791,7 @@ ${starLine}`;
       banner.classList.remove("turn-banner--counterspell");
       banner.className = "turn-banner";
     }
+    this.resetTrapSpellBanner();
   }
 
   async playCoinFlipAnimation(victimRow, victimCol, victimColor, cardName = "Coin Flip", victimSnap = null) {
@@ -1876,7 +1907,7 @@ ${starLine}`;
 
     const countered = tryConsumeCounterspell(this.state, this.localColor);
     if (countered) {
-      await this.runCounterspellReveal();
+      await this.runCounterspellReveal({ trapOwner: countered.trapOwner });
       return finishSpellTrack({ success: false, countered: true, message: "Enemy Counterspell! Your spell fizzles." });
     }
 
@@ -2087,7 +2118,7 @@ ${starLine}`;
   }
 
   hideAiSpellBanner() {
-    this.$("ai-spell-banner")?.classList.add("hidden");
+    this.resetTrapSpellBanner();
     this.$("ai-action-panel")?.classList.remove("ai-action-panel--casting");
     this.$("board")?.closest(".board-frame")?.classList.remove("board-frame--ai-spell");
     this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
@@ -2212,12 +2243,14 @@ ${starLine}`;
             applyAiReplayEntry(this.state, entry, oc);
             this.recordHistoryFromReplayEntry(entry);
             this.render();
-            await this.runCounterspellReveal();
+            await this.runCounterspellReveal({
+              trapOwner: this.state.pendingTrapHistory?.color ?? this.localColor,
+            });
             this.recordPendingTrapHistory();
           } else {
-            takeTrapHistoryReveal(this.state);
+            const trap = takeTrapHistoryReveal(this.state);
             this.render();
-            await this.runCounterspellReveal();
+            await this.runCounterspellReveal({ trapOwner: trap?.color });
           }
           this.setMessage("Your Counterspell cancels their magic!");
         } else {
