@@ -4,7 +4,7 @@
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
-  createPiece, getAllMovesForColor, hasMandatoryJumps, countPieces,
+  createPiece, getAllMovesForColor, pieceHasLegalMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone,
   tryPromoteOnFarRow,
 } from "./board.js";
@@ -313,8 +313,8 @@ const EFFECTS = {
     return ok(crowned ? "Random teleport — crowned!" : "Random teleport!", { teleportFrom: [r, c], teleportTo: [tr, tc] });
   },
   flank_3(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(r1===r2&&c1===c2) return fail(); if(Math.abs(r2-r1)!==Math.abs(c2-c1)||Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
-  rook_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.rookTurns=2; return ok(); },
-  bishop_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bishopTurns=2; return ok(); },
+  rook_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.rookTurns=2; return ok(); },
+  bishop_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.bishopTurns=2; return ok(); },
   pawn_zeal(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); p.pawnZeal=true; return ok(); },
   cross_bolt(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(const [tr,tc] of getBoltTarget(state.board,p)) kill(state,tr,tc,color); return ok(); },
   snipe(state, color, picks) {
@@ -327,8 +327,8 @@ const EFFECTS = {
     return ok();
   },
   landmine(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); if(sq.mine||sq.hiddenMine) return fail("Square already trapped"); placeMine(sq, color, true); return ok(); },
-  bomb(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bombArmed=true; return ok("Bomb armed — explodes on next move."); },
-  shockwave(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shockwaveArmed=true; return ok("Shockwave armed — pulses on next move."); },
+  bomb(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.bombArmed=true; return ok("Bomb armed — explodes on next move."); },
+  shockwave(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.shockwaveArmed=true; return ok("Shockwave armed — pulses on next move."); },
   detonate(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r+dr,c+dc); if(t&&t.color!==color) kill(state,r+dr,c+dc,color);} return ok(); },
   ricochet(state, color, picks) { state.meta.pendingRicochet[color]=true; return ok(); },
   duel(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); if(Math.max(Math.abs(r1-r2),Math.abs(c1-c2))!==1) return fail(); kill(state,r1,c1,color); kill(state,r2,c2,color); return ok(); },
@@ -436,8 +436,8 @@ const EFFECTS = {
   fog_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); state.meta.fogPieceId[color]=p.id; state.meta.fogTurns[color]=2; return ok(); },
   panic(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||p.king) return fail(); p.panicTurn=true; return ok(); },
   bribery_15(state, color, picks) { const o=opp(color); const n=Math.min(15,state.gems[o]); state.gems[o]-=n; state.gems[color]+=n; return ok(); },
-  bishop_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bishopTurns=2; return ok(); },
-  rook_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.rookTurns=2; return ok(); },
+  bishop_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.bishopTurns=2; return ok(); },
+  rook_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.rookTurns=2; return ok(); },
   queen_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.queenTurns=2; return ok(); },
   demote(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||!p.king) return fail(); p.king=false; return ok(); },
   bounty(state, color, picks) {

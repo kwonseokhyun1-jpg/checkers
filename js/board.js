@@ -514,6 +514,13 @@ export function getAllMovesForColor(board, color, state = null) {
   return steps;
 }
 
+/** True when this friendly piece has at least one legal move right now. */
+export function pieceHasLegalMoves(board, color, state, row, col) {
+  return getAllMovesForColor(board, color, state).some(
+    (m) => m.from[0] === row && m.from[1] === col
+  );
+}
+
 /** True when the player has jump captures and must take them (not optional). */
 export function hasMandatoryJumps(board, color, state = null) {
   if (state?.meta?.optionalJumps?.[color]) return false;

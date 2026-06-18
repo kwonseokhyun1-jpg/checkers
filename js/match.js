@@ -2729,6 +2729,8 @@ ${starLine}`;
           if (piece.rookTurns > 0) el.classList.add("rook-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
           if (piece.shockwaveArmed) el.classList.add("shockwave-armed");
+          const constitutionTurns = piece.king ? ensureConstitutionTurns(this.state.meta)[piece.color] : 0;
+          if (constitutionTurns > 0) el.classList.add("constitution-mark");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
           if (piece.linkedFateId) el.classList.add("linked-fate");
@@ -2910,6 +2912,34 @@ ${starLine}`;
             rook.appendChild(mark);
             rook.appendChild(bar);
             sq.appendChild(rook);
+          }
+          if (constitutionTurns > 0) {
+            const constitution = document.createElement("div");
+            constitution.className = "constitution-indicator";
+            constitution.setAttribute(
+              "aria-label",
+              `Constitution — ${constitutionTurns} turn${constitutionTurns === 1 ? "" : "s"} left`
+            );
+            const mark = document.createElement("span");
+            mark.className = "constitution-indicator__mark";
+            mark.textContent = "♛";
+            mark.setAttribute("aria-hidden", "true");
+            const bar = document.createElement("div");
+            bar.className = "constitution-indicator__bar";
+            bar.setAttribute("role", "meter");
+            bar.setAttribute("aria-label", `Constitution — ${constitutionTurns} turns left`);
+            bar.setAttribute("aria-valuenow", String(constitutionTurns));
+            bar.setAttribute("aria-valuemin", "0");
+            bar.setAttribute("aria-valuemax", "5");
+            for (let i = 0; i < 5; i++) {
+              const block = document.createElement("span");
+              block.className =
+                "constitution-indicator__block" + (i < constitutionTurns ? " constitution-indicator__block--filled" : "");
+              bar.appendChild(block);
+            }
+            constitution.appendChild(mark);
+            constitution.appendChild(bar);
+            sq.appendChild(constitution);
           }
           if (piece.linkedFateId) {
             const link = document.createElement("div");

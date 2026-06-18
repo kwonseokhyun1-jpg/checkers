@@ -208,6 +208,9 @@ body {
 .board-frame--local-flipped .sanctuary-indicator,
 .board-frame--local-flipped .shield-indicator,
 .board-frame--local-flipped .ultra-shield-indicator,
+.board-frame--local-flipped .bishop-indicator,
+.board-frame--local-flipped .rook-indicator,
+.board-frame--local-flipped .constitution-indicator,
 .board-frame--local-flipped .poison-indicator,
 .board-frame--local-flipped .fire-indicator,
 .board-frame--local-flipped .blood-indicator,
@@ -684,6 +687,51 @@ body {
   box-shadow:
     0 0 0 2px rgba(59, 130, 246, 0.75),
     0 0 10px rgba(37, 99, 235, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.constitution-indicator {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.constitution-indicator__mark {
+  font-size: clamp(0.45rem, 2.4vw, 0.62rem);
+  line-height: 1;
+  color: #fde68a;
+  text-shadow: 0 0 4px rgba(245, 158, 11, 0.85);
+}
+
+.constitution-indicator__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.constitution-indicator__block {
+  width: clamp(4px, 1.8vw, 6px);
+  height: clamp(5px, 2.2vw, 7px);
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(253, 230, 138, 0.25);
+}
+
+.constitution-indicator__block--filled {
+  background: linear-gradient(180deg, #fde68a 0%, #d97706 100%);
+  border-color: rgba(253, 230, 138, 0.9);
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.75);
+}
+
+.piece.constitution-mark {
+  box-shadow:
+    0 0 0 2px rgba(245, 158, 11, 0.75),
+    0 0 10px rgba(217, 119, 6, 0.45),
     0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
