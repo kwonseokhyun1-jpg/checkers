@@ -210,8 +210,13 @@ function fEmptyFirstPickTargets(state, color, card) {
       return false;
     });
   }
-  if (card.effect === "nudge" || card.effect === "sidestep") {
+  if (card.effect === "nudge") {
     return filter((piece) => getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
+  }
+  if (card.effect === "sidestep") {
+    return filter((piece, r, c) =>
+      [[r, c - 2], [r, c + 2]].some(([tr, tc]) => emptyDark(state, tr, tc))
+    );
   }
   return friends;
 }
@@ -284,8 +289,8 @@ export function getValidTargets(state, color, card, picks) {
         );
       if (card.effect === "sidestep")
         return [
-          [pr, pc - 1],
-          [pr, pc + 1],
+          [pr, pc - 2],
+          [pr, pc + 2],
         ].filter(([r, c]) => emptyDark(state, r, c));
       if (card.effect === "clone") return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
       if (card.effect === "backstep") return getBackstepTarget(state.board, p, state);

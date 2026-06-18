@@ -83,7 +83,6 @@ export const REMOVED_CARD_IDS = new Set([
   "sanctified",
   "sanctuary_pulse",
   "shield_bash",
-  "sidestep",
   "silence",
   "slow",
   "spear_thrust",

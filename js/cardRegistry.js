@@ -43,6 +43,7 @@ export const CARD_REGISTRY = [
   { id: "duel", name: "Duel", desc: "Choose your piece and an adjacent enemy; both are destroyed unless shielded.", rarity: "common", weight: 5, mode: "f_e_adj", effect: "duel" },
   { id: "panic", name: "Panic", desc: "Force an enemy man to step backward on its owner's next turn if possible.", rarity: "common", weight: 5, mode: "enemy", effect: "panic" },
   { id: "shadow_swap", name: "Shadow Swap", desc: "Swap positions of two of your pieces.", rarity: "common", weight: 5, mode: "f_f", effect: "swap_friendly" },
+  { id: "sidestep", name: "Sidestep", desc: "Skip 2 columns left or right along the same row to an empty dark square.", rarity: "common", weight: 6, mode: "f_empty", effect: "sidestep" },
   { id: "press", name: "Press", desc: "On opponent's next turn, they must move again after their normal move.", rarity: "common", weight: 6, mode: "instant", effect: "press" },
   { id: "long_step", name: "Long Step", desc: "Move one of your pieces 2 squares diagonally if the path is clear (no capture).", rarity: "uncommon", weight: 4, mode: "f_empty", effect: "long_step" },
   { id: "ward", name: "Ward", desc: "Shield a friendly piece for 1 turn — blocks one capture or spell hit (shields can be burned off).", rarity: "common", weight: 6, mode: "friendly", effect: "shield_1" },

@@ -86,6 +86,7 @@ const ID_TO_CATEGORY = {
   sanctuary: "defense",
   scatter: "movement",
   shadow_swap: "movement",
+  sidestep: "movement",
   shatter: "attack",
   snipe: "attack",
   snowball: "control",
