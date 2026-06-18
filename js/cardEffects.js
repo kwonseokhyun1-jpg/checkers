@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, hasMandatoryJumps } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, hasMandatoryJumps, pieceHasLegalMoves } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, longStepOk, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -162,6 +162,16 @@ const FRONT_ROW_PROTECTION_EFFECTS = new Set([
 /** Enemy-targeting spells that should hit the opponent's front line first. */
 const ENEMY_FRONT_ROW_EFFECTS = new Set(["snowball"]);
 
+/** Friendly spells that only make sense on pieces able to move this turn. */
+const FRIENDLY_REQUIRES_MOVABLE = new Set([
+  "bomb",
+  "shockwave",
+  "bishop_2",
+  "bishop_3",
+  "rook_2",
+  "rook_3",
+]);
+
 /** Most advanced row for this color (closest to the opponent). */
 function frontRowRank(state, color) {
   let front = color === COLORS.RED ? Infinity : -Infinity;
@@ -257,6 +267,7 @@ export function getValidTargets(state, color, card, picks) {
           const p = at(state, r, c);
           if (!p || p.color !== color) continue;
           if (pieceCloakedByDarkness(state, r, c)) continue;
+          if (FRIENDLY_REQUIRES_MOVABLE.has(card.effect) && !pieceHasLegalMoves(state.board, color, state, r, c)) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
           res.push([r, c]);
