@@ -17,7 +17,7 @@ SPELLS = [
     ("teleport", "Blink", "Teleport your piece to any empty dark square within 2 steps (Chebyshev).", "rare", 4, "f_empty", "blink_2"),
     # === MOVEMENT ===
     ("long_step", "Long Step", "Move one of your pieces 2 squares diagonally if the path is clear (no capture).", "uncommon", 5, "f_empty", "long_step"),
-    ("sidestep", "Sidestep", "Move a piece 1 square horizontally onto an adjacent dark square.", "common", 5, "f_empty", "sidestep"),
+    ("sidestep", "Sidestep", "Skip 2 columns left or right along the same row to an empty dark square.", "common", 6, "f_empty", "sidestep"),
     ("chain_pull", "Chain Pull", "Pull an adjacent enemy piece 1 square toward you into an empty dark square behind it.", "rare", 3, "friendly", "chain_pull"),
     ("repel", "Repel", "Push an adjacent enemy piece 1 square away if the landing square is empty.", "uncommon", 4, "friendly", "repel"),
     ("leapfrog", "Leapfrog", "Jump your piece over a friendly piece to land on the empty square beyond.", "uncommon", 4, "f_empty", "leapfrog"),

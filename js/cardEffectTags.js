@@ -24,7 +24,7 @@ const TAGS = {
   blink_2: ["Teleport within 2 squares"],
   random_teleport: ["Jump to a random empty dark square", "Crowned if you land on the back rank"],
   long_step: ["Epic: leap 2 squares diagonally (no capture)"],
-  sidestep: ["Step 1 square horizontally"],
+  sidestep: ["Skip 2 columns on the same row"],
   landmine: ["Hidden trap 2 turns — destroys enemy lander"],
   quicksand: ["Hidden trap — freezes the next piece to land there"],
   detonate: ["Destroy self + adjacent enemies"],
