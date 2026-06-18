@@ -26,6 +26,7 @@ const ID_TO_CATEGORY = {
   snowball: "control",
   berserk: "movement",
   bomb: "attack",
+  shockwave: "control",
   bulwark: "defense",
   butterfly: "special",
   create_foe: "special",

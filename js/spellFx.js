@@ -19,6 +19,7 @@ export const EFFECT_VISUAL = {
   vengeance: "vengeance",
   hibernation: "hibernation",
   bomb: "bomb_arm",
+  shockwave: "shockwave_arm",
   landmine: "landmine_arm",
 
   nudge: "move",
@@ -120,6 +121,7 @@ export const VISUAL_DURATION_MS = {
   vengeance: 1100,
   hibernation: 1200,
   bomb_arm: 1000,
+  shockwave_arm: 1000,
   landmine_arm: 1000,
   move: 1100,
   swap: 1100,
@@ -149,6 +151,7 @@ export const VISUAL_DURATION_MS = {
 
 export function visualForEffect(effect) {
   if (effect === "bomb") return EFFECT_VISUAL.bomb_arm;
+  if (effect === "shockwave") return EFFECT_VISUAL.shockwave_arm;
   if (effect === "landmine") return EFFECT_VISUAL.landmine_arm;
   return EFFECT_VISUAL[effect] || null;
 }
@@ -213,6 +216,9 @@ export function applySquareSpellFx(square, visual, animRole, ctx) {
   }
   if (visual === "bomb_arm" && animRole === "buff") {
     square.classList.add("spell-fx-bomb-arm");
+  }
+  if (visual === "shockwave_arm" && animRole === "buff") {
+    square.classList.add("spell-fx-shockwave-arm");
   }
   if (visual === "landmine_arm" && (animRole === "terrain" || animRole === "hit")) {
     square.classList.add("spell-fx-mine-arm");

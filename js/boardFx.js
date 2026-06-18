@@ -34,6 +34,7 @@ export function queueBoardFx(state, kind, centerRow, centerCol, extraSquares = n
 
 export const BOARD_FX_MS = {
   bomb: 1200,
+  shockwave: 1000,
   mine: 1000,
   vengeance: 1100,
   deflect: 1200,

@@ -30,6 +30,7 @@ const TAGS = {
   detonate: ["Destroy self + adjacent enemies"],
   venom: ["Poison — 2 ticks destroys target"],
   bomb: ["Arm friendly piece", "On next move: explodes", "Kills all adjacent pieces"],
+  shockwave: ["Arm friendly piece", "On next move: paralyzes all adjacent pieces", "1 turn — does not kill"],
   press: ["Opponent must move again after their normal move on their next turn"],
   mind_control: ["Convert an enemy man to your color for 2 of your turns", "Reverts to the enemy afterward"],
   barrier: ["Place on any dark square", "Blocks enemies for 2 turn cycles"],

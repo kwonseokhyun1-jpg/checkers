@@ -98,6 +98,7 @@ export function createPiece(color, row, col, king = false) {
     silenced: 0,
     rusted: false,
     bombArmed: false,
+    shockwaveArmed: false,
     anchored: 0,
     fortifyTurns: 0,
     venom: 0,
@@ -146,6 +147,15 @@ export function applyFreezeToPiece(board, state, row, col, turns, { deferEndTick
   if (!piece) return false;
   piece.frozenTurns = Math.max(piece.frozenTurns || 0, turns);
   if (deferEndTick) piece.freezeDeferEndTick = true;
+  return true;
+}
+
+export function applyParalyzeToPiece(board, state, row, col, turns, { deferEndTick = false } = {}) {
+  if (state && isInDarknessZone(state, row, col)) return false;
+  const piece = board[row][col];
+  if (!piece) return false;
+  piece.paralyzedTurns = Math.max(piece.paralyzedTurns || 0, turns);
+  if (deferEndTick) piece.paralyzeDeferEndTick = true;
   return true;
 }
 
@@ -507,6 +517,19 @@ export function hasMandatoryJumps(board, color, state = null) {
   return false;
 }
 
+function shockwavePulseAt(board, state, row, col) {
+  let n = 0;
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue;
+      const r = row + dr, c = col + dc;
+      if (!inBounds(r, c)) continue;
+      if (applyParalyzeToPiece(board, state, r, c, 1, { deferEndTick: true })) n++;
+    }
+  }
+  return n;
+}
+
 function explodeBombAt(board, state, row, col) {
   const victims = [];
   for (let dr = -1; dr <= 1; dr++) {
@@ -589,6 +612,11 @@ export function applyMove(board, move, state = null) {
       sq.mine = null;
       return null;
     }
+  }
+  if (piece && piece.shockwaveArmed) {
+    piece.shockwaveArmed = false;
+    shockwavePulseAt(board, state, tr, tc);
+    if (state) queueBoardFx(state, "shockwave", tr, tc);
   }
   if (piece && piece.bombArmed) {
     piece.bombArmed = false;

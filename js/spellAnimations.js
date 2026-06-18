@@ -70,7 +70,7 @@ const TERRAIN_EFFECTS = new Set([
 
 const BUFF_EFFECTS = new Set([
   "shield_1", "shield_2", "retreat_3", "knight_perm", "crown", "rook_2", "bishop_2", "bishop_3",
-  "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "mirror_shield", "phalanx",
+  "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "shockwave", "mirror_shield", "phalanx",
   "last_stand", "ghost_guard", "fortify", "hibernation", "stall", "revive",
   "wraith_2", "rally", "fusion", "create_foe",
 ]);
@@ -412,7 +412,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
-  if ((effect === "hibernation" || effect === "bomb") && p.length === 1) {
+  if ((effect === "hibernation" || effect === "bomb" || effect === "shockwave") && p.length === 1) {
     return withVisual({
       type: "buff",
       duration: animDurationForEffect(effect),

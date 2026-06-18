@@ -2088,6 +2088,19 @@ body.tutorial-match-active .card-preview-modal {
   font-size: 0.65rem;
   line-height: 1;
 }
+.piece.shockwave-armed::after {
+  content: "⚡";
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 0.65rem;
+  line-height: 1;
+  animation: shockwave-arm-pulse 0.6s ease-in-out infinite;
+}
+@keyframes shockwave-arm-pulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
 .piece { position: relative; }
 
 @keyframes ai-pulse-to {
@@ -3576,14 +3589,38 @@ body.chest-open-active {
 }
 
 
-/* ── Reactive board FX: bomb, landmine, vengeance ── */
+/* ── Reactive board FX: bomb, landmine, vengeance, shockwave ── */
 .board-frame--fx-bomb { box-shadow: 0 0 48px rgba(255, 100, 40, 0.55); }
+.board-frame--fx-shockwave { box-shadow: 0 0 44px rgba(80, 180, 255, 0.55); }
 .board-frame--fx-mine { box-shadow: 0 0 40px rgba(255, 60, 40, 0.5); }
 .board-frame--fx-vengeance { box-shadow: 0 0 44px rgba(160, 20, 40, 0.55); }
 
 .square.board-fx-blast { position: relative; z-index: 3; }
 .square.board-fx-bomb.board-fx-blast {
   animation: board-fx-bomb-blast 1s ease-out;
+}
+.square.board-fx-shockwave.board-fx-blast {
+  animation: board-fx-shockwave-blast 0.9s ease-out;
+}
+.square.board-fx-shockwave.board-fx-blast::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(100, 200, 255, 0.85), rgba(60, 140, 255, 0.4) 45%, transparent 70%);
+  pointer-events: none;
+  animation: board-fx-shockwave-ring 0.85s ease-out;
+}
+.square.board-fx-shockwave.board-fx-blast::before {
+  content: "⚡";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  pointer-events: none;
+  animation: board-fx-shockwave-pop 0.45s ease-out 2;
 }
 .square.board-fx-bomb.board-fx-blast::after {
   content: "";
@@ -3657,6 +3694,20 @@ body.chest-open-active {
   0% { transform: scale(1); filter: brightness(1); }
   40% { transform: scale(1.08); filter: brightness(1.8); }
   100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes board-fx-shockwave-blast {
+  0% { transform: scale(1); filter: brightness(1); }
+  40% { transform: scale(1.06); filter: brightness(1.5) hue-rotate(180deg); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes board-fx-shockwave-ring {
+  0% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@keyframes board-fx-shockwave-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.5; }
 }
 @keyframes board-fx-bomb-ring {
   0% { transform: scale(0.3); opacity: 1; }
@@ -3777,6 +3828,15 @@ body.chest-open-active {
   animation: spell-bomb-arm-pulse 0.5s ease-in-out 4;
   pointer-events: none;
 }
+.square.spell-fx-shockwave_arm.spell-fx-shockwave-arm::after {
+  content: "⚡";
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 1rem;
+  animation: spell-shockwave-arm-pulse 0.45s ease-in-out 4;
+  pointer-events: none;
+}
 .square.spell-fx-landmine_arm.spell-fx-mine-arm::before {
   content: "";
   position: absolute;
@@ -3802,6 +3862,10 @@ body.chest-open-active {
 @keyframes spell-bomb-arm-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.2); }
+}
+@keyframes spell-shockwave-arm-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
 }
 @keyframes spell-mine-arm-pulse {
   0%, 100% { opacity: 0.4; }
