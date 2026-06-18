@@ -220,13 +220,14 @@ export function setPiece(board, row, col, piece) {
 }
 
 /** Crown a man that reached the far row (opponent's back rank). */
-export function tryPromoteOnFarRow(piece) {
-  if (!piece || piece.king || piece.rustedTurns > 0) return false;
-  if (piece.color === COLORS.RED && piece.row === 0) {
+export function tryPromoteOnFarRow(piece, row = piece?.row) {
+  if (!piece || piece.king || (piece.rustedTurns ?? 0) > 0) return false;
+  if (row == null) return false;
+  if (piece.color === COLORS.RED && row === 0) {
     piece.king = true;
     return true;
   }
-  if (piece.color === COLORS.BLACK && piece.row === SIZE - 1) {
+  if (piece.color === COLORS.BLACK && row === SIZE - 1) {
     piece.king = true;
     return true;
   }
@@ -338,7 +339,7 @@ export function movePiece(board, fromR, fromC, toR, toC) {
   board[fromR][fromC] = null;
   setPiece(board, toR, toC, piece);
   decrementSigilMoves(piece);
-  tryPromoteOnFarRow(piece);
+  tryPromoteOnFarRow(piece, toR);
   return piece;
 }
 
@@ -612,7 +613,7 @@ export function applyMove(board, move, state = null) {
     if (captured && bountyVictim) payBountyOnCapture(state, bountyVictim, piece.color);
   }
   if (!piece) return null;
-  tryPromoteOnFarRow(piece);
+  tryPromoteOnFarRow(piece, tr);
   const sq = state ? getSq(state, tr, tc) : null;
   if (sq?.sanctified === piece.color && !piece.king) piece.king = true;
   if (sq?.hiddenQuicksand) {

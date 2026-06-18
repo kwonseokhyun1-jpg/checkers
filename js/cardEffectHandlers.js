@@ -86,8 +86,8 @@ function swapAt(state, r1, c1, r2, c2) {
   state.board[r2][c2] = a;
   if (a) { a.row = r2; a.col = c2; }
   if (b) { b.row = r1; b.col = c1; }
-  tryPromoteOnFarRow(a);
-  tryPromoteOnFarRow(b);
+  tryPromoteOnFarRow(a, r2);
+  tryPromoteOnFarRow(b, r1);
 }
 
 function findPieceById(state, id) {
@@ -212,7 +212,7 @@ export function executeTrickster(state, plan) {
     state.board[e.to[0]][e.to[1]] = e.piece;
     e.piece.row = e.to[0];
     e.piece.col = e.to[1];
-    tryPromoteOnFarRow(e.piece);
+    tryPromoteOnFarRow(e.piece, e.to[0]);
   }
 }
 
@@ -240,10 +240,22 @@ function ownBackRank(color) { return color === COLORS.RED ? SIZE - 1 : 0; }
 export function reviveSquareAllowed(color, r) { return r !== ownBackRank(color); }
 function promoRow(color) { return color === COLORS.RED ? 0 : 7; }
 
+/** Move a friendly piece via spell; crown and message when landing on the far row. */
+function friendlySpellMove(state, color, r1, c1, r2, c2, message = "") {
+  const p = at(state, r1, c1);
+  if (!p || p.color !== color) return fail();
+  const wasMan = !p.king;
+  movePiece(state.board, r1, c1, r2, c2);
+  markMove(state, color);
+  const landed = at(state, r2, c2);
+  const crowned = wasMan && landed?.king && r2 === promoRow(color);
+  if (crowned) return ok(message ? `${message} Crowned!` : "Crowned!");
+  return ok(message);
+}
 
 const EFFECTS = {
-  backstep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const allowed=getBackstepTarget(state.board,p,state); if(!allowed.some(([r,c])=>r===r2&&c===c2)) return fail("No square behind"); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok("Backstep!"); },
-  nudge(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
+  backstep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const allowed=getBackstepTarget(state.board,p,state); if(!allowed.some(([r,c])=>r===r2&&c===c2)) return fail("No square behind"); return friendlySpellMove(state,color,r1,c1,r2,c2,"Backstep!"); },
+  nudge(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!emptyDark(state,r2,c2)||!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); return friendlySpellMove(state,color,r1,c1,r2,c2); },
   shield_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,1); return ok(); },
   shield_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,2); return ok(); },
   forward_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!spellKill(state,r2,c2,color)) return fail(); return ok(); },
@@ -286,7 +298,7 @@ const EFFECTS = {
     return ok('Shatter — you cannot cast spells next turn.');
   },
   blink_2(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const d=Math.max(Math.abs(r2-r1),Math.abs(c2-c1)); if(d<1||d>2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
-  long_step(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!longStepOk(state,r1,c1,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
+  long_step(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!longStepOk(state,r1,c1,r2,c2)) return fail(); return friendlySpellMove(state,color,r1,c1,r2,c2); },
   sidestep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||r1!==r2||Math.abs(c2-c1)!==2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   chain_pull(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const e=at(state,r+dr,c+dc); if(e&&e.color!==color){ const nr=r+dr*2,nc=c+dc*2; if(emptyDark(state,nr,nc)) movePiece(state.board,e.row,e.col,nr,nc); return ok();}} return fail(); },
   repel(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const e=at(state,r+dr,c+dc); if(e&&e.color!==color){ const nr=e.row+dr,nc=e.col+dc; if(emptyDark(state,nr,nc)) movePiece(state.board,e.row,e.col,nr,nc); return ok();}} return fail(); },
@@ -523,7 +535,7 @@ const EFFECTS = {
   },
   sanctified(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); getSq(state,r,c).sanctified=color; return ok(); },
   warp_gate(state, color, picks) { if(picks.length<2) return fail(); const k1=sk(...p0(picks)),k2=sk(...p1(picks)); state.squares[k1]={...state.squares[k1],warp:k2}; state.squares[k2]={...state.squares[k2],warp:k1}; return ok(); },
-  collapse(state, color, picks) { const [r,c]=p0(picks); if(!isDarkSquare(r,c)) return fail(); const p=at(state,r,c); if(p&&isFortified(p)) return fail('Fortified'); setCollapsedSquare(state.meta, r, c); if(p){ removePiece(state.board,r,c); for(let r2=0;r2<SIZE;r2++) for(let c2=0;c2<SIZE;c2++) if(emptyDark(state,r2,c2)){ state.board[r2][c2]=p; p.row=r2; p.col=c2; tryPromoteOnFarRow(p); break;}} return ok(); },
+  collapse(state, color, picks) { const [r,c]=p0(picks); if(!isDarkSquare(r,c)) return fail(); const p=at(state,r,c); if(p&&isFortified(p)) return fail('Fortified'); setCollapsedSquare(state.meta, r, c); if(p){ removePiece(state.board,r,c); for(let r2=0;r2<SIZE;r2++) for(let c2=0;c2<SIZE;c2++) if(emptyDark(state,r2,c2)){ state.board[r2][c2]=p; p.row=r2; p.col=c2; tryPromoteOnFarRow(p, r2); break;}} return ok(); },
   mirror_board(state, color, picks) { state.meta.mirrorBoardTurns[opp(color)]=2; return ok(); },
   darkness(state, color, picks) {
     const [r, c] = p0(picks);

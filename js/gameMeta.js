@@ -178,7 +178,7 @@ export function tickMeta(state, color) {
     if (!state.board[r][c]) state.board[r][c] = piece;
     piece.row = r;
     piece.col = c;
-    tryPromoteOnFarRow(piece);
+    tryPromoteOnFarRow(piece, r);
     state.meta.pocket = null;
   }
 }

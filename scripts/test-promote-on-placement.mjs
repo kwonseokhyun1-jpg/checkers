@@ -53,6 +53,28 @@ function assert(cond, msg) {
   assert(state.board[0][3]?.king === true, "man swapped onto far row should crown");
 }
 
+// Long Step: red man leaps onto the far rank and crowns.
+{
+  const state = baseState();
+  const friendly = createPiece(COLORS.RED, 2, 1, false);
+  setPiece(state.board, 2, 1, friendly);
+  const res = applyCard(state, COLORS.RED, { effect: "long_step" }, [[2, 1], [0, 3]]);
+  assert(res.success, "long_step should succeed");
+  assert(state.board[0][3]?.king === true, "long_step onto far row should crown");
+  assert(res.message.includes("Crowned"), "long_step should report crown");
+}
+
+// Nudge: red man steps onto the far rank and crowns.
+{
+  const state = baseState();
+  const friendly = createPiece(COLORS.RED, 1, 2, false);
+  setPiece(state.board, 1, 2, friendly);
+  const res = applyCard(state, COLORS.RED, { effect: "nudge" }, [[1, 2], [0, 3]]);
+  assert(res.success, "nudge should succeed");
+  assert(state.board[0][3]?.king === true, "nudge onto far row should crown");
+  assert(res.message.includes("Crowned"), "nudge should report crown");
+}
+
 // Rusted pieces should not crown when swapped onto far row.
 {
   const state = baseState();
