@@ -6,6 +6,7 @@ import {
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone,
+  tryPromoteOnFarRow,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
@@ -79,6 +80,8 @@ function swapAt(state, r1, c1, r2, c2) {
   state.board[r2][c2] = a;
   if (a) { a.row = r2; a.col = c2; }
   if (b) { b.row = r1; b.col = c1; }
+  tryPromoteOnFarRow(a);
+  tryPromoteOnFarRow(b);
 }
 
 function findPieceById(state, id) {
@@ -203,6 +206,7 @@ export function executeTrickster(state, plan) {
     state.board[e.to[0]][e.to[1]] = e.piece;
     e.piece.row = e.to[0];
     e.piece.col = e.to[1];
+    tryPromoteOnFarRow(e.piece);
   }
 }
 
@@ -298,10 +302,6 @@ const EFFECTS = {
     if (!emptyDark(state, tr, tc)) return fail();
     movePiece(state.board, r, c, tr, tc);
     const landed = at(state, tr, tc);
-    if (landed && !landed.king && !(landed.rustedTurns > 0)) {
-      if (landed.color === COLORS.RED && tr === 0) landed.king = true;
-      if (landed.color === COLORS.BLACK && tr === SIZE - 1) landed.king = true;
-    }
     markMove(state, color);
     const crowned = landed?.king && (tr === promoRow(color));
     return ok(crowned ? "Random teleport — crowned!" : "Random teleport!", { teleportFrom: [r, c], teleportTo: [tr, tc] });
@@ -508,7 +508,7 @@ const EFFECTS = {
   },
   sanctified(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); getSq(state,r,c).sanctified=color; return ok(); },
   warp_gate(state, color, picks) { if(picks.length<2) return fail(); const k1=sk(...p0(picks)),k2=sk(...p1(picks)); state.squares[k1]={...state.squares[k1],warp:k2}; state.squares[k2]={...state.squares[k2],warp:k1}; return ok(); },
-  collapse(state, color, picks) { const [r,c]=p0(picks); if(!isDarkSquare(r,c)) return fail(); setCollapsedSquare(state.meta, r, c); const p=at(state,r,c); if(p){ removePiece(state.board,r,c); for(let r2=0;r2<SIZE;r2++) for(let c2=0;c2<SIZE;c2++) if(emptyDark(state,r2,c2)){ state.board[r2][c2]=p; p.row=r2; p.col=c2; break;}} return ok(); },
+  collapse(state, color, picks) { const [r,c]=p0(picks); if(!isDarkSquare(r,c)) return fail(); setCollapsedSquare(state.meta, r, c); const p=at(state,r,c); if(p){ removePiece(state.board,r,c); for(let r2=0;r2<SIZE;r2++) for(let c2=0;c2<SIZE;c2++) if(emptyDark(state,r2,c2)){ state.board[r2][c2]=p; p.row=r2; p.col=c2; tryPromoteOnFarRow(p); break;}} return ok(); },
   mirror_board(state, color, picks) { state.meta.mirrorBoardTurns[opp(color)]=2; return ok(); },
   darkness(state, color, picks) {
     const [r, c] = p0(picks);
