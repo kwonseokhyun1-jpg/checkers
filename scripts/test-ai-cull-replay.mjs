@@ -7,6 +7,7 @@ import { planAiTurnWork, applyAiReplayEntry, cloneMatchState } from "../js/ai.js
 import { COLORS } from "../js/board.js";
 import { createCardInstance, getCardById } from "../js/cards.js";
 import { createMatchState } from "../js/match.js";
+import { DECK_SIZE } from "../js/cardCatalog.js";
 
 function replayAiLogSkippingCullApply(state, log, aiColor) {
   for (const entry of log) {
@@ -25,7 +26,7 @@ function replayAiLogWithCullApply(state, log, aiColor) {
   }
 }
 
-const live = createMatchState(Array(30).fill("nudge"));
+const live = createMatchState(Array(DECK_SIZE).fill("nudge"));
 live.turn = COLORS.BLACK;
 live.hands[COLORS.BLACK] = [createCardInstance(getCardById("cull"))];
 live.hands[COLORS.RED] = [];

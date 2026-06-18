@@ -40,7 +40,7 @@ export function validateDeck(cardIds, profile) {
 export function canAddCardToDeck(deckIds, cardId, profile) {
   if (isKnightCard(cardId)) return { ok: false, reason: "This spell is no longer in the game." };
   if (isEconomyCard(cardId)) return { ok: false, reason: "Economy spells are disabled." };
-  if (deckIds.length >= DECK_SIZE) return { ok: false, reason: "Deck is full (30 cards)." };
+  if (deckIds.length >= DECK_SIZE) return { ok: false, reason: `Deck is full (${DECK_SIZE} cards).` };
   const counts = countById(deckIds);
   const inDeck = counts[cardId] || 0;
   const cap = maxCopiesForCard(cardId);
@@ -54,7 +54,7 @@ export function buildAiDeck() {
   return buildMysteryDeck();
 }
 
-/** Random 30-card deck from the full playable pool — no collection ownership check. */
+/** Random deck from the full playable pool — no collection ownership check. */
 export function buildMysteryDeck() {
   const pool = getPlayableCards();
   const ids = [];

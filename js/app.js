@@ -918,7 +918,7 @@ function appendCollectionCard(parent, def, opts = {}) {
     } else {
       action.classList.add("deck-collection-row__action--disabled");
       action.disabled = true;
-      if (workingDeck.length >= DECK_SIZE) action.textContent = "Deck full (30/30)";
+      if (workingDeck.length >= DECK_SIZE) action.textContent = `Deck full (${DECK_SIZE}/${DECK_SIZE})`;
       else if (inDeck >= cap) action.textContent = "Max copies in deck";
       else if (owned < 1) action.textContent = "Open Shop chests to unlock";
       else if (addCheck.reason) action.textContent = addCheck.reason;
@@ -1652,7 +1652,7 @@ function startAdventureMatch() {
     const opponent = $("prebattle-opponent");
     if (opponent) {
       if (!deck || deck.cardIds.length !== DECK_SIZE) {
-        opponent.textContent = "Build a complete 30-card deck in the Decks tab, then try again.";
+        opponent.textContent = `Build a complete ${DECK_SIZE}-card deck in the Decks tab, then try again.`;
       } else {
         opponent.textContent = "Could not start battle — close and pick the stage again.";
       }
