@@ -9,6 +9,7 @@ import { isRemovedCard, isEconomyCard, isKnightCard } from "../js/cardCatalog.js
 const REACTIVE_FX = {
   landmine: "mine blast (on trigger)",
   bomb: "bomb blast (on move)",
+  shockwave: "shockwave pulse (on move)",
 };
 
 const withVisual = [];

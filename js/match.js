@@ -1375,6 +1375,7 @@ export class MatchSession {
     const kind = this.boardFx.kind || "bomb";
     const labels = {
       bomb: "Bomb detonates — adjacent pieces destroyed!",
+      shockwave: "Shockwave — adjacent pieces paralyzed!",
       mine: "Landmine explodes!",
       vengeance: "Vengeance — blood for blood!",
       deflect: "Deflect — spell reflected!",
@@ -2706,6 +2707,7 @@ ${starLine}`;
           if (piece.bishopTurns > 0) el.classList.add("bishop-mark");
           if (piece.rookTurns > 0) el.classList.add("rook-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
+          if (piece.shockwaveArmed) el.classList.add("shockwave-armed");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
           if (piece.linkedFateId) el.classList.add("linked-fate");

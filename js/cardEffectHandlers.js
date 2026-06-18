@@ -322,6 +322,7 @@ const EFFECTS = {
   },
   landmine(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); if(sq.mine||sq.hiddenMine) return fail("Square already trapped"); placeMine(sq, color, true); return ok(); },
   bomb(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bombArmed=true; return ok("Bomb armed — explodes on next move."); },
+  shockwave(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shockwaveArmed=true; return ok("Shockwave armed — pulses on next move."); },
   detonate(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r+dr,c+dc); if(t&&t.color!==color) kill(state,r+dr,c+dc,color);} return ok(); },
   ricochet(state, color, picks) { state.meta.pendingRicochet[color]=true; return ok(); },
   duel(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); if(Math.max(Math.abs(r1-r2),Math.abs(c1-c2))!==1) return fail(); kill(state,r1,c1,color); kill(state,r2,c2,color); return ok(); },

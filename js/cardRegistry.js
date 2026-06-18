@@ -84,6 +84,7 @@ export const CARD_REGISTRY = [
   { id: "shatter", name: "Shatter", desc: "Destroy any unshielded enemy. You cannot cast spells on your next turn.", rarity: "legendary", weight: 1, mode: "enemy", effect: "destroy_unshielded" },
   { id: "pyromancy", name: "Pyromancy", desc: "Ignite an enemy piece and one empty dark square — each burns for 2 turns (like poison, but fire). Burning tiles block enemy movement. You cannot cast spells on your next turn.", rarity: "legendary", weight: 1, mode: "e_empty", effect: "pyromancy" },
   { id: "bomb", name: "Bomb", desc: "Arm a friendly piece; when it moves, it explodes on adjacent squares (including itself).", rarity: "legendary", weight: 1, mode: "friendly", effect: "bomb" },
+  { id: "shockwave", name: "Shockwave", desc: "Arm a friendly piece; when it moves, paralyze all adjacent pieces for 1 turn.", rarity: "epic", weight: 2, mode: "friendly", effect: "shockwave" },
   { id: "chain_lightning", name: "Chain Lightning", desc: "Destroy up to 2 chained adjacent enemies from your piece.", rarity: "legendary", weight: 1, mode: "friendly", effect: "chain_lightning" },
   { id: "revive", name: "Revive", desc: "Return your most recently captured man to any empty dark square except your back rank; no capture the turn it returns.", rarity: "legendary", weight: 1, mode: "empty", effect: "revive" },
   { id: "mind_control", name: "Mind Control", desc: "Convert an enemy man to your color for 2 of your turns, then it reverts to the enemy.", rarity: "epic", weight: 2, mode: "enemy", effect: "mind_control" },

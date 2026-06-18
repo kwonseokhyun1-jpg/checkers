@@ -120,6 +120,7 @@ export const EFFECT_ILLUSTRATIONS = {
   backstab: () => wrap(`${piece(28, 40, 5)} ${enemy(40, 28, 5)} ${arrow(32, 36, 38, 32)}`),
   cryo_bolt: () => wrap(`${enemy(40, 26, 5)} ${piece(22, 44, 4)} ${bolt(26, 40, 36, 30)}<path d="M40 18 L44 22 L36 22 Z" fill="currentColor" opacity="0.5"/>`),
   bomb: () => wrap(`${piece(32, 36, 6)}<circle cx="32" cy="36" r="10" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/><path d="M32 20 V26" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="18" r="2.5" fill="currentColor" opacity="0.8"/>`),
+  shockwave: () => wrap(`${piece(32, 36, 6)}<circle cx="32" cy="36" r="8" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.45"/><circle cx="32" cy="36" r="14" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.35"/><circle cx="32" cy="36" r="20" fill="none" stroke="currentColor" stroke-width="1" opacity="0.25"/>`),
   magnet: () => wrap(`${piece(20, 36, 5)} ${enemy(48, 36, 5)} ${arrow(44, 36, 28, 36)}<text x="12" y="22" font-size="10" fill="currentColor" opacity="0.6">U</text>`),
 
   poison_3: () => wrap(`${enemy(32, 30, 6)}<text x="27" y="18" font-size="11" fill="currentColor" opacity="0.85">☠</text><path d="M28 40 H36" stroke="currentColor" stroke-width="2" opacity="0.45"/>`),
