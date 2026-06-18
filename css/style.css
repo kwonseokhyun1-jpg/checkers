@@ -816,6 +816,40 @@ body {
   50% { transform: translateX(30%) rotate(0deg); opacity: 0.85; }
 }
 .spell-card__svg { width: 64px; height: 64px; }
+.spell-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.spell-card__art-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spell-card__art-fallback .spell-card__svg {
+  width: 64px;
+  height: 64px;
+}
+.spell-card--has-art .spell-card__art {
+  background: #0a0e14;
+}
+.spell-card--has-art .spell-card__art-shine,
+.spell-card--has-art .spell-card__sigil {
+  display: none;
+}
+.spell-card--has-art.spell-card--anim-debuff .spell-card__art,
+.spell-card--has-art.spell-card--anim-board .spell-card__art {
+  animation: none;
+}
+.spell-card--has-art .spell-card__svg {
+  animation: none;
+}
 .spell-card__sigil {
   position: absolute;
   bottom: 4px;

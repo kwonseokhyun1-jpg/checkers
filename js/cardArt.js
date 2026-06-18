@@ -3,6 +3,7 @@
  */
 import { getCardEffectTags, formatEffectTooltip } from "./cardEffectTags.js";
 import { illustrationForCard } from "./cardIllustrations.js";
+import { cardArtUrl, hasCardArt } from "./cardArtManifest.js";
 
 const THEME_STYLES = {
   movement: { symbol: "↗", label: "Motion", anim: "movement" },
@@ -121,6 +122,15 @@ function themeIllustration(theme, variant) {
   return shapes[theme] || shapes.arcane;
 }
 
+function artMarkup(theme, hue, cardId, def) {
+  const url = def?.id ? cardArtUrl(def.id) : null;
+  if (url) {
+    return `<img class="spell-card__img" src="${escapeHtml(url)}" alt="" decoding="async" loading="lazy"/>
+      <div class="spell-card__art-fallback" hidden aria-hidden="true">${artSvg(theme, hue, cardId, def)}</div>`;
+  }
+  return artSvg(theme, hue, cardId, def);
+}
+
 function artSvg(theme, hue, cardId, def) {
   const gid = safeId(cardId);
   const accent = (hue + 42) % 360;
@@ -185,6 +195,7 @@ export function renderSpellCardEl(def, opts = {}) {
   el.className = [
     "spell-card",
     `spell-card--${size}`,
+    hasCardArt(def.id) ? "spell-card--has-art" : "",
     `spell-card--anim-${style.anim}`,
     rarityClass,
     def.rarity === "epic" ? "spell-card--epic-fx" : "",
@@ -215,7 +226,7 @@ export function renderSpellCardEl(def, opts = {}) {
     <div class="spell-card__frame">
       <div class="spell-card__art spell-card__art--animated" aria-hidden="true">
         <div class="spell-card__art-shine"></div>
-        ${artSvg(theme, hue, def.id, def)}
+        ${artMarkup(theme, hue, def.id, def)}
         <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
       </div>
       <div class="spell-card__body">
@@ -230,6 +241,18 @@ export function renderSpellCardEl(def, opts = {}) {
       ${buildEffectListHtml(def)}
     </div>
   `;
+
+  const img = el.querySelector(".spell-card__img");
+  if (img) {
+    img.addEventListener("error", () => {
+      img.hidden = true;
+      const fallback = el.querySelector(".spell-card__art-fallback");
+      if (fallback) {
+        fallback.hidden = false;
+        el.classList.remove("spell-card--has-art");
+      }
+    });
+  }
 
   if (opts.onClick) {
     el.addEventListener("click", (e) => {
