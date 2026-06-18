@@ -1,6 +1,6 @@
 /** Global match state: gems modifiers, square terrain, turn flags */
 
-import { COLORS, SIZE, inBounds, isDarkSquare } from "./board.js";
+import { COLORS, SIZE, inBounds, isDarkSquare, tryPromoteOnFarRow } from "./board.js";
 import { drawToHand } from "./deckPile.js";
 
 export function createMatchMeta() {
@@ -178,6 +178,7 @@ export function tickMeta(state, color) {
     if (!state.board[r][c]) state.board[r][c] = piece;
     piece.row = r;
     piece.col = c;
+    tryPromoteOnFarRow(piece);
     state.meta.pocket = null;
   }
 }
