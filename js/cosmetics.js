@@ -6,7 +6,7 @@ export const COSMETIC_TYPES = ["avatar", "frame", "banner", "pieceSkin"];
 
 export const COSMETIC_RARITIES = ["common", "uncommon", "rare", "epic", "legendary"];
 
-const RARITY_GEM_DUPE = { common: 5, uncommon: 10, rare: 20, epic: 40, legendary: 80 };
+const RARITY_GEM_DUPE = { common: 0, uncommon: 5, rare: 15, epic: 35, legendary: 75 };
 
 /** @type {{ id: string, type: string, name: string, rarity: string, desc: string }[]} */
 export const COSMETIC_ITEMS = [
@@ -138,7 +138,7 @@ export function drawCosmeticItem(profile, weightsOrBox) {
       profile.cosmetics.owned[pick.type].push(pick.id);
       return { ...pick, duplicate: false };
     }
-    const gemRefund = RARITY_GEM_DUPE[pick.rarity] || 5;
+    const gemRefund = RARITY_GEM_DUPE[pick.rarity] ?? 0;
     return { ...pick, duplicate: true, gemRefund };
   }
   return null;
@@ -158,7 +158,7 @@ export function openCosmeticBox(profile, boxId) {
     const item = drawCosmeticItem(profile, box);
     if (!item) continue;
     pulls.push(item);
-    if (item.duplicate) bonusGems += item.gemRefund || RARITY_GEM_DUPE[item.rarity] || 5;
+    if (item.duplicate) bonusGems += item.gemRefund ?? RARITY_GEM_DUPE[item.rarity] ?? 0;
   }
 
   if (bonusGems) profile.gems += bonusGems;

@@ -51,7 +51,7 @@ function grantCosmeticTier(profile, tier) {
     const item = drawCosmeticItem(profile, tier.weights);
     if (item) {
       pulls.push(item);
-      if (item.duplicate) bonusGems += item.gemRefund || 5;
+      if (item.duplicate) bonusGems += item.gemRefund ?? 0;
     }
   }
   if (bonusGems) profile.gems = (profile.gems || 0) + bonusGems;
