@@ -42,9 +42,42 @@ CATEGORY_CARDS: dict[str, list[str]] = {
 }
 
 CATEGORY_SKIP: dict[str, set[int]] = {
-  # unnamed (row 2, col 6) and snap (row 3, col 4) on the attack sheet
+    # unnamed (row 2, col 6) and snap (row 3, col 4) on the attack sheet
     "attack": {10, 14},
 }
+
+CATEGORY_GRID_ROWS: dict[str, list[int]] = {
+    "attack": [5, 6, 5],
+}
+
+
+def grid_card_boxes(
+    img: Image.Image,
+    row_counts: list[int],
+    margin_x: float = 0.02,
+    margin_y: float = 0.03,
+    gap_x: float = 0.015,
+    gap_y: float = 0.04,
+) -> list[tuple[int, int, int, int]]:
+    """Split sheet into a fixed row grid (e.g. attack: 5+6+5 cards)."""
+    w, h = img.size
+    mx = int(w * margin_x)
+    my = int(h * margin_y)
+    gx = int(w * gap_x)
+    gy = int(h * gap_y)
+    inner_w = w - 2 * mx
+    inner_h = h - 2 * my
+    row_h = (inner_h - gy * (len(row_counts) - 1)) // len(row_counts)
+    boxes: list[tuple[int, int, int, int]] = []
+    y = my
+    for count in row_counts:
+        cell_w = (inner_w - gx * (count - 1)) // count
+        x = mx
+        for _ in range(count):
+            boxes.append((x, y, x + cell_w, y + row_h))
+            x += cell_w + gx
+        y += row_h + gy
+    return boxes
 
 
 def detect_card_boxes(img: Image.Image, min_area_ratio: float = 0.004) -> list[tuple[int, int, int, int]]:
@@ -172,6 +205,12 @@ def main() -> None:
     parser.add_argument("category", choices=sorted(CATEGORY_CARDS.keys()))
     parser.add_argument("sheet", type=Path, help="Path to the category sheet image")
     parser.add_argument("--skip", type=str, default="", help="Comma-separated 0-based indices to skip")
+    parser.add_argument(
+        "--grid-rows",
+        type=str,
+        default="",
+        help="Fixed row layout, e.g. 5,6,5 (overrides auto-detect)",
+    )
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -186,7 +225,18 @@ def main() -> None:
 
     names = CATEGORY_CARDS[category]
     img = Image.open(sheet)
-    boxes = detect_card_boxes(img)
+
+    if args.grid_rows:
+        row_counts = [int(x.strip()) for x in args.grid_rows.split(",") if x.strip()]
+    elif category in CATEGORY_GRID_ROWS:
+        row_counts = CATEGORY_GRID_ROWS[category]
+    else:
+        row_counts = []
+
+    if row_counts:
+        boxes = grid_card_boxes(img, row_counts)
+    else:
+        boxes = detect_card_boxes(img)
     usable = [b for i, b in enumerate(boxes) if i not in skip]
 
     if len(usable) != len(names):
