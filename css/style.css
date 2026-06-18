@@ -3074,6 +3074,16 @@ body.chest-open-active {
 .piece.paralyzed-mark {
   box-shadow: 0 0 0 2px rgba(180, 120, 255, 0.9), 0 0 14px rgba(140, 80, 220, 0.5);
 }
+.piece.paralyzed-mark::after {
+  content: "⚡";
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  font-size: 0.6rem;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(140, 200, 255, 0.9);
+  pointer-events: none;
+}
 
 /* ── Collapsed square (crossed out) ── */
 .square.square--collapsed {
