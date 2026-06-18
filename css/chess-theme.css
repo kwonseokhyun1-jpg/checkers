@@ -213,7 +213,8 @@ body {
 .board-frame--local-flipped .blood-indicator,
 .board-frame--local-flipped .fire-tile-indicator,
 .board-frame--local-flipped .landmine-indicator,
-.board-frame--local-flipped .linked-fate-indicator {
+.board-frame--local-flipped .linked-fate-indicator,
+.board-frame--local-flipped .bounty-indicator {
   transform: rotate(180deg);
 }
 
@@ -372,6 +373,20 @@ body {
   box-shadow:
     0 0 0 2px rgba(255, 196, 64, 0.85),
     0 0 12px rgba(255, 180, 40, 0.45);
+}
+
+.bounty-indicator {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.bounty-indicator__mark {
+  font-size: clamp(0.48rem, 2.5vw, 0.66rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 4px rgba(255, 196, 64, 0.95));
 }
 
 .piece.poisoned {
