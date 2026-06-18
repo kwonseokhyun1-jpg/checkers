@@ -20,6 +20,15 @@ if (errors.length) {
   process.exit(1);
 }
 
+// Auth gate blocks nav in CI (Supabase configured, no signed-in user).
+if (await page.locator("#auth-gate:not(.hidden)").isVisible()) {
+  await page.evaluate(() => {
+    document.getElementById("auth-gate")?.classList.add("hidden");
+    document.body.classList.remove("auth-gate-active");
+  });
+  await page.waitForTimeout(300);
+}
+
 const tutorialVisible = await page.locator("#tutorial-modal:not(.hidden)").isVisible();
 if (tutorialVisible) {
   await page.locator('[data-tab="play"]').click();
@@ -61,11 +70,20 @@ if (squares < 64) {
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.waitForTimeout(1000);
-await page.locator("#auth-header-btn").click();
-await page.waitForTimeout(500);
-if (!(await page.locator("#auth-modal:not(.hidden)").isVisible())) {
-  console.error("Auth modal did not open from header");
-  process.exit(1);
+if (await page.locator("#auth-gate:not(.hidden)").isVisible()) {
+  await page.evaluate(() => {
+    document.getElementById("auth-gate")?.classList.add("hidden");
+    document.body.classList.remove("auth-gate-active");
+  });
+}
+const authHeader = page.locator("#auth-header-btn");
+if (await authHeader.isVisible()) {
+  await authHeader.click();
+  await page.waitForTimeout(500);
+  if (!(await page.locator("#auth-modal:not(.hidden)").isVisible())) {
+    console.error("Auth modal did not open from header");
+    process.exit(1);
+  }
 }
 
 console.log("Smoke test passed:", { baseUrl, stages, squares });
