@@ -103,6 +103,7 @@ export function createPiece(color, row, col, king = false) {
     fortifyTurns: 0,
     venom: 0,
     blazeTurns: 0,
+    blazeBy: null,
     superMan: 0,
     lastStand: false,
     mirrorShield: false,
@@ -186,13 +187,27 @@ export function applyVenomToPiece(board, state, row, col, amount) {
   return true;
 }
 
-export function applyBurnToPiece(board, state, row, col, turns) {
+export function applyBurnToPiece(board, state, row, col, turns, byColor = null) {
   if (state && isInDarknessZone(state, row, col)) return false;
   const piece = board[row][col];
   if (isFortified(piece)) return false;
   if (destroyPieceIfClone(board, state, row, col)) return true;
   if (!piece) return false;
+  if (byColor && piece.color !== byColor && piece.mirrorShield) {
+    piece.mirrorShield = false;
+    const es = enemyPieces(board, byColor);
+    if (es.length) {
+      const t = es[Math.floor(Math.random() * es.length)];
+      return applyBurnToPiece(board, state, t.row, t.col, turns, byColor);
+    }
+    return true;
+  }
+  if (piece.shieldTurns > 0) {
+    piece.shieldTurns--;
+    return true;
+  }
   piece.blazeTurns = turns;
+  piece.blazeBy = byColor;
   return true;
 }
 
@@ -567,24 +582,18 @@ function shockwavePulseAt(board, state, row, col) {
 }
 
 function explodeBombAt(board, state, row, col) {
-  const victims = [];
+  const bomber = board[row]?.[col];
+  const byColor = bomber?.color;
+  let killed = 0;
   for (let dr = -1; dr <= 1; dr++) {
     for (let dc = -1; dc <= 1; dc++) {
       const r = row + dr, c = col + dc;
       if (!inBounds(r, c)) continue;
-      const p = board[r][c];
-      if (!p) continue;
-      victims.push([r, c, p]);
+      if (!board[r][c]) continue;
+      if (resolveCapture(board, state, r, c, byColor, { nonCap: true })) killed++;
     }
   }
-  for (const [r, c, p] of victims) {
-    if (state) {
-      if (!state.captured[p.color]) state.captured[p.color] = [];
-      state.captured[p.color].push({ king: p.king });
-    }
-    removePiece(board, r, c);
-  }
-  return victims.length;
+  return killed;
 }
 
 export function applyMove(board, move, state = null) {
@@ -754,7 +763,12 @@ export function tickEffects(board, color, state = null) {
       }
       if (p.blazeTurns > 0) {
         p.blazeTurns--;
-        if (p.blazeTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
+        if (p.blazeTurns <= 0) {
+          p.blazeTurns = 0;
+          const byColor = p.blazeBy || (p.color === COLORS.RED ? COLORS.BLACK : COLORS.RED);
+          p.blazeBy = null;
+          resolveCapture(board, state, r, c, byColor, { nonCap: true });
+        }
       }
       if (p.bloodTurns > 0) {
         p.bloodTurns--;
