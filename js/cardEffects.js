@@ -389,6 +389,8 @@ export function getValidTargets(state, color, card, picks) {
               if (found) res.push([r, c]);
             } else if (card.effect === "deport") {
               if (deportCanTarget(state, p, r, c)) res.push([r, c]);
+            } else if (card.effect === "execution") {
+              if (!pieceHasLegalMoves(state.board, o, state, r, c)) res.push([r, c]);
             } else res.push([r, c]);
           }
         }
