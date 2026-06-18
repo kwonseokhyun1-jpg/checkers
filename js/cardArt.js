@@ -125,7 +125,7 @@ function themeIllustration(theme, variant) {
 function artMarkup(theme, hue, cardId, def) {
   const url = def?.id ? cardArtUrl(def.id) : null;
   if (url) {
-    return `<img class="spell-card__img" src="${escapeHtml(url)}" alt="" decoding="async" loading="lazy"/>
+    return `<img class="spell-card__img" src="${escapeHtml(url)}" alt="" decoding="async"/>
       <div class="spell-card__art-fallback" hidden aria-hidden="true">${artSvg(theme, hue, cardId, def)}</div>`;
   }
   return artSvg(theme, hue, cardId, def);
@@ -192,10 +192,12 @@ export function renderSpellCardEl(def, opts = {}) {
 
   const rarityClass = def.rarity === "legendary" ? "legendary" : def.rarity;
 
+  const usePortraitArt = hasCardArt(def.id);
+
   el.className = [
     "spell-card",
     `spell-card--${size}`,
-    hasCardArt(def.id) ? "spell-card--has-art" : "",
+    usePortraitArt ? "spell-card--portrait-art" : "",
     `spell-card--anim-${style.anim}`,
     rarityClass,
     def.rarity === "epic" ? "spell-card--epic-fx" : "",
@@ -221,6 +223,8 @@ export function renderSpellCardEl(def, opts = {}) {
         ? '<div class="spell-card__fx spell-card__fx--epic" aria-hidden="true"></div>'
         : "";
 
+  const showBody = !usePortraitArt || opts.showBody;
+
   el.innerHTML = `
     ${fxLayer}
     <div class="spell-card__frame">
@@ -229,12 +233,12 @@ export function renderSpellCardEl(def, opts = {}) {
         ${artMarkup(theme, hue, def.id, def)}
         <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
       </div>
-      <div class="spell-card__body">
+      ${showBody ? `<div class="spell-card__body">
         <span class="spell-card__rarity">${def.rarity}</span>
         <h3 class="spell-card__name">${escapeHtml(def.name)}</h3>
         ${opts.meta ? `<p class="spell-card__meta">${escapeHtml(opts.meta)}</p>` : ""}
         ${showDesc ? `<p class="spell-card__desc">${escapeHtml(def.desc)}</p>` : ""}
-      </div>
+      </div>` : ""}
     </div>
     <div class="spell-card__tooltip" role="tooltip">
       <strong>${escapeHtml(def.name)}</strong>
@@ -249,7 +253,7 @@ export function renderSpellCardEl(def, opts = {}) {
       const fallback = el.querySelector(".spell-card__art-fallback");
       if (fallback) {
         fallback.hidden = false;
-        el.classList.remove("spell-card--has-art");
+        el.classList.remove("spell-card--portrait-art");
       }
     });
   }

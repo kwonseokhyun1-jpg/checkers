@@ -263,6 +263,9 @@ body.deck-editing .game-nav.tabs {
 .deck-slot-wrap--strip .spell-card__art {
   height: 2.85rem;
 }
+.deck-slot-wrap--strip .spell-card--portrait-art .spell-card__art {
+  height: auto;
+}
 
 .deck-slot-wrap--strip .spell-card__body {
   padding: 0.2rem 0.15rem 0.25rem;
@@ -418,6 +421,9 @@ body.deck-editing .game-nav.tabs {
 
 .deck-collection-row__thumb .spell-card__art {
   height: 2rem;
+}
+.deck-collection-row__thumb .spell-card--portrait-art .spell-card__art {
+  height: auto;
 }
 
 .deck-collection-row__thumb .spell-card__body {
