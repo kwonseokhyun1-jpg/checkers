@@ -209,7 +209,9 @@ export class MatchSession {
     this._pendingHistoryLabel = null;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.achievementTracker =
-      this.profile && !this.isPvp ? createMatchAchievementTracker(this.profile, this.localColor) : null;
+      this.profile && !this.isPvp
+        ? createMatchAchievementTracker(this.profile, this.localColor, this.state)
+        : null;
     if (this.achievementTracker) {
       this.state.meta.achievementHook = this.achievementTracker;
     }
@@ -1594,6 +1596,9 @@ ${starLine}`;
         this._pendingStarsGained = starsGained;
       }
     }
+    if (won && this.achievementTracker) {
+      this.achievementTracker.onVictory(this.state);
+    }
     const overlay = this.root.querySelector("#game-over");
     if (overlay) {
       this.root.querySelector("#game-over-title").textContent = title;
@@ -1619,9 +1624,6 @@ ${starLine}`;
         const { playStarCollectAnimation } = await import("./starCollectAnimation.js");
         await playStarCollectAnimation(n, starsEl);
       }
-    }
-    if (won && this.achievementTracker) {
-      this.achievementTracker.onVictory(this.state);
     }
     if (this.isPvp) {
       this.onPvpWin?.(won);
