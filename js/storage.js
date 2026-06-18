@@ -1,7 +1,7 @@
 import { isKnightCard, isRemovedCard, getCardDef, getPlayableCards, maxCopiesForCard, DECK_SIZE } from "./cardCatalog.js";
 import { defaultAdventureProgress, migrateAdventureDecks, repairAdventureProgress } from "./adventure.js";
 import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
-import { normalizeAchievements, DEFAULT_ACHIEVEMENTS, syncArcaneMastery } from "./achievements.js";
+import { normalizeAchievements, DEFAULT_ACHIEVEMENTS, syncArcaneMastery, syncChampion } from "./achievements.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
 
@@ -309,6 +309,7 @@ function finalizeProfile(profile) {
   if (!p.achievements) p.achievements = structuredClone(DEFAULT_ACHIEVEMENTS);
   p.achievements = normalizeAchievements(p.achievements);
   syncArcaneMastery(p);
+  syncChampion(p);
   return p;
 }
 
