@@ -48,6 +48,7 @@ import {
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
+import { smallMysteryBoxSvgMarkup, bigMysteryBoxSvgMarkup } from "./mysteryBoxArt.js";
 import { MatchSession } from "./match.js";
 import {
   renderProfileTab,
@@ -492,10 +493,11 @@ function showDeckSubview(sub) {
 
 function mysteryBoxHtml({ id, title, desc, cost, big = false }) {
   const canAfford = (profile.stars ?? 0) >= cost;
+  const art = big ? bigMysteryBoxSvgMarkup() : smallMysteryBoxSvgMarkup();
   return `
     <article class="mystery-box ${big ? "mystery-box--big" : ""} ${canAfford ? "mystery-box--ready" : "mystery-box--locked"}" data-mystery-id="${id}" role="button" tabindex="0" aria-label="Open ${title} for ${cost} stars">
       <div class="mystery-box__glow" aria-hidden="true"></div>
-      <div class="mystery-box__icon" aria-hidden="true">${big ? "★?" : "?"}</div>
+      <div class="mystery-box__visual" aria-hidden="true">${art}</div>
       <h3 class="mystery-box__title">${title}</h3>
       <p class="mystery-box__desc">${desc}</p>
       <p class="mystery-box__cost"><span aria-hidden="true">★</span> ${cost} stars</p>
