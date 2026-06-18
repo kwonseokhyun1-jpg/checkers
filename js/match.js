@@ -16,7 +16,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, hasVengeanceArmed } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, hasVengeanceArmed, isConfused, clearConfusion } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -484,7 +484,8 @@ export class MatchSession {
       s.turn === this.localColor &&
       !s.gameOver &&
       !this.actionBusy &&
-      !this.cardPlay
+      !this.cardPlay &&
+      !isConfused(s.meta, this.localColor)
     );
   }
 
@@ -505,8 +506,8 @@ export class MatchSession {
 
   pickConfusedMove(color) {
     const s = this.state;
-    if (!s.meta.confuseNext?.[color]) return null;
-    s.meta.confuseNext[color] = false;
+    if (!isConfused(s.meta, color)) return null;
+    clearConfusion(s.meta, color);
     const pool = getAllMovesForColor(s.board, color, s);
     if (!pool.length) return null;
     const move = pool[Math.floor(Math.random() * pool.length)];
@@ -618,6 +619,8 @@ export class MatchSession {
       this.setMessage("Spell backlash — no spells this turn. Select a piece to move.");
     } else if (color === this.localColor && s.meta.blinded?.[color]) {
       this.setMessage("You are blinded — no spells this turn. Select a piece to move.");
+    } else if (color === this.localColor && isConfused(s.meta, color)) {
+      this.setMessage("Confusion — your move will be random. Cast a spell or skip to move.");
     } else if (color === this.localColor && s.meta.pendingPressMove?.[color]) {
       this.setMessage("Press — you'll move again after your normal move. Select a piece.");
     }
@@ -1430,9 +1433,15 @@ export class MatchSession {
     const preMoveSnap = this.tutorialHooks ? cloneMatchState(s) : null;
     this._pendingHistoryMove = move;
     this._pendingHistoryLabel = formatPieceMoveLabel(s.board, move);
-    if (s.turn === this.localColor && s.meta.confuseNext?.[this.localColor]) {
+    if (s.turn === this.localColor && isConfused(s.meta, this.localColor)) {
       const forced = this.pickConfusedMove(this.localColor);
-      if (forced) move = forced;
+      if (!forced) {
+        this.cancelCardPlay();
+        this.setMessage("Confusion — no moves available.");
+        this.endHumanTurn();
+        return;
+      }
+      move = forced;
     }
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
@@ -2297,8 +2306,11 @@ ${starLine}`;
                 applyAiReplayEntry(this.state, entry, oc);
               }
             } else {
+              const earlyMetaApply =
+                entry.cardEffect === "confusion" || entry.cardEffect === "blind";
+              if (earlyMetaApply) applyAiReplayEntry(this.state, entry, oc);
               await this.playSpellEntryVisual(entry, { cardName, def, oc });
-              applyAiReplayEntry(this.state, entry, oc);
+              if (!earlyMetaApply) applyAiReplayEntry(this.state, entry, oc);
             }
             this.recordHistoryFromReplayEntry(entry);
             this.render();
@@ -2462,9 +2474,14 @@ ${starLine}`;
     if (s.gameOver || s.turn !== this.localColor) return;
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
-    const confused = this.pickConfusedMove(this.localColor);
-    if (confused) {
-      this.executeHumanMove(confused);
+    if (isConfused(s.meta, this.localColor)) {
+      const forced = this.pickConfusedMove(this.localColor);
+      if (forced) {
+        this.executeHumanMove(forced);
+      } else {
+        this.setMessage("Confusion — no moves available.");
+        this.endHumanTurn();
+      }
       return;
     }
     const panicked = findPanicPiece(s.board, this.localColor);
@@ -3109,6 +3126,8 @@ ${starLine}`;
           ? "No spells (backlash) · "
           : s.meta.blinded?.[this.localColor]
             ? "No spells (Blinded) · "
+            : isConfused(s.meta, this.localColor)
+              ? "Confusion — random move · "
             : s.spellPlayed[this.localColor]
             ? "Spell used · "
             : "1 spell available · ";

@@ -8,7 +8,7 @@ import {
   getBackwardStepMoves,
 } from "./board.js";
 import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell } from "./cardEffects.js";
-import { queueTrapHistoryReveal } from "./gameMeta.js";
+import { queueTrapHistoryReveal, isConfused, clearConfusion } from "./gameMeta.js";
 import { getCardDef } from "./cardCatalog.js";
 
 /** Deep copy for AI planning without mutating the live match state. */
@@ -122,7 +122,7 @@ export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
   if (entry.type === "move") {
     const [fr, fc] = entry.from;
     if (!state.board[fr]?.[fc]) return false;
-    if (entry.confused) state.meta.confuseNext[color] = false;
+    if (entry.confused) clearConfusion(state.meta, color);
     if (entry.bearBonus) {
       if (!state.meta.bearBonusUsed) state.meta.bearBonusUsed = {};
       state.meta.bearBonusUsed[aiColor] = true;
@@ -283,9 +283,9 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
   let confused = false;
   const panicked = findPanicPiece(state.board, color);
   const panicForced = panicked && getBackwardStepMoves(state.board, panicked, state).length > 0;
-  if (state.meta.confuseNext?.[color]) {
+  if (isConfused(state.meta, color)) {
     confused = true;
-    state.meta.confuseNext[color] = false;
+    clearConfusion(state.meta, color);
     const moves = getAllMovesForColor(state.board, color, state);
     move = moves[Math.floor(Math.random() * moves.length)] || null;
     if (move) log.push({ type: "message", text: "Confusion — random move!" });
