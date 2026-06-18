@@ -3,7 +3,7 @@
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, hasMandatoryJumps } from "./board.js";
 import { collapsedSquareKey, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, longStepOk, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
 export { applyCard, applyEffect };
@@ -188,7 +188,7 @@ function fEmptyFirstPickTargets(state, color, card) {
   }
   if (card.effect === "long_step") {
     return filter((piece, r, c) =>
-      [[r + 2, c + 2], [r + 2, c - 2], [r - 2, c + 2], [r - 2, c - 2]].some(([tr, tc]) => emptyDark(state, tr, tc))
+      [[r + 2, c + 2], [r + 2, c - 2], [r - 2, c + 2], [r - 2, c - 2]].some(([tr, tc]) => longStepOk(state, r, c, tr, tc))
     );
   }
   if (card.effect === "blink_2" || card.effect === "teleport") {
@@ -285,7 +285,7 @@ export function getValidTargets(state, color, card, picks) {
       if (card.effect === "blink_2" || card.effect === "teleport") return getTeleportTargets(state.board, p);
       if (card.effect === "long_step")
         return [[pr + 2, pc + 2], [pr + 2, pc - 2], [pr - 2, pc + 2], [pr - 2, pc - 2]].filter(
-          ([r, c]) => emptyDark(state, r, c)
+          ([r, c]) => longStepOk(state, pr, pc, r, c)
         );
       if (card.effect === "sidestep")
         return [

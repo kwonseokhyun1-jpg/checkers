@@ -63,6 +63,12 @@ export function callForwardMoveOk(state, er, ec, tr, tc) {
   return diagonalPathClear(state, er, ec, tr, tc);
 }
 
+export function longStepOk(state, r1, c1, r2, c2) {
+  if (Math.abs(r2 - r1) !== 2 || Math.abs(c2 - c1) !== 2) return false;
+  if (!emptyDark(state, r2, c2)) return false;
+  return diagonalPathClear(state, r1, c1, r2, c2);
+}
+
 export function deportCanTarget(state, piece, r, c) {
   if (!piece || piece.startRow == null || piece.startCol == null) return false;
   if (!enemyCardCanMove(piece)) return false;
@@ -276,7 +282,7 @@ const EFFECTS = {
     return ok('Shatter — you cannot cast spells next turn.');
   },
   blink_2(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const d=Math.max(Math.abs(r2-r1),Math.abs(c2-c1)); if(d<1||d>2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
-  long_step(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(Math.abs(r2-r1)!==2||Math.abs(c2-c1)!==2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
+  long_step(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!longStepOk(state,r1,c1,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   sidestep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||r1!==r2||Math.abs(c2-c1)!==2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   chain_pull(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const e=at(state,r+dr,c+dc); if(e&&e.color!==color){ const nr=r+dr*2,nc=c+dc*2; if(emptyDark(state,nr,nc)) movePiece(state.board,e.row,e.col,nr,nc); return ok();}} return fail(); },
   repel(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const e=at(state,r+dr,c+dc); if(e&&e.color!==color){ const nr=e.row+dr,nc=e.col+dc; if(emptyDark(state,nr,nc)) movePiece(state.board,e.row,e.col,nr,nc); return ok();}} return fail(); },
