@@ -79,10 +79,10 @@ ROOT_SHEET_MAP: dict[str, str] = {
 def grid_card_boxes(
     img: Image.Image,
     row_counts: list[int],
-    margin_x: float = 0.02,
-    margin_y: float = 0.03,
-    gap_x: float = 0.015,
-    gap_y: float = 0.04,
+    margin_x: float = 0.006,
+    margin_y: float = 0.012,
+    gap_x: float = 0.006,
+    gap_y: float = 0.014,
 ) -> list[tuple[int, int, int, int]]:
     """Split sheet into a fixed row grid."""
     w, h = img.size
@@ -186,7 +186,7 @@ def split_category(
         urls = load_existing_manifest()
 
     for name, box in zip(names, usable):
-        rel = f"assets/cards/{category}/{name}.webp"
+        rel = f"./assets/cards/{category}/{name}.webp"
         out_path = ROOT / rel
         if dry_run:
             print(f"would write {rel} from {box}")
