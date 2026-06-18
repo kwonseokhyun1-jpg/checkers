@@ -121,7 +121,6 @@ export const EFFECT_ILLUSTRATIONS = {
   bomb: () => wrap(`${piece(32, 36, 6)}<circle cx="32" cy="36" r="10" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/><path d="M32 20 V26" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="18" r="2.5" fill="currentColor" opacity="0.8"/>`),
   magnet: () => wrap(`${piece(20, 36, 5)} ${enemy(48, 36, 5)} ${arrow(44, 36, 28, 36)}<text x="12" y="22" font-size="10" fill="currentColor" opacity="0.6">U</text>`),
 
-  hex_3: () => wrap(`${enemy(32, 32, 6)}<path d="M32 16 L42 22 V34 L32 40 L22 34 V22 Z" fill="none" stroke="currentColor" stroke-width="1.8" opacity="0.7"/>`),
   poison_3: () => wrap(`${enemy(32, 30, 6)}<text x="27" y="18" font-size="11" fill="currentColor" opacity="0.85">☠</text><path d="M28 40 H36" stroke="currentColor" stroke-width="2" opacity="0.45"/>`),
   rust: () => wrap(`${enemy(32, 34, 6)} ${crown(32, 22)}<path d="M24 20 L40 36 M40 20 L24 36" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>`),
   root_2: () => wrap(`${enemy(32, 28, 6)}<path d="M24 40 C28 34 36 34 40 40 M26 44 C30 38 34 38 38 44" stroke="currentColor" stroke-width="1.8" fill="none" opacity="0.65"/>`),
@@ -140,7 +139,6 @@ export const EFFECT_ILLUSTRATIONS = {
 
   crown: () => wrap(`${piece(32, 38, 6)} ${crown(32, 24)}`),
   demote: () => wrap(`${enemy(32, 36, 6)} ${crown(32, 18)}<path d="M24 16 L40 32 M40 16 L24 32" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>`),
-  stone_form: () => wrap(`${piece(32, 34, 6)} ${crown(32, 20)}<rect x="22" y="28" width="20" height="18" rx="3" fill="currentColor" opacity="0.25" stroke="currentColor" stroke-width="1.5"/>`),
   fusion: () => wrap(`${piece(20, 38, 5)} ${piece(44, 38, 5)} ${arrow(26, 38, 38, 38)} ${piece(32, 30, 7, 0.55)}`),
   clone: () => wrap(`${piece(24, 34, 5)} ${piece(42, 34, 5, 0.45)} ${arrow(30, 34, 36, 34)}`),
   chameleon: () => wrap(`${piece(32, 34, 6)}<path d="M18 22 H46 M18 30 H46 M18 38 H46" stroke="currentColor" stroke-width="1.2" opacity="0.25"/><circle cx="20" cy="22" r="3" fill="currentColor" opacity="0.5"/><circle cx="44" cy="30" r="3" fill="currentColor" opacity="0.35"/>`),

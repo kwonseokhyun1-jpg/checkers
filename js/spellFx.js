@@ -53,7 +53,6 @@ export const EFFECT_VISUAL = {
   fortify: "shield",
   fog_2: "shield",
   rally: "shield",
-  stone_form: "shield",
   sanctuary_pulse: "shield",
   revive: "revive",
   iron_will: "shield",
@@ -64,7 +63,6 @@ export const EFFECT_VISUAL = {
   create_foe: "summon",
 
   poison_3: "poison",
-  hex_3: "curse",
   rust: "curse",
   demote: "curse",
   panic: "curse",

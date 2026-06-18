@@ -72,11 +72,11 @@ const BUFF_EFFECTS = new Set([
   "shield_1", "shield_2", "retreat_3", "knight_perm", "crown", "rook_2", "bishop_2", "bishop_3",
   "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "mirror_shield", "phalanx",
   "last_stand", "ghost_guard", "fortify", "hibernation", "stall", "revive",
-  "wraith_2", "stone_form", "rally", "fusion", "create_foe",
+  "wraith_2", "rally", "fusion", "create_foe",
 ]);
 
 const DEBUFF_EFFECTS = new Set([
-  "freeze_1", "freeze_2", "snowball", "deep_freeze", "root_2", "slow_2", "silence_3", "rust", "hex_3", "fog_2",
+  "freeze_1", "freeze_2", "snowball", "deep_freeze", "root_2", "slow_2", "silence_3", "rust", "fog_2",
   "panic", "demote", "reverse_only_2", "venom", "backpedal",
 ]);
 

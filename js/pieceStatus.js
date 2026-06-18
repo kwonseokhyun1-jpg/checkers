@@ -29,13 +29,11 @@ const CURSE_RULES = [
   { key: "paralyzedTurns", label: "Paralyzed", turns: true },
   { key: "rooted", label: "Rooted", turns: true },
   { key: "silenced", label: "Silenced", turns: true },
-  { key: "hexed", label: "Hexed", turns: true },
   { key: "venom", label: "Venom", turns: true },
   { key: "blazeTurns", label: "Burning", turns: true },
   { key: "bloodTurns", label: "Vengeance Blood", turns: true },
   { key: "slowed", label: "Slowed", turns: true },
   { key: "reverseOnlyTurns", label: "Reverse March", turns: true },
-  { key: "stoneTurns", label: "Stone", turns: true },
   { key: "anchored", label: "Anchored", turns: true },
   { key: "rusted", label: "Rusted", bool: true },
   { key: "panicTurn", label: "Panic", bool: true },
@@ -100,14 +98,12 @@ export function cleanseDebuffs(piece) {
   piece.paralyzedTurns = 0;
   piece.rooted = 0;
   piece.silenced = 0;
-  piece.hexed = 0;
   piece.venom = 0;
   piece.blazeTurns = 0;
   piece.linkedFateId = null;
   piece.bountyBy = null;
   piece.slowed = 0;
   piece.reverseOnlyTurns = 0;
-  piece.stoneTurns = 0;
   piece.anchored = 0;
   piece.rusted = false;
   piece.rustedTurns = 0;
