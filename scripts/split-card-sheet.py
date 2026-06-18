@@ -52,12 +52,12 @@ CATEGORY_CARDS: dict[str, list[str]] = {
 }
 
 CATEGORY_SKIP: dict[str, set[int]] = {
-    # unnamed (row 2, col 6) and snap (row 3, col 4) on the attack sheet
-    "attack": {10, 14},
+    # Legacy 16-card attack sheet skipped unnamed + snap; pre-trimmed sheets need no skip.
+    "attack": set(),
 }
 
 CATEGORY_GRID_ROWS: dict[str, list[int]] = {
-    "attack": [5, 6, 5],
+    "attack": [5, 5, 4],
     "control": [6, 6],
     "defense": [6, 6],
     "movement": [7, 7, 8],
@@ -67,6 +67,7 @@ CATEGORY_GRID_ROWS: dict[str, list[int]] = {
 
 # Uploaded sheets dropped in repo root (UUID filenames)
 ROOT_SHEET_MAP: dict[str, str] = {
+    "attack_sheet_removed_snap_nameless.png": "attack",
     "43c41ca1-3a29-41ea-9acd-aeb441a4cfc5.png": "defense",
     "621e110a-6c9c-4dff-8bdb-ee476bf5a0b4.png": "special",
     "64e309bb-bed6-45d8-ba1f-fc217acfedeb.png": "trap",

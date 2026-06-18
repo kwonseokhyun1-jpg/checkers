@@ -71,7 +71,21 @@ export const CARD_ART_URLS = {
   "landmine": "assets/cards/trap/landmine.webp",
   "last_stand": "assets/cards/trap/last_stand.webp",
   "quicksand": "assets/cards/trap/quicksand.webp",
-  "vengeance": "assets/cards/trap/vengeance.webp"
+  "vengeance": "assets/cards/trap/vengeance.webp",
+  "backstab": "assets/cards/attack/backstab.webp",
+  "bomb": "assets/cards/attack/bomb.webp",
+  "chain_lightning": "assets/cards/attack/chain_lightning.webp",
+  "coin_flip": "assets/cards/attack/coin_flip.webp",
+  "cryo_bolt": "assets/cards/attack/cryo_bolt.webp",
+  "cull": "assets/cards/attack/cull.webp",
+  "duel": "assets/cards/attack/duel.webp",
+  "execution": "assets/cards/attack/execution.webp",
+  "poison": "assets/cards/attack/poison.webp",
+  "pyromancy": "assets/cards/attack/pyromancy.webp",
+  "sacrifice": "assets/cards/attack/sacrifice.webp",
+  "shatter": "assets/cards/attack/shatter.webp",
+  "snipe": "assets/cards/attack/snipe.webp",
+  "stab": "assets/cards/attack/stab.webp"
 };
 
 /** @param {string} id */
