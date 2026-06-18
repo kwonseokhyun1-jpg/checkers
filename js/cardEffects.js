@@ -86,7 +86,90 @@ export function getCardHint(card) {
   if (card.effect === "snowball") return hints.snowball_hint;
   if (card.effect === "deep_freeze") return "Click your piece, then any square on the diagonal to freeze.";
   if (card.effect === "barrier") return "Click a dark square — enemies cannot enter it next turn.";
+  if (card.effect === "mass_nudge") {
+    return "Click your piece, then where it moves; optionally pick a second piece and destination.";
+  }
   return hints[card.mode] || "Click valid targets on the board.";
+}
+
+export function picksRequiredForCard(card, picks = [], state = null, color = null) {
+  if (card.effect === "snowball") return 1;
+  if (card.effect === "mass_nudge" && state && color) {
+    if (picks.length < 2) return 2;
+    if (picks.length === 2 && massNudgeHasAnotherPiece(state, color, picks)) return 4;
+    return picks.length;
+  }
+  const TWO_PICK_MODES = new Set([
+    "f_empty",
+    "f_f",
+    "f_e",
+    "f_e_adj",
+    "e_empty",
+    "e_e",
+    "e_e_adj",
+    "f_f_adj",
+    "diagonal",
+    "any_piece",
+    "empty_empty",
+  ]);
+  return TWO_PICK_MODES.has(card.mode) ? 2 : 1;
+}
+
+function massNudgeCanMovePiece(state, color, row, col, exclude = []) {
+  const p = at(state, row, col);
+  if (!p || p.color !== color || pieceCloakedByDarkness(state, row, col)) return false;
+  if (exclude.some(([er, ec]) => er === row && ec === col)) return false;
+  return getAdjacentEmpty(state.board, p).some(([r, c]) => emptyDark(state, r, c));
+}
+
+export function massNudgeHasAnotherPiece(state, color, picks) {
+  if (picks.length < 2) return false;
+  const used = picks.filter((_, i) => i % 2 === 0);
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (massNudgeCanMovePiece(state, color, r, c, used)) return true;
+    }
+  }
+  return false;
+}
+
+function friendlyWithAdjacentEnemy(state, color) {
+  const o = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  const res = [];
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = at(state, r, c);
+      if (!p || p.color !== color || pieceCloakedByDarkness(state, r, c)) continue;
+      let found = false;
+      for (let dr = -1; dr <= 1 && !found; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (!dr && !dc) continue;
+          const ep = at(state, r + dr, c + dc);
+          if (ep && ep.color === o && !pieceCloakedByDarkness(state, r + dr, c + dc)) {
+            found = true;
+            break;
+          }
+        }
+      }
+      if (found) res.push([r, c]);
+    }
+  }
+  return res;
+}
+
+function adjacentEnemiesTo(state, color, row, col) {
+  const o = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  const res = [];
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue;
+      const r = row + dr;
+      const c = col + dc;
+      const p = at(state, r, c);
+      if (p && p.color === o && !pieceCloakedByDarkness(state, r, c)) res.push([r, c]);
+    }
+  }
+  return res;
 }
 
 function at(state, r, c) {
@@ -321,6 +404,40 @@ export function getValidTargets(state, color, card, picks) {
         for (let c = 0; c < SIZE; c++) if (inBounds(r, c)) res.push([r, c]);
       return res;
     case "f_empty": {
+      if (card.effect === "mass_nudge") {
+        if (picks.length === 0) {
+          const res = [];
+          for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+              if (massNudgeCanMovePiece(state, color, r, c)) res.push([r, c]);
+            }
+          }
+          return res;
+        }
+        if (picks.length === 1) {
+          const [pr, pc] = picks[0];
+          const p = at(state, pr, pc);
+          if (!p || p.color !== color) return [];
+          return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
+        }
+        if (picks.length === 2) {
+          const used = [picks[0]];
+          const res = [];
+          for (let r = 0; r < SIZE; r++) {
+            for (let c = 0; c < SIZE; c++) {
+              if (massNudgeCanMovePiece(state, color, r, c, used)) res.push([r, c]);
+            }
+          }
+          return res;
+        }
+        if (picks.length === 3) {
+          const [pr, pc] = picks[2];
+          const p = at(state, pr, pc);
+          if (!p || p.color !== color) return [];
+          return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
+        }
+        return [];
+      }
       if (picks.length === 0) return fEmptyFirstPickTargets(state, color, card);
       const [pr, pc] = picks[0];
       const p = at(state, pr, pc);
@@ -356,9 +473,11 @@ export function getValidTargets(state, color, card, picks) {
     case "f_f":
       return getValidTargets(state, color, { mode: "friendly" }, []);
     case "f_e":
-    case "f_e_adj":
       if (picks.length === 0) return getValidTargets(state, color, { mode: "friendly" }, []);
       return getValidTargets(state, color, { mode: "enemy" }, []);
+    case "f_e_adj":
+      if (picks.length === 0) return friendlyWithAdjacentEnemy(state, color);
+      return adjacentEnemiesTo(state, color, picks[0][0], picks[0][1]);
     case "e_empty":
       if (picks.length === 0) return getValidTargets(state, color, { mode: "enemy", effect: card.effect }, []);
       return getValidTargets(state, color, { mode: "empty", effect: card.effect }, picks);
@@ -477,13 +596,33 @@ function* pickSequences(state, color, card, max = 24) {
     for (const p of t0.slice(0, max)) yield [p];
     return;
   }
-  if (card.mode === "f_f" || card.mode === "e_e" || card.mode === "e_e_adj" || card.mode === "f_f_adj") {
+  if (card.mode === "f_f" || card.mode === "e_e" || card.mode === "e_e_adj" || card.mode === "f_f_adj" || card.mode === "f_e_adj") {
     let n = 0;
     for (const a of t0) {
       const t1 = getValidTargets(state, color, card, [a]);
       for (const b of t1) {
         yield [a, b];
         if (++n >= max) return;
+      }
+    }
+    return;
+  }
+  if (card.effect === "mass_nudge") {
+    let n = 0;
+    const starters = getValidTargets(state, color, card, []);
+    for (const a of starters) {
+      const d1 = getValidTargets(state, color, card, [a]);
+      for (const b of d1) {
+        yield [a, b];
+        if (++n >= max) return;
+        const secondPieces = getValidTargets(state, color, card, [a, b]);
+        for (const c of secondPieces) {
+          const d2 = getValidTargets(state, color, card, [a, b, c]);
+          for (const d of d2) {
+            yield [a, b, c, d];
+            if (++n >= max) return;
+          }
+        }
       }
     }
     return;

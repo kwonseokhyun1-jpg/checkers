@@ -16,7 +16,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns, takeTrapHistoryReveal, flushPendingBountyMessage } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, hasVengeanceArmed } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -27,6 +27,7 @@ import {
   getValidTargets,
   playInstant,
   applyCard,
+  picksRequiredForCard,
 } from "./cardEffects.js";
 import { planAiTurnWork, runAiTurn, cloneMatchState, syncPlannedAiState, applyAiReplayEntry } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
@@ -98,20 +99,6 @@ const AI_PACE = {
   replayTimeout: 14000,
 };
 
-const TWO_PICK_MODES = new Set([
-  "f_empty",
-  "f_f",
-  "f_e",
-  "f_e_adj",
-  "e_empty",
-  "e_e",
-  "e_e_adj",
-  "f_f_adj",
-  "diagonal",
-  "any_piece",
-  "empty_empty",
-]);
-
 export function isPvpTerminalBoard(state, localColor) {
   if (!state?.board) return false;
   const opp = localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
@@ -142,9 +129,8 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
   return state;
 }
 
-function picksRequired(card) {
-  if (card.effect === "snowball") return 1;
-  return TWO_PICK_MODES.has(card.mode) ? 2 : 1;
+function picksRequired(card, picks = [], state = null, color = null) {
+  return picksRequiredForCard(card, picks, state, color);
 }
 
 function usesAxisPick(card) {
@@ -874,7 +860,7 @@ export class MatchSession {
       preview.innerHTML = "";
       preview.appendChild(renderSpellCardEl(card, { static: true, compact: true, fullDesc: true }));
     }
-    const need = picksRequired(card);
+    const need = picksRequired(card, picks, this.state, this.localColor);
     const step = picks.length + 1;
     const base = getCardHint(card);
     if (hint) {
@@ -890,12 +876,13 @@ export class MatchSession {
   finishCardPlay(msg, replayExtras = {}) {
     const card = this.cardPlay?.card;
     const picks = this.cardPlay?.picks ? [...this.cardPlay.picks] : [];
+    const bonusSpell = !!this.state.meta.extraSpellCast?.[this.localColor];
     if (card) {
       this.recordPvpSpell(card, picks, replayExtras);
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
     }
-    if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
+    if (!bonusSpell) this.state.spellPlayed[this.localColor] = true;
     else this.state.meta.extraSpellCast[this.localColor] = false;
     this.cardPlay = null;
     this.validTargets = [];
@@ -904,7 +891,6 @@ export class MatchSession {
     this.selectedRow = null;
     this.endDrag();
     this.updateSpellCastUI();
-    this.setMessage(msg || "Spell played (1 per turn).");
     if (card && this.hasMoveHistory() && !this.shouldDeferTrapHistory(card)) {
       this.recordHistoryEntry(card.name, "spell", {
         color: this.localColor,
@@ -918,6 +904,12 @@ export class MatchSession {
     if (this.checkWin()) return;
     this.pushPvpState();
     if (!this.state.gameOver) {
+      if (bonusSpell) {
+        this.state.phase = PHASE.CARDS;
+        this.setMessage(msg || "Cast another spell.");
+        this.render();
+        return;
+      }
       const moveMsg = msg ? `${msg} Select a piece to move.` : undefined;
       this.beginMovePhase({ afterSpell: true, spellMessage: moveMsg });
     }
@@ -1032,7 +1024,7 @@ export class MatchSession {
       return;
     }
     picks.push([row, col]);
-    const need = picksRequired(card);
+    const need = picksRequired(card, picks, this.state, this.localColor);
     if (picks.length < need) {
       this.validTargets = getValidTargets(this.state, this.localColor, card, picks);
       this.selectedSquare = picks[picks.length - 1];
@@ -2057,7 +2049,8 @@ ${starLine}`;
       );
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
-      if (!this.state.meta.extraSpellCast?.[this.localColor]) this.state.spellPlayed[this.localColor] = true;
+      const bonusSpell = !!this.state.meta.extraSpellCast?.[this.localColor];
+      if (!bonusSpell) this.state.spellPlayed[this.localColor] = true;
       else this.state.meta.extraSpellCast[this.localColor] = false;
       if (this.hasMoveHistory() && !this.shouldDeferTrapHistory(card)) {
         this.recordHistoryEntry(card.name, "spell", { color: this.localColor, picks: [] });
@@ -2066,6 +2059,11 @@ ${starLine}`;
       this.render();
       this.pushPvpState();
       if (!this.state.gameOver) {
+        if (bonusSpell) {
+          this.state.phase = PHASE.CARDS;
+          this.setMessage(res.message || "Cast another spell.");
+          return;
+        }
         let moveMsg = "Spell cast — select a piece to move.";
         if (card.effect === "constitution") {
           moveMsg = "Constitution active — your kings are protected. Select a piece to move.";
@@ -2762,6 +2760,9 @@ ${starLine}`;
           if (piece.rookTurns > 0) el.classList.add("rook-mark");
           if (piece.bombArmed) el.classList.add("bomb-armed");
           if (piece.shockwaveArmed) el.classList.add("shockwave-armed");
+          if (piece.color === this.localColor && hasVengeanceArmed(this.state, piece.color)) {
+            el.classList.add("vengeance-armed");
+          }
           const constitutionTurns = piece.king ? ensureConstitutionTurns(this.state.meta)[piece.color] : 0;
           if (constitutionTurns > 0) el.classList.add("constitution-mark");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
