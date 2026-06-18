@@ -5,9 +5,10 @@
 import assert from "node:assert/strict";
 import { COLORS } from "../js/board.js";
 import { createMatchState } from "../js/match.js";
+import { DECK_SIZE } from "../js/cardCatalog.js";
 import { getChainLightningAnimSquares } from "../js/cardEffectHandlers.js";
 
-const state = createMatchState(Array(30).fill("nudge"));
+const state = createMatchState(Array(DECK_SIZE).fill("nudge"));
 const picks = [[1, 0]];
 const chainSquares = [
   [1, 0],

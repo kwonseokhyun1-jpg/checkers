@@ -2,6 +2,7 @@
  * Guided meta tutorial — open chests and build a deck after the practice match.
  */
 import { dismissMetaTutorial } from "./tutorial.js";
+import { DECK_SIZE } from "./cardCatalog.js";
 
 /** @typedef {{ id: string, title: string, body: string, hint?: string, autoAdvance?: boolean, highlight?: string, allowed?: string[], actionSelector?: string, onEnter?: () => void }} MetaStep */
 
@@ -39,7 +40,7 @@ const STEPS = [
   {
     id: "deck-tab",
     title: "Build your deck",
-    body: "Tap Decks to open the deck builder and customize your 30-card battle list.",
+    body: `Tap Decks to open the deck builder and customize your ${DECK_SIZE}-card battle list.`,
     hint: "Tap Decks in the menu below.",
     highlight: '[data-tab="deck"]',
     allowed: ['[data-tab="deck"]'],
@@ -57,7 +58,7 @@ const STEPS = [
   {
     id: "remove-card",
     title: "Make room in your deck",
-    body: "Your deck holds 30 spells. Tap × on one in the strip above to remove it and make room for something new.",
+    body: `Your deck holds ${DECK_SIZE} spells. Tap × on one in the strip above to remove it and make room for something new.`,
     hint: "Tap × on a card in your deck strip.",
     highlight: ".deck-slot-remove--visible",
     allowed: [".deck-slot-remove", ".deck-slot-remove--visible", ".deck-slot-wrap", ".deck-slot-wrap *"],
@@ -82,7 +83,7 @@ const STEPS = [
   {
     id: "save-deck",
     title: "Save your deck",
-    body: "When you are happy with your list, tap Save. You need 30 cards before battling in Adventure.",
+    body: `When you are happy with your list, tap Save. You need ${DECK_SIZE} cards before battling in Adventure.`,
     hint: "Tap Save in the deck editor.",
     highlight: "#btn-save-deck, #btn-save-deck-bottom",
     allowed: ["#btn-save-deck", "#btn-save-deck-bottom"],

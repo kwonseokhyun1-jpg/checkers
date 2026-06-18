@@ -1,5 +1,5 @@
 /**
- * In-match controller: 30-card deck, 3 start hand, max 5, 1 spell/turn, draw every 2 turns
+ * In-match controller: deck size from DECK_SIZE, 3 start hand, max 5, 1 spell/turn, draw every 2 turns
  */
 import {
   SIZE,
