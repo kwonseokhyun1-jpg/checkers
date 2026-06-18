@@ -212,6 +212,7 @@ body {
 .board-frame--local-flipped .fire-indicator,
 .board-frame--local-flipped .blood-indicator,
 .board-frame--local-flipped .fire-tile-indicator,
+.board-frame--local-flipped .landmine-indicator,
 .board-frame--local-flipped .linked-fate-indicator {
   transform: rotate(180deg);
 }
@@ -562,6 +563,36 @@ body {
   font-size: clamp(0.55rem, 2.2vw, 0.7rem);
   font-weight: 700;
   color: #fdba74;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.square.has-own-hidden-mine {
+  box-shadow: inset 0 0 0 2px rgba(255, 90, 70, 0.45);
+}
+
+.landmine-indicator {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 2px 3px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.landmine-indicator__mark {
+  font-size: clamp(0.65rem, 2.8vw, 0.85rem);
+  line-height: 1;
+  color: rgba(255, 120, 100, 0.95);
+  text-shadow: 0 0 4px rgba(255, 60, 40, 0.8);
+}
+
+.landmine-indicator__turns {
+  font-size: clamp(0.55rem, 2.2vw, 0.7rem);
+  font-weight: 700;
+  color: rgba(255, 180, 170, 0.95);
+  margin-left: 1px;
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 }
 

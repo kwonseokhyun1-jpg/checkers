@@ -2536,6 +2536,7 @@ ${starLine}`;
         const terrain = s.squares[key];
         let cls = `square ${isDarkSquare(row, col) ? "dark" : "light"}`;
         if (terrain?.mine && !terrain?.hiddenMine) cls += " has-mine";
+        if (terrain?.hiddenMine?.owner === this.localColor) cls += " has-own-hidden-mine";
         if (terrain?.quicksand && !terrain?.hiddenQuicksand) cls += " has-quicksand";
         if (terrain?.barrier?.turnsLeft > 0) cls += " has-barrier";
         if (terrain?.sanctuary && terrain?.sanctuaryTurns > 0) cls += " has-sanctuary";
@@ -2604,6 +2605,26 @@ ${starLine}`;
           fireEl.appendChild(flames);
           fireEl.appendChild(turns);
           sq.appendChild(fireEl);
+        }
+
+        if (terrain?.hiddenMine?.owner === this.localColor) {
+          const turnsLeft = terrain.hiddenMine.turnsLeft ?? 0;
+          const mineEl = document.createElement("div");
+          mineEl.className = "landmine-indicator";
+          mineEl.setAttribute(
+            "aria-label",
+            `Your landmine — ${turnsLeft} turn${turnsLeft === 1 ? "" : "s"} left`
+          );
+          const mark = document.createElement("span");
+          mark.className = "landmine-indicator__mark";
+          mark.textContent = "⊗";
+          mark.setAttribute("aria-hidden", "true");
+          const turns = document.createElement("span");
+          turns.className = "landmine-indicator__turns";
+          turns.textContent = String(turnsLeft);
+          mineEl.appendChild(mark);
+          mineEl.appendChild(turns);
+          sq.appendChild(mineEl);
         }
 
         if (this.aiHighlight?.from?.[0] === row && this.aiHighlight?.from?.[1] === col) {
