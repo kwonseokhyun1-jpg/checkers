@@ -13,18 +13,30 @@ function opponentColor(color) {
   return color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
 }
 
-export function createMatchAchievementTracker(profile, localColor) {
+export function createMatchAchievementTracker(profile, localColor, state = null) {
   if (!profile) return null;
 
   const opp = opponentColor(localColor);
   let dirty = false;
+  const restored = state?.meta?.achievementSession;
   const session = {
-    usedSacrificeOffering: false,
-    opponentCapturedUs: false,
-    kingsPromotedThisMatch: 0,
+    usedSacrificeOffering: !!restored?.usedSacrificeOffering,
+    opponentCapturedUs: !!restored?.opponentCapturedUs,
+    kingsPromotedThisMatch: restored?.kingsPromotedThisMatch ?? 0,
     spellCapturesThisTurn: 0,
     notifiedComplete: new Set(),
-    _ourPiecesBefore: null,
+    _ourPiecesBefore: restored?._ourPiecesBefore ?? null,
+    victoryHandled: false,
+  };
+
+  const syncSessionToMeta = () => {
+    if (!state?.meta) return;
+    state.meta.achievementSession = {
+      usedSacrificeOffering: session.usedSacrificeOffering,
+      opponentCapturedUs: session.opponentCapturedUs,
+      kingsPromotedThisMatch: session.kingsPromotedThisMatch,
+      _ourPiecesBefore: session._ourPiecesBefore,
+    };
   };
 
   const persistIfNeeded = () => {
@@ -56,8 +68,9 @@ export function createMatchAchievementTracker(profile, localColor) {
     return n;
   };
 
-  const snapshotOurPieces = (state) => {
-    session._ourPiecesBefore = countPieces(state.board, localColor);
+  const snapshotOurPieces = (boardState) => {
+    session._ourPiecesBefore = countPieces(boardState.board, localColor);
+    syncSessionToMeta();
   };
 
   const onSpellBefore = (state) => {
@@ -81,6 +94,7 @@ export function createMatchAchievementTracker(profile, localColor) {
     }
     if (effect === "sacrifice" || effect === "offering") {
       session.usedSacrificeOffering = true;
+      syncSessionToMeta();
     }
     if (effect === "mind_control" || effect === "hostile_swap") {
       applyIncrements([["mind_bender", 1]]);
@@ -121,10 +135,12 @@ export function createMatchAchievementTracker(profile, localColor) {
 
   const onOurPieceCaptured = () => {
     session.opponentCapturedUs = true;
+    syncSessionToMeta();
   };
 
   const onKingPromoted = () => {
     session.kingsPromotedThisMatch += 1;
+    syncSessionToMeta();
     if (session.kingsPromotedThisMatch >= 4) {
       applyIncrements([["royal_fleet", 1]]);
       persistIfNeeded();
@@ -135,14 +151,17 @@ export function createMatchAchievementTracker(profile, localColor) {
     session.spellCapturesThisTurn = 0;
   };
 
-  const onVictory = (state) => {
-    const remaining = countPieces(state.board, localColor);
+  const onVictory = (boardState) => {
+    if (session.victoryHandled) return;
+    session.victoryHandled = true;
+    const remaining = countPieces(boardState.board, localColor);
     const hadOneBeforeWin = session._ourPiecesBefore === 1;
     if (remaining === 1 || (remaining === 0 && hadOneBeforeWin)) {
       applyIncrements([["close_call", 1]]);
     }
     if (!session.opponentCapturedUs) applyIncrements([["no_mercy", 1]]);
     if (session.usedSacrificeOffering) applyIncrements([["calculated_sacrifice", 1]]);
+    if (boardState?.meta) delete boardState.meta.achievementSession;
     persistIfNeeded();
   };
 
