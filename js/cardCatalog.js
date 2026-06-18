@@ -95,6 +95,8 @@ export const REMOVED_CARD_IDS = new Set([
   "warp_gate",
   "wild_magic",
   "wraith_2",
+  "hex",
+  "stone_form",
 ]);
 
 export function isRemovedCard(cardOrId) {

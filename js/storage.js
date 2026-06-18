@@ -29,7 +29,7 @@ export const STARTER_COMMON_IDS = [
   "recall",
   "barrier",
   "ward",
-  "hex",
+  "rust",
 ];
 
 export function buildStarterDeckCardIds() {

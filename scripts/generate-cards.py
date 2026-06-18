@@ -65,7 +65,6 @@ SPELLS = [
     ("confusion", "Confusion", "On opponent's next turn, their move is chosen randomly.", "epic", 2, "instant", "confusion"),
     ("silence", "Silence", "Suppress knight/retreat/bishop/rook movement on an enemy for 3 turns.", "uncommon", 4, "enemy", "silence_3"),
     ("rust", "Rust", "Target enemy cannot be crowned for the rest of the game.", "uncommon", 4, "enemy", "rust"),
-    ("hex", "Hex", "Marked enemy cannot receive buffs for 3 turns.", "uncommon", 4, "enemy", "hex_3"),
     ("tangle", "Tangle", "Swap two adjacent enemies and freeze both for 1 turn.", "rare", 3, "e_e_adj", "tangle"),
     ("panic", "Panic", "Force an enemy man to step backward on its owner's next turn if possible.", "uncommon", 4, "enemy", "panic"),
     ("bribery", "Bribery", "Steal up to 15 gems from opponent.", "uncommon", 4, "instant", "bribery_15"),
@@ -76,7 +75,6 @@ SPELLS = [
     ("fusion", "Fusion", "Merge two adjacent friendly men into one super-man (2-step non-capture).", "rare", 3, "f_f_adj", "fusion"),
     ("chameleon", "Chameleon", "Copy any piece's movement tags on the board for 2 turns.", "rare", 3, "any_piece", "chameleon"),
     ("wraith_form", "Wraith Form", "Piece passes through enemies for 2 turns (no capture while passing).", "rare", 3, "friendly", "wraith_2"),
-    ("stone_form", "Stone Form", "Piece becomes a king immediately but cannot capture for 2 turns.", "uncommon", 4, "friendly", "stone_form"),
     # === BOARD ===
     ("obstacle", "Obstacle", "Mark a light square as permanently impassable.", "uncommon", 4, "any_square", "obstacle"),
     ("quicksand", "Quicksand", "Hidden trap on an empty dark square — the next piece to end a turn there is frozen (invisible until it triggers).", "common", 6, "empty", "quicksand"),

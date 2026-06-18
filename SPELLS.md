@@ -42,7 +42,6 @@
 - **Forward Bolt** — Eliminate the first enemy piece directly ahead along your piece's forward diagonal.
 - **Frost Bind** — Freeze an enemy piece — it cannot move on its owner's next turn.
 - **Gamble** — Pay 15 gems; draw 2 cards.
-- **Hex** — Marked enemy cannot receive buffs for 3 turns.
 - **Interest** — Gain gems equal to half your total (max 25).
 - **Last Stand** — If this piece would be captured, it survives with an ultra shield for 3 turns instead.
 - **Leapfrog** — Jump your piece over a friendly piece to land on the empty square beyond.
@@ -70,7 +69,6 @@
 - **Slow** — Enemy kings move like men for 2 turns.
 - **Snipe** — Destroy an enemy exactly 2 squares away on a diagonal with nothing between.
 - **Spear Thrust** — Destroy the first enemy along a rank or file from your piece.
-- **Stone Form** — Piece becomes a king immediately but cannot capture for 2 turns.
 - **Tax** — Opponent loses 10 gems; you gain 5.
 
 ## Rare

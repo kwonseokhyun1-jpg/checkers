@@ -92,12 +92,10 @@ export function createPiece(color, row, col, king = false) {
     bishopTurns: 0,
     queenTurns: 0,
     wraithTurns: 0,
-    stoneTurns: 0,
     rooted: 0,
     slowed: 0,
     reverseOnlyTurns: 0,
     silenced: 0,
-    hexed: 0,
     rusted: false,
     bombArmed: false,
     anchored: 0,
@@ -465,7 +463,6 @@ export function getJumpMoves(board, piece, color, state = null) {
     const mid = getPiece(board, mr, mc);
     if (!mid || mid.color === piece.color) continue;
     if (isProtected(mid, state, mr, mc)) continue;
-    if (piece.stoneTurns > 0) continue;
     if (board[lr][lc]) continue;
     moves.push({ from: [piece.row, piece.col], to: [lr, lc], captures: [[mr, mc]], type: "jump" });
   }
@@ -680,7 +677,7 @@ export function tickEffects(board, color, state = null) {
       }
       dec("shieldTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
-      dec("stoneTurns"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
+      dec("slowed"); dec("reverseOnlyTurns"); dec("silenced");
       dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("rustedTurns"); dec("noCaptureTurns");
       dec("deflectTurns");
       if (p.venom > 0) {
