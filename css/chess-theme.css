@@ -384,9 +384,15 @@ body {
 .bounty-indicator {
   position: absolute;
   bottom: 2px;
-  left: 2px;
+  right: 2px;
   z-index: 6;
   pointer-events: none;
+}
+
+/* Keep bounty on the left only when linked fate is not sharing the corner */
+.square:not(:has(.linked-fate-indicator)) .bounty-indicator {
+  left: 2px;
+  right: auto;
 }
 
 .bounty-indicator__mark {
