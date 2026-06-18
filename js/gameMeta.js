@@ -20,6 +20,7 @@ export function createMatchMeta() {
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blinded: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     confuseNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    confused: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     shatterSilenceNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     shatterSilenced: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     mirrorBoardTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
@@ -128,6 +129,16 @@ export function ensureConstitutionTurns(meta) {
   return meta.constitutionTurns;
 }
 
+export function isConfused(meta, color) {
+  return !!(meta?.confused?.[color] || meta?.confuseNext?.[color]);
+}
+
+export function clearConfusion(meta, color) {
+  if (!meta) return;
+  if (meta.confused) meta.confused[color] = false;
+  if (meta.confuseNext) meta.confuseNext[color] = false;
+}
+
 export function startTurnMeta(state, color) {
   ensureConstitutionTurns(state.meta);
   state.meta.turnNumber += 1;
@@ -164,6 +175,13 @@ export function startTurnMeta(state, color) {
     state.meta.blinded[color] = true;
   } else {
     state.meta.blinded[color] = false;
+  }
+  state.meta.confused = state.meta.confused || { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  if (state.meta.confuseNext?.[color]) {
+    state.meta.confuseNext[color] = false;
+    state.meta.confused[color] = true;
+  } else {
+    state.meta.confused[color] = false;
   }
   if (state.meta.constitutionTurns[color] > 0) state.meta.constitutionTurns[color]--;
   if (state.meta.collapsedSquare && typeof state.meta.collapsedSquare === "object") {
