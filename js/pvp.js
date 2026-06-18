@@ -310,7 +310,7 @@ export class PvpService {
       !mystery &&
       (!Array.isArray(hostDeckIds) || hostDeckIds.length !== DECK_SIZE)
     ) {
-      throw new Error("Select a valid 30-card deck first");
+      throw new Error(`Select a valid ${DECK_SIZE}-card deck first`);
     }
 
     const withSkins = await probePieceSkinColumns(sb);
@@ -461,7 +461,7 @@ export class PvpService {
     }
 
     if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
-      throw new Error("Select a valid 30-card deck first");
+      throw new Error(`Select a valid ${DECK_SIZE}-card deck first`);
     }
 
     const rpcArgs = {

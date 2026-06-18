@@ -129,7 +129,7 @@ export function getCardDef(id) {
   return CARDS[id] || null;
 }
 
-export const DECK_SIZE = 30;
+export const DECK_SIZE = 27;
 export const MAX_COPIES_PER_CARD = 3;
 
 export function maxCopiesForRarity(_rarity) {

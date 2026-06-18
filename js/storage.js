@@ -17,19 +17,18 @@ export const WIN_GEMS = 10;
 export const GEMS_BONUS_1000_FLAG = "gemsGrant1000_v1";
 export const GEMS_BONUS_1000 = 1000;
 
-/** Starter / beginner deck: 3× each curated common until 30 cards (10 × 3). */
+/** Starter / beginner deck: 3× each curated spell until 27 cards (9 × 3). */
 export const STARTER_COPIES_PER_CARD = 3;
 export const STARTER_COMMON_IDS = [
-  "nudge",
-  "retreat",
   "backstep",
-  "repel",
+  "coin_flip",
+  "snowball",
+  "duel",
   "leapfrog",
-  "anchor",
-  "recall",
-  "barrier",
+  "nudge",
+  "quicksand",
   "ward",
-  "rust",
+  "recall",
 ];
 
 export function buildStarterDeckCardIds() {
@@ -110,7 +109,7 @@ function hasValidDeck(profile) {
   );
 }
 
-/** Ensure starter commons in collection and a playable 30-card starter deck. */
+/** Ensure starter spells in collection and a playable starter deck. */
 export function repairProfile(profile) {
   if (!profile) return false;
   if (!profile.collection || typeof profile.collection !== "object") profile.collection = {};

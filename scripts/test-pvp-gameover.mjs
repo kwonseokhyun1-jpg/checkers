@@ -5,8 +5,9 @@
  */
 import { COLORS, createInitialBoard, countPieces, removePiece } from "../js/board.js";
 import { createMatchState, isPvpTerminalBoard } from "../js/match.js";
+import { DECK_SIZE } from "../js/cardCatalog.js";
 
-const deck = Array(30).fill("bomb");
+const deck = Array(DECK_SIZE).fill("bomb");
 
 {
   const board = createInitialBoard();

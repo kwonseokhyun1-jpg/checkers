@@ -743,7 +743,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     const mystery = getSelectedMode() === PVP_MODE_MYSTERY;
     const deck = getSelectedDeck();
     if (!mystery && (!deck || deck.cardIds.length !== DECK_SIZE)) {
-      setStatus("Build a 30-card deck in Decks first.", true);
+      setStatus(`Build a ${DECK_SIZE}-card deck in Decks first.`, true);
       return;
     }
 
@@ -787,7 +787,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     if (!mystery) {
       const deck = getSelectedDeck();
       if (!deck || deck.cardIds.length !== DECK_SIZE) {
-        setStatus("Build a 30-card deck in Decks first.", true);
+        setStatus(`Build a ${DECK_SIZE}-card deck in Decks first.`, true);
         return;
       }
     }

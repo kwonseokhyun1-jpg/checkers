@@ -4,7 +4,7 @@
  * Run: node scripts/test-all-spells.mjs
  */
 import { readFileSync } from "fs";
-import { getPlayableCards } from "../js/cardCatalog.js";
+import { getPlayableCards, DECK_SIZE } from "../js/cardCatalog.js";
 import { getValidTargets, tryAutoPlay } from "../js/cardEffects.js";
 import { applyCard } from "../js/cardEffectHandlers.js";
 import { createMatchState } from "../js/match.js";
@@ -75,7 +75,7 @@ function emptyDark(state, r, c) {
 
 function boardSetups(randomCount = 50) {
   const setups = [
-    () => createMatchState(Array(30).fill("nudge")),
+    () => createMatchState(Array(DECK_SIZE).fill("nudge")),
     () => { const s = baseState(); place(s, COLOR, 5, 1); return s; },
     () => { const s = baseState(); place(s, COLOR, 5, 0); place(s, COLOR, 4, 1); return s; },
     () => { const s = baseState(); place(s, COLOR, 5, 0); place(s, OPP, 6, 1); return s; },
