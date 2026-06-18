@@ -2,7 +2,7 @@
  * Card targeting UI + AI auto-play
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, hasMandatoryJumps, pieceHasLegalMoves } from "./board.js";
-import { collapsedSquareKey, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
+import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, longStepOk, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
@@ -113,6 +113,40 @@ function pieceCloakedByDarkness(state, r, c) {
   return isInDarknessZone(state, r, c);
 }
 
+function berserkEnemyBackRows(color) {
+  return color === COLORS.RED ? [0, 1, 2] : [5, 6, 7];
+}
+
+function getBerserkDestinations(state, color) {
+  const enemyBack = berserkEnemyBackRows(color);
+  const spots = [];
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      if (enemyBack.includes(r)) continue;
+      if (!isDarkSquare(r, c) || squareBlocked(state, r, c)) continue;
+      const t = at(state, r, c);
+      if (t && t.color === color) continue;
+      if (t && t.color !== color && pieceCloakedByDarkness(state, r, c)) continue;
+      spots.push([r, c]);
+    }
+  }
+  return spots;
+}
+
+/** True when berserk landing on this square removes the occupant (not just teleports). */
+function berserkWouldDestroyAt(state, color, r, c) {
+  const t = at(state, r, c);
+  if (!t || t.color === color) return false;
+  if (pieceCloakedByDarkness(state, r, c)) return false;
+  if (isInDarknessZone(state, r, c)) return false;
+  if (t.cloneNoCaptureThisTurn) return false;
+  if (t.king && ensureConstitutionTurns(state.meta)[t.color] > 0) return false;
+  if (t.lastStand) return false;
+  if ((t.deflectTurns || 0) > 0) return false;
+  if (t.mirrorShield) return false;
+  return true;
+}
+
 /** Single-target friendly spells that shield or protect a piece. */
 const FRONT_ROW_PROTECTION_EFFECTS = new Set([
   "shield_1",
@@ -205,20 +239,7 @@ function fEmptyFirstPickTargets(state, color, card) {
     return filter((piece) => getTeleportTargets(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
   }
   if (card.effect === "berserk") {
-    const enemyBack = color === COLORS.RED ? [0, 1, 2] : [5, 6, 7];
-    return filter((_piece, r, c) => {
-      for (let rr = 0; rr < SIZE; rr++) {
-        for (let cc = 0; cc < SIZE; cc++) {
-          if (enemyBack.includes(rr)) continue;
-          if (!isDarkSquare(rr, cc) || squareBlocked(state, rr, cc)) continue;
-          const t = at(state, rr, cc);
-          if (t && t.color === color) continue;
-          if (t && t.color !== color && pieceCloakedByDarkness(state, rr, cc)) continue;
-          return true;
-        }
-      }
-      return false;
-    });
+    return getBerserkDestinations(state, color).length ? friends : [];
   }
   if (card.effect === "nudge") {
     return filter((piece) => getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
@@ -318,21 +339,7 @@ export function getValidTargets(state, color, card, picks) {
         }
         return spots;
       }
-      if (card.effect === "berserk") {
-        const enemyBack = color === COLORS.RED ? [0, 1, 2] : [5, 6, 7];
-        const spots = [];
-        for (let r = 0; r < SIZE; r++) {
-          for (let c = 0; c < SIZE; c++) {
-            if (enemyBack.includes(r)) continue;
-            if (!isDarkSquare(r, c) || squareBlocked(state, r, c)) continue;
-            const t = at(state, r, c);
-            if (t && t.color === color) continue;
-            if (t && t.color !== color && pieceCloakedByDarkness(state, r, c)) continue;
-            spots.push([r, c]);
-          }
-        }
-        return spots;
-      }
+      if (card.effect === "berserk") return getBerserkDestinations(state, color);
       return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
     }
     case "f_f":
@@ -465,6 +472,26 @@ function* pickSequences(state, color, card, max = 24) {
   }
   if (card.mode === "f_empty" || card.mode === "diagonal" || card.mode === "f_e" || card.mode === "e_empty") {
     let n = 0;
+    if (card.effect === "berserk") {
+      const destroySeqs = [];
+      const otherSeqs = [];
+      for (const a of t0) {
+        const t1 = getValidTargets(state, color, card, [a]);
+        for (const b of t1) {
+          if (berserkWouldDestroyAt(state, color, b[0], b[1])) destroySeqs.push([a, b]);
+          else otherSeqs.push([a, b]);
+        }
+      }
+      for (const seq of destroySeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      for (const seq of otherSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      return;
+    }
     for (const a of t0) {
       const t1 = getValidTargets(state, color, card, [a]);
       for (const b of t1) {
