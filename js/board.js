@@ -96,7 +96,6 @@ export function createPiece(color, row, col, king = false) {
     slowed: 0,
     reverseOnlyTurns: 0,
     silenced: 0,
-    rusted: false,
     bombArmed: false,
     shockwaveArmed: false,
     anchored: 0,
@@ -236,7 +235,7 @@ export function setPiece(board, row, col, piece) {
 
 /** Crown a man that reached the far row (opponent's back rank). */
 export function tryPromoteOnFarRow(piece, row = piece?.row) {
-  if (!piece || piece.king || (piece.rustedTurns ?? 0) > 0) return false;
+  if (!piece || piece.king) return false;
   if (row == null) return false;
   if (piece.color === COLORS.RED && row === 0) {
     piece.king = true;
@@ -748,7 +747,7 @@ export function tickEffects(board, color, state = null) {
       dec("shieldTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
       dec("slowed"); dec("reverseOnlyTurns"); dec("silenced");
-      dec("anchored"); dec("superMan"); dec("chameleonTurns"); dec("rustedTurns"); dec("noCaptureTurns");
+      dec("anchored"); dec("superMan"); dec("chameleonTurns"); dec("noCaptureTurns");
       if (p.fortifyTurns > 0) {
         p.fortifyTurns--;
         if (p.fortifyTurns <= 0) {
@@ -784,13 +783,6 @@ export function tickEffects(board, color, state = null) {
       }
       if (p.revivedNoCapture) p.revivedNoCapture = false;
       if (p.berserkNoCapture) p.berserkNoCapture = false;
-      if (p.rustedTurns > 0) {
-        p.rustedTurns--;
-        if (p.rustedTurns <= 0) {
-          const promo = p.color === COLORS.RED ? 0 : SIZE - 1;
-          if (p.row === promo) p.king = true;
-        }
-      }
     }
   }
   if (state?.squares) {

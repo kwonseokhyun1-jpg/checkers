@@ -76,7 +76,7 @@ const BUFF_EFFECTS = new Set([
 ]);
 
 const DEBUFF_EFFECTS = new Set([
-  "freeze_1", "freeze_2", "snowball", "deep_freeze", "root_2", "slow_2", "silence_3", "rust", "fog_2",
+  "freeze_1", "freeze_2", "snowball", "deep_freeze", "root_2", "slow_2", "silence_3", "fog_2",
   "panic", "demote", "reverse_only_2", "venom", "backpedal",
 ]);
 

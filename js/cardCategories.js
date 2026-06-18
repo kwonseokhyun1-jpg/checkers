@@ -82,7 +82,6 @@ const ID_TO_CATEGORY = {
   revive: "defense",
   rooks_mark: "movement",
   root: "control",
-  rust: "control",
   sacrifice: "attack",
   sanctuary: "defense",
   scatter: "movement",
@@ -118,7 +117,7 @@ export function getCardCategory(def) {
   if (/move|nudge|teleport|recall|leap|step|displace|swap|scatter|retreat|bishop|rook|fusion|overrun|promote|pull|push|shift|earthquake|magnet|repel/.test(blob)) {
     return "movement";
   }
-  if (/freeze|blind|confusion|hex|root|rust|panic|press|silence|paraly|control|cannot play|random|mark|poison|die in \d+ turn/.test(blob)) {
+  if (/freeze|blind|confusion|hex|root|panic|press|silence|paraly|control|cannot play|random|mark|poison|die in \d+ turn/.test(blob)) {
     return "control";
   }
   if (/\bdestroy\b|\bkills?\b|fireball|bolt|stab|snipe|duel|sacrifice|execution|shatter|cull|lightning/.test(blob)) {

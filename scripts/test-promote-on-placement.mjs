@@ -75,17 +75,4 @@ function assert(cond, msg) {
   assert(res.message.includes("Crowned"), "nudge should report crown");
 }
 
-// Rusted pieces should not crown when swapped onto far row.
-{
-  const state = baseState();
-  const friendly = createPiece(COLORS.RED, 3, 2, false);
-  friendly.rustedTurns = 2;
-  const enemy = createPiece(COLORS.BLACK, 0, 1, false);
-  setPiece(state.board, 3, 2, friendly);
-  setPiece(state.board, 0, 1, enemy);
-  const res = applyCard(state, COLORS.RED, { effect: "hostile_swap" }, [[3, 2], [0, 1]]);
-  assert(res.success, "hostile_swap should succeed");
-  assert(state.board[0][1]?.king !== true, "rusted piece should not crown on placement");
-}
-
 console.log("test-promote-on-placement: ok");
