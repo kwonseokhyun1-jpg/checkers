@@ -266,7 +266,7 @@ const EFFECTS = {
     const enemy = at(state, er, ec);
     if (!enemy || enemy.color === color) return fail("First target must be an enemy piece");
     if (!emptyDark(state, tr, tc)) return fail("Second target must be an empty dark square");
-    applyBurnToPiece(state.board, state, er, ec, 2);
+    applyBurnToPiece(state.board, state, er, ec, 2, color);
     const sq = getSq(state, tr, tc);
     sq.fireTurns = 2;
     sq.fireOwner = color;
