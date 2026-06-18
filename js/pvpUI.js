@@ -33,6 +33,7 @@ import {
   shouldApplyPvpRow,
 } from "./pvp.js";
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
+import { syncChampion } from "./achievements.js";
 import { recordPvpWin } from "./profileStats.js";
 import { saveProfile } from "./storage.js";
 import {
@@ -686,6 +687,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
             if (won) {
               const profile = getProfile();
               recordPvpWin(profile);
+              syncChampion(profile);
               saveProfile(profile);
             }
             const winnerId = won

@@ -94,6 +94,14 @@ export const MAGE_TITLES = [
     glow: "rainbow",
     achievementId: "arcane_mastery",
   },
+  {
+    id: "title_champion",
+    name: "Champion",
+    display: "Champion",
+    rarity: "legendary",
+    glow: "gold",
+    achievementId: "champion",
+  },
 ];
 
 export const MAGE_TITLE_BY_ID = Object.fromEntries(MAGE_TITLES.map((t) => [t.id, t]));

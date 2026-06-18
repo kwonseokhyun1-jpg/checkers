@@ -4,6 +4,7 @@
 import { getPlayableCards } from "./cardCatalog.js";
 import { normalizeCosmetics } from "./cosmetics.js";
 import { unlockTitleForAchievement, TITLE_BY_ACHIEVEMENT, MAGE_TITLE_BY_ID } from "./mageTitles.js";
+import { getPvpWinCount } from "./profileStats.js";
 
 export const ACHIEVEMENTS = [
   {
@@ -83,12 +84,20 @@ export const ACHIEVEMENTS = [
     target: 50,
     track: "state",
   },
+  {
+    id: "champion",
+    title: "Champion",
+    description: "Win 100 PvP matches.",
+    target: 100,
+    track: "state",
+  },
 ];
 
 export const ACHIEVEMENT_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
 
 const ARCANE_MASTERY_TARGET = 50;
 const ARCANE_MASTERY_COPIES = 3;
+const CHAMPION_TARGET = 100;
 
 const PLAYABLE_SPELL_IDS = getPlayableCards().map((c) => c.id);
 
@@ -122,6 +131,7 @@ export function isAchievementComplete(profile, id) {
   const def = ACHIEVEMENT_BY_ID[id];
   if (!def) return false;
   if (id === "arcane_mastery") return hasArcaneMastery(profile);
+  if (id === "champion") return getPvpWinCount(profile) >= CHAMPION_TARGET;
   return getAchievementProgress(profile, id) >= def.target;
 }
 
@@ -193,6 +203,16 @@ export function syncArcaneMastery(profile) {
   return [];
 }
 
+/** Sync champion progress from PvP wins; returns newly completed ids */
+export function syncChampion(profile) {
+  profile.achievements = normalizeAchievements(profile.achievements);
+  const count = Math.min(CHAMPION_TARGET, getPvpWinCount(profile));
+  const prev = profile.achievements.progress.champion || 0;
+  profile.achievements.progress.champion = count;
+  if (count >= CHAMPION_TARGET && prev < CHAMPION_TARGET) return ["champion"];
+  return [];
+}
+
 export function achievementRewardTitle(id) {
   const titleId = TITLE_BY_ACHIEVEMENT[id]?.id;
   return titleId ? MAGE_TITLE_BY_ID[titleId] : null;
@@ -205,6 +225,10 @@ export function progressLabel(profile, id) {
     const owned = Math.min(ARCANE_MASTERY_TARGET, countTripledSpells(profile));
     return `${owned} / ${ARCANE_MASTERY_TARGET} spells at 3×`;
   }
+  if (id === "champion") {
+    const wins = Math.min(CHAMPION_TARGET, getPvpWinCount(profile));
+    return `${wins} / ${CHAMPION_TARGET} PvP wins`;
+  }
   const cur = Math.min(def.target, getAchievementProgress(profile, id));
   return `${cur} / ${def.target}`;
 }
@@ -215,6 +239,9 @@ export function achievementProgressRatio(profile, id) {
   if (!def?.target) return 0;
   if (id === "arcane_mastery") {
     return Math.min(1, countTripledSpells(profile) / def.target);
+  }
+  if (id === "champion") {
+    return Math.min(1, getPvpWinCount(profile) / def.target);
   }
   return Math.min(1, getAchievementProgress(profile, id) / def.target);
 }
