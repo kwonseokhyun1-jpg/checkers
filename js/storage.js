@@ -17,7 +17,7 @@ export const WIN_GEMS = 10;
 export const GEMS_BONUS_1000_FLAG = "gemsGrant1000_v1";
 export const GEMS_BONUS_1000 = 1000;
 
-/** Starter / beginner deck: 3× each curated spell until 27 cards (9 × 3). */
+/** Starter / beginner deck: 3× each curated spell until 30 cards (10 × 3). */
 export const STARTER_COPIES_PER_CARD = 3;
 export const STARTER_COMMON_IDS = [
   "backstep",
@@ -29,6 +29,7 @@ export const STARTER_COMMON_IDS = [
   "quicksand",
   "ward",
   "recall",
+  "panic",
 ];
 
 export function buildStarterDeckCardIds() {
