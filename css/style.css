@@ -3957,6 +3957,34 @@ body.chest-open-active {
   border: 1px solid rgba(180, 160, 255, 0.35);
 }
 
+.piece.bounty-mark.red,
+.piece.bounty-mark.black,
+.piece.bounty-mark.piece-skin-ember.red,
+.piece.bounty-mark.piece-skin-ember.black,
+.piece.bounty-mark.piece-skin-frost.red,
+.piece.bounty-mark.piece-skin-frost.black,
+.piece.bounty-mark.piece-skin-arcane.red,
+.piece.bounty-mark.piece-skin-arcane.black,
+.piece.bounty-mark.piece-skin-void.red,
+.piece.bounty-mark.piece-skin-void.black {
+  outline: 2px solid rgba(255, 196, 64, 0.95);
+  outline-offset: 1px;
+}
+
+.piece.fortify-mark.red,
+.piece.fortify-mark.black,
+.piece.fortify-mark.piece-skin-ember.red,
+.piece.fortify-mark.piece-skin-ember.black,
+.piece.fortify-mark.piece-skin-frost.red,
+.piece.fortify-mark.piece-skin-frost.black,
+.piece.fortify-mark.piece-skin-arcane.red,
+.piece.fortify-mark.piece-skin-arcane.black,
+.piece.fortify-mark.piece-skin-void.red,
+.piece.fortify-mark.piece-skin-void.black {
+  outline: 2px solid rgba(147, 197, 253, 0.95);
+  outline-offset: 1px;
+}
+
 /* ── Profile tab ── */
 .profile-panel { max-width: 52rem; margin: 0 auto; }
 .profile-account {

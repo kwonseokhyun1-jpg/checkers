@@ -132,18 +132,25 @@ export function createPiece(color, row, col, king = false) {
   };
 }
 
+/** Stall/Fortify — fully invulnerable to capture, destruction, and debuffs. */
+export function isFortified(piece) {
+  return !!(piece && piece.fortifyTurns > 0);
+}
+
 /** Clones are destroyed instantly by freeze, poison, or burn instead of receiving the debuff. */
 export function destroyPieceIfClone(board, state, row, col) {
   const p = board[row][col];
   if (!p?.isClone) return false;
+  if (isFortified(p)) return false;
   removePiece(board, row, col, { force: true, state });
   return true;
 }
 
 export function applyFreezeToPiece(board, state, row, col, turns, { deferEndTick = false } = {}) {
   if (state && isInDarknessZone(state, row, col)) return false;
-  if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
+  if (isFortified(piece)) return false;
+  if (destroyPieceIfClone(board, state, row, col)) return true;
   if (!piece) return false;
   piece.frozenTurns = Math.max(piece.frozenTurns || 0, turns);
   if (deferEndTick) piece.freezeDeferEndTick = true;
@@ -153,6 +160,7 @@ export function applyFreezeToPiece(board, state, row, col, turns, { deferEndTick
 export function applyParalyzeToPiece(board, state, row, col, turns, { deferEndTick = false } = {}) {
   if (state && isInDarknessZone(state, row, col)) return false;
   const piece = board[row][col];
+  if (isFortified(piece)) return false;
   if (!piece) return false;
   piece.paralyzedTurns = Math.max(piece.paralyzedTurns || 0, turns);
   if (deferEndTick) piece.paralyzeDeferEndTick = true;
@@ -170,8 +178,9 @@ function tickDeferredTurnDebuff(piece, turnsKey, deferKey) {
 
 export function applyVenomToPiece(board, state, row, col, amount) {
   if (state && isInDarknessZone(state, row, col)) return false;
-  if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
+  if (isFortified(piece)) return false;
+  if (destroyPieceIfClone(board, state, row, col)) return true;
   if (!piece) return false;
   piece.venom = amount;
   return true;
@@ -179,8 +188,9 @@ export function applyVenomToPiece(board, state, row, col, amount) {
 
 export function applyBurnToPiece(board, state, row, col, turns) {
   if (state && isInDarknessZone(state, row, col)) return false;
-  if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
+  if (isFortified(piece)) return false;
+  if (destroyPieceIfClone(board, state, row, col)) return true;
   if (!piece) return false;
   piece.blazeTurns = turns;
   return true;
@@ -242,6 +252,7 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
   if (!p) return false;
   if (!linkFate && state && isInDarknessZone(state, r, c)) return false;
   if (!linkFate && p.cloneNoCaptureThisTurn) return false;
+  if (!berserkSlam && !linkFate && isFortified(p)) return false;
   if (!berserkSlam && !linkFate && p.shieldTurns > 0) {
     p.shieldTurns--;
     return false;
@@ -301,6 +312,7 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
 
 export function removePiece(board, row, col, { force = false, state = null } = {}) {
   const p = board[row][col];
+  if (isFortified(p)) return false;
   if (p?.cloneNoCaptureThisTurn && !force) return false;
   if (p && state) {
     if (!state.captured[p.color]) state.captured[p.color] = [];
@@ -333,6 +345,7 @@ export function movePiece(board, fromR, fromC, toR, toC) {
 function isProtected(piece, state = null, r = null, c = null) {
   if (!piece) return false;
   if (piece.cloneNoCaptureThisTurn) return true;
+  if (isFortified(piece)) return true;
   if (piece.shieldTurns > 0) return true;
   if (state != null && r != null && c != null) {
     if (isSanctuaryProtected(state, r, c, piece.color)) return true;
@@ -725,7 +738,14 @@ export function tickEffects(board, color, state = null) {
       dec("shieldTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
       dec("slowed"); dec("reverseOnlyTurns"); dec("silenced");
-      dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("rustedTurns"); dec("noCaptureTurns");
+      dec("anchored"); dec("superMan"); dec("chameleonTurns"); dec("rustedTurns"); dec("noCaptureTurns");
+      if (p.fortifyTurns > 0) {
+        p.fortifyTurns--;
+        if (p.fortifyTurns <= 0) {
+          p.fortifyTurns = 0;
+          p.shieldTurns = Math.max(p.shieldTurns, 1);
+        }
+      }
       dec("deflectTurns");
       if (p.venom > 0) {
         p.venom--;
@@ -787,7 +807,7 @@ export function getBoltTarget(board, piece) {
     while (inBounds(r, c) && isDarkSquare(r, c)) {
       const cell = board[r][c];
       if (cell) {
-        if (cell.color !== piece.color && cell.shieldTurns <= 0) targets.push([r, c]);
+        if (cell.color !== piece.color && cell.shieldTurns <= 0 && !isFortified(cell)) targets.push([r, c]);
         break;
       }
       r += dir; c += dc;
@@ -829,7 +849,7 @@ export function getAdjacentForwardBoltTarget(board, piece) {
     const c = piece.col + dc;
     if (inBounds(r, c) && isDarkSquare(r, c)) {
       const cell = board[r][c];
-      if (cell && cell.color !== piece.color && cell.shieldTurns <= 0) targets.push([r, c]);
+      if (cell && cell.color !== piece.color && cell.shieldTurns <= 0 && !isFortified(cell)) targets.push([r, c]);
     }
   }
   return targets;

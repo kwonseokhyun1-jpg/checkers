@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, hasMandatoryJumps, pieceHasLegalMoves } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, hasMandatoryJumps, pieceHasLegalMoves, isFortified } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, longStepOk, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -140,6 +140,7 @@ function berserkWouldDestroyAt(state, color, r, c) {
   if (pieceCloakedByDarkness(state, r, c)) return false;
   if (isInDarknessZone(state, r, c)) return false;
   if (t.cloneNoCaptureThisTurn) return false;
+  if (isFortified(t)) return false;
   if (t.king && ensureConstitutionTurns(state.meta)[t.color] > 0) return false;
   if (t.lastStand) return false;
   if ((t.deflectTurns || 0) > 0) return false;

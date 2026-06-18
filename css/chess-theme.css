@@ -217,6 +217,7 @@ body {
 .board-frame--local-flipped .fire-tile-indicator,
 .board-frame--local-flipped .landmine-indicator,
 .board-frame--local-flipped .linked-fate-indicator,
+.board-frame--local-flipped .fortify-indicator,
 .board-frame--local-flipped .bounty-indicator {
   transform: rotate(180deg);
 }
@@ -373,6 +374,8 @@ body {
 }
 
 .piece.bounty-mark {
+  outline: 2px solid rgba(255, 196, 64, 0.95);
+  outline-offset: 1px;
   box-shadow:
     0 0 0 2px rgba(255, 196, 64, 0.85),
     0 0 12px rgba(255, 180, 40, 0.45);
@@ -380,16 +383,54 @@ body {
 
 .bounty-indicator {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  z-index: 5;
+  bottom: 2px;
+  left: 2px;
+  z-index: 6;
   pointer-events: none;
 }
 
 .bounty-indicator__mark {
-  font-size: clamp(0.48rem, 2.5vw, 0.66rem);
+  font-size: clamp(0.58rem, 3vw, 0.78rem);
   line-height: 1;
-  filter: drop-shadow(0 0 4px rgba(255, 196, 64, 0.95));
+  color: #ffd166;
+  text-shadow:
+    0 0 4px rgba(255, 196, 64, 0.95),
+    0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.piece.fortify-mark {
+  outline: 2px solid rgba(147, 197, 253, 0.95);
+  outline-offset: 1px;
+  box-shadow:
+    0 0 0 2px rgba(147, 197, 253, 0.85),
+    0 0 14px rgba(96, 165, 250, 0.45);
+}
+
+.fortify-indicator {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.fortify-indicator__mark {
+  font-size: clamp(0.54rem, 2.8vw, 0.74rem);
+  line-height: 1;
+  color: #93c5fd;
+  text-shadow: 0 0 4px rgba(147, 197, 253, 0.95);
+}
+
+.fortify-indicator__turns {
+  font-size: clamp(0.42rem, 2vw, 0.55rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #bfdbfe;
+  text-shadow: 0 0 4px rgba(147, 197, 253, 0.85);
 }
 
 .piece.poisoned {

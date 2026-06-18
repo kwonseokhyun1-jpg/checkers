@@ -2767,6 +2767,7 @@ ${starLine}`;
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
           if (piece.linkedFateId) el.classList.add("linked-fate");
+          if (piece.fortifyTurns > 0) el.classList.add("fortify-mark");
           if (piece.bountyBy) el.classList.add("bounty-mark");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (piece.isClone) el.classList.add("clone-mark");
@@ -2988,12 +2989,32 @@ ${starLine}`;
             link.appendChild(mark);
             sq.appendChild(link);
           }
+          if (piece.fortifyTurns > 0) {
+            const fortify = document.createElement("div");
+            fortify.className = "fortify-indicator";
+            fortify.setAttribute(
+              "aria-label",
+              `Fortified — ${piece.fortifyTurns} turn${piece.fortifyTurns === 1 ? "" : "s"} left (invulnerable)`
+            );
+            const mark = document.createElement("span");
+            mark.className = "fortify-indicator__mark";
+            mark.textContent = "⛊";
+            mark.setAttribute("aria-hidden", "true");
+            const turns = document.createElement("span");
+            turns.className = "fortify-indicator__turns";
+            turns.textContent = String(piece.fortifyTurns);
+            fortify.appendChild(mark);
+            fortify.appendChild(turns);
+            sq.appendChild(fortify);
+          }
           if (piece.bountyBy) {
             const bounty = document.createElement("div");
             bounty.className = "bounty-indicator";
             bounty.setAttribute(
               "aria-label",
-              "Bounty — jump-capture this piece to draw 2 cards"
+              piece.bountyBy === this.localColor
+                ? "Bounty — jump-capture this piece to draw 2 cards"
+                : "Bounty — enemy marked this piece for capture"
             );
             const mark = document.createElement("span");
             mark.className = "bounty-indicator__mark";
