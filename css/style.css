@@ -2097,6 +2097,17 @@ body.tutorial-match-active .card-preview-modal {
   line-height: 1;
   animation: shockwave-arm-pulse 0.6s ease-in-out infinite;
 }
+.piece.vengeance-armed::after {
+  content: "⚔";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  font-size: 0.65rem;
+  line-height: 1;
+  color: rgba(220, 80, 90, 0.95);
+  text-shadow: 0 0 6px rgba(180, 30, 50, 0.8);
+  animation: shockwave-arm-pulse 0.8s ease-in-out infinite;
+}
 @keyframes shockwave-arm-pulse {
   0%, 100% { opacity: 0.75; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.15); }

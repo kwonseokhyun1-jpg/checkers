@@ -635,7 +635,21 @@ const EFFECTS = {
   },
   fireline(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?-1:1; for(const dc of [-1,1]){ let rr=p.row+dir,cc=p.col+dc; while(inBounds(rr,cc)&&isDarkSquare(rr,cc)){ const t=at(state,rr,cc); if(t){ if(t.color!==color) kill(state,rr,cc,color); break;} rr+=dir; cc+=dc;}} return ok(); },
   sanctuary_pulse(state, color, picks) { const rank=ownBackRank(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&r===rank) p.shieldTurns=Math.max(p.shieldTurns,1);} return ok(); },
-  mass_nudge(state, color, picks) { let n=0; for(const p of [...fri(state,color)]){ if(n>=2) break; const adj=getAdjacentEmpty(state.board,p); if(adj.length){ const [tr,tc]=adj[0]; movePiece(state.board,p.row,p.col,tr,tc); n++; markMove(state,color);} } return n?ok():fail('No targets'); },
+  mass_nudge(state, color, picks) {
+    if (picks.length < 2 || picks.length % 2 !== 0) return fail("Pick a piece and destination");
+    for (let i = 0; i < picks.length; i += 2) {
+      const [r1, c1] = picks[i];
+      const [r2, c2] = picks[i + 1];
+      const p = at(state, r1, c1);
+      if (!p || p.color !== color) return fail();
+      if (!getAdjacentEmpty(state.board, p).some(([r, c]) => r === r2 && c === c2) || !emptyDark(state, r2, c2)) {
+        return fail("Invalid destination");
+      }
+      movePiece(state.board, r1, c1, r2, c2);
+      markMove(state, color);
+    }
+    return ok();
+  },
   chain_lightning(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);

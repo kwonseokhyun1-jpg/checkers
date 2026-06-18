@@ -227,8 +227,9 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
   } else if (state.meta.blinded?.[color]) {
     log.push({ type: "message", text: `${opponentName} is blinded — skips spells.` });
   } else if (!state.spellPlayed[aiColor] && hand.length) {
-    const playable = hand.filter((c) => canAiPlay(state, color, c));
-    if (playable.length) {
+    while (!state.spellPlayed[aiColor] && hand.length) {
+      const playable = hand.filter((c) => canAiPlay(state, color, c));
+      if (!playable.length) break;
       const card = playable[Math.floor(Math.random() * playable.length)];
       const idx = hand.indexOf(card);
       const trapped = !!state.meta.counterspell?.[human];
@@ -247,33 +248,34 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
           countered: true,
           text: `Cast ${card.name}`,
         });
-      } else {
-        const res = tryAutoPlay(state, color, card);
-        if (res.success) {
-          hand.splice(idx, 1);
-          if (!state.meta.extraSpellCast?.[aiColor]) state.spellPlayed[aiColor] = true;
-          else state.meta.extraSpellCast[aiColor] = false;
-          log.push({
-            type: "spell",
-            cardName: card.name,
-            cardId: card.id,
-            cardDesc: card.desc,
-            cardEffect: card.effect,
-            cardMode: card.mode,
-            picks: res.picks || [],
-            text: res.message || `Cast ${card.name}`,
-            ...(isHiddenTrapSpell(card) ? { hidden: true } : {}),
-            ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
-            ...(res.coinFlipSquare
-              ? {
-                  coinFlipSquare: res.coinFlipSquare,
-                  coinFlipVictimColor: res.coinFlipVictimColor,
-                  coinFlipVictim: res.coinFlipVictim,
-                }
-              : {}),
-          });
-        }
+        break;
       }
+      const res = tryAutoPlay(state, color, card);
+      if (!res.success) break;
+      hand.splice(idx, 1);
+      const bonusSpell = !!state.meta.extraSpellCast?.[aiColor];
+      if (!bonusSpell) state.spellPlayed[aiColor] = true;
+      else state.meta.extraSpellCast[aiColor] = false;
+      log.push({
+        type: "spell",
+        cardName: card.name,
+        cardId: card.id,
+        cardDesc: card.desc,
+        cardEffect: card.effect,
+        cardMode: card.mode,
+        picks: res.picks || [],
+        text: res.message || `Cast ${card.name}`,
+        ...(isHiddenTrapSpell(card) ? { hidden: true } : {}),
+        ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
+        ...(res.coinFlipSquare
+          ? {
+              coinFlipSquare: res.coinFlipSquare,
+              coinFlipVictimColor: res.coinFlipVictimColor,
+              coinFlipVictim: res.coinFlipVictim,
+            }
+          : {}),
+      });
+      if (!bonusSpell) break;
     }
   }
 
