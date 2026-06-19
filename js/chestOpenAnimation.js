@@ -111,7 +111,8 @@ export function playChestOpenAnimation({ tier, tierLabel, pulls }) {
         const card = renderSpellCardEl(def, {
           button: true,
           deal: true,
-          onClick: () => showCardPreview(def, { meta: "Added to collection" }),
+          hideDesc: true,
+          onClick: () => showCardPreview(def, { hideDesc: true }),
         });
         card.style.animationDelay = `${i * 0.14}s`;
         grid.appendChild(card);

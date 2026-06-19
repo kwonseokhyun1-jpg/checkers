@@ -14,6 +14,7 @@ function setPreviewBodyState(open) {
 
 export function closeCardPreview() {
   $("card-preview-modal")?.classList.add("hidden");
+  $("card-preview-mount")?.classList.remove("card-preview-mount--reveal-only");
   setPreviewBodyState(false);
 }
 
@@ -34,7 +35,8 @@ export function showCardPreview(def, opts = {}) {
   if (!modal || !mount || !def) return;
 
   mount.innerHTML = "";
-  mount.appendChild(renderSpellCardEl(def, { static: true }));
+  mount.classList.toggle("card-preview-mount--reveal-only", !!opts.hideDesc);
+  mount.appendChild(renderSpellCardEl(def, { static: true, hideDesc: opts.hideDesc }));
 
   if (actions) {
     actions.innerHTML = "";

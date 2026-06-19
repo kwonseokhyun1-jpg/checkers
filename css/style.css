@@ -2909,18 +2909,12 @@ body.chest-open-active {
   max-width: none;
 }
 
-.chest-open-cards__grid .spell-card__meta {
+.chest-open-cards__grid .spell-card__meta,
+.chest-open-cards__grid .spell-card__text-frame,
+.chest-pulls__grid .spell-card__meta,
+.chest-pulls__grid .spell-card__text-frame,
+.card-preview-mount--reveal-only .spell-card__text-frame {
   display: none;
-}
-
-.chest-open-cards__grid .spell-card__desc {
-  -webkit-line-clamp: 2;
-  font-size: 0.62rem;
-}
-
-.chest-open-cards__grid .spell-card__text-frame {
-  min-height: 0;
-  padding: 0.25rem 0.4rem 0.3rem;
 }
 
 /* Board coordinate labels (a–h, 1–8) */
