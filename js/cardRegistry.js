@@ -79,7 +79,7 @@ export const CARD_REGISTRY = [
   { id: "cryo_bolt", name: "Cryo Bolt", desc: "Bolt along your diagonal: freezes a normal enemy, or destroys a frozen or paralyzed one (breaks shield).", rarity: "uncommon", weight: 3, mode: "diagonal", effect: "cryo_bolt" },
   { id: "collapse", name: "Collapse", desc: "Remove one dark square from play for 3 turns; piece on it relocates.", rarity: "uncommon", weight: 4, mode: "empty", effect: "collapse" },
   { id: "last_king", name: "Last King", desc: "If you have only 1 piece, it becomes a king with shield for 2 turns.", rarity: "uncommon", weight: 4, mode: "instant", effect: "last_king" },
-  { id: "quick_march", name: "Quick March", desc: "After your normal move, move the same piece again; either step may capture.", rarity: "epic", weight: 2, mode: "instant", effect: "quick_march" },
+  { id: "quick_march", name: "Bonus Step", desc: "After your normal move, move the same piece again; either step may capture.", rarity: "epic", weight: 2, mode: "instant", effect: "quick_march" },
   { id: "shatter", name: "Shatter", desc: "Destroy any unshielded enemy. You cannot cast spells on your next turn.", rarity: "legendary", weight: 1, mode: "enemy", effect: "destroy_unshielded" },
   { id: "pyromancy", name: "Pyromancy", desc: "Ignite an enemy piece and one empty dark square — each burns for 2 turns (like poison, but fire). Burning tiles block enemy movement. You cannot cast spells on your next turn.", rarity: "legendary", weight: 1, mode: "e_empty", effect: "pyromancy" },
   { id: "bomb", name: "Bomb", desc: "Arm a friendly piece; when it moves, it explodes on adjacent squares (including itself).", rarity: "legendary", weight: 1, mode: "friendly", effect: "bomb" },

@@ -44,7 +44,7 @@ Then visit http://localhost:8080
 | **Knight's Sigil** | Piece moves like a chess knight permanently |
 | **Royal Decree** | Instantly crown a piece |
 | **Shadow Swap** | Swap two of your pieces |
-| **Quick March** | After your move, move the same piece again (non-capture) |
+| **Bonus Step** | After your move, move the same piece again (non-capture) |
 | **Gem Cache** | Gain 20 gems |
 | **Shatter** | Destroy any unshielded enemy piece |
 | **Blink** | Teleport your piece to any empty dark square within 2 steps |

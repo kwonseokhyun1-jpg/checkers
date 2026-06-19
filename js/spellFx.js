@@ -292,7 +292,7 @@ function metaOverlayMarkup(kind) {
     counter: "Counterspell armed",
     "vengeance-arm": "Vengeance armed",
     ignore: "Optional jumps",
-    march: "Quick March",
+    march: "Bonus Step",
     possess: "Mind Control",
     constitution: "Constitution",
     dominion: "Dominion",

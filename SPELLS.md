@@ -110,7 +110,7 @@
 - **Phalanx** — Two adjacent friendly pieces share protection — both must be jumped together.
 - **Phase Walk** — Move through one friendly piece to land on the empty square beyond it.
 - **Pocket Dimension** — Remove a friendly piece for 1 turn; it returns to the same square.
-- **Quick March** — After your normal move, move the same piece again (non-capture step).
+- **Bonus Step** — After your normal move, move the same piece again (non-capture step).
 - **Regicide** — If you capture a king this turn, gain 30 gems.
 - **Ricochet** — Arm your next capture to also remove an enemy 2 squares behind the captured piece.
 - **Rook's Mark** — For 2 turns, a piece may slide along a rank or file over empty dark squares.

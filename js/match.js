@@ -1409,7 +1409,7 @@ export class MatchSession {
     s.phase = PHASE.MOVE;
     this.validMoves = extras;
     this.selectedSquare = [landR, landC];
-    this.setMessage("Quick March — move again!");
+    this.setMessage("Bonus Step — move again!");
     this.render();
     return true;
   }
