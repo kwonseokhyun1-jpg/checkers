@@ -1,7 +1,7 @@
 import { isKnightCard, isRemovedCard, getCardDef, getPlayableCards, maxCopiesForCard, DECK_SIZE } from "./cardCatalog.js";
 import { defaultAdventureProgress, migrateAdventureDecks, repairAdventureProgress } from "./adventure.js";
 import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
-import { normalizeAchievements, DEFAULT_ACHIEVEMENTS, syncArcaneMastery } from "./achievements.js";
+import { normalizeAchievements, DEFAULT_ACHIEVEMENTS, syncArcaneMastery, syncChampion } from "./achievements.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
 
@@ -17,19 +17,19 @@ export const WIN_GEMS = 10;
 export const GEMS_BONUS_1000_FLAG = "gemsGrant1000_v1";
 export const GEMS_BONUS_1000 = 1000;
 
-/** Starter / beginner deck: 3× each curated common until 30 cards (10 × 3). */
+/** Starter / beginner deck: 3× each curated spell until 30 cards (10 × 3). */
 export const STARTER_COPIES_PER_CARD = 3;
 export const STARTER_COMMON_IDS = [
-  "nudge",
-  "retreat",
   "backstep",
-  "repel",
+  "coin_flip",
+  "snowball",
+  "duel",
   "leapfrog",
-  "anchor",
-  "recall",
-  "barrier",
+  "nudge",
+  "quicksand",
   "ward",
-  "hex",
+  "recall",
+  "panic",
 ];
 
 export function buildStarterDeckCardIds() {
@@ -110,7 +110,7 @@ function hasValidDeck(profile) {
   );
 }
 
-/** Ensure starter commons in collection and a playable 30-card starter deck. */
+/** Ensure starter spells in collection and a playable starter deck. */
 export function repairProfile(profile) {
   if (!profile) return false;
   if (!profile.collection || typeof profile.collection !== "object") profile.collection = {};
@@ -254,10 +254,30 @@ function stripKnightCards(profile) {
   return profile;
 }
 
+function tutorialFlagsFromParsed(parsed) {
+  const flags = {};
+  if (parsed.interactiveTutorialDone || parsed.tutorialDone) flags.interactiveTutorialDone = true;
+  if (parsed.metaTutorialDone || parsed.tutorialDone) flags.metaTutorialDone = true;
+  if (parsed.tutorialDone) flags.tutorialDone = true;
+  if (parsed.questsTutorialDone) flags.questsTutorialDone = true;
+  if (parsed.pvpTutorialDone) flags.pvpTutorialDone = true;
+  if (parsed.cosmeticsTutorialDone) flags.cosmeticsTutorialDone = true;
+  return flags;
+}
+
 function normalizeLoadedProfile(parsed) {
   const adv = repairAdventureProgress(parsed.adventure);
   const stub = { adventure: adv };
   migrateAdventureDecks(stub);
+
+  const pvpWins =
+    typeof parsed.pvpWins === "number" && Number.isFinite(parsed.pvpWins)
+      ? Math.max(0, Math.floor(parsed.pvpWins))
+      : undefined;
+  const spellsPlayed =
+    typeof parsed.spellsPlayed === "number" && Number.isFinite(parsed.spellsPlayed)
+      ? Math.max(0, Math.floor(parsed.spellsPlayed))
+      : undefined;
 
   return {
     gems: typeof parsed.gems === "number" ? parsed.gems : STARTING_GEMS,
@@ -268,6 +288,11 @@ function normalizeLoadedProfile(parsed) {
     cosmetics: normalizeCosmetics(parsed.cosmetics),
     achievements: normalizeAchievements(parsed.achievements),
     adventure: stub.adventure,
+    savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : undefined,
+    newCardIds: parsed.newCardIds && typeof parsed.newCardIds === "object" ? parsed.newCardIds : undefined,
+    ...(pvpWins !== undefined ? { pvpWins } : {}),
+    ...(spellsPlayed !== undefined ? { spellsPlayed } : {}),
+    ...tutorialFlagsFromParsed(parsed),
   };
 }
 
@@ -284,6 +309,7 @@ function finalizeProfile(profile) {
   if (!p.achievements) p.achievements = structuredClone(DEFAULT_ACHIEVEMENTS);
   p.achievements = normalizeAchievements(p.achievements);
   syncArcaneMastery(p);
+  syncChampion(p);
   return p;
 }
 

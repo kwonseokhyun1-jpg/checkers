@@ -1,34 +1,85 @@
 const TUTORIAL_KEY = "arcane_checkers_tutorial_v1";
+const INTERACTIVE_TUTORIAL_KEY = "arcane_checkers_interactive_tutorial_v1";
+const META_TUTORIAL_KEY = "arcane_checkers_meta_tutorial_v1";
+const QUESTS_TUTORIAL_KEY = "arcane_checkers_quests_tutorial_v1";
+const PVP_TUTORIAL_KEY = "arcane_checkers_pvp_tutorial_v1";
+const COSMETICS_TUTORIAL_KEY = "arcane_checkers_cosmetics_tutorial_v1";
+const PENDING_SIGNUP_TUTORIAL_KEY = "arcane_checkers_pending_signup_tutorial_v1";
 
-const STEPS = [
-  {
-    title: "Welcome to Arcane Checkers",
-    body: "Build decks, cast spells, and capture every enemy piece. This quick tour covers cards and the shop.",
-  },
-  {
-    title: "Playing spells in battle",
-    body: "On your turn, drag a spell from your hand onto the board or tap highlighted squares. One spell per turn — then move a piece. Tap End spell phase to skip casting.",
-  },
-  {
-    title: "Shop for cards",
-    body: "Earn gems from adventure wins. Open the Shop tab to buy spell chests with gems. New cards go to your collection for deck building.",
-  },
-  {
-    title: "Save your progress",
-    body: "Progress saves automatically on this device. Sign in from the header to sync decks, stars, and collection to the cloud.",
-  },
-];
-
-function isTutorialVisible() {
-  const modal = document.getElementById("tutorial-modal");
-  return !!modal && !modal.classList.contains("hidden");
+export function markPendingSignupTutorial() {
+  try {
+    sessionStorage.setItem(PENDING_SIGNUP_TUTORIAL_KEY, "1");
+  } catch {
+    /* ignore */
+  }
 }
 
-/** @param {{ persist?: boolean, profile?: object, saveProfile?: (p: object) => void }} [opts] */
+export function clearPendingSignupTutorial() {
+  try {
+    sessionStorage.removeItem(PENDING_SIGNUP_TUTORIAL_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function hasPendingSignupTutorial() {
+  try {
+    return sessionStorage.getItem(PENDING_SIGNUP_TUTORIAL_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/** Keep per-device tutorial keys aligned with the signed-in profile. */
+export function syncTutorialStorageWithProfile(profile) {
+  if (!profile) return;
+  const pairs = [
+    [INTERACTIVE_TUTORIAL_KEY, profile.interactiveTutorialDone || profile.tutorialDone],
+    [META_TUTORIAL_KEY, profile.metaTutorialDone || profile.tutorialDone],
+    [QUESTS_TUTORIAL_KEY, profile.questsTutorialDone],
+    [PVP_TUTORIAL_KEY, profile.pvpTutorialDone],
+    [COSMETICS_TUTORIAL_KEY, profile.cosmeticsTutorialDone],
+  ];
+  try {
+    for (const [key, done] of pairs) {
+      if (done) {
+        localStorage.setItem(key, "done");
+      } else if (localStorage.getItem(key) === "done") {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Reset tutorial completion so a brand-new account always gets the practice lesson. */
+export function prepareInteractiveTutorialForNewAccount(profile, saveProfile) {
+  markPendingSignupTutorial();
+  try {
+    localStorage.removeItem(INTERACTIVE_TUTORIAL_KEY);
+    localStorage.removeItem(META_TUTORIAL_KEY);
+    localStorage.removeItem(QUESTS_TUTORIAL_KEY);
+    localStorage.removeItem(PVP_TUTORIAL_KEY);
+    localStorage.removeItem(COSMETICS_TUTORIAL_KEY);
+    localStorage.removeItem(TUTORIAL_KEY);
+  } catch {
+    /* ignore */
+  }
+  if (profile) {
+    delete profile.interactiveTutorialDone;
+    delete profile.metaTutorialDone;
+    delete profile.questsTutorialDone;
+    delete profile.pvpTutorialDone;
+    delete profile.cosmeticsTutorialDone;
+    delete profile.tutorialDone;
+    saveProfile?.(profile);
+  }
+}
+
 export function dismissTutorial(opts = {}) {
   const modal = document.getElementById("tutorial-modal");
-  if (!modal) return;
-  modal.classList.add("hidden");
+  if (modal) modal.classList.add("hidden");
 
   if (opts.persist) {
     try {
@@ -36,86 +87,153 @@ export function dismissTutorial(opts = {}) {
     } catch {
       /* ignore */
     }
-    if (opts.profile) opts.profile.tutorialDone = true;
+    if (opts.profile) {
+      opts.profile.tutorialDone = true;
+      opts.profile.interactiveTutorialDone = true;
+      opts.profile.metaTutorialDone = true;
+    }
     opts.saveProfile?.(opts.profile);
   }
 }
 
-export function shouldShowTutorial(profile) {
+export function dismissInteractiveTutorial(opts = {}) {
+  clearPendingSignupTutorial();
+  if (opts.persist) {
+    try {
+      localStorage.setItem(INTERACTIVE_TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.interactiveTutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function dismissMetaTutorial(opts = {}) {
+  if (opts.persist) {
+    try {
+      localStorage.setItem(META_TUTORIAL_KEY, "done");
+      localStorage.setItem(TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.metaTutorialDone = true;
+      opts.profile.tutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function shouldShowInteractiveTutorial(profile) {
+  if (hasPendingSignupTutorial()) return true;
+  if (profile?.interactiveTutorialDone) return false;
   if (profile?.tutorialDone) return false;
   try {
-    return localStorage.getItem(TUTORIAL_KEY) !== "done";
+    return localStorage.getItem(INTERACTIVE_TUTORIAL_KEY) !== "done";
   } catch {
     return true;
   }
 }
 
-export function initTutorial({ profile, saveProfile, onDone }) {
-  const modal = document.getElementById("tutorial-modal");
-  if (!modal || !shouldShowTutorial(profile)) return;
-
-  const titleEl = modal.querySelector("#tutorial-title");
-  const bodyEl = modal.querySelector("#tutorial-body");
-  const stepEl = modal.querySelector("#tutorial-step");
-  const nextBtn = modal.querySelector("#tutorial-next");
-  const skipBtn = modal.querySelector("#tutorial-skip");
-  const backdrop = modal.querySelector(".tutorial-modal-backdrop");
-  let index = 0;
-
-  function render() {
-    const step = STEPS[index];
-    if (titleEl) titleEl.textContent = step.title;
-    if (bodyEl) bodyEl.textContent = step.body;
-    if (stepEl) stepEl.textContent = `${index + 1} / ${STEPS.length}`;
-    if (nextBtn) nextBtn.textContent = index >= STEPS.length - 1 ? "Got it" : "Next";
-  }
-
-  function finish() {
-    dismissTutorial({ persist: true, profile, saveProfile });
-    onDone?.();
-  }
-
-  function isMainUiClick(target) {
-    if (!(target instanceof Element)) return false;
-    return !!(
-      target.closest(".game-nav") ||
-      target.closest("#auth-header-btn") ||
-      target.closest("#header-profile-btn") ||
-      target.closest("#pvp-sign-in") ||
-      target.closest(".adventure-stage-row") ||
-      target.closest(".adventure-map-pin")
-    );
-  }
-
-  nextBtn?.addEventListener("click", () => {
-    if (index >= STEPS.length - 1) finish();
-    else {
-      index += 1;
-      render();
+export function shouldShowMetaTutorial(profile) {
+  if (profile?.metaTutorialDone || profile?.tutorialDone) return false;
+  if (!profile?.interactiveTutorialDone) {
+    try {
+      if (localStorage.getItem(INTERACTIVE_TUTORIAL_KEY) !== "done") return false;
+    } catch {
+      return false;
     }
-  });
-  skipBtn?.addEventListener("click", finish);
-  backdrop?.addEventListener("click", finish);
-
-  document.addEventListener(
-    "click",
-    (e) => {
-      if (!isTutorialVisible()) return;
-      if (isMainUiClick(e.target)) finish();
-    },
-    true
-  );
-
-  document.addEventListener(
-    "touchend",
-    (e) => {
-      if (!isTutorialVisible()) return;
-      const target = e.target;
-      if (isMainUiClick(target)) finish();
-    },
-    { capture: true, passive: true }
-  );
-
-  render();
-  modal.classList.remove("hidden");
+  }
+  try {
+    return localStorage.getItem(META_TUTORIAL_KEY) !== "done";
+  } catch {
+    return true;
+  }
 }
+
+export function dismissQuestsTutorial(opts = {}) {
+  if (opts.persist) {
+    try {
+      localStorage.setItem(QUESTS_TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.questsTutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function dismissPvpTutorial(opts = {}) {
+  if (opts.persist) {
+    try {
+      localStorage.setItem(PVP_TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.pvpTutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function shouldShowQuestsTutorial(profile) {
+  if (profile?.questsTutorialDone) return false;
+  try {
+    return localStorage.getItem(QUESTS_TUTORIAL_KEY) !== "done";
+  } catch {
+    return true;
+  }
+}
+
+export function shouldShowPvpTutorial(profile) {
+  if (profile?.pvpTutorialDone) return false;
+  if (!profile?.questsTutorialDone) {
+    try {
+      if (localStorage.getItem(QUESTS_TUTORIAL_KEY) !== "done") return false;
+    } catch {
+      return false;
+    }
+  }
+  try {
+    return localStorage.getItem(PVP_TUTORIAL_KEY) !== "done";
+  } catch {
+    return true;
+  }
+}
+
+export function dismissCosmeticsTutorial(opts = {}) {
+  if (opts.persist) {
+    try {
+      localStorage.setItem(COSMETICS_TUTORIAL_KEY, "done");
+    } catch {
+      /* ignore */
+    }
+    if (opts.profile) {
+      opts.profile.cosmeticsTutorialDone = true;
+    }
+    opts.saveProfile?.(opts.profile);
+  }
+}
+
+export function shouldShowCosmeticsTutorial(profile) {
+  if (profile?.cosmeticsTutorialDone) return false;
+  try {
+    return localStorage.getItem(COSMETICS_TUTORIAL_KEY) !== "done";
+  } catch {
+    return true;
+  }
+}
+
+/** @deprecated Legacy modal tutorial — replaced by interactive practice match. */
+export function shouldShowTutorial(profile) {
+  return false;
+}
+
+/** @deprecated Legacy modal tutorial — replaced by interactive practice match. */
+export function initTutorial() {}

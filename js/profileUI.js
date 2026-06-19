@@ -1,4 +1,6 @@
 import { COSMETIC_BOXES, COSMETIC_BY_ID, COSMETIC_TYPES, equipCosmetic, getEquippedCosmetics, openCosmeticBox } from "./cosmetics.js";
+import { COSMETICS_UNLOCK_MESSAGE } from "./adventure.js";
+import { notifyUnlockTutorial } from "./tutorialUnlocks.js";
 import {
   ACHIEVEMENTS,
   achievementRewardTitle,
@@ -6,6 +8,7 @@ import {
   claimAchievement,
   isAchievementClaimed,
   isAchievementComplete,
+  achievementProgressRatio,
   progressLabel,
 } from "./achievements.js";
 import {
@@ -146,9 +149,14 @@ function profileHeroCardHtml(cos, profile, { username, email }) {
 }
 
 /** Cosmetic boxes — rendered in Shop → Cosmetics tab */
-export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened } = {}) {
+export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened, cosmeticsUnlocked = true } = {}) {
   if (!listEl) return;
   listEl.innerHTML = "";
+
+  if (!cosmeticsUnlocked) {
+    listEl.innerHTML = `<p class="vault-locked-msg muted">${COSMETICS_UNLOCK_MESSAGE}</p>`;
+    return;
+  }
 
   for (const box of COSMETIC_BOXES) {
     const tier = COSMETIC_BOX_TIERS[box.id] || COSMETIC_BOX_TIERS.style_crate;
@@ -201,7 +209,8 @@ export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOp
         logEl.textContent = `Opened ${box.name}: ${names}${res.bonusGems ? ` · +${res.bonusGems} gems from duplicates` : ""}`;
       }
       onOpened?.(res);
-      renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened });
+      notifyUnlockTutorial("cosmetic-box-opened", { boxId: box.id, pulls: res.pulls });
+      renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOpened, cosmeticsUnlocked });
     });
     listEl.appendChild(el);
   }
@@ -256,7 +265,11 @@ function bindAchievementsGrid(profile, grid, { onTitleChanged } = {}) {
       if (isAchievementClaimed(profile, id)) return 2;
       return 1;
     };
-    return sortKey(a.id) - sortKey(b.id);
+    const keyDiff = sortKey(a.id) - sortKey(b.id);
+    if (keyDiff !== 0) return keyDiff;
+    const progressDiff = achievementProgressRatio(profile, b.id) - achievementProgressRatio(profile, a.id);
+    if (progressDiff !== 0) return progressDiff;
+    return a.title.localeCompare(b.title);
   });
   for (const ach of sortedAchievements) {
     const reward = achievementRewardTitle(ach.id);
@@ -427,11 +440,13 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
         <strong class="profile-cosmetic-card__name">${item.name}</strong>
         <span class="profile-cosmetic-card__action">${equipped ? "Equipped" : "Equip"}</span>`;
       card.addEventListener("click", () => {
+        if (equipped) return;
         const res = equipCosmetic(profile, filter, id);
         if (res.success) {
           saveProfile(profile);
           renderGrid();
           refreshShowcase();
+          notifyUnlockTutorial("cosmetic-equipped", { type: filter, id });
         }
       });
       grid.appendChild(card);

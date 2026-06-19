@@ -208,9 +208,17 @@ body {
 .board-frame--local-flipped .sanctuary-indicator,
 .board-frame--local-flipped .shield-indicator,
 .board-frame--local-flipped .ultra-shield-indicator,
+.board-frame--local-flipped .bishop-indicator,
+.board-frame--local-flipped .rook-indicator,
+.board-frame--local-flipped .constitution-indicator,
 .board-frame--local-flipped .poison-indicator,
 .board-frame--local-flipped .fire-indicator,
-.board-frame--local-flipped .fire-tile-indicator {
+.board-frame--local-flipped .blood-indicator,
+.board-frame--local-flipped .fire-tile-indicator,
+.board-frame--local-flipped .landmine-indicator,
+.board-frame--local-flipped .linked-fate-indicator,
+.board-frame--local-flipped .fortify-indicator,
+.board-frame--local-flipped .bounty-indicator {
   transform: rotate(180deg);
 }
 
@@ -324,13 +332,111 @@ body {
 }
 
 .piece.linked-fate {
-  box-shadow: 0 0 0 2px #e85d5d, 0 0 12px rgba(232, 93, 93, 0.45);
+  box-shadow:
+    0 0 0 2px #e85d5d,
+    0 0 12px rgba(232, 93, 93, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.linked-fate-indicator {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.linked-fate-indicator__mark {
+  font-size: clamp(0.48rem, 2.5vw, 0.66rem);
+  line-height: 1;
+  color: #ff9a9a;
+  text-shadow:
+    0 0 4px rgba(232, 93, 93, 0.95),
+    0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.linked-fate-overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  overflow: visible;
+}
+
+.linked-fate-overlay line {
+  stroke: rgba(232, 93, 93, 0.8);
+  stroke-width: 0.9;
+  stroke-dasharray: 3 2.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 2px rgba(232, 93, 93, 0.75));
 }
 
 .piece.bounty-mark {
+  outline: 2px solid rgba(255, 196, 64, 0.95);
+  outline-offset: 1px;
   box-shadow:
     0 0 0 2px rgba(255, 196, 64, 0.85),
     0 0 12px rgba(255, 180, 40, 0.45);
+}
+
+.bounty-indicator {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+/* Keep bounty on the left only when linked fate is not sharing the corner */
+.square:not(:has(.linked-fate-indicator)) .bounty-indicator {
+  left: 2px;
+  right: auto;
+}
+
+.bounty-indicator__mark {
+  font-size: clamp(0.58rem, 3vw, 0.78rem);
+  line-height: 1;
+  color: #ffd166;
+  text-shadow:
+    0 0 4px rgba(255, 196, 64, 0.95),
+    0 1px 2px rgba(0, 0, 0, 0.65);
+}
+
+.piece.fortify-mark {
+  outline: 2px solid rgba(147, 197, 253, 0.95);
+  outline-offset: 1px;
+  box-shadow:
+    0 0 0 2px rgba(147, 197, 253, 0.85),
+    0 0 14px rgba(96, 165, 250, 0.45);
+}
+
+.fortify-indicator {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.fortify-indicator__mark {
+  font-size: clamp(0.54rem, 2.8vw, 0.74rem);
+  line-height: 1;
+  color: #93c5fd;
+  text-shadow: 0 0 4px rgba(147, 197, 253, 0.95);
+}
+
+.fortify-indicator__turns {
+  font-size: clamp(0.42rem, 2vw, 0.55rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #bfdbfe;
+  text-shadow: 0 0 4px rgba(147, 197, 253, 0.85);
 }
 
 .piece.poisoned {
@@ -429,6 +535,56 @@ body {
   box-shadow: 0 0 4px rgba(249, 115, 22, 0.75);
 }
 
+.piece.vengeance-mark {
+  box-shadow:
+    0 0 0 2px rgba(185, 28, 28, 0.85),
+    0 0 14px rgba(160, 20, 40, 0.55);
+  animation: piece-blood-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes piece-blood-pulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.12); }
+}
+
+.blood-indicator {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.blood-indicator__mark {
+  font-size: clamp(0.45rem, 2.4vw, 0.62rem);
+  line-height: 1;
+  filter: drop-shadow(0 0 4px rgba(185, 28, 28, 0.9));
+}
+
+.blood-indicator__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.blood-indicator__block {
+  width: clamp(5px, 2.2vw, 7px);
+  height: clamp(5px, 2.2vw, 7px);
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(185, 28, 28, 0.25);
+}
+
+.blood-indicator__block--filled {
+  background: linear-gradient(180deg, #fca5a5 0%, #b91c1c 100%);
+  border-color: rgba(252, 165, 165, 0.9);
+  box-shadow: 0 0 4px rgba(185, 28, 28, 0.75);
+}
+
 .square.has-fire-tile {
   box-shadow: inset 0 0 0 2px rgba(249, 115, 22, 0.55);
 }
@@ -472,6 +628,36 @@ body {
   font-size: clamp(0.55rem, 2.2vw, 0.7rem);
   font-weight: 700;
   color: #fdba74;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.square.has-own-hidden-mine {
+  box-shadow: inset 0 0 0 2px rgba(255, 90, 70, 0.45);
+}
+
+.landmine-indicator {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 2px 3px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.landmine-indicator__mark {
+  font-size: clamp(0.65rem, 2.8vw, 0.85rem);
+  line-height: 1;
+  color: rgba(255, 120, 100, 0.95);
+  text-shadow: 0 0 4px rgba(255, 60, 40, 0.8);
+}
+
+.landmine-indicator__turns {
+  font-size: clamp(0.55rem, 2.2vw, 0.7rem);
+  font-weight: 700;
+  color: rgba(255, 180, 170, 0.95);
+  margin-left: 1px;
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 }
 
@@ -563,6 +749,51 @@ body {
   box-shadow:
     0 0 0 2px rgba(59, 130, 246, 0.75),
     0 0 10px rgba(37, 99, 235, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.constitution-indicator {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.constitution-indicator__mark {
+  font-size: clamp(0.45rem, 2.4vw, 0.62rem);
+  line-height: 1;
+  color: #fde68a;
+  text-shadow: 0 0 4px rgba(245, 158, 11, 0.85);
+}
+
+.constitution-indicator__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.constitution-indicator__block {
+  width: clamp(4px, 1.8vw, 6px);
+  height: clamp(5px, 2.2vw, 7px);
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(253, 230, 138, 0.25);
+}
+
+.constitution-indicator__block--filled {
+  background: linear-gradient(180deg, #fde68a 0%, #d97706 100%);
+  border-color: rgba(253, 230, 138, 0.9);
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.75);
+}
+
+.piece.constitution-mark {
+  box-shadow:
+    0 0 0 2px rgba(245, 158, 11, 0.75),
+    0 0 10px rgba(217, 119, 6, 0.45),
     0 3px 8px rgba(0, 0, 0, 0.4);
 }
 

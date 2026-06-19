@@ -8,7 +8,7 @@ import {
   getBackwardStepMoves,
 } from "./board.js";
 import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell } from "./cardEffects.js";
-import { queueTrapHistoryReveal } from "./gameMeta.js";
+import { queueTrapHistoryReveal, isConfused, clearConfusion } from "./gameMeta.js";
 import { getCardDef } from "./cardCatalog.js";
 
 /** Deep copy for AI planning without mutating the live match state. */
@@ -122,7 +122,7 @@ export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
   if (entry.type === "move") {
     const [fr, fc] = entry.from;
     if (!state.board[fr]?.[fc]) return false;
-    if (entry.confused) state.meta.confuseNext[color] = false;
+    if (entry.confused) clearConfusion(state.meta, color);
     if (entry.bearBonus) {
       if (!state.meta.bearBonusUsed) state.meta.bearBonusUsed = {};
       state.meta.bearBonusUsed[aiColor] = true;
@@ -223,12 +223,13 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
   const log = [];
 
   if (state.meta.shatterSilenced?.[color]) {
-    log.push({ type: "message", text: `${opponentName} is reeling from Shatter — no spells this turn.` });
+    log.push({ type: "message", text: `${opponentName} is reeling from spell backlash — no spells this turn.` });
   } else if (state.meta.blinded?.[color]) {
     log.push({ type: "message", text: `${opponentName} is blinded — skips spells.` });
   } else if (!state.spellPlayed[aiColor] && hand.length) {
-    const playable = hand.filter((c) => canAiPlay(state, color, c));
-    if (playable.length) {
+    while (!state.spellPlayed[aiColor] && hand.length) {
+      const playable = hand.filter((c) => canAiPlay(state, color, c));
+      if (!playable.length) break;
       const card = playable[Math.floor(Math.random() * playable.length)];
       const idx = hand.indexOf(card);
       const trapped = !!state.meta.counterspell?.[human];
@@ -247,33 +248,34 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
           countered: true,
           text: `Cast ${card.name}`,
         });
-      } else {
-        const res = tryAutoPlay(state, color, card);
-        if (res.success) {
-          hand.splice(idx, 1);
-          if (!state.meta.extraSpellCast?.[aiColor]) state.spellPlayed[aiColor] = true;
-          else state.meta.extraSpellCast[aiColor] = false;
-          log.push({
-            type: "spell",
-            cardName: card.name,
-            cardId: card.id,
-            cardDesc: card.desc,
-            cardEffect: card.effect,
-            cardMode: card.mode,
-            picks: res.picks || [],
-            text: res.message || `Cast ${card.name}`,
-            ...(isHiddenTrapSpell(card) ? { hidden: true } : {}),
-            ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
-            ...(res.coinFlipSquare
-              ? {
-                  coinFlipSquare: res.coinFlipSquare,
-                  coinFlipVictimColor: res.coinFlipVictimColor,
-                  coinFlipVictim: res.coinFlipVictim,
-                }
-              : {}),
-          });
-        }
+        break;
       }
+      const res = tryAutoPlay(state, color, card);
+      if (!res.success) break;
+      hand.splice(idx, 1);
+      const bonusSpell = !!state.meta.extraSpellCast?.[aiColor];
+      if (!bonusSpell) state.spellPlayed[aiColor] = true;
+      else state.meta.extraSpellCast[aiColor] = false;
+      log.push({
+        type: "spell",
+        cardName: card.name,
+        cardId: card.id,
+        cardDesc: card.desc,
+        cardEffect: card.effect,
+        cardMode: card.mode,
+        picks: res.picks || [],
+        text: res.message || `Cast ${card.name}`,
+        ...(isHiddenTrapSpell(card) ? { hidden: true } : {}),
+        ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
+        ...(res.coinFlipSquare
+          ? {
+              coinFlipSquare: res.coinFlipSquare,
+              coinFlipVictimColor: res.coinFlipVictimColor,
+              coinFlipVictim: res.coinFlipVictim,
+            }
+          : {}),
+      });
+      if (!bonusSpell) break;
     }
   }
 
@@ -281,9 +283,9 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
   let confused = false;
   const panicked = findPanicPiece(state.board, color);
   const panicForced = panicked && getBackwardStepMoves(state.board, panicked, state).length > 0;
-  if (state.meta.confuseNext?.[color]) {
+  if (isConfused(state.meta, color)) {
     confused = true;
-    state.meta.confuseNext[color] = false;
+    clearConfusion(state.meta, color);
     const moves = getAllMovesForColor(state.board, color, state);
     move = moves[Math.floor(Math.random() * moves.length)] || null;
     if (move) log.push({ type: "message", text: "Confusion — random move!" });

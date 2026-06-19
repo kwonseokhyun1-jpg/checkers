@@ -29,7 +29,7 @@ export function buildRoomHostAvatarHtml(cosmetics, displayName, { clickable = fa
     renderAvatarPreview(equipped.avatar) ||
     `<span class="profile-avatar-fallback">${escapeHtml(initial)}</span>`;
   const frameClass = frameClassFor(equipped.frame);
-  const avatarMarkup = `<span class="profile-avatar-stack pvp-room-host-profile__avatar ${frameClass}"><span class="profile-avatar-inner">${inner}</span></span>`;
+  const avatarMarkup = `<span class="profile-avatar-stack ${frameClass}"><span class="profile-avatar-inner">${inner}</span></span>`;
 
   if (clickable && userId) {
     return `<button type="button" class="pvp-room-host-profile" data-view-profile="${escapeHtml(userId)}" data-profile-name="${escapeHtml(displayName)}" aria-label="View ${escapeHtml(displayName)}'s profile">${avatarMarkup}</button>`;

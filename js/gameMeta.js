@@ -1,6 +1,6 @@
 /** Global match state: gems modifiers, square terrain, turn flags */
 
-import { COLORS, SIZE, inBounds, isDarkSquare } from "./board.js";
+import { COLORS, SIZE, inBounds, isDarkSquare, tryPromoteOnFarRow } from "./board.js";
 import { drawToHand } from "./deckPile.js";
 
 export function createMatchMeta() {
@@ -20,6 +20,7 @@ export function createMatchMeta() {
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blinded: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     confuseNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    confused: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     shatterSilenceNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     shatterSilenced: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     mirrorBoardTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
@@ -128,6 +129,16 @@ export function ensureConstitutionTurns(meta) {
   return meta.constitutionTurns;
 }
 
+export function isConfused(meta, color) {
+  return !!(meta?.confused?.[color] || meta?.confuseNext?.[color]);
+}
+
+export function clearConfusion(meta, color) {
+  if (!meta) return;
+  if (meta.confused) meta.confused[color] = false;
+  if (meta.confuseNext) meta.confuseNext[color] = false;
+}
+
 export function startTurnMeta(state, color) {
   ensureConstitutionTurns(state.meta);
   state.meta.turnNumber += 1;
@@ -165,6 +176,13 @@ export function startTurnMeta(state, color) {
   } else {
     state.meta.blinded[color] = false;
   }
+  state.meta.confused = state.meta.confused || { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  if (state.meta.confuseNext?.[color]) {
+    state.meta.confuseNext[color] = false;
+    state.meta.confused[color] = true;
+  } else {
+    state.meta.confused[color] = false;
+  }
   if (state.meta.constitutionTurns[color] > 0) state.meta.constitutionTurns[color]--;
   if (state.meta.collapsedSquare && typeof state.meta.collapsedSquare === "object") {
     state.meta.collapsedSquare.turnsLeft -= 1;
@@ -178,6 +196,7 @@ export function tickMeta(state, color) {
     if (!state.board[r][c]) state.board[r][c] = piece;
     piece.row = r;
     piece.col = c;
+    tryPromoteOnFarRow(piece, r);
     state.meta.pocket = null;
   }
 }
@@ -188,6 +207,7 @@ export const TRAP_EFFECT_LABELS = {
   landmine: "Landmine",
   quicksand: "Quicksand",
   last_stand: "Last Stand",
+  deflect_1: "Deflect",
 };
 
 /** Queue a trap spell for move history — logged after the action that triggered it. */

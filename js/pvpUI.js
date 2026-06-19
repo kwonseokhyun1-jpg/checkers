@@ -33,6 +33,7 @@ import {
   shouldApplyPvpRow,
 } from "./pvp.js";
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
+import { syncChampion } from "./achievements.js";
 import { recordPvpWin } from "./profileStats.js";
 import { saveProfile } from "./storage.js";
 import {
@@ -537,7 +538,11 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       const terminal = isPvpTerminalBoard(row.state_json, pvpService.localColor);
       const finished = row.status === "finished";
       if (!finished && !shouldApplyPvpRow(row, pvpService, matchSession)) return;
-      if ((matchSession.actionBusy || matchSession._syncBusy) && !terminal && !finished) {
+      if (
+        (matchSession.actionBusy || matchSession._syncBusy || matchSession._syncDirty) &&
+        !terminal &&
+        !finished
+      ) {
         matchSession.queuePvpRow(row);
         return;
       }
@@ -682,6 +687,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
             if (won) {
               const profile = getProfile();
               recordPvpWin(profile);
+              syncChampion(profile);
               saveProfile(profile);
             }
             const winnerId = won
@@ -739,7 +745,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     const mystery = getSelectedMode() === PVP_MODE_MYSTERY;
     const deck = getSelectedDeck();
     if (!mystery && (!deck || deck.cardIds.length !== DECK_SIZE)) {
-      setStatus("Build a 30-card deck in Decks first.", true);
+      setStatus(`Build a ${DECK_SIZE}-card deck in Decks first.`, true);
       return;
     }
 
@@ -783,7 +789,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     if (!mystery) {
       const deck = getSelectedDeck();
       if (!deck || deck.cardIds.length !== DECK_SIZE) {
-        setStatus("Build a 30-card deck in Decks first.", true);
+        setStatus(`Build a ${DECK_SIZE}-card deck in Decks first.`, true);
         return;
       }
     }

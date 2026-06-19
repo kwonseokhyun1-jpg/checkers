@@ -17,7 +17,7 @@ SPELLS = [
     ("teleport", "Blink", "Teleport your piece to any empty dark square within 2 steps (Chebyshev).", "rare", 4, "f_empty", "blink_2"),
     # === MOVEMENT ===
     ("long_step", "Long Step", "Move one of your pieces 2 squares diagonally if the path is clear (no capture).", "uncommon", 5, "f_empty", "long_step"),
-    ("sidestep", "Sidestep", "Move a piece 1 square horizontally onto an adjacent dark square.", "common", 5, "f_empty", "sidestep"),
+    ("sidestep", "Sidestep", "Skip 2 columns left or right along the same row to an empty dark square.", "common", 6, "f_empty", "sidestep"),
     ("chain_pull", "Chain Pull", "Pull an adjacent enemy piece 1 square toward you into an empty dark square behind it.", "rare", 3, "friendly", "chain_pull"),
     ("repel", "Repel", "Push an adjacent enemy piece 1 square away if the landing square is empty.", "uncommon", 4, "friendly", "repel"),
     ("leapfrog", "Leapfrog", "Jump your piece over a friendly piece to land on the empty square beyond.", "uncommon", 4, "f_empty", "leapfrog"),
@@ -58,14 +58,12 @@ SPELLS = [
     ("ghost_guard", "Ghost Guard", "When a friendly piece is captured, its square blocks enemies for 2 turns.", "rare", 3, "friendly", "ghost_guard"),
     ("fortify", "Fortify", "Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.", "rare", 3, "friendly", "fortify"),
     # === CROWD CONTROL ===
-    ("deep_freeze", "Deep Freeze", "Freeze every enemy on one diagonal through your piece for 2 turns.", "uncommon", 4, "friendly", "deep_freeze"),
+    ("deep_freeze", "Deep Freeze", "Freeze every enemy on one diagonal through your piece for 2 turns.", "uncommon", 4, "diagonal", "deep_freeze"),
     ("root", "Root", "Enemy cannot jump or capture for 2 turns (can still step).", "uncommon", 4, "enemy", "root_2"),
     ("slow", "Slow", "Enemy kings move like men for 2 turns.", "uncommon", 4, "enemy", "slow_2"),
     ("blind", "Blind", "Opponent cannot play cards on their next turn.", "rare", 3, "instant", "blind"),
     ("confusion", "Confusion", "On opponent's next turn, their move is chosen randomly.", "epic", 2, "instant", "confusion"),
     ("silence", "Silence", "Suppress knight/retreat/bishop/rook movement on an enemy for 3 turns.", "uncommon", 4, "enemy", "silence_3"),
-    ("rust", "Rust", "Target enemy cannot be crowned for the rest of the game.", "uncommon", 4, "enemy", "rust"),
-    ("hex", "Hex", "Marked enemy cannot receive buffs for 3 turns.", "uncommon", 4, "enemy", "hex_3"),
     ("tangle", "Tangle", "Swap two adjacent enemies and freeze both for 1 turn.", "rare", 3, "e_e_adj", "tangle"),
     ("panic", "Panic", "Force an enemy man to step backward on its owner's next turn if possible.", "uncommon", 4, "enemy", "panic"),
     ("bribery", "Bribery", "Steal up to 15 gems from opponent.", "uncommon", 4, "instant", "bribery_15"),
@@ -76,7 +74,6 @@ SPELLS = [
     ("fusion", "Fusion", "Merge two adjacent friendly men into one super-man (2-step non-capture).", "rare", 3, "f_f_adj", "fusion"),
     ("chameleon", "Chameleon", "Copy any piece's movement tags on the board for 2 turns.", "rare", 3, "any_piece", "chameleon"),
     ("wraith_form", "Wraith Form", "Piece passes through enemies for 2 turns (no capture while passing).", "rare", 3, "friendly", "wraith_2"),
-    ("stone_form", "Stone Form", "Piece becomes a king immediately but cannot capture for 2 turns.", "uncommon", 4, "friendly", "stone_form"),
     # === BOARD ===
     ("obstacle", "Obstacle", "Mark a light square as permanently impassable.", "uncommon", 4, "any_square", "obstacle"),
     ("quicksand", "Quicksand", "Hidden trap on an empty dark square — the next piece to end a turn there is frozen (invisible until it triggers).", "common", 6, "empty", "quicksand"),

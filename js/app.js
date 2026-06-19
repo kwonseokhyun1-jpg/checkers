@@ -40,10 +40,15 @@ import {
   getNextPlayableLevelId,
   repairAdventureProgress,
   getWorldForLevel,
+  isQuestsAndPvpUnlocked,
+  QUESTS_PVP_UNLOCK_MESSAGE,
+  isCosmeticsUnlocked,
+  COSMETICS_UNLOCK_MESSAGE,
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
+import { smallMysteryBoxSvgMarkup, bigMysteryBoxSvgMarkup } from "./mysteryBoxArt.js";
 import { MatchSession } from "./match.js";
 import {
   renderProfileTab,
@@ -62,7 +67,19 @@ import {
 import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
-import { dismissTutorial, initTutorial } from "./tutorial.js";
+import { initAuthGate, requiresAuthGate } from "./authGate.js";
+import {
+  shouldShowInteractiveTutorial,
+  shouldShowMetaTutorial,
+  shouldShowQuestsTutorial,
+  shouldShowPvpTutorial,
+  shouldShowCosmeticsTutorial,
+  prepareInteractiveTutorialForNewAccount,
+  syncTutorialStorageWithProfile,
+} from "./tutorial.js";
+import { startInteractiveTutorial } from "./tutorialMatch.js";
+import { startMetaTutorial, notifyMetaTutorial } from "./tutorialMeta.js";
+import { startQuestsTutorial, startPvpTutorial, startCosmeticsTutorial, notifyUnlockTutorial } from "./tutorialUnlocks.js";
 import { initPvpUI } from "./pvpUI.js";
 import { clearAllWaitingRoomsOnce } from "./pvp.js";
 import { getMatchHtml } from "./matchView.js";
@@ -132,6 +149,19 @@ function sortCollectionCards(cards) {
 }
 let matchSession = null;
 let pvpController = null;
+/** @type {ReturnType<typeof initAuthGate> | null} */
+let authGate = null;
+/** @type {ReturnType<typeof initAuthUI> | null} */
+let authUI = null;
+let tutorialRunning = false;
+let bypassQuestsPvpGate = false;
+let bypassCosmeticsGate = false;
+let pendingPostStage1Tutorials = false;
+let pendingPostStage5CosmeticsTutorial = false;
+/** @type {number|null} */
+let postStage1TutorialTimer = null;
+/** @type {number|null} */
+let postStage5CosmeticsTutorialTimer = null;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
 let selectedAdventureWorldId = 1;
@@ -160,6 +190,7 @@ function removeOneFromDeck(cardId) {
   if (i < 0) return;
   workingDeck.splice(i, 1);
   renderDeckEditor();
+  notifyMetaTutorial("card-removed-from-deck", { cardId });
 }
 
 function autoFinishDeck() {
@@ -204,7 +235,46 @@ function hideStageModal() {
   document.body.classList.remove("adventure-stage-open");
 }
 
+function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
+  const hint = $("adventure-world-hint");
+  if (hint) hint.textContent = message;
+}
+
+function syncNavUnlockState() {
+  const unlocked = isQuestsAndPvpUnlocked(profile);
+  for (const tab of ["quests", "pvp"]) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+    if (!btn) continue;
+    btn.classList.toggle("tab-btn--locked", !unlocked);
+    btn.title = unlocked ? "" : QUESTS_PVP_UNLOCK_MESSAGE;
+    btn.setAttribute("aria-disabled", unlocked ? "false" : "true");
+  }
+
+  const cosmeticsUnlocked = isCosmeticsUnlocked(profile);
+  const cosmeticsTab = document.querySelector('.vault-tab[data-vault-tab="cosmetics"]');
+  if (cosmeticsTab) {
+    cosmeticsTab.classList.toggle("vault-tab--locked", !cosmeticsUnlocked);
+    cosmeticsTab.title = cosmeticsUnlocked ? "" : COSMETICS_UNLOCK_MESSAGE;
+    cosmeticsTab.setAttribute("aria-disabled", cosmeticsUnlocked ? "false" : "true");
+  }
+}
+
 function showTab(tab) {
+  const matchView = document.getElementById("view-match");
+  if (tutorialRunning && matchView && !matchView.classList.contains("hidden")) {
+    return;
+  }
+  if (
+    !bypassQuestsPvpGate &&
+    (tab === "quests" || tab === "pvp") &&
+    !isQuestsAndPvpUnlocked(profile)
+  ) {
+    showUnlockHint();
+    bypassQuestsPvpGate = true;
+    showTab("play");
+    bypassQuestsPvpGate = false;
+    return;
+  }
   reconcileMatchShellState();
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
@@ -215,7 +285,6 @@ function showTab(tab) {
     document.querySelector("#btn-leave-match")?.click();
     return;
   }
-  dismissTutorial({ persist: true, profile, saveProfile });
   if (tab !== "deck" && deckSubview === "edit") {
     unlockBodyScrollForDeckEdit();
     document.body.classList.remove("deck-editing");
@@ -227,6 +296,8 @@ function showTab(tab) {
   document.querySelectorAll(".view").forEach((v) => {
     v.classList.toggle("hidden", v.id !== `view-${tab}`);
   });
+  notifyMetaTutorial("tab-changed", { tab });
+  notifyUnlockTutorial("tab-changed", { tab });
   if (tab === "chests") {
     showVaultTab(activeVaultTab);
     renderChests();
@@ -278,6 +349,7 @@ async function refreshHeaderIdentity() {
 
 function openProfileTab(section) {
   showTab("profile");
+  notifyUnlockTutorial("profile-opened", { section });
   if (section) renderProfile({ initialSection: section });
 }
 
@@ -421,10 +493,11 @@ function showDeckSubview(sub) {
 
 function mysteryBoxHtml({ id, title, desc, cost, big = false }) {
   const canAfford = (profile.stars ?? 0) >= cost;
+  const art = big ? bigMysteryBoxSvgMarkup() : smallMysteryBoxSvgMarkup();
   return `
     <article class="mystery-box ${big ? "mystery-box--big" : ""} ${canAfford ? "mystery-box--ready" : "mystery-box--locked"}" data-mystery-id="${id}" role="button" tabindex="0" aria-label="Open ${title} for ${cost} stars">
       <div class="mystery-box__glow" aria-hidden="true"></div>
-      <div class="mystery-box__icon" aria-hidden="true">${big ? "★?" : "?"}</div>
+      <div class="mystery-box__visual" aria-hidden="true">${art}</div>
       <h3 class="mystery-box__title">${title}</h3>
       <p class="mystery-box__desc">${desc}</p>
       <p class="mystery-box__cost"><span aria-hidden="true">★</span> ${cost} stars</p>
@@ -550,6 +623,17 @@ function renderStarsShop() {
 }
 
 function showVaultTab(tab) {
+  if (
+    !bypassCosmeticsGate &&
+    tab === "cosmetics" &&
+    !isCosmeticsUnlocked(profile)
+  ) {
+    showUnlockHint(COSMETICS_UNLOCK_MESSAGE);
+    bypassCosmeticsGate = true;
+    showVaultTab("cards");
+    bypassCosmeticsGate = false;
+    return;
+  }
   activeVaultTab = tab;
   document.querySelectorAll(".vault-tab").forEach((btn) => {
     const on = btn.dataset.vaultTab === tab;
@@ -561,12 +645,14 @@ function showVaultTab(tab) {
     panel.classList.toggle("hidden", !on);
     panel.hidden = !on;
   });
+  notifyUnlockTutorial("vault-tab-changed", { tab });
 }
 
 function renderCosmeticsShop() {
   renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
     logEl: $("cosmetic-box-log"),
     onGemsChange: updateGemHeader,
+    cosmeticsUnlocked: isCosmeticsUnlocked(profile),
     onOpened: () => {
       if (activeTab === "profile") renderProfile();
       if (activeTab === "quests") renderQuests();
@@ -646,6 +732,8 @@ function renderChests(options = {}) {
         tierLabel: tier.label,
         pulls: res.pulls,
       });
+
+      notifyMetaTutorial("chest-opened", { chestId: chest.id });
 
       if (log) {
         log.textContent = `Got ${res.pulls.length} new cards from ${chest.name}.`;
@@ -744,6 +832,7 @@ function addCardToWorkingDeck(cardId) {
   clearCardNew(profile, cardId);
   saveProfile(profile);
   renderDeckEditor();
+  notifyMetaTutorial("card-added-to-deck", { cardId });
   return true;
 }
 
@@ -831,7 +920,7 @@ function appendCollectionCard(parent, def, opts = {}) {
     } else {
       action.classList.add("deck-collection-row__action--disabled");
       action.disabled = true;
-      if (workingDeck.length >= DECK_SIZE) action.textContent = "Deck full (30/30)";
+      if (workingDeck.length >= DECK_SIZE) action.textContent = `Deck full (${DECK_SIZE}/${DECK_SIZE})`;
       else if (inDeck >= cap) action.textContent = "Max copies in deck";
       else if (owned < 1) action.textContent = "Open Shop chests to unlock";
       else if (addCheck.reason) action.textContent = addCheck.reason;
@@ -960,6 +1049,7 @@ function openDeckEdit(deckId) {
   const nameInput = $("deck-name-input");
   if (nameInput) nameInput.value = deck.name;
   showDeckSubview("edit");
+  notifyMetaTutorial("deck-edit-opened", { deckId });
 }
 
 function renderDeckList() {
@@ -1125,6 +1215,7 @@ function saveWorkingDeck() {
   upsertDeck(profile, deck);
   profile.selectedDeckId = deck.id;
   saveProfile(profile);
+  notifyMetaTutorial("deck-saved", { deckId: deck.id });
   editingDeckId = null;
   workingDeck = [];
   showDeckSubview("list");
@@ -1208,6 +1299,7 @@ function getMapSceneryMarkup(theme) {
 
 function renderAdventureMap() {
   updateCurrencyHeader();
+  syncNavUnlockState();
   const progress = repairAdventureProgress(profile.adventure);
   profile.adventure = progress;
   const nextId = getNextPlayableLevelId(progress);
@@ -1479,12 +1571,27 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
         root.innerHTML = "";
         $("view-match")?.classList.add("hidden");
         showTab(consumePendingNavigationTab() || "play");
+        if (pendingPostStage1Tutorials) {
+          schedulePostStage1Tutorials();
+        }
+        if (pendingPostStage5CosmeticsTutorial) {
+          schedulePostStage5CosmeticsTutorial();
+        }
       },
       (stars) => {
-        const { gems, stars: bestStars, starsGained } = recordLevelClear(profile, levelId, stars);
+        const result = recordLevelClear(profile, levelId, stars);
+        const { gems, stars: bestStars, starsGained } = result;
         profile.gems += gems;
         saveProfile(profile);
         updateCurrencyHeader();
+        syncNavUnlockState();
+        if (levelId === 1 && result.firstTime) {
+          pendingPostStage1Tutorials = true;
+          schedulePostStage1Tutorials();
+        }
+        if (levelId === 5 && result.firstTime) {
+          pendingPostStage5CosmeticsTutorial = true;
+        }
         return {
           message: `+${gems} gems! · Best: ${formatStars(bestStars)}`,
           starsGained,
@@ -1547,7 +1654,7 @@ function startAdventureMatch() {
     const opponent = $("prebattle-opponent");
     if (opponent) {
       if (!deck || deck.cardIds.length !== DECK_SIZE) {
-        opponent.textContent = "Build a complete 30-card deck in the Decks tab, then try again.";
+        opponent.textContent = `Build a complete ${DECK_SIZE}-card deck in the Decks tab, then try again.`;
       } else {
         opponent.textContent = "Could not start battle — close and pick the stage again.";
       }
@@ -1691,25 +1798,41 @@ function init() {
   const authModal = document.getElementById("auth-modal");
   const authBtn = document.getElementById("auth-header-btn");
   const profileBtn = document.getElementById("header-profile-btn");
-  initTutorial({ profile, saveProfile });
 
   profileBtn?.addEventListener("click", () => openProfileTab());
 
-  const authUI = initAuthUI({
+  authGate = initAuthGate({
+    onSignIn: () => authUI?.open("signin", { forced: true }),
+    onSignUp: () => authUI?.open("signup", { forced: true }),
+  });
+
+  authUI = initAuthUI({
     authBtn,
     modal: authModal,
+    onNewAccount: () => {
+      profile = loadProfile();
+      prepareInteractiveTutorialForNewAccount(profile, saveProfile);
+    },
     onSignedIn: () => {
       profile = loadProfile();
       repairProfile(profile);
+      syncTutorialStorageWithProfile(profile);
       updateCurrencyHeader();
       renderDeckList();
       renderStarsShop();
+      authGate?.hide();
       void refreshHeaderIdentity().then(() => {
         if (activeTab === "profile") renderProfile();
         if (activeTab === "quests") renderQuests();
       });
       pvpController?.render();
-      showTab(activeTab);
+      maybeStartInteractiveTutorial();
+      maybeStartMetaTutorial();
+      maybeStartPostStage1Tutorials();
+      maybeStartPostStage5CosmeticsTutorial();
+      if (!tutorialRunning) {
+        showTab(activeTab);
+      }
     },
     onSignedOut: () => {
       headerDisplayUsername = "";
@@ -1718,6 +1841,7 @@ function init() {
       matchSession = null;
       exitMatchMode({ clearCheckpoint: true });
       reconcileMatchShellState();
+      authGate?.show();
       showTab("deck");
     },
   });
@@ -1727,15 +1851,187 @@ function init() {
   pvpController = initPvpUI({
     root: document.getElementById("view-pvp"),
     getProfile: () => profile,
-    openAuthModal: () => authUI.open("signin"),
+    openAuthModal: () => authUI?.open("signin", { forced: true }),
     onNavigateTab: showTab,
   });
 
   bindMatchVisibilityHandlers(() => matchSession);
   repairProfile(profile);
   syncCollectionFilterControls();
+  syncNavUnlockState();
 
   void bootstrapAfterAuth();
+}
+
+function schedulePostStage1Tutorials() {
+  if (!pendingPostStage1Tutorials) return;
+  if (postStage1TutorialTimer != null) return;
+
+  let attempts = 0;
+  const maxAttempts = 10;
+
+  const tryStart = () => {
+    postStage1TutorialTimer = null;
+    attempts += 1;
+    if (!pendingPostStage1Tutorials) return;
+    if (isLiveMatchUiVisible()) {
+      if (attempts < maxAttempts) {
+        postStage1TutorialTimer = window.setTimeout(tryStart, 400);
+      }
+      return;
+    }
+    syncTutorialStorageWithProfile(profile);
+    if (maybeStartPostStage1Tutorials()) {
+      pendingPostStage1Tutorials = false;
+      return;
+    }
+    if (attempts < maxAttempts) {
+      postStage1TutorialTimer = window.setTimeout(tryStart, 500);
+    }
+  };
+
+  postStage1TutorialTimer = window.setTimeout(tryStart, 350);
+}
+
+function schedulePostStage5CosmeticsTutorial() {
+  if (!pendingPostStage5CosmeticsTutorial) return;
+  if (postStage5CosmeticsTutorialTimer != null) return;
+
+  let attempts = 0;
+  const maxAttempts = 10;
+
+  const tryStart = () => {
+    postStage5CosmeticsTutorialTimer = null;
+    attempts += 1;
+    if (!pendingPostStage5CosmeticsTutorial) return;
+    if (isLiveMatchUiVisible()) {
+      if (attempts < maxAttempts) {
+        postStage5CosmeticsTutorialTimer = window.setTimeout(tryStart, 400);
+      }
+      return;
+    }
+    syncTutorialStorageWithProfile(profile);
+    if (maybeStartPostStage5CosmeticsTutorial()) {
+      pendingPostStage5CosmeticsTutorial = false;
+      return;
+    }
+    if (attempts < maxAttempts) {
+      postStage5CosmeticsTutorialTimer = window.setTimeout(tryStart, 500);
+    }
+  };
+
+  postStage5CosmeticsTutorialTimer = window.setTimeout(tryStart, 350);
+}
+
+function maybeStartPvpTutorial() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!isQuestsAndPvpUnlocked(profile)) return false;
+  if (!shouldShowPvpTutorial(profile)) return false;
+  tutorialRunning = true;
+  startPvpTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      syncNavUnlockState();
+      showTab("play");
+      maybeStartPostStage5CosmeticsTutorial();
+    },
+  });
+  return true;
+}
+
+function maybeStartPostStage5CosmeticsTutorial() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!isCosmeticsUnlocked(profile)) return false;
+  if (shouldShowInteractiveTutorial(profile) || shouldShowMetaTutorial(profile)) return false;
+  if (shouldShowQuestsTutorial(profile) || shouldShowPvpTutorial(profile)) return false;
+  if (!shouldShowCosmeticsTutorial(profile)) return false;
+  tutorialRunning = true;
+  showTab("play");
+  startCosmeticsTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      syncNavUnlockState();
+      showTab("play");
+    },
+  });
+  return true;
+}
+
+function maybeStartPostStage1Tutorials() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!isQuestsAndPvpUnlocked(profile)) return false;
+  syncTutorialStorageWithProfile(profile);
+  if (!shouldShowQuestsTutorial(profile)) return maybeStartPvpTutorial();
+  tutorialRunning = true;
+  showTab("play");
+  startQuestsTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      syncNavUnlockState();
+      maybeStartPvpTutorial();
+      maybeStartPostStage5CosmeticsTutorial();
+    },
+  });
+  return true;
+}
+
+function maybeStartInteractiveTutorial() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!shouldShowInteractiveTutorial(profile)) return false;
+  tutorialRunning = true;
+  startInteractiveTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      updateCurrencyHeader();
+      renderDeckList();
+      renderStarsShop();
+      if (!maybeStartMetaTutorial()) {
+        showTab("deck");
+      }
+      maybeStartPostStage1Tutorials();
+      maybeStartPostStage5CosmeticsTutorial();
+    },
+  });
+  return true;
+}
+
+function maybeStartMetaTutorial() {
+  if (tutorialRunning || !getCurrentUser()) return false;
+  if (!shouldShowMetaTutorial(profile)) return false;
+  tutorialRunning = true;
+  showTab("deck");
+  startMetaTutorial({
+    profile,
+    saveProfile,
+    onComplete: () => {
+      tutorialRunning = false;
+      profile = loadProfile();
+      repairProfile(profile);
+      updateCurrencyHeader();
+      renderDeckList();
+      renderStarsShop();
+      showTab("deck");
+      maybeStartPostStage1Tutorials();
+      maybeStartPostStage5CosmeticsTutorial();
+    },
+  });
+  return true;
 }
 
 async function bootstrapAfterAuth() {
@@ -1756,8 +2052,21 @@ async function bootstrapAfterAuth() {
   } catch (e) {
     console.warn("Auth init failed", e);
   }
+  syncTutorialStorageWithProfile(profile);
   await refreshHeaderIdentity();
   reconcileMatchShellState();
+
+  if (requiresAuthGate()) {
+    authGate?.show();
+    return;
+  }
+  authGate?.hide();
+
+  if (maybeStartInteractiveTutorial()) return;
+  if (maybeStartMetaTutorial()) return;
+  if (maybeStartPostStage1Tutorials()) return;
+  if (maybeStartPostStage5CosmeticsTutorial()) return;
+  if (tutorialRunning) return;
   if (!tryResumeSavedMatch()) showTab("deck");
   reconcileMatchShellState();
 }

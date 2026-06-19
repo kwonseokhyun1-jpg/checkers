@@ -11,6 +11,7 @@ export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS };
 /** Meta / hand / turn-rule spells — shimmer only, no board shake */
 const META_EFFECTS = new Set([
   "quick_march", "trickster", "ricochet", "blind", "confusion", "counterspell", "vengeance", "dominion",
+  "deflect_1",
   "conduct", "mirror_move", "roulette", "ignore", "mirror_board", "highlight_path",
   "pocket", "mind_control", "chameleon", "identity_theft", "succession",
   "twin_soul", "last_king", "constitution", "sanctuary_pulse", "parallel", "echo",
@@ -69,13 +70,13 @@ const TERRAIN_EFFECTS = new Set([
 
 const BUFF_EFFECTS = new Set([
   "shield_1", "shield_2", "retreat_3", "knight_perm", "crown", "rook_2", "bishop_2", "bishop_3",
-  "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "mirror_shield", "phalanx",
+  "rook_3", "queen_2", "pawn_zeal", "anchor_2", "bomb", "shockwave", "mirror_shield", "phalanx",
   "last_stand", "ghost_guard", "fortify", "hibernation", "stall", "revive",
-  "wraith_2", "stone_form", "rally", "fusion", "create_foe",
+  "wraith_2", "rally", "fusion", "create_foe",
 ]);
 
 const DEBUFF_EFFECTS = new Set([
-  "freeze_1", "freeze_2", "snowball", "deep_freeze", "root_2", "slow_2", "silence_3", "rust", "hex_3", "fog_2",
+  "freeze_1", "freeze_2", "snowball", "deep_freeze", "root_2", "slow_2", "silence_3", "fog_2",
   "panic", "demote", "reverse_only_2", "venom", "backpedal",
 ]);
 
@@ -411,7 +412,7 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
-  if ((effect === "hibernation" || effect === "bomb") && p.length === 1) {
+  if ((effect === "hibernation" || effect === "bomb" || effect === "shockwave") && p.length === 1) {
     return withVisual({
       type: "buff",
       duration: animDurationForEffect(effect),
@@ -433,6 +434,19 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
       label,
       squares: p,
       to: p[0],
+    }, effect);
+  }
+
+  if (effect === "deep_freeze" && p.length >= 2) {
+    return finishSpec({
+      type: "debuff",
+      visual: "freeze",
+      duration: animDurationForEffect("deep_freeze"),
+      label,
+      squares: p.slice(0, 2),
+      from: p[0],
+      to: p[1],
+      lineSquares: squaresBetween(p[0], p[1]),
     }, effect);
   }
 

@@ -4,7 +4,7 @@
  * Run: node scripts/test-all-spells.mjs
  */
 import { readFileSync } from "fs";
-import { getPlayableCards } from "../js/cardCatalog.js";
+import { getPlayableCards, DECK_SIZE } from "../js/cardCatalog.js";
 import { getValidTargets, tryAutoPlay } from "../js/cardEffects.js";
 import { applyCard } from "../js/cardEffectHandlers.js";
 import { createMatchState } from "../js/match.js";
@@ -23,7 +23,7 @@ import {
   tickEndTurnEffects,
   tickEffects,
 } from "../js/board.js";
-import { createMatchMeta, tryConsumeCounterspell, tryConsumeVengeance, ensureConstitutionTurns } from "../js/gameMeta.js";
+import { createMatchMeta, tryConsumeCounterspell, tryConsumeVengeance, ensureConstitutionTurns, startTurnMeta } from "../js/gameMeta.js";
 import { initCardState } from "../js/cardEffects.js";
 
 const handlerKeys = new Set(
@@ -75,7 +75,7 @@ function emptyDark(state, r, c) {
 
 function boardSetups(randomCount = 50) {
   const setups = [
-    () => createMatchState(Array(30).fill("nudge")),
+    () => createMatchState(Array(DECK_SIZE).fill("nudge")),
     () => { const s = baseState(); place(s, COLOR, 5, 1); return s; },
     () => { const s = baseState(); place(s, COLOR, 5, 0); place(s, COLOR, 4, 1); return s; },
     () => { const s = baseState(); place(s, COLOR, 5, 0); place(s, OPP, 6, 1); return s; },
@@ -356,6 +356,11 @@ for (const card of cards) {
   const sq = s.squares["3,3"] || s.squares["4,3"];
   const key = Object.keys(s.squares).find((k) => s.squares[k]?.fireTurns === 2);
   if (!key) throw new Error("Pyromancy should ignite empty dark tile");
+  if (!s.meta.shatterSilenceNext[COLOR]) throw new Error("Pyromancy should set spell silence for next turn");
+  startTurnMeta(s, OPP);
+  if (!s.meta.shatterSilenceNext[COLOR]) throw new Error("Pyromancy silence should persist through opponent turn");
+  startTurnMeta(s, COLOR);
+  if (!s.meta.shatterSilenced[COLOR]) throw new Error("Pyromancy should block spells on caster's next turn");
   console.log("Pyromancy test: OK");
 }
 

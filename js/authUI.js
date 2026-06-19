@@ -14,7 +14,6 @@ import {
 } from "./auth.js";
 import { upsertProfileRow } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
-import { dismissTutorial } from "./tutorial.js";
 
 const USERNAME_RE = USERNAME_PATTERN;
 
@@ -24,8 +23,9 @@ const USERNAME_RE = USERNAME_PATTERN;
  * @param {HTMLElement} opts.modal
  * @param {() => void} opts.onSignedIn
  * @param {() => void} [opts.onSignedOut]
+ * @param {() => void} [opts.onNewAccount]
  */
-export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
+export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccount }) {
   if (!authBtn || !modal) return;
 
   const form = modal.querySelector("#auth-form");
@@ -39,6 +39,9 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
 
   let mode = "signin";
   let usernameCheckTimer = null;
+  let forced = false;
+  /** Suppress duplicate onSignedIn from onAuthChange while the form handler runs. */
+  let handlingAuthForm = false;
 
   function syncAuthFields() {
     form?.querySelectorAll(".auth-field-signup").forEach((el) => {
@@ -97,11 +100,12 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
     setUsernameHint("Available", "ok");
   }
 
-  function open(modeOverride) {
-    dismissTutorial({ persist: true });
+  function open(modeOverride, opts = {}) {
+    forced = !!opts.forced;
     if (!isAuthAvailable()) {
       setError("Add Supabase anon key in js/supabaseConfig.js");
       modal.classList.remove("hidden");
+      closeBtn?.classList.toggle("hidden", forced);
       return;
     }
     mode = modeOverride || mode;
@@ -109,10 +113,13 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
     if (toggle) toggle.textContent = mode === "signup" ? "Already have an account? Sign in" : "Need an account? Sign up";
     setError("");
     syncAuthFields();
+    closeBtn?.classList.toggle("hidden", forced);
+    backdrop?.classList.toggle("auth-modal-backdrop--locked", forced);
     modal.classList.remove("hidden");
   }
 
   function close() {
+    if (forced) return;
     modal.classList.add("hidden");
     setError("");
     setUsernameHint("");
@@ -150,7 +157,9 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
   });
 
   closeBtn?.addEventListener("click", close);
-  backdrop?.addEventListener("click", close);
+  backdrop?.addEventListener("click", () => {
+    if (!forced) close();
+  });
 
   const usernameInput = form?.querySelector("#auth-username");
   usernameInput?.addEventListener("input", () => {
@@ -181,6 +190,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
 
     if (submitBtn) submitBtn.disabled = true;
 
+    handlingAuthForm = true;
     try {
       if (mode === "signup") {
         if (!identifier.includes("@")) {
@@ -205,6 +215,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
           return;
         }
 
+        onNewAccount?.();
         const data = await signUp(identifier, password, chosenUsername, chosenUsername);
         const user = data.session?.user ?? getCurrentUser();
 
@@ -240,10 +251,13 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
 
           try {
             await pullCloudProfile();
-            onSignedIn?.();
           } catch (err) {
             console.warn("Profile sync after signup failed", err);
           }
+          onSignedIn?.();
+          forced = false;
+          closeBtn?.classList.remove("hidden");
+          backdrop?.classList.remove("auth-modal-backdrop--locked");
           close();
           return;
         }
@@ -262,10 +276,13 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
       }
       try {
         await pullCloudProfile();
-        onSignedIn?.();
       } catch (err) {
         console.warn("Profile sync after sign-in failed", err);
       }
+      onSignedIn?.();
+      forced = false;
+      closeBtn?.classList.remove("hidden");
+      backdrop?.classList.remove("auth-modal-backdrop--locked");
       updateHeaderBtn(user);
       close();
     } catch (err) {
@@ -292,6 +309,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
         setError(msg);
       }
     } finally {
+      handlingAuthForm = false;
       if (submitBtn) submitBtn.disabled = false;
     }
   });
@@ -299,12 +317,16 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut }) {
   onAuthChange(async (user) => {
     updateHeaderBtn(user);
     if (user) {
+      if (handlingAuthForm) return;
       try {
         await pullCloudProfile();
-        onSignedIn?.();
       } catch (err) {
         console.warn("Profile sync failed", err);
       }
+      onSignedIn?.();
+      forced = false;
+      closeBtn?.classList.remove("hidden");
+      backdrop?.classList.remove("auth-modal-backdrop--locked");
       close();
     } else {
       onSignedOut?.();

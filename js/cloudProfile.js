@@ -10,9 +10,14 @@ function isEmptyRemoteProfile(json) {
   if (keys.every((k) => k === "loginEmail" || k === "login_email" || k === "savedAt")) return true;
   const hasCollection = json.collection && Object.keys(json.collection).length > 0;
   const hasDecks = Array.isArray(json.decks) && json.decks.length > 0;
-  const hasProgress = (json.adventure?.cleared?.length || 0) > 0;
+  const cleared = json.adventure?.cleared;
+  const hasProgress =
+    (Array.isArray(cleared) ? cleared.length : Object.keys(cleared || {}).length) > 0;
   const hasCurrency = typeof json.gems === "number" || typeof json.stars === "number";
-  return !(hasCollection || hasDecks || hasProgress || hasCurrency);
+  const hasStats =
+    (typeof json.pvpWins === "number" && json.pvpWins > 0) ||
+    (typeof json.spellsPlayed === "number" && json.spellsPlayed > 0);
+  return !(hasCollection || hasDecks || hasProgress || hasCurrency || hasStats);
 }
 
 function applyRemoteProfile(remote) {

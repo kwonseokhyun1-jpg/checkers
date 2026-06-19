@@ -83,7 +83,6 @@ export const REMOVED_CARD_IDS = new Set([
   "sanctified",
   "sanctuary_pulse",
   "shield_bash",
-  "sidestep",
   "silence",
   "slow",
   "spear_thrust",
@@ -95,6 +94,8 @@ export const REMOVED_CARD_IDS = new Set([
   "warp_gate",
   "wild_magic",
   "wraith_2",
+  "hex",
+  "stone_form",
 ]);
 
 export function isRemovedCard(cardOrId) {

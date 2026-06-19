@@ -608,6 +608,13 @@ body {
   color: var(--bg-deep);
   border-color: transparent;
 }
+.tab-btn--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.tab-btn--locked:not(.active) {
+  filter: grayscale(0.35);
+}
 .view.hidden { display: none; }
 .hidden { display: none !important; }
 .header-gems {
@@ -809,6 +816,77 @@ body {
   50% { transform: translateX(30%) rotate(0deg); opacity: 0.85; }
 }
 .spell-card__svg { width: 64px; height: 64px; }
+
+/* Portrait raster art — uploaded images are complete card faces */
+.spell-card--portrait-art {
+  padding: 0;
+  max-width: none;
+}
+.spell-card--portrait-art .spell-card__frame {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.spell-card--portrait-art:not(.disabled):hover .spell-card__frame {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+}
+.spell-card--portrait-art.selected .spell-card__frame {
+  box-shadow: 0 0 0 2px var(--accent-gold);
+}
+.spell-card--portrait-art .spell-card__art {
+  height: auto;
+  aspect-ratio: 276 / 294;
+  background: transparent;
+  display: block;
+}
+.spell-card--portrait-art .spell-card__img {
+  position: static;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+}
+.spell-card--portrait-art .spell-card__art-shine,
+.spell-card--portrait-art .spell-card__sigil,
+.spell-card--portrait-art .spell-card__body {
+  display: none;
+}
+.spell-card--portrait-art .spell-card__art-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spell-card--portrait-art .spell-card__art-fallback .spell-card__svg {
+  width: 64px;
+  height: 64px;
+}
+
+.spell-card__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+}
+.spell-card__art-fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.spell-card__art-fallback .spell-card__svg {
+  width: 64px;
+  height: 64px;
+}
 .spell-card__sigil {
   position: absolute;
   bottom: 4px;
@@ -876,8 +954,23 @@ body {
 
 .spell-card--compact,
 .spell-card.compact { max-width: 140px; }
+.spell-card--portrait-art.spell-card--compact,
+.spell-card--portrait-art.compact {
+  max-width: 120px;
+}
+.spell-card--portrait-art.spell-card--small .spell-card__art {
+  height: auto;
+}
+.spell-card--portrait-art.spell-card--tiny .spell-card__art,
+.spell-card--portrait-art.tiny .spell-card__art {
+  height: auto;
+}
 .spell-card--compact .spell-card__art,
 .spell-card.compact .spell-card__art { height: 72px; }
+.spell-card--portrait-art.spell-card--compact .spell-card__art,
+.spell-card--portrait-art.compact .spell-card__art {
+  height: auto;
+}
 .spell-card--compact .spell-card__name,
 .spell-card.compact .spell-card__name { font-size: 0.75rem; }
 .spell-card--compact .spell-card__desc,
@@ -1096,6 +1189,12 @@ body {
   padding: 0.25rem;
   scroll-snap-align: start;
 }
+.hand.spell-hand .spell-card--portrait-art {
+  flex: 0 0 4.35rem;
+  width: 4.35rem;
+  max-width: 4.35rem;
+  padding: 0;
+}
 .hand.spell-hand.spell-hand--crowded {
   gap: 0.35rem;
   scroll-snap-type: x proximity;
@@ -1105,8 +1204,16 @@ body {
   width: 4.85rem;
   max-width: 4.85rem;
 }
+.hand.spell-hand.spell-hand--crowded .spell-card--portrait-art {
+  flex-basis: 3.85rem;
+  width: 3.85rem;
+  max-width: 3.85rem;
+}
 .hand.spell-hand.spell-hand--crowded .spell-card__art {
   height: 2.85rem;
+}
+.hand.spell-hand .spell-card--portrait-art .spell-card__art {
+  height: auto;
 }
 
 .hand.spell-hand .spell-card__body {
@@ -1189,6 +1296,9 @@ body {
   transform: translate(-50%, -50%);
   max-width: 120px;
   filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.55));
+}
+body.tutorial-match-active .spell-drag-ghost {
+  z-index: 530;
 }
 .hand.spell-hand .spell-card:not(.disabled) {
   pointer-events: auto;
@@ -1761,6 +1871,13 @@ body {
   justify-content: center;
   padding: 1rem;
 }
+/* Above tutorial overlays so Cast spell / deck actions stay clickable */
+body.tutorial-meta-active .card-preview-modal {
+  z-index: 420;
+}
+body.tutorial-match-active .card-preview-modal {
+  z-index: 520;
+}
 .card-preview-modal.hidden { display: none; }
 .card-preview-backdrop {
   position: absolute;
@@ -1781,11 +1898,21 @@ body {
 }
 .card-preview-mount {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
 }
 .card-preview-mount .spell-card {
   max-width: 200px;
   pointer-events: none;
+}
+.card-preview-desc {
+  margin: 0;
+  max-width: 280px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-align: center;
 }
 .card-preview-mount .spell-card__desc {
   -webkit-line-clamp: unset;
@@ -2070,6 +2197,30 @@ body {
   right: -4px;
   font-size: 0.65rem;
   line-height: 1;
+}
+.piece.shockwave-armed::after {
+  content: "⚡";
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 0.65rem;
+  line-height: 1;
+  animation: shockwave-arm-pulse 0.6s ease-in-out infinite;
+}
+.piece.vengeance-armed::after {
+  content: "⚔";
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  font-size: 0.65rem;
+  line-height: 1;
+  color: rgba(220, 80, 90, 0.95);
+  text-shadow: 0 0 6px rgba(180, 30, 50, 0.8);
+  animation: shockwave-arm-pulse 0.8s ease-in-out infinite;
+}
+@keyframes shockwave-arm-pulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.15); }
 }
 .piece { position: relative; }
 
@@ -3044,6 +3195,16 @@ body.chest-open-active {
 .piece.paralyzed-mark {
   box-shadow: 0 0 0 2px rgba(180, 120, 255, 0.9), 0 0 14px rgba(140, 80, 220, 0.5);
 }
+.piece.paralyzed-mark::after {
+  content: "⚡";
+  position: absolute;
+  top: -6px;
+  right: -4px;
+  font-size: 0.6rem;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(140, 200, 255, 0.9);
+  pointer-events: none;
+}
 
 /* ── Collapsed square (crossed out) ── */
 .square.square--collapsed {
@@ -3559,14 +3720,38 @@ body.chest-open-active {
 }
 
 
-/* ── Reactive board FX: bomb, landmine, vengeance ── */
+/* ── Reactive board FX: bomb, landmine, vengeance, shockwave ── */
 .board-frame--fx-bomb { box-shadow: 0 0 48px rgba(255, 100, 40, 0.55); }
+.board-frame--fx-shockwave { box-shadow: 0 0 44px rgba(80, 180, 255, 0.55); }
 .board-frame--fx-mine { box-shadow: 0 0 40px rgba(255, 60, 40, 0.5); }
 .board-frame--fx-vengeance { box-shadow: 0 0 44px rgba(160, 20, 40, 0.55); }
 
 .square.board-fx-blast { position: relative; z-index: 3; }
 .square.board-fx-bomb.board-fx-blast {
   animation: board-fx-bomb-blast 1s ease-out;
+}
+.square.board-fx-shockwave.board-fx-blast {
+  animation: board-fx-shockwave-blast 0.9s ease-out;
+}
+.square.board-fx-shockwave.board-fx-blast::after {
+  content: "";
+  position: absolute;
+  inset: -10%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(100, 200, 255, 0.85), rgba(60, 140, 255, 0.4) 45%, transparent 70%);
+  pointer-events: none;
+  animation: board-fx-shockwave-ring 0.85s ease-out;
+}
+.square.board-fx-shockwave.board-fx-blast::before {
+  content: "⚡";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  pointer-events: none;
+  animation: board-fx-shockwave-pop 0.45s ease-out 2;
 }
 .square.board-fx-bomb.board-fx-blast::after {
   content: "";
@@ -3641,6 +3826,20 @@ body.chest-open-active {
   40% { transform: scale(1.08); filter: brightness(1.8); }
   100% { transform: scale(1); filter: brightness(1); }
 }
+@keyframes board-fx-shockwave-blast {
+  0% { transform: scale(1); filter: brightness(1); }
+  40% { transform: scale(1.06); filter: brightness(1.5) hue-rotate(180deg); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+@keyframes board-fx-shockwave-ring {
+  0% { transform: scale(0.3); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@keyframes board-fx-shockwave-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.5; }
+}
 @keyframes board-fx-bomb-ring {
   0% { transform: scale(0.3); opacity: 1; }
   100% { transform: scale(1.4); opacity: 0; }
@@ -3671,6 +3870,53 @@ body.chest-open-active {
   0% { transform: translateY(-20%); opacity: 0; }
   50% { opacity: 1; }
   100% { transform: translateY(30%); opacity: 0.5; }
+}
+
+/* Deflect trap reveal — vibrating arrow from defender to redirected victim */
+.board-frame--fx-deflect {
+  box-shadow: 0 0 0 2px rgba(90, 200, 255, 0.35), var(--frame-shadow, 0 8px 32px rgba(0, 0, 0, 0.45));
+}
+.square.board-fx-deflect-from.board-fx-blast {
+  animation: board-fx-deflect-pulse 0.45s ease-in-out 3;
+  box-shadow: inset 0 0 0 3px rgba(90, 200, 255, 0.95);
+}
+.square.board-fx-deflect-to.board-fx-blast {
+  animation: board-fx-deflect-victim 0.5s ease-in-out 3;
+  box-shadow: inset 0 0 0 3px rgba(255, 90, 90, 0.95);
+}
+.deflect-arrow-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 12;
+  color: rgba(120, 230, 255, 0.95);
+}
+.deflect-arrow-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.deflect-arrow-line {
+  stroke: currentColor;
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(90, 220, 255, 0.8));
+  animation: deflect-arrow-vibrate 0.12s linear infinite;
+}
+@keyframes board-fx-deflect-pulse {
+  0%, 100% { filter: brightness(1); transform: scale(1); }
+  50% { filter: brightness(1.35); transform: scale(1.04); }
+}
+@keyframes board-fx-deflect-victim {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.5) saturate(1.3); }
+}
+@keyframes deflect-arrow-vibrate {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(1.5px, -1.5px); }
+  50% { transform: translate(-1.5px, 1.5px); }
+  75% { transform: translate(1px, 1px); }
+  100% { transform: translate(0, 0); }
 }
 
 /* Spell cast: vengeance / hibernation / trap arm */
@@ -3713,6 +3959,15 @@ body.chest-open-active {
   animation: spell-bomb-arm-pulse 0.5s ease-in-out 4;
   pointer-events: none;
 }
+.square.spell-fx-shockwave_arm.spell-fx-shockwave-arm::after {
+  content: "⚡";
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 1rem;
+  animation: spell-shockwave-arm-pulse 0.45s ease-in-out 4;
+  pointer-events: none;
+}
 .square.spell-fx-landmine_arm.spell-fx-mine-arm::before {
   content: "";
   position: absolute;
@@ -3738,6 +3993,10 @@ body.chest-open-active {
 @keyframes spell-bomb-arm-pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.2); }
+}
+@keyframes spell-shockwave-arm-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.25); opacity: 1; }
 }
 @keyframes spell-mine-arm-pulse {
   0%, 100% { opacity: 0.4; }
@@ -3817,6 +4076,34 @@ body.chest-open-active {
   background: radial-gradient(circle at 35% 30%, #3a3560, #0a0814 85%);
   box-shadow: 0 0 14px rgba(123, 92, 255, 0.55);
   border: 1px solid rgba(180, 160, 255, 0.35);
+}
+
+.piece.bounty-mark.red,
+.piece.bounty-mark.black,
+.piece.bounty-mark.piece-skin-ember.red,
+.piece.bounty-mark.piece-skin-ember.black,
+.piece.bounty-mark.piece-skin-frost.red,
+.piece.bounty-mark.piece-skin-frost.black,
+.piece.bounty-mark.piece-skin-arcane.red,
+.piece.bounty-mark.piece-skin-arcane.black,
+.piece.bounty-mark.piece-skin-void.red,
+.piece.bounty-mark.piece-skin-void.black {
+  outline: 2px solid rgba(255, 196, 64, 0.95);
+  outline-offset: 1px;
+}
+
+.piece.fortify-mark.red,
+.piece.fortify-mark.black,
+.piece.fortify-mark.piece-skin-ember.red,
+.piece.fortify-mark.piece-skin-ember.black,
+.piece.fortify-mark.piece-skin-frost.red,
+.piece.fortify-mark.piece-skin-frost.black,
+.piece.fortify-mark.piece-skin-arcane.red,
+.piece.fortify-mark.piece-skin-arcane.black,
+.piece.fortify-mark.piece-skin-void.red,
+.piece.fortify-mark.piece-skin-void.black {
+  outline: 2px solid rgba(147, 197, 253, 0.95);
+  outline-offset: 1px;
 }
 
 /* ── Profile tab ── */
@@ -4630,6 +4917,17 @@ body.chest-open-active {
 .vault-tab-panel.hidden {
   display: none;
 }
+.vault-tab--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.vault-tab--locked:not(.active) {
+  filter: grayscale(0.35);
+}
+.vault-locked-msg {
+  padding: 1.25rem 0;
+  text-align: center;
+}
 .vault-section-title {
   font-family: var(--font-display, "Fraunces", serif);
   font-size: 1.05rem;
@@ -4770,6 +5068,9 @@ body.chest-open-active {
   inset: 0;
   background: rgba(4, 6, 12, 0.85);
   backdrop-filter: blur(6px);
+}
+.auth-modal-backdrop--locked {
+  cursor: default;
 }
 .auth-modal-dialog {
   position: relative;
@@ -4980,31 +5281,53 @@ body.public-profile-modal-open {
   outline: 2px solid var(--accent-gem);
   outline-offset: 2px;
 }
-.pvp-room-host-profile__avatar {
-  width: 3rem;
-  height: 3rem;
+.pvp-room-host-profile .profile-avatar-stack {
+  position: relative;
+  display: block;
+  width: 2.5rem;
+  height: 2.5rem;
   padding: 3px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
 }
-.pvp-room-host-profile__avatar .profile-avatar-inner svg {
+.pvp-room-host-profile .profile-avatar-inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.pvp-room-host-profile .profile-avatar-inner svg {
   width: 100%;
   height: 100%;
   display: block;
 }
-.pvp-room-host-profile__avatar .profile-avatar-fallback {
+.pvp-room-host-profile .profile-avatar-fallback {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   height: 100%;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-muted, #9aa3b2);
 }
-.pvp-room-host-profile__avatar.profile-frame--legend::after,
-.pvp-room-host-profile__avatar.profile-frame--silver::after {
-  font-size: 0.55rem;
-  top: -0.1rem;
+.pvp-room-host-profile .profile-frame--legend {
+  animation: none;
+  box-shadow: 0 0 10px rgba(159, 122, 234, 0.45);
+}
+.pvp-room-host-profile .profile-frame--legend::after {
+  inset: 3px;
+}
+.pvp-room-host-profile .profile-frame--silver::after {
+  font-size: 0.4rem;
+  top: -0.08rem;
+}
+.pvp-room-host-profile .profile-frame--gold::before {
+  font-size: 0.5rem;
+  top: -0.22rem;
+}
+.pvp-room-host-profile .profile-frame--bronze::before {
+  inset: 3px;
+  border-width: 1px;
 }
 .pvp-open-join {
   display: flex;
@@ -5388,11 +5711,28 @@ body.public-profile-modal-open {
   0%, 100% { opacity: 0.5; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.05); }
 }
-.mystery-box__icon {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #e9d5ff;
+.mystery-box__visual {
   position: relative;
+  width: 140px;
+  height: 116px;
+  margin: 0 auto 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.mystery-box-svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 14px rgba(167, 139, 250, 0.25));
+}
+.mystery-box--big .mystery-box-svg {
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 18px rgba(251, 191, 36, 0.35));
+}
+.mystery-box--ready .mystery-box-svg__float {
+  animation: chest-float 3s ease-in-out infinite;
+}
+.mystery-box--big.mystery-box--ready .mystery-box-svg__float {
+  animation: chest-float 2.6s ease-in-out infinite;
 }
 .mystery-box__title { position: relative; margin: 0.5rem 0 0.25rem; font-family: var(--font-heading); }
 .mystery-box__desc { position: relative; font-size: 0.85rem; color: var(--text-muted); margin: 0 0 0.75rem; }
@@ -5407,10 +5747,6 @@ body.public-profile-modal-open {
 }
 .mystery-box--big .mystery-box__glow {
   background: radial-gradient(circle, rgba(251, 191, 36, 0.3), transparent 60%);
-}
-.mystery-box--big .mystery-box__icon {
-  color: #fde68a;
-  font-size: 2.75rem;
 }
 .mystery-box--big .mystery-box__cost {
   color: #fbbf24;
@@ -5926,9 +6262,260 @@ body.adventure-stage-open {
 }
 .tutorial-actions {
   display: flex;
-  gap: 0.75rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+.tutorial-actions .btn-primary {
+  margin-top: 0;
+}
+.tutorial-skip-btn {
+  align-self: center;
+  margin: 0;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+/* Auth gate — required sign-in for new players */
+body.auth-gate-active .game-shell {
+  visibility: hidden;
+  pointer-events: none;
+}
+.auth-gate {
+  position: fixed;
+  inset: 0;
+  z-index: 480;
+  display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  padding: max(1.25rem, env(safe-area-inset-top)) max(1.25rem, env(safe-area-inset-right))
+    max(1.25rem, env(safe-area-inset-bottom)) max(1.25rem, env(safe-area-inset-left));
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(120, 90, 200, 0.22), transparent 60%),
+    linear-gradient(165deg, #12141c 0%, #0a0c12 55%, #06080e 100%);
+}
+.auth-gate.hidden { display: none; }
+.auth-gate__inner {
+  width: 100%;
+  max-width: 22rem;
+  text-align: center;
+}
+.auth-gate__brand {
+  margin-bottom: 2rem;
+}
+.auth-gate__title {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 1.65rem;
+  letter-spacing: -0.02em;
+}
+.auth-gate__notice {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+.auth-gate__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+.auth-gate__btn {
+  width: 100%;
+}
+
+/* In-match interactive tutorial overlay */
+.tutorial-match-active {
+  overscroll-behavior: none;
+}
+body.tutorial-match-active #view-match:not(.hidden) {
+  padding-bottom: var(--tutorial-match-inset, 0px);
+}
+body.tutorial-match-active.card-preview-open #view-match:not(.hidden),
+body.tutorial-match-active:has(.tutorial-match-overlay--card-top) #view-match:not(.hidden) {
+  padding-bottom: 0;
+}
+.tutorial-match-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 500;
+  padding: 0.75rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+.tutorial-match-overlay--card-top,
+body.tutorial-match-active.card-preview-open .tutorial-match-overlay {
+  top: 0;
+  bottom: auto;
+  justify-content: flex-start;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-bottom: 0.75rem;
+}
+.tutorial-match-overlay--card-top .tutorial-match-card,
+body.tutorial-match-active.card-preview-open .tutorial-match-card {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+.tutorial-match-card {
+  pointer-events: auto;
+  max-width: 28rem;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+}
+.tutorial-match-step {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-gem);
+}
+.tutorial-match-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.1rem;
+}
+.tutorial-match-body {
+  margin: 0 0 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+.tutorial-match-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+.tutorial-match-actions .btn-primary {
+  margin-top: 0;
+}
+
+/* Meta tutorial — shop & deck building */
+.tutorial-meta-active {
+  overscroll-behavior: none;
+}
+.tutorial-meta-active .game-main {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(100dvh - var(--nav-height, 4.25rem) - 5.5rem - var(--game-safe-top, 0px));
+}
+.tutorial-meta-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 415;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0.75rem;
+  padding-bottom: max(calc(var(--nav-height, 4.25rem) + 0.5rem), env(safe-area-inset-bottom));
+}
+.tutorial-meta-shield {
+  position: fixed;
+  inset: 0;
+  z-index: 414;
+  pointer-events: auto;
+  background: transparent;
+  touch-action: none;
+}
+.tutorial-meta-shield.hidden {
+  display: none;
+}
+.tutorial-meta-overlay--card-top {
+  justify-content: flex-start;
+  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-bottom: 0.75rem;
+}
+.tutorial-meta-spotlight {
+  position: fixed;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(4, 6, 12, 0.82);
+  pointer-events: none;
+  z-index: 416;
+  transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+.tutorial-meta-spotlight.hidden {
+  display: none;
+}
+.tutorial-meta-card {
+  pointer-events: none;
+  max-width: 28rem;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.45);
+  position: relative;
+  z-index: 417;
+}
+.tutorial-meta-overlay--card-top .tutorial-meta-card {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+.tutorial-meta-actions,
+.tutorial-meta-actions * {
+  pointer-events: auto;
+}
+.tutorial-meta-step {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-gem);
+}
+.tutorial-meta-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.1rem;
+}
+.tutorial-meta-body {
+  margin: 0 0 0.5rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+.tutorial-meta-hint {
+  margin: 0 0 0.85rem;
+  font-size: 0.85rem;
+  color: var(--accent-gem);
+  line-height: 1.4;
+}
+.tutorial-meta-hint.hidden {
+  display: none;
+}
+.tutorial-meta-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+.tutorial-meta-actions .btn-primary {
+  margin-top: 0;
+}
+.tutorial-meta-highlight {
+  position: relative;
+  z-index: 418 !important;
+  outline: 2px solid var(--accent-gem);
+  outline-offset: 3px;
+  border-radius: 10px;
+  animation: tutorial-meta-pulse 1.4s ease-in-out infinite;
+}
+.tutorial-meta-highlight.chest-open,
+.tutorial-meta-highlight.chest-card__btn {
+  box-shadow: 0 0 0 3px rgba(92, 225, 230, 0.35), 0 6px 24px rgba(92, 225, 230, 0.25);
+}
+.tutorial-meta-highlight.tab-btn,
+.tutorial-meta-highlight.deck-row {
+  cursor: pointer;
+}
+@keyframes tutorial-meta-pulse {
+  0%, 100% { outline-color: var(--accent-gem); }
+  50% { outline-color: rgba(120, 200, 255, 0.55); }
 }
 
 /* —— Mage titles & quests —— */

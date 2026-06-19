@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import { createClient } from "@supabase/supabase-js";
+import { DECK_SIZE } from "../js/cardCatalog.js";
 
 const url = "https://xhoskftcrgbsjkmzjscw.supabase.co";
 const key = "sb_publishable_7AI9vdLLVGjrq_q98gYm7A_-tI7S6Si";
 const pass = "TestPass123!xyz";
-const deck = Array(30).fill("bomb");
+const deck = Array(DECK_SIZE).fill("bomb");
 
 const sb = createClient(url, key);
 const ts = Date.now();

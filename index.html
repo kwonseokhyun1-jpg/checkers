@@ -78,7 +78,7 @@
         <section class="panel game-panel vault-panel">
           <header class="panel-head">
             <h2 class="panel-head__title">Shop</h2>
-            <p class="panel-head__desc">Spend gems on chests and cosmetic boxes, or stars on small mystery boxes. Equip unlocks in Profile.</p>
+            <p class="panel-head__desc">Spend gems on spell chests and cosmetic boxes (unlocked at Adventure stage 5), or stars on mystery boxes. Equip cosmetics in Profile.</p>
           </header>
           <nav class="vault-tabs" role="tablist" aria-label="Shop categories">
             <button type="button" class="vault-tab active" data-vault-tab="cards" role="tab" aria-selected="true" aria-controls="vault-tab-cards">Cards</button>
@@ -246,6 +246,24 @@
     </footer>
   </div>
 
+  <div id="auth-gate" class="auth-gate hidden" role="dialog" aria-modal="true" aria-labelledby="auth-gate-title">
+    <div class="auth-gate__inner">
+      <div class="auth-gate__brand">
+        <div class="logo-mark" aria-hidden="true">
+          <span class="logo-mark__piece logo-mark__piece--red"></span>
+          <span class="logo-mark__piece logo-mark__piece--black"></span>
+          <span class="logo-mark__spark">✦</span>
+        </div>
+        <h2 id="auth-gate-title" class="auth-gate__title">Arcane Checkers</h2>
+        <p id="auth-gate-notice" class="auth-gate__notice">Sign in to play. Your progress saves to the cloud.</p>
+      </div>
+      <div class="auth-gate__actions">
+        <button type="button" id="auth-gate-signup" class="btn-primary btn-lg auth-gate__btn">Create account</button>
+        <button type="button" id="auth-gate-signin" class="btn-secondary auth-gate__btn">Sign in</button>
+      </div>
+    </div>
+  </div>
+
   <div id="tutorial-modal" class="tutorial-modal hidden" role="dialog" aria-modal="true" aria-labelledby="tutorial-title">
     <div class="tutorial-modal-backdrop"></div>
     <div class="tutorial-modal-dialog panel game-panel">
@@ -253,8 +271,8 @@
       <h2 id="tutorial-title" class="panel-head__title">Tutorial</h2>
       <p id="tutorial-body" class="tutorial-body"></p>
       <div class="tutorial-actions">
-        <button type="button" id="tutorial-skip" class="btn-text">Skip</button>
         <button type="button" id="tutorial-next" class="btn-primary">Next</button>
+        <button type="button" id="tutorial-skip" class="btn-text tutorial-skip-btn">Skip</button>
       </div>
     </div>
   </div>

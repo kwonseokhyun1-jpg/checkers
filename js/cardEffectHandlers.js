@@ -3,9 +3,10 @@
  */
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece, resolveCapture,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, piecesOfColor, enemyPieces,
-  createPiece, getAllMovesForColor, hasMandatoryJumps, countPieces,
-  applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
+  createPiece, getAllMovesForColor, pieceHasLegalMoves, hasMandatoryJumps, countPieces,
+  applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
+  tryPromoteOnFarRow,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
@@ -31,8 +32,11 @@ function blocked(state, r, c) {
 function emptyDark(state, r, c) {
   return isDarkSquare(r, c) && !blocked(state, r, c) && !at(state, r, c);
 }
+function darkSquare(state, r, c) {
+  return isDarkSquare(r, c) && !blocked(state, r, c);
+}
 function enemyCardCanMove(p) {
-  return p && !(p.anchored > 0);
+  return p && !(p.anchored > 0) && !isFortified(p);
 }
 
 /** True when every square strictly between (r1,c1) and (r2,c2) is clear on a diagonal. */
@@ -60,6 +64,12 @@ export function callForwardMoveOk(state, er, ec, tr, tc) {
   return diagonalPathClear(state, er, ec, tr, tc);
 }
 
+export function longStepOk(state, r1, c1, r2, c2) {
+  if (Math.abs(r2 - r1) !== 2 || Math.abs(c2 - c1) !== 2) return false;
+  if (!emptyDark(state, r2, c2)) return false;
+  return diagonalPathClear(state, r1, c1, r2, c2);
+}
+
 export function deportCanTarget(state, piece, r, c) {
   if (!piece || piece.startRow == null || piece.startCol == null) return false;
   if (!enemyCardCanMove(piece)) return false;
@@ -76,6 +86,8 @@ function swapAt(state, r1, c1, r2, c2) {
   state.board[r2][c2] = a;
   if (a) { a.row = r2; a.col = c2; }
   if (b) { b.row = r1; b.col = c1; }
+  tryPromoteOnFarRow(a, r2);
+  tryPromoteOnFarRow(b, r1);
 }
 
 function findPieceById(state, id) {
@@ -106,14 +118,17 @@ function kill(state, r, c, by, nonCap = true, opts = {}) {
   return resolveCapture(state.board, state, r, c, by, { nonCap, ...opts });
 }
 
-/** Spell destroy: counts as spent if target is removed or Last Stand triggers. */
+/** Spell destroy: counts as spent if target is removed or Last Stand / Deflect triggers. */
 function spellKill(state, r, c, by, nonCap = true, opts = {}) {
   const t = at(state, r, c);
   if (!t) return false;
   const hadLastStand = !opts.linkFate && t.lastStand;
+  const deflectBefore = !opts.linkFate && nonCap ? (t.deflectTurns || 0) : 0;
   if (kill(state, r, c, by, nonCap, opts)) return true;
   const survivor = at(state, r, c);
-  return !!(hadLastStand && survivor && !survivor.lastStand);
+  if (hadLastStand && survivor && !survivor.lastStand) return true;
+  if (deflectBefore > 0 && survivor && (survivor.deflectTurns || 0) < deflectBefore) return true;
+  return false;
 }
 
 function adjacentSquares(r, c) {
@@ -197,6 +212,7 @@ export function executeTrickster(state, plan) {
     state.board[e.to[0]][e.to[1]] = e.piece;
     e.piece.row = e.to[0];
     e.piece.col = e.to[1];
+    tryPromoteOnFarRow(e.piece, e.to[0]);
   }
 }
 
@@ -224,10 +240,22 @@ function ownBackRank(color) { return color === COLORS.RED ? SIZE - 1 : 0; }
 export function reviveSquareAllowed(color, r) { return r !== ownBackRank(color); }
 function promoRow(color) { return color === COLORS.RED ? 0 : 7; }
 
+/** Move a friendly piece via spell; crown and message when landing on the far row. */
+function friendlySpellMove(state, color, r1, c1, r2, c2, message = "") {
+  const p = at(state, r1, c1);
+  if (!p || p.color !== color) return fail();
+  const wasMan = !p.king;
+  movePiece(state.board, r1, c1, r2, c2);
+  markMove(state, color);
+  const landed = at(state, r2, c2);
+  const crowned = wasMan && landed?.king && r2 === promoRow(color);
+  if (crowned) return ok(message ? `${message} Crowned!` : "Crowned!");
+  return ok(message);
+}
 
 const EFFECTS = {
-  backstep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const allowed=getBackstepTarget(state.board,p,state); if(!allowed.some(([r,c])=>r===r2&&c===c2)) return fail("No square behind"); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok("Backstep!"); },
-  nudge(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
+  backstep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const allowed=getBackstepTarget(state.board,p,state); if(!allowed.some(([r,c])=>r===r2&&c===c2)) return fail("No square behind"); return friendlySpellMove(state,color,r1,c1,r2,c2,"Backstep!"); },
+  nudge(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!emptyDark(state,r2,c2)||!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); return friendlySpellMove(state,color,r1,c1,r2,c2); },
   shield_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,1); return ok(); },
   shield_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,2); return ok(); },
   forward_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!spellKill(state,r2,c2,color)) return fail(); return ok(); },
@@ -238,11 +266,12 @@ const EFFECTS = {
     const enemy = at(state, er, ec);
     if (!enemy || enemy.color === color) return fail("First target must be an enemy piece");
     if (!emptyDark(state, tr, tc)) return fail("Second target must be an empty dark square");
-    applyBurnToPiece(state.board, state, er, ec, 2);
+    applyBurnToPiece(state.board, state, er, ec, 2, color);
     const sq = getSq(state, tr, tc);
     sq.fireTurns = 2;
     sq.fireOwner = color;
-    return ok("Pyromancy — burns for 2 turns!", { pyromancySquares: [[er, ec], [tr, tc]] });
+    state.meta.shatterSilenceNext[color] = true;
+    return ok("Pyromancy — burns for 2 turns! You cannot cast spells next turn.", { pyromancySquares: [[er, ec], [tr, tc]] });
   },
   freeze_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); applyFreezeToPiece(state.board, state, r, c, 1); return ok(); },
   snowball(state, color, picks) {
@@ -269,8 +298,8 @@ const EFFECTS = {
     return ok('Shatter — you cannot cast spells next turn.');
   },
   blink_2(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const d=Math.max(Math.abs(r2-r1),Math.abs(c2-c1)); if(d<1||d>2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
-  long_step(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(Math.abs(r2-r1)!==2||Math.abs(c2-c1)!==2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
-  sidestep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||r1!==r2||Math.abs(c2-c1)!==1||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
+  long_step(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!longStepOk(state,r1,c1,r2,c2)) return fail(); return friendlySpellMove(state,color,r1,c1,r2,c2); },
+  sidestep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||r1!==r2||Math.abs(c2-c1)!==2||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
   chain_pull(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const e=at(state,r+dr,c+dc); if(e&&e.color!==color){ const nr=r+dr*2,nc=c+dc*2; if(emptyDark(state,nr,nc)) movePiece(state.board,e.row,e.col,nr,nc); return ok();}} return fail(); },
   repel(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const e=at(state,r+dr,c+dc); if(e&&e.color!==color){ const nr=e.row+dr,nc=e.col+dc; if(emptyDark(state,nr,nc)) movePiece(state.board,e.row,e.col,nr,nc); return ok();}} return fail(); },
   leapfrog(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const dr=Math.sign(r2-r1),dc=Math.sign(c2-c1); const mr=r1+dr,mc=c1+dc; const mid=at(state,mr,mc); if(!mid||mid.color!==color||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
@@ -291,17 +320,13 @@ const EFFECTS = {
     if (!emptyDark(state, tr, tc)) return fail();
     movePiece(state.board, r, c, tr, tc);
     const landed = at(state, tr, tc);
-    if (landed && !landed.king && !(landed.rustedTurns > 0)) {
-      if (landed.color === COLORS.RED && tr === 0) landed.king = true;
-      if (landed.color === COLORS.BLACK && tr === SIZE - 1) landed.king = true;
-    }
     markMove(state, color);
     const crowned = landed?.king && (tr === promoRow(color));
     return ok(crowned ? "Random teleport — crowned!" : "Random teleport!", { teleportFrom: [r, c], teleportTo: [tr, tc] });
   },
   flank_3(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(r1===r2&&c1===c2) return fail(); if(Math.abs(r2-r1)!==Math.abs(c2-c1)||Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3||!emptyDark(state,r2,c2)) return fail(); movePiece(state.board,r1,c1,r2,c2); markMove(state,color); return ok(); },
-  rook_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.rookTurns=2; return ok(); },
-  bishop_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bishopTurns=2; return ok(); },
+  rook_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.rookTurns=2; return ok(); },
+  bishop_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.bishopTurns=2; return ok(); },
   pawn_zeal(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color||p.king) return fail(); p.pawnZeal=true; return ok(); },
   cross_bolt(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(const [tr,tc] of getBoltTarget(state.board,p)) kill(state,tr,tc,color); return ok(); },
   snipe(state, color, picks) {
@@ -314,7 +339,8 @@ const EFFECTS = {
     return ok();
   },
   landmine(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); if(sq.mine||sq.hiddenMine) return fail("Square already trapped"); placeMine(sq, color, true); return ok(); },
-  bomb(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bombArmed=true; return ok("Bomb armed — explodes on next move."); },
+  bomb(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.bombArmed=true; return ok("Bomb armed — explodes on next move."); },
+  shockwave(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.shockwaveArmed=true; return ok("Shockwave armed — pulses on next move."); },
   detonate(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r+dr,c+dc); if(t&&t.color!==color) kill(state,r+dr,c+dc,color);} return ok(); },
   ricochet(state, color, picks) { state.meta.pendingRicochet[color]=true; return ok(); },
   duel(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); if(Math.max(Math.abs(r1-r2),Math.abs(c1-c2))!==1) return fail(); kill(state,r1,c1,color); kill(state,r2,c2,color); return ok(); },
@@ -387,31 +413,37 @@ const EFFECTS = {
     return ok("Vengeance armed — hidden.");
   },
   hibernation(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(p.hibernationTurns>0) return fail("Already hibernating."); p.hibernationTurns=2; p.bearAwakened=false; return ok("Hibernation — wakes as a king in 2 turns."); },
-  barrier(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); sq.barrier={owner:color,turnsLeft:2}; return ok(); },
+  barrier(state, color, picks) { const [r,c]=p0(picks); if(!darkSquare(state,r,c)) return fail(); const sq=getSq(state,r,c); sq.barrier={owner:color,turnsLeft:2}; return ok(); },
   iron_will(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.frozenTurns=0; p.rooted=0; return ok(); },
   revive(state, color, picks) { const [r,c]=p0(picks); const cap=state.captured[color]; if(!cap?.length) return fail('Revive requires a captured piece'); if(!reviveSquareAllowed(color,r)) return fail('Cannot revive on your back rank'); if(!emptyDark(state,r,c)) return fail(); const data=cap.pop(); const p=createPiece(color,r,c,data.king); p.revivedNoCapture=true; state.board[r][c]=p; return ok('Piece revived — it cannot capture this turn.'); },
   ghost_guard(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.ghostGuard=true; return ok(); },
   fortify(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.fortifyTurns=2; return ok(); },
-  reverse_only_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.reverseOnlyTurns=2; p.noCaptureTurns=2; return ok(); },
+  reverse_only_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.reverseOnlyTurns=2; p.noCaptureTurns=2; return ok(); },
   freeze_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); applyFreezeToPiece(state.board, state, r, c, 1); return ok(); },
   deep_freeze(state, color, picks) {
+    if (picks.length < 2) return fail("Pick your piece, then a square on the diagonal to freeze");
     const [r, c] = p0(picks);
+    const [tr, tc] = p1(picks);
     const p = at(state, r, c);
     if (!p || p.color !== color) return fail();
+    const dir = diagonalDirectionFromPick(r, c, tr, tc);
+    if (!dir) return fail("Pick a square on a diagonal through your piece");
+    const [dr, dc] = dir;
     let n = 0;
     for (let i = -SIZE + 1; i < SIZE; i++) {
-      const t = at(state, r + i, c + i);
-      if (t && t.color !== color && applyFreezeToPiece(state.board, state, r + i, c + i, 2)) n++;
+      if (i === 0) continue;
+      const er = r + dr * i;
+      const ec = c + dc * i;
+      const t = at(state, er, ec);
+      if (t && t.color !== color && applyFreezeToPiece(state.board, state, er, ec, 2)) n++;
     }
     return n ? ok(`Deep Freeze — ${n} frozen.`, { freezeCount: n }) : fail("No enemies on that diagonal");
   },
-  root_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.rooted=1; return ok(); },
-  slow_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.slowed=2; return ok(); },
+  root_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.rooted=1; return ok(); },
+  slow_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.slowed=2; return ok(); },
   blind(state, color, picks) { state.meta.blindNext[opp(color)]=true; return ok(); },
   confusion(state, color, picks) { state.meta.confuseNext[opp(color)]=true; return ok(); },
-  silence_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.silenced=3; return ok(); },
-  rust(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.rustedTurns=3; p.rusted=false; return ok(); },
-  hex_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); p.hexed=3; return ok(); },
+  silence_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.silenced=3; return ok(); },
   tangle(state, color, picks) {
     if (picks.length < 2) return fail();
     const [r1, c1] = p0(picks), [r2, c2] = p1(picks);
@@ -421,16 +453,16 @@ const EFFECTS = {
     return ok();
   },
   fog_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); state.meta.fogPieceId[color]=p.id; state.meta.fogTurns[color]=2; return ok(); },
-  panic(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||p.king) return fail(); p.panicTurn=true; return ok(); },
+  panic(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||p.king||isFortified(p)) return fail(); p.panicTurn=true; return ok(); },
   bribery_15(state, color, picks) { const o=opp(color); const n=Math.min(15,state.gems[o]); state.gems[o]-=n; state.gems[color]+=n; return ok(); },
-  bishop_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bishopTurns=2; return ok(); },
-  rook_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.rookTurns=2; return ok(); },
+  bishop_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.bishopTurns=2; return ok(); },
+  rook_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.rookTurns=2; return ok(); },
   queen_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.queenTurns=2; return ok(); },
-  demote(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||!p.king) return fail(); p.king=false; return ok(); },
+  demote(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||!p.king||isFortified(p)) return fail(); p.king=false; return ok(); },
   bounty(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
-    if (!p || p.color === color) return fail();
+    if (!p || p.color === color || isFortified(p)) return fail();
     for (let rr = 0; rr < SIZE; rr++) {
       for (let cc = 0; cc < SIZE; cc++) {
         const ep = state.board[rr][cc];
@@ -445,6 +477,7 @@ const EFFECTS = {
     const [r1, c1] = p0(picks), [r2, c2] = p1(picks);
     const a = at(state, r1, c1), b = at(state, r2, c2);
     if (!a || !b || a.color === color || b.color === color) return fail();
+    if (isFortified(a) || isFortified(b)) return fail("Fortified");
     if (r1 === r2 && c1 === c2) return fail();
     if (a.linkedFateId) {
       const old = findPieceById(state, a.linkedFateId);
@@ -490,7 +523,6 @@ const EFFECTS = {
   },
   chameleon(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=2; return ok(); },
   wraith_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.wraithTurns=2; return ok(); },
-  stone_form(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.king=true; p.stoneTurns=2; return ok(); },
   obstacle(state, color, picks) { const [r,c]=p0(picks); if(isDarkSquare(r,c)) return fail('Pick a light square'); getSq(state,r,c).obstacle=true; return ok(); },
   quicksand(state, color, picks) {
     const [r, c] = p0(picks);
@@ -502,7 +534,7 @@ const EFFECTS = {
   },
   sanctified(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); getSq(state,r,c).sanctified=color; return ok(); },
   warp_gate(state, color, picks) { if(picks.length<2) return fail(); const k1=sk(...p0(picks)),k2=sk(...p1(picks)); state.squares[k1]={...state.squares[k1],warp:k2}; state.squares[k2]={...state.squares[k2],warp:k1}; return ok(); },
-  collapse(state, color, picks) { const [r,c]=p0(picks); if(!isDarkSquare(r,c)) return fail(); setCollapsedSquare(state.meta, r, c); const p=at(state,r,c); if(p){ removePiece(state.board,r,c); for(let r2=0;r2<SIZE;r2++) for(let c2=0;c2<SIZE;c2++) if(emptyDark(state,r2,c2)){ state.board[r2][c2]=p; p.row=r2; p.col=c2; break;}} return ok(); },
+  collapse(state, color, picks) { const [r,c]=p0(picks); if(!isDarkSquare(r,c)) return fail(); const p=at(state,r,c); if(p&&isFortified(p)) return fail('Fortified'); setCollapsedSquare(state.meta, r, c); if(p){ removePiece(state.board,r,c); for(let r2=0;r2<SIZE;r2++) for(let c2=0;c2<SIZE;c2++) if(emptyDark(state,r2,c2)){ state.board[r2][c2]=p; p.row=r2; p.col=c2; tryPromoteOnFarRow(p, r2); break;}} return ok(); },
   mirror_board(state, color, picks) { state.meta.mirrorBoardTurns[opp(color)]=2; return ok(); },
   darkness(state, color, picks) {
     const [r, c] = p0(picks);
@@ -525,7 +557,7 @@ const EFFECTS = {
   coupon(state, color, picks) { state.meta.freeDraw[color]=true; return ok(); },
   hand_expand(state, color, picks) { state.meta.handMax[color]=8; return ok(); },
   mulligan(state, color, picks) { const h=state.hands[color]; const n=h.length; h.length=0; for(let i=0;i<n;i++) h.push(createCardInstance(drawRandomCard())); return ok(); },
-  hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
+  hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns||isFortified(a)||isFortified(b)) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
   mind_control(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
@@ -602,7 +634,21 @@ const EFFECTS = {
   },
   fireline(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?-1:1; for(const dc of [-1,1]){ let rr=p.row+dir,cc=p.col+dc; while(inBounds(rr,cc)&&isDarkSquare(rr,cc)){ const t=at(state,rr,cc); if(t){ if(t.color!==color) kill(state,rr,cc,color); break;} rr+=dir; cc+=dc;}} return ok(); },
   sanctuary_pulse(state, color, picks) { const rank=ownBackRank(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&r===rank) p.shieldTurns=Math.max(p.shieldTurns,1);} return ok(); },
-  mass_nudge(state, color, picks) { let n=0; for(const p of [...fri(state,color)]){ if(n>=2) break; const adj=getAdjacentEmpty(state.board,p); if(adj.length){ const [tr,tc]=adj[0]; movePiece(state.board,p.row,p.col,tr,tc); n++; markMove(state,color);} } return n?ok():fail('No targets'); },
+  mass_nudge(state, color, picks) {
+    if (picks.length < 2 || picks.length % 2 !== 0) return fail("Pick a piece and destination");
+    for (let i = 0; i < picks.length; i += 2) {
+      const [r1, c1] = picks[i];
+      const [r2, c2] = picks[i + 1];
+      const p = at(state, r1, c1);
+      if (!p || p.color !== color) return fail();
+      if (!getAdjacentEmpty(state.board, p).some(([r, c]) => r === r2 && c === c2) || !emptyDark(state, r2, c2)) {
+        return fail("Invalid destination");
+      }
+      movePiece(state.board, r1, c1, r2, c2);
+      markMove(state, color);
+    }
+    return ok();
+  },
   chain_lightning(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
@@ -627,7 +673,13 @@ const EFFECTS = {
     applyVenomToPiece(state.board, state, r, c, 3);
     return ok(wasClone ? "Poison — clone destroyed." : "Poison — dies in 3 turns.");
   },
-  deflect_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.deflectTurns=1; return ok('Deflect — next hit reflects to a random enemy.'); },
+  deflect_1(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color !== color) return fail();
+    p.deflectTurns = 2;
+    return ok("Deflect armed — hidden.");
+  },
   trickster(state, color, picks) {
     let plan = state.meta.pendingTrickster;
     if (!plan) plan = planTrickster(state);
@@ -685,7 +737,7 @@ const EFFECTS = {
     return ok();
   },
   pocket(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); state.meta.pocket={piece:p,r,c}; state.meta.pocketReturnTurn=state.meta.turnNumber+2; return ok(); },
-  uno_reverse(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); state.meta.forcedCapturePieceId=p.id; return ok(); },
+  uno_reverse(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); state.meta.forcedCapturePieceId=p.id; return ok(); },
   gems_5(state, color, picks) { state.gems[color] += 5; return ok(); },
   draw_1(state, color, picks) { state.hands[color].push(createCardInstance(drawRandomCard())); return ok(); },
   conduct(state, color, picks) { state.meta.pendingConduct[color]=true; return ok(); },

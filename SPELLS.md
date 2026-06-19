@@ -1,6 +1,6 @@
 # Card Checkers — Spell Compendium
 
-**83 spells** in the draw pool.
+**82 spells** in the draw pool.
 
 ## Common
 
@@ -33,7 +33,7 @@
 - **Bribery** — Steal up to 15 gems from opponent.
 - **Conduct** — If you played a movement card this turn, your checker step may be 2 squares.
 - **Counterspell** — Hidden trap: cancel the next enemy spell when they cast it.
-- **Vengeance** — Hidden trap: the next enemy capture of your piece destroys the capturer.
+- **Vengeance** — Hidden trap: the next enemy capture of your piece destroys the capturer; your piece survives 2 turns (blood counters), then dies.
 - **Deep Freeze** — Enemy cannot move for 2 of its owner's turns.
 - **Dominion** — All your men may move backward this turn.
 - **Duel** — Choose your piece and an adjacent enemy; both are destroyed unless shielded.
@@ -42,7 +42,6 @@
 - **Forward Bolt** — Eliminate the first enemy piece directly ahead along your piece's forward diagonal.
 - **Frost Bind** — Freeze an enemy piece — it cannot move on its owner's next turn.
 - **Gamble** — Pay 15 gems; draw 2 cards.
-- **Hex** — Marked enemy cannot receive buffs for 3 turns.
 - **Interest** — Gain gems equal to half your total (max 25).
 - **Last Stand** — If this piece would be captured, it survives with an ultra shield for 3 turns instead.
 - **Leapfrog** — Jump your piece over a friendly piece to land on the empty square beyond.
@@ -60,7 +59,6 @@
 - **Retreat** — Grant a piece backward movement for 3 turns.
 - **Root** — Enemy cannot jump or capture for 2 turns (can still step).
 - **Rules Lawyer** — Jumps are optional for you this turn (not mandatory).
-- **Rust** — Target enemy cannot be crowned for the rest of the game.
 - **Sacrifice** — Destroy one of your men to destroy any enemy man (not kings).
 - **Sanctuary Pulse** — Shield all your pieces in your back row for 1 turn.
 - **Scout** — Look at 3 random cards from the pool; add one to your hand.
@@ -70,7 +68,6 @@
 - **Slow** — Enemy kings move like men for 2 turns.
 - **Snipe** — Destroy an enemy exactly 2 squares away on a diagonal with nothing between.
 - **Spear Thrust** — Destroy the first enemy along a rank or file from your piece.
-- **Stone Form** — Piece becomes a king immediately but cannot capture for 2 turns.
 - **Tax** — Opponent loses 10 gems; you gain 5.
 
 ## Rare

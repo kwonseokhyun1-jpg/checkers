@@ -54,6 +54,7 @@ export function inBounds(row, col) {
 export const SIGIL_MOVES = 2;
 /** Shield turns granted when Last Stand triggers on capture. */
 export const LAST_STAND_SHIELD_TURNS = 3;
+export const VENGEANCE_BLOOD_TURNS = 2;
 
 export function hasKnightSigil(piece) {
   return piece && (piece.knightTurns > 0 || piece.isKnight) && !piece.silenced;
@@ -91,18 +92,17 @@ export function createPiece(color, row, col, king = false) {
     bishopTurns: 0,
     queenTurns: 0,
     wraithTurns: 0,
-    stoneTurns: 0,
     rooted: 0,
     slowed: 0,
     reverseOnlyTurns: 0,
     silenced: 0,
-    hexed: 0,
-    rusted: false,
     bombArmed: false,
+    shockwaveArmed: false,
     anchored: 0,
     fortifyTurns: 0,
     venom: 0,
     blazeTurns: 0,
+    blazeBy: null,
     superMan: 0,
     lastStand: false,
     mirrorShield: false,
@@ -128,24 +128,42 @@ export function createPiece(color, row, col, king = false) {
     cloneNoCaptureThisTurn: false,
     freezeDeferEndTick: false,
     paralyzeDeferEndTick: false,
+    bloodTurns: 0,
   };
+}
+
+/** Stall/Fortify — fully invulnerable to capture, destruction, and debuffs. */
+export function isFortified(piece) {
+  return !!(piece && piece.fortifyTurns > 0);
 }
 
 /** Clones are destroyed instantly by freeze, poison, or burn instead of receiving the debuff. */
 export function destroyPieceIfClone(board, state, row, col) {
   const p = board[row][col];
   if (!p?.isClone) return false;
+  if (isFortified(p)) return false;
   removePiece(board, row, col, { force: true, state });
   return true;
 }
 
 export function applyFreezeToPiece(board, state, row, col, turns, { deferEndTick = false } = {}) {
   if (state && isInDarknessZone(state, row, col)) return false;
-  if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
+  if (isFortified(piece)) return false;
+  if (destroyPieceIfClone(board, state, row, col)) return true;
   if (!piece) return false;
   piece.frozenTurns = Math.max(piece.frozenTurns || 0, turns);
   if (deferEndTick) piece.freezeDeferEndTick = true;
+  return true;
+}
+
+export function applyParalyzeToPiece(board, state, row, col, turns, { deferEndTick = false } = {}) {
+  if (state && isInDarknessZone(state, row, col)) return false;
+  const piece = board[row][col];
+  if (isFortified(piece)) return false;
+  if (!piece) return false;
+  piece.paralyzedTurns = Math.max(piece.paralyzedTurns || 0, turns);
+  if (deferEndTick) piece.paralyzeDeferEndTick = true;
   return true;
 }
 
@@ -160,19 +178,35 @@ function tickDeferredTurnDebuff(piece, turnsKey, deferKey) {
 
 export function applyVenomToPiece(board, state, row, col, amount) {
   if (state && isInDarknessZone(state, row, col)) return false;
-  if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
+  if (isFortified(piece)) return false;
+  if (destroyPieceIfClone(board, state, row, col)) return true;
   if (!piece) return false;
   piece.venom = amount;
   return true;
 }
 
-export function applyBurnToPiece(board, state, row, col, turns) {
+export function applyBurnToPiece(board, state, row, col, turns, byColor = null) {
   if (state && isInDarknessZone(state, row, col)) return false;
-  if (destroyPieceIfClone(board, state, row, col)) return true;
   const piece = board[row][col];
+  if (isFortified(piece)) return false;
+  if (destroyPieceIfClone(board, state, row, col)) return true;
   if (!piece) return false;
+  if (byColor && piece.color !== byColor && piece.mirrorShield) {
+    piece.mirrorShield = false;
+    const es = enemyPieces(board, byColor);
+    if (es.length) {
+      const t = es[Math.floor(Math.random() * es.length)];
+      return applyBurnToPiece(board, state, t.row, t.col, turns, byColor);
+    }
+    return true;
+  }
+  if (piece.shieldTurns > 0) {
+    piece.shieldTurns--;
+    return true;
+  }
   piece.blazeTurns = turns;
+  piece.blazeBy = byColor;
   return true;
 }
 
@@ -199,6 +233,21 @@ export function setPiece(board, row, col, piece) {
   board[row][col] = piece;
 }
 
+/** Crown a man that reached the far row (opponent's back rank). */
+export function tryPromoteOnFarRow(piece, row = piece?.row) {
+  if (!piece || piece.king) return false;
+  if (row == null) return false;
+  if (piece.color === COLORS.RED && row === 0) {
+    piece.king = true;
+    return true;
+  }
+  if (piece.color === COLORS.BLACK && row === SIZE - 1) {
+    piece.king = true;
+    return true;
+  }
+  return false;
+}
+
 function findPieceById(board, id) {
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
@@ -218,6 +267,7 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
   if (!p) return false;
   if (!linkFate && state && isInDarknessZone(state, r, c)) return false;
   if (!linkFate && p.cloneNoCaptureThisTurn) return false;
+  if (!berserkSlam && !linkFate && isFortified(p)) return false;
   if (!berserkSlam && !linkFate && p.shieldTurns > 0) {
     p.shieldTurns--;
     return false;
@@ -229,13 +279,20 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
     queueTrapHistoryReveal(state, { effect: "last_stand", color: p.color, picks: [[r, c]] });
     return false;
   }
-  if (!linkFate && p.deflectTurns > 0) {
+  if (!linkFate && nonCap && p.deflectTurns > 0) {
     p.deflectTurns = 0;
-    const es = enemyPieces(board, byColor);
-    if (es.length) {
-      const t = es[Math.floor(Math.random() * es.length)];
-      removePiece(board, t.row, t.col);
+    const redirect = findClosestEnemySquare(board, r, c, p.color, [r, c]);
+    if (state) {
+      queueTrapHistoryReveal(state, { effect: "deflect_1", color: p.color, picks: [[r, c]] });
+      queueBoardFx(
+        state,
+        "deflect",
+        r,
+        c,
+        redirect ? [[r, c], redirect] : [[r, c]]
+      );
     }
+    if (redirect) resolveCapture(board, state, redirect[0], redirect[1], p.color, { nonCap: true });
     return false;
   }
   if (!linkFate && p.mirrorShield) {
@@ -270,6 +327,7 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
 
 export function removePiece(board, row, col, { force = false, state = null } = {}) {
   const p = board[row][col];
+  if (isFortified(p)) return false;
   if (p?.cloneNoCaptureThisTurn && !force) return false;
   if (p && state) {
     if (!state.captured[p.color]) state.captured[p.color] = [];
@@ -295,12 +353,14 @@ export function movePiece(board, fromR, fromC, toR, toC) {
   board[fromR][fromC] = null;
   setPiece(board, toR, toC, piece);
   decrementSigilMoves(piece);
+  tryPromoteOnFarRow(piece, toR);
   return piece;
 }
 
 function isProtected(piece, state = null, r = null, c = null) {
   if (!piece) return false;
   if (piece.cloneNoCaptureThisTurn) return true;
+  if (isFortified(piece)) return true;
   if (piece.shieldTurns > 0) return true;
   if (state != null && r != null && c != null) {
     if (isSanctuaryProtected(state, r, c, piece.color)) return true;
@@ -456,7 +516,6 @@ export function getJumpMoves(board, piece, color, state = null) {
     const mid = getPiece(board, mr, mc);
     if (!mid || mid.color === piece.color) continue;
     if (isProtected(mid, state, mr, mc)) continue;
-    if (piece.stoneTurns > 0) continue;
     if (board[lr][lc]) continue;
     moves.push({ from: [piece.row, piece.col], to: [lr, lc], captures: [[mr, mc]], type: "jump" });
   }
@@ -483,6 +542,13 @@ export function getAllMovesForColor(board, color, state = null) {
   return steps;
 }
 
+/** True when this friendly piece has at least one legal move right now. */
+export function pieceHasLegalMoves(board, color, state, row, col) {
+  return getAllMovesForColor(board, color, state).some(
+    (m) => m.from[0] === row && m.from[1] === col
+  );
+}
+
 /** True when the player has jump captures and must take them (not optional). */
 export function hasMandatoryJumps(board, color, state = null) {
   if (state?.meta?.optionalJumps?.[color]) return false;
@@ -501,39 +567,52 @@ export function hasMandatoryJumps(board, color, state = null) {
   return false;
 }
 
+function shockwavePulseAt(board, state, row, col) {
+  let n = 0;
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue;
+      const r = row + dr, c = col + dc;
+      if (!inBounds(r, c)) continue;
+      if (applyParalyzeToPiece(board, state, r, c, 1, { deferEndTick: true })) n++;
+    }
+  }
+  return n;
+}
+
 function explodeBombAt(board, state, row, col) {
-  const victims = [];
+  const bomber = board[row]?.[col];
+  const byColor = bomber?.color;
+  let killed = 0;
   for (let dr = -1; dr <= 1; dr++) {
     for (let dc = -1; dc <= 1; dc++) {
       const r = row + dr, c = col + dc;
       if (!inBounds(r, c)) continue;
-      const p = board[r][c];
-      if (!p) continue;
-      victims.push([r, c, p]);
+      if (!board[r][c]) continue;
+      if (resolveCapture(board, state, r, c, byColor, { nonCap: true })) killed++;
     }
   }
-  for (const [r, c, p] of victims) {
-    if (state) {
-      if (!state.captured[p.color]) state.captured[p.color] = [];
-      state.captured[p.color].push({ king: p.king });
-    }
-    removePiece(board, r, c);
-  }
-  return victims.length;
+  return killed;
 }
 
 export function applyMove(board, move, state = null) {
   const [fr, fc] = move.from;
   const [tr, tc] = move.to;
+  const captureTargets = move.captures.map(([cr, cc]) => ({
+    cr,
+    cc,
+    cap: board[cr]?.[cc] ?? null,
+  }));
   let piece = movePiece(board, fr, fc, tr, tc);
-  for (const [cr, cc] of move.captures) {
-    const cap = board[cr][cc];
+  for (const { cr, cc, cap } of captureTargets) {
     if (!cap || !piece) continue;
     if (tryConsumeVengeance(state, piece.color, cap.color)) {
       queueTrapHistoryReveal(state, { effect: "vengeance", color: cap.color, picks: [[cr, cc]] });
       queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
       state?.meta?.achievementHook?.onTrapTriggered?.(cap.color, piece.color);
-      removePiece(board, piece.row, piece.col);
+      removePiece(board, piece.row, piece.col, { state });
+      cap.bloodTurns = VENGEANCE_BLOOD_TURNS;
+      setPiece(board, cr, cc, cap);
       piece = null;
       continue;
     }
@@ -542,10 +621,7 @@ export function applyMove(board, move, state = null) {
     if (captured && bountyVictim) payBountyOnCapture(state, bountyVictim, piece.color);
   }
   if (!piece) return null;
-  if (!piece.king && !(piece.rustedTurns > 0)) {
-    if (piece.color === COLORS.RED && tr === 0) piece.king = true;
-    if (piece.color === COLORS.BLACK && tr === SIZE - 1) piece.king = true;
-  }
+  tryPromoteOnFarRow(piece, tr);
   const sq = state ? getSq(state, tr, tc) : null;
   if (sq?.sanctified === piece.color && !piece.king) piece.king = true;
   if (sq?.hiddenQuicksand) {
@@ -577,6 +653,11 @@ export function applyMove(board, move, state = null) {
       sq.mine = null;
       return null;
     }
+  }
+  if (piece && piece.shockwaveArmed) {
+    piece.shockwaveArmed = false;
+    shockwavePulseAt(board, state, tr, tc);
+    if (state) queueBoardFx(state, "shockwave", tr, tc);
   }
   if (piece && piece.bombArmed) {
     piece.bombArmed = false;
@@ -665,8 +746,15 @@ export function tickEffects(board, color, state = null) {
       }
       dec("shieldTurns"); dec("retreatTurns");
       dec("queenTurns"); dec("wraithTurns");
-      dec("stoneTurns"); dec("slowed"); dec("reverseOnlyTurns"); dec("silenced"); dec("hexed");
-      dec("anchored"); dec("fortifyTurns"); dec("superMan"); dec("chameleonTurns"); dec("rustedTurns"); dec("noCaptureTurns");
+      dec("slowed"); dec("reverseOnlyTurns"); dec("silenced");
+      dec("anchored"); dec("superMan"); dec("chameleonTurns"); dec("noCaptureTurns");
+      if (p.fortifyTurns > 0) {
+        p.fortifyTurns--;
+        if (p.fortifyTurns <= 0) {
+          p.fortifyTurns = 0;
+          p.shieldTurns = Math.max(p.shieldTurns, 1);
+        }
+      }
       dec("deflectTurns");
       if (p.venom > 0) {
         p.venom--;
@@ -674,7 +762,16 @@ export function tickEffects(board, color, state = null) {
       }
       if (p.blazeTurns > 0) {
         p.blazeTurns--;
-        if (p.blazeTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
+        if (p.blazeTurns <= 0) {
+          p.blazeTurns = 0;
+          const byColor = p.blazeBy || (p.color === COLORS.RED ? COLORS.BLACK : COLORS.RED);
+          p.blazeBy = null;
+          resolveCapture(board, state, r, c, byColor, { nonCap: true });
+        }
+      }
+      if (p.bloodTurns > 0) {
+        p.bloodTurns--;
+        if (p.bloodTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
       }
       if (p.mindControlTurns > 0) {
         p.mindControlTurns--;
@@ -686,13 +783,6 @@ export function tickEffects(board, color, state = null) {
       }
       if (p.revivedNoCapture) p.revivedNoCapture = false;
       if (p.berserkNoCapture) p.berserkNoCapture = false;
-      if (p.rustedTurns > 0) {
-        p.rustedTurns--;
-        if (p.rustedTurns <= 0) {
-          const promo = p.color === COLORS.RED ? 0 : SIZE - 1;
-          if (p.row === promo) p.king = true;
-        }
-      }
     }
   }
   if (state?.squares) {
@@ -724,7 +814,7 @@ export function getBoltTarget(board, piece) {
     while (inBounds(r, c) && isDarkSquare(r, c)) {
       const cell = board[r][c];
       if (cell) {
-        if (cell.color !== piece.color && cell.shieldTurns <= 0) targets.push([r, c]);
+        if (cell.color !== piece.color && cell.shieldTurns <= 0 && !isFortified(cell)) targets.push([r, c]);
         break;
       }
       r += dir; c += dc;
@@ -751,6 +841,33 @@ export function getCryoBoltTarget(board, piece) {
   return targets;
 }
 
+/** Every dark square on either diagonal through (r, c), excluding the center. */
+export function getDiagonalThroughSquares(r, c) {
+  const res = [];
+  const seen = new Set();
+  const add = (nr, nc) => {
+    if (!inBounds(nr, nc) || !isDarkSquare(nr, nc)) return;
+    const key = `${nr},${nc}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    res.push([nr, nc]);
+  };
+  for (let i = -SIZE + 1; i < SIZE; i++) {
+    if (i === 0) continue;
+    add(r + i, c + i);
+    add(r + i, c - i);
+  }
+  return res;
+}
+
+/** Unit diagonal step from center (r, c) toward (tr, tc), or null if not on a diagonal. */
+export function diagonalDirectionFromPick(r, c, tr, tc) {
+  const dr = Math.sign(tr - r);
+  const dc = Math.sign(tc - c);
+  if (!dr || !dc || Math.abs(tr - r) !== Math.abs(tc - c)) return null;
+  return [dr, dc];
+}
+
 /** True when (targetRow, targetCol) is the first enemy on a forward diagonal from the caster. */
 export function isCryoBoltTarget(board, caster, targetRow, targetCol) {
   if (!caster) return false;
@@ -766,7 +883,7 @@ export function getAdjacentForwardBoltTarget(board, piece) {
     const c = piece.col + dc;
     if (inBounds(r, c) && isDarkSquare(r, c)) {
       const cell = board[r][c];
-      if (cell && cell.color !== piece.color && cell.shieldTurns <= 0) targets.push([r, c]);
+      if (cell && cell.color !== piece.color && cell.shieldTurns <= 0 && !isFortified(cell)) targets.push([r, c]);
     }
   }
   return targets;
@@ -839,4 +956,21 @@ export function piecesOfColor(board, color) {
 
 export function enemyPieces(board, color) {
   return piecesOfColor(board, color === COLORS.RED ? COLORS.BLACK : COLORS.RED);
+}
+
+/** Closest enemy to a square (Manhattan); ties keep first found. */
+export function findClosestEnemySquare(board, row, col, attackerColor, exclude = null) {
+  const foes = enemyPieces(board, attackerColor);
+  if (!foes.length) return null;
+  let best = null;
+  let bestDist = Infinity;
+  for (const e of foes) {
+    if (exclude && e.row === exclude[0] && e.col === exclude[1]) continue;
+    const d = Math.abs(e.row - row) + Math.abs(e.col - col);
+    if (d < bestDist) {
+      bestDist = d;
+      best = [e.row, e.col];
+    }
+  }
+  return best;
 }

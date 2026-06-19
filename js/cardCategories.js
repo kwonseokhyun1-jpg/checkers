@@ -26,6 +26,7 @@ const ID_TO_CATEGORY = {
   snowball: "control",
   berserk: "movement",
   bomb: "attack",
+  shockwave: "control",
   bulwark: "defense",
   butterfly: "special",
   create_foe: "special",
@@ -40,9 +41,9 @@ const ID_TO_CATEGORY = {
   crown: "special",
   cryo_bolt: "attack",
   cull: "attack",
-  darkness: "trap",
+  darkness: "defense",
   deep_freeze: "control",
-  deflect: "defense",
+  deflect: "trap",
   demote: "control",
   deport: "movement",
   displacement: "movement",
@@ -51,8 +52,7 @@ const ID_TO_CATEGORY = {
   earthquake: "special",
   execution: "attack",
   pyromancy: "attack",
-  fusion: "movement",
-  hex: "control",
+  fusion: "special",
   hibernation: "special",
   hostile_swap: "movement",
   ignore: "special",
@@ -82,17 +82,16 @@ const ID_TO_CATEGORY = {
   revive: "defense",
   rooks_mark: "movement",
   root: "control",
-  rust: "control",
   sacrifice: "attack",
   sanctuary: "defense",
   scatter: "movement",
   shadow_swap: "movement",
+  sidestep: "movement",
   shatter: "attack",
   snipe: "attack",
   snowball: "control",
   stab: "attack",
   stall: "defense",
-  stone_form: "defense",
   tangle: "control",
   teleport: "movement",
   trickster: "special",
@@ -111,14 +110,14 @@ export function getCardCategory(def) {
   if (mapped) return mapped;
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
-  if (/trap|mine|quicksand|counterspell|vengeance|last.?stand|darkness/.test(blob)) return "trap";
-  if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|rally/.test(blob)) {
+  if (/trap|mine|quicksand|counterspell|vengeance|last.?stand/.test(blob)) return "trap";
+  if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|rally|darkness/.test(blob)) {
     return "defense";
   }
-  if (/move|nudge|teleport|recall|leap|step|displace|swap|scatter|retreat|bishop|rook|fusion|overrun|promote|pull|push|shift|earthquake|magnet|repel/.test(blob)) {
+  if (/move|nudge|teleport|recall|leap|step|displace|swap|scatter|retreat|bishop|rook|overrun|promote|pull|push|shift|earthquake|magnet|repel/.test(blob)) {
     return "movement";
   }
-  if (/freeze|blind|confusion|hex|root|rust|panic|press|silence|paraly|control|cannot play|random|mark|poison|die in \d+ turn/.test(blob)) {
+  if (/freeze|blind|confusion|hex|root|panic|press|silence|paraly|control|cannot play|random|mark|poison|die in \d+ turn/.test(blob)) {
     return "control";
   }
   if (/\bdestroy\b|\bkills?\b|fireball|bolt|stab|snipe|duel|sacrifice|execution|shatter|cull|lightning/.test(blob)) {
