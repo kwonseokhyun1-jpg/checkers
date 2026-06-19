@@ -45,10 +45,7 @@ export function buildStarterDeckCardIds() {
 }
 
 function starterDeckNeedsRepair(deck) {
-  if (!deck?.cardIds || deck.cardIds.length !== DECK_SIZE) return true;
-  const sorted = [...deck.cardIds].sort().join(",");
-  const target = [...buildStarterDeckCardIds()].sort().join(",");
-  return sorted !== target;
+  return !deck?.cardIds || deck.cardIds.length !== DECK_SIZE;
 }
 
 
