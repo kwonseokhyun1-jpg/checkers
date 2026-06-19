@@ -78,6 +78,8 @@ export const PHASE = { CARDS: "cards", MOVE: "move" };
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const BOUNTY_WANTED_SVG = `<svg viewBox="0 0 24 28" aria-hidden="true"><rect x="1" y="1" width="22" height="26" rx="2" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="12" y="9" text-anchor="middle" font-size="4.8" font-weight="700" fill="#92400e" font-family="Georgia,serif">WANTED</text><line x1="4" y1="11.5" x2="20" y2="11.5" stroke="#d97706" stroke-width="0.8"/><circle cx="12" cy="19" r="5.2" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/><ellipse cx="10" cy="17.2" rx="2.2" ry="1.4" fill="rgba(255,255,255,0.35)"/></svg>`;
+
 /** Extra time the top spell banner stays visible */
 const SPELL_BANNER_EXTRA_MS = 1000;
 
@@ -2021,6 +2023,14 @@ ${starLine}`;
       return finishSpellTrack(res);
     }
 
+    if (card.effect === "bounty") {
+      const res = await this.applyCardWithTrapFx(card, picks);
+      if (!res.success) return finishSpellTrack(res);
+      this.render();
+      await this.runSpellAnimation(buildAnimSpec(card, animPicks, this.localColor, extra));
+      return finishSpellTrack(res);
+    }
+
     const spec = buildAnimSpec(card, animPicks, this.localColor, extra);
     await this.runSpellAnimation(spec);
     return finishSpellTrack(await this.applyCardWithTrapFx(card, picks));
@@ -2309,7 +2319,9 @@ ${starLine}`;
               }
             } else {
               const earlyMetaApply =
-                entry.cardEffect === "confusion" || entry.cardEffect === "blind";
+                entry.cardEffect === "confusion" ||
+                entry.cardEffect === "blind" ||
+                entry.cardEffect === "bounty";
               if (earlyMetaApply) applyAiReplayEntry(this.state, entry, oc);
               await this.playSpellEntryVisual(entry, { cardName, def, oc });
               if (!earlyMetaApply) applyAiReplayEntry(this.state, entry, oc);
@@ -3038,8 +3050,7 @@ ${starLine}`;
             );
             const mark = document.createElement("span");
             mark.className = "bounty-indicator__mark";
-            mark.textContent = "🎯";
-            mark.setAttribute("aria-hidden", "true");
+            mark.innerHTML = BOUNTY_WANTED_SVG;
             bounty.appendChild(mark);
             sq.appendChild(bounty);
           }
