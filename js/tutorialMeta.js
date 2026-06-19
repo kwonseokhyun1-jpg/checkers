@@ -50,7 +50,7 @@ const STEPS = [
     id: "open-deck",
     title: "Edit your deck",
     body: "Tap your Starter Deck to view and edit the cards you take into battle.",
-    hint: "Tap the Starter Deck row.",
+    hint: "Tap the Starter Deck tile.",
     highlight: ".deck-row",
     allowed: [".deck-row", ".deck-row *"],
     actionSelector: ".deck-row",
