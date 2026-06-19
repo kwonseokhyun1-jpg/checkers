@@ -1,5 +1,5 @@
 /**
- * Deck editor — full-screen mobile layout, three-zone card rows (art | info | action)
+ * Deck editor — full-screen mobile layout, chest-pull style collection tiles
  */
 
 :root {
@@ -399,64 +399,60 @@ body.deck-editing .game-nav.tabs {
   letter-spacing: 0.04em;
 }
 
-/* ── Card tile: full-width card on top, meta + action below ── */
-.deck-collection-row {
+/* ── Card tile: chest-pull style card, meta, full-width action ── */
+.deck-editor-tile {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
   min-width: 0;
-  padding: 0.45rem;
+  padding: 0.4rem;
   background: var(--bg-panel, #302e2b);
   border: 1px solid #4a4845;
   border-radius: 10px;
 }
 
-.deck-collection-row__main {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-}
-
-.deck-collection-row__art {
-  width: 100%;
-  cursor: pointer;
-}
-
-.deck-collection-row__card.spell-card {
+.deck-editor-tile__card {
   width: 100%;
   max-width: none;
-  pointer-events: none;
+  padding: 0;
 }
 
-.deck-collection-row__card .spell-card__tooltip {
+.deck-editor-tile__card .spell-card__tooltip {
   display: none;
 }
 
-.deck-collection-row__card.spell-card--small .spell-card__art {
-  height: clamp(52px, 24vw, 72px);
-}
-
-.deck-collection-row__card.spell-card--small .spell-card__svg:not(.spell-card__svg--full-bleed) {
-  width: clamp(40px, 18vw, 56px);
-  height: clamp(40px, 18vw, 56px);
-}
-
-.deck-collection-row__meta {
+.deck-editor-tile__meta {
   display: flex;
   align-items: center;
   flex-wrap: nowrap;
   gap: 0.35rem;
-  font-size: 0.6rem;
+  margin: 0;
+  font-size: 0.62rem;
   color: var(--text-muted);
-  line-height: 1.2;
+  text-align: center;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
 }
 
-.deck-collection-row__action {
+.deck-editor-tile__new {
+  display: inline-block;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  background: rgba(129, 182, 76, 0.22);
+  color: #c8e6a0;
+}
+
+.deck-editor-tile__action {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -476,50 +472,56 @@ body.deck-editing .game-nav.tabs {
   letter-spacing: 0;
 }
 
-.deck-collection-row__action--add {
+.deck-editor-tile__action--add {
   background: var(--accent-primary, #81b64c);
   color: #1a1a18;
 }
 
-.deck-collection-row__action--add:active:not(:disabled) {
+.deck-editor-tile__action--add:active:not(:disabled) {
   filter: brightness(0.92);
 }
 
-.deck-collection-row__action--buy {
+.deck-editor-tile__action--buy {
   background: linear-gradient(180deg, #ffe566 0%, #c9a227 100%);
   color: #1a1208;
   border: 2px solid rgba(255, 255, 255, 0.25);
 }
 
-.deck-collection-row__action--buy:not(:disabled):active {
+.deck-editor-tile__action--buy:not(:disabled):active {
   filter: brightness(0.95);
 }
 
-.deck-collection-row__action--disabled,
-.deck-collection-row__action:disabled {
+.deck-editor-tile__action--disabled,
+.deck-editor-tile__action:disabled {
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-muted);
   cursor: not-allowed;
   border: 1px solid #3a3835;
 }
 
-.deck-collection-row--new {
+.deck-editor-tile--new {
   border-color: rgba(129, 182, 76, 0.45);
 }
 
-.deck-collection-row__new {
-  display: inline-block;
-  flex-shrink: 0;
-  margin-left: auto;
-  padding: 0.05rem 0.35rem;
-  border-radius: 999px;
-  font-size: 0.55rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  vertical-align: middle;
-  background: rgba(129, 182, 76, 0.22);
-  color: #c8e6a0;
+#deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__frame {
+  height: 100%;
+}
+
+#deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+#deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art {
+  height: auto;
+  aspect-ratio: 5 / 6;
+  min-height: 5rem;
+  max-height: none;
+}
+
+#deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__svg:not(.spell-card__svg--full-bleed) {
+  width: 72%;
+  height: 72%;
 }
 
 .deck-editor__hint {
@@ -756,13 +758,17 @@ body.deck-editing .game-nav.tabs {
     overflow: visible;
   }
 
-  .deck-collection-row__meta {
+  .deck-editor-tile__meta {
     font-size: 0.64rem;
   }
 
-  .deck-collection-row__action {
+  .deck-editor-tile__action {
     font-size: 0.72rem;
     padding: 0.4rem 0.5rem;
     min-height: 2.5rem;
+  }
+
+  #deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art {
+    min-height: 5.5rem;
   }
 }
