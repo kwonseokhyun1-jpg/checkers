@@ -844,7 +844,8 @@ body {
 }
 .spell-card__art {
   position: relative;
-  height: 88px;
+  height: auto;
+  aspect-ratio: 7 / 6;
   border-radius: 2px;
   border: 1px solid rgba(0, 0, 0, 0.5);
   background:
@@ -1022,7 +1023,7 @@ body {
 }
 .spell-card--full .spell-card__art,
 .spell-card:not(.spell-card--compact):not(.spell-card--small):not(.spell-card--tiny) .spell-card__art {
-  height: 110px;
+  aspect-ratio: 7 / 6;
 }
 .spell-card--full .spell-card__svg:not(.spell-card__svg--full-bleed),
 .spell-card:not(.spell-card--compact):not(.spell-card--small):not(.spell-card--tiny) .spell-card__svg:not(.spell-card__svg--full-bleed) {
@@ -1037,7 +1038,7 @@ body {
 .spell-card--compact,
 .spell-card.compact { max-width: 140px; }
 .spell-card--compact .spell-card__art,
-.spell-card.compact .spell-card__art { height: 72px; }
+.spell-card.compact .spell-card__art { aspect-ratio: 7 / 6; }
 .spell-card--compact .spell-card__name,
 .spell-card.compact .spell-card__name { font-size: 0.75rem; }
 .spell-card--compact .spell-card__desc,
@@ -1053,7 +1054,7 @@ body {
 }
 .spell-card--gallery .spell-card__art {
   height: auto;
-  aspect-ratio: 5 / 6;
+  aspect-ratio: 7 / 6;
   min-height: 4.75rem;
   max-height: none;
 }
@@ -1076,7 +1077,7 @@ body {
 }
 
 .spell-card--small { max-width: 100px; }
-.spell-card--small .spell-card__art { height: 56px; }
+.spell-card--small .spell-card__art { aspect-ratio: 7 / 6; }
 .spell-card--small .spell-card__svg:not(.spell-card__svg--full-bleed) { width: 48px; height: 48px; }
 .spell-card--small .spell-card__name { font-size: 0.68rem; }
 .spell-card--small .spell-card__desc { font-size: 0.6rem; -webkit-line-clamp: 2; }
@@ -1084,7 +1085,7 @@ body {
 .spell-card--tiny,
 .spell-card.tiny { max-width: 72px; }
 .spell-card--tiny .spell-card__art,
-.spell-card.tiny .spell-card__art { height: 48px; }
+.spell-card.tiny .spell-card__art { aspect-ratio: 7 / 6; }
 .spell-card--tiny .spell-card__title-frame,
 .spell-card.tiny .spell-card__title-frame { padding: 0.15rem 0.2rem; }
 .spell-card--tiny .spell-card__name,
@@ -1331,7 +1332,8 @@ body {
   max-width: 4.85rem;
 }
 .hand.spell-hand.spell-hand--crowded .spell-card__art {
-  height: 2.85rem;
+  aspect-ratio: 7 / 6;
+  height: auto;
 }
 
 .hand.spell-hand .spell-card__title-frame {
@@ -1357,7 +1359,8 @@ body {
 }
 
 .hand.spell-hand .spell-card__art {
-  height: 3.25rem;
+  aspect-ratio: 7 / 6;
+  height: auto;
 }
 
 .hand.spell-hand .spell-card__art--full-bleed > .spell-card__svg {
@@ -2042,7 +2045,9 @@ body.chest-open-active .card-preview-modal {
   pointer-events: none;
 }
 .card-preview-mount .spell-card__art {
-  height: 140px;
+  aspect-ratio: 7 / 6;
+  height: auto;
+  min-height: 7.5rem;
 }
 .card-preview-mount .spell-card__desc {
   -webkit-line-clamp: unset;

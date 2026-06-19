@@ -514,7 +514,7 @@ body.deck-editing .game-nav.tabs {
 
 #deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art {
   height: auto;
-  aspect-ratio: 5 / 6;
+  aspect-ratio: 7 / 6;
   min-height: 5rem;
   max-height: none;
 }
