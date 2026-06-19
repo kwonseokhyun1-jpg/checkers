@@ -37,8 +37,8 @@ import {
   formatStars,
   getLevelStars,
   MAP_PIN_LAYOUT,
-  getNextPlayableLevelId,
   repairAdventureProgress,
+  getNextPlayableLevelId,
   getWorldForLevel,
   isQuestsAndPvpUnlocked,
   QUESTS_PVP_UNLOCK_MESSAGE,
@@ -1302,14 +1302,7 @@ function renderAdventureMap() {
   syncNavUnlockState();
   const progress = repairAdventureProgress(profile.adventure);
   profile.adventure = progress;
-  const nextId = getNextPlayableLevelId(progress);
-  const nextLevel = getLevel(nextId);
-  if (nextLevel) {
-    progress.selectedWorld = nextLevel.worldId;
-    selectedAdventureWorldId = nextLevel.worldId;
-  } else {
-    selectedAdventureWorldId = progress.selectedWorld || 1;
-  }
+  selectedAdventureWorldId = progress.selectedWorld || 1;
 
   const tabs = $("adventure-world-tabs");
   if (tabs) {
@@ -1362,6 +1355,7 @@ function renderAdventureMap() {
   const pinsLayer = map.querySelector(".adventure-map-pins");
   const points = [];
   const levels = getLevelsForWorld(selectedAdventureWorldId);
+  const nextId = getNextPlayableLevelId(progress);
 
   levels.forEach((level, i) => {
     const pos = MAP_PIN_LAYOUT[i] || MAP_PIN_LAYOUT[MAP_PIN_LAYOUT.length - 1];
