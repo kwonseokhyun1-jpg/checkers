@@ -37,7 +37,6 @@ import {
   formatStars,
   getLevelStars,
   MAP_PIN_LAYOUT,
-  getNextPlayableLevelId,
   repairAdventureProgress,
   getWorldForLevel,
   isQuestsAndPvpUnlocked,
@@ -1302,14 +1301,7 @@ function renderAdventureMap() {
   syncNavUnlockState();
   const progress = repairAdventureProgress(profile.adventure);
   profile.adventure = progress;
-  const nextId = getNextPlayableLevelId(progress);
-  const nextLevel = getLevel(nextId);
-  if (nextLevel) {
-    progress.selectedWorld = nextLevel.worldId;
-    selectedAdventureWorldId = nextLevel.worldId;
-  } else {
-    selectedAdventureWorldId = progress.selectedWorld || 1;
-  }
+  selectedAdventureWorldId = progress.selectedWorld || 1;
 
   const tabs = $("adventure-world-tabs");
   if (tabs) {
