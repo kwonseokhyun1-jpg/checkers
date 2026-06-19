@@ -466,6 +466,11 @@ body.deck-editing .game-nav.tabs {
   object-fit: cover;
 }
 
+.deck-collection-row__thumb .spell-card__art--full-bleed > .spell-card__svg {
+  position: absolute;
+  inset: 0;
+}
+
 .deck-collection-row__thumb .spell-card__title-frame,
 .deck-collection-row__thumb .spell-card__type-frame,
 .deck-collection-row__thumb .spell-card__text-frame {

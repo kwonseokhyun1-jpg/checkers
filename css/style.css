@@ -841,17 +841,22 @@ body {
   background: none;
   padding: 0;
   display: block;
+  min-height: 0;
 }
 
 .spell-card__art--full-bleed .spell-card__art-shine {
-  opacity: 0.2;
+  opacity: 0.25;
 }
 
+/* Full-bleed art must always fill the art window (parent selector is the reliable hook). */
+.spell-card__art--full-bleed > .spell-card__svg,
 .spell-card__svg--full-bleed {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none;
+  max-height: none;
   display: block;
 }
 
@@ -1280,6 +1285,18 @@ body {
 
 .hand.spell-hand .spell-card__art {
   height: 3.25rem;
+}
+
+.hand.spell-hand .spell-card__art--full-bleed > .spell-card__svg {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.hand.spell-hand .spell-card__art:not(.spell-card__art--full-bleed) .spell-card__svg {
+  width: auto;
+  height: 88%;
+  max-height: 2.85rem;
+  aspect-ratio: 1;
 }
 
 .spell-cast-bar {
@@ -1930,7 +1947,7 @@ body.tutorial-match-active .card-preview-modal {
 .card-preview-dialog {
   position: relative;
   z-index: 1;
-  max-width: 220px;
+  max-width: 260px;
   width: 100%;
   padding: 1.25rem 1rem 1rem;
   background: linear-gradient(165deg, var(--bg-panel-elevated), var(--bg-panel));
@@ -1943,8 +1960,11 @@ body.tutorial-match-active .card-preview-modal {
   justify-content: center;
 }
 .card-preview-mount .spell-card {
-  max-width: 200px;
+  max-width: 240px;
   pointer-events: none;
+}
+.card-preview-mount .spell-card__art {
+  height: 140px;
 }
 .card-preview-mount .spell-card__desc {
   -webkit-line-clamp: unset;
@@ -2001,6 +2021,9 @@ body.tutorial-match-active .card-preview-modal {
 /* Card theme animations */
 .spell-card__art--animated .spell-card__svg:not(.spell-card__svg--full-bleed) {
   animation: card-art-idle 4s ease-in-out infinite;
+}
+.spell-card__art--full-bleed.spell-card__art--animated > .spell-card__svg {
+  animation: card-art-idle 5s ease-in-out infinite;
 }
 .spell-card--anim-combat .spell-card__sigil { animation: sigil-pulse 1.2s ease-in-out infinite; }
 .spell-card--anim-debuff .spell-card__art { animation: frost-shimmer 3s linear infinite; }
