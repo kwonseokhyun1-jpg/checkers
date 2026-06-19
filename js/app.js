@@ -751,7 +751,8 @@ function renderChests(options = {}) {
             button: true,
             deal: true,
             hideDesc: true,
-            onClick: () => showCardPreview(def, { hideDesc: true }),
+            showViewFullHint: true,
+            onClick: () => showCardPreview(def),
           });
           pulled.style.animationDelay = `${i * 0.12}s`;
           grid.appendChild(pulled);

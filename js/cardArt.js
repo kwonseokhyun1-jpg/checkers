@@ -244,8 +244,9 @@ export function renderSpellCardEl(def, opts = {}) {
           <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
         </div>
       </div>
-      <div class="spell-card__type-frame">
+      <div class="spell-card__type-frame${opts.showViewFullHint ? " spell-card__type-frame--with-hint" : ""}">
         <span class="spell-card__rarity">${def.rarity}</span>
+        ${opts.showViewFullHint ? '<span class="spell-card__view-full">Click to see full card</span>' : ""}
         ${opts.meta ? `<span class="spell-card__meta">${escapeHtml(opts.meta)}</span>` : ""}
       </div>
       ${showDesc ? `<div class="spell-card__text-frame"><p class="spell-card__desc">${escapeHtml(def.desc)}</p></div>` : ""}
