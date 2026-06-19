@@ -750,8 +750,7 @@ function renderChests(options = {}) {
           const pulled = renderSpellCardEl(def, {
             button: true,
             deal: true,
-            hideDesc: true,
-            showViewFullHint: true,
+            gallery: true,
             onClick: () => showCardPreview(def),
           });
           pulled.style.animationDelay = `${i * 0.12}s`;

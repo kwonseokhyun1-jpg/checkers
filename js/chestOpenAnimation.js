@@ -111,8 +111,7 @@ export function playChestOpenAnimation({ tier, tierLabel, pulls }) {
         const card = renderSpellCardEl(def, {
           button: true,
           deal: true,
-          hideDesc: true,
-          showViewFullHint: true,
+          gallery: true,
           onClick: () => showCardPreview(def),
         });
         card.style.animationDelay = `${i * 0.14}s`;
