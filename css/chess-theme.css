@@ -877,6 +877,7 @@ body {
 
 .adventure-stage-row,
 .deck-list-item,
+.deck-row,
 .chest-card {
   border-radius: 8px;
   border: 1px solid #4a4845;
@@ -918,7 +919,8 @@ body {
   font-weight: 600;
 }
 
-.deck-list-item:hover {
+.deck-list-item:hover,
+.deck-row--open:hover {
   background: #403d39;
   transform: none;
 }
