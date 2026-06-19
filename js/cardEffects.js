@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDiagonalThroughSquares, hasMandatoryJumps, pieceHasLegalMoves, isFortified } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, isFortified } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, longStepOk, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -84,7 +84,7 @@ export function getCardHint(card) {
   }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
   if (card.effect === "snowball") return hints.snowball_hint;
-  if (card.effect === "deep_freeze") return "Click your piece, then any square on the diagonal to freeze.";
+  if (card.effect === "deep_freeze") return "Click your piece, then an adjacent diagonal square to choose direction.";
   if (card.effect === "barrier") return "Click a dark square — enemies cannot enter it next turn.";
   if (card.effect === "mass_nudge") {
     return "Click your piece, then where it moves; optionally pick a second piece and destination.";
@@ -523,7 +523,7 @@ export function getValidTargets(state, color, card, picks) {
       const [pr, pc] = picks[0];
       const p = at(state, pr, pc);
       if (!p) return [];
-      if (card.effect === "deep_freeze") return getDiagonalThroughSquares(pr, pc);
+      if (card.effect === "deep_freeze") return getDiagonalAdjacentSquares(pr, pc);
       if (card.effect === "forward_bolt") {
         return getAdjacentForwardBoltTarget(state.board, p).filter(([r, c]) => !pieceCloakedByDarkness(state, r, c));
       }

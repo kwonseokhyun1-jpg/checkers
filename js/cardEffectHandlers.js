@@ -421,13 +421,13 @@ const EFFECTS = {
   reverse_only_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.reverseOnlyTurns=2; p.noCaptureTurns=2; return ok(); },
   freeze_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color) return fail(); applyFreezeToPiece(state.board, state, r, c, 1); return ok(); },
   deep_freeze(state, color, picks) {
-    if (picks.length < 2) return fail("Pick your piece, then a square on the diagonal to freeze");
+    if (picks.length < 2) return fail("Pick your piece, then an adjacent diagonal square");
     const [r, c] = p0(picks);
     const [tr, tc] = p1(picks);
     const p = at(state, r, c);
     if (!p || p.color !== color) return fail();
     const dir = diagonalDirectionFromPick(r, c, tr, tc);
-    if (!dir) return fail("Pick a square on a diagonal through your piece");
+    if (!dir || Math.abs(tr - r) !== 1 || Math.abs(tc - c) !== 1) return fail("Pick an adjacent diagonal square");
     const [dr, dc] = dir;
     let n = 0;
     for (let i = -SIZE + 1; i < SIZE; i++) {

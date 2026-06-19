@@ -841,6 +841,22 @@ export function getCryoBoltTarget(board, piece) {
   return targets;
 }
 
+/** The up to four dark squares diagonally adjacent to (r, c). */
+export function getDiagonalAdjacentSquares(r, c) {
+  const res = [];
+  for (const [dr, dc] of [
+    [-1, -1],
+    [-1, 1],
+    [1, -1],
+    [1, 1],
+  ]) {
+    const nr = r + dr;
+    const nc = c + dc;
+    if (inBounds(nr, nc) && isDarkSquare(nr, nc)) res.push([nr, nc]);
+  }
+  return res;
+}
+
 /** Every dark square on either diagonal through (r, c), excluding the center. */
 export function getDiagonalThroughSquares(r, c) {
   const res = [];
