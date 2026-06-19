@@ -1,5 +1,5 @@
 /**
- * Deck editor — full-screen mobile layout, one obvious action per card
+ * Deck editor — full-screen mobile layout, three-zone card rows (art | info | action)
  */
 
 :root {
@@ -372,11 +372,13 @@ body.deck-editing .game-nav.tabs {
   letter-spacing: 0.04em;
 }
 
-/* ── Card row: info on top, full-width action button below ── */
+/* ── Card row: art | name + meta | add/buy action ── */
 .deck-collection-row {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  display: grid;
+  grid-template-columns: 2.75rem 1fr minmax(5.5rem, 7.5rem);
+  grid-template-rows: auto;
+  align-items: stretch;
+  gap: 0.45rem;
   padding: 0.45rem;
   background: var(--bg-panel, #302e2b);
   border: 1px solid #4a4845;
@@ -384,16 +386,15 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-collection-row__main {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-width: 0;
+  display: contents;
 }
 
 .deck-collection-row__art {
+  grid-column: 1;
+  grid-row: 1;
   width: 2.75rem;
   height: 3.5rem;
-  flex-shrink: 0;
+  align-self: center;
   overflow: hidden;
   border-radius: 6px;
   cursor: pointer;
@@ -415,7 +416,8 @@ body.deck-editing .game-nav.tabs {
 .deck-collection-row__thumb .spell-card__art {
   flex: 1;
   min-height: 0;
-  height: 100%;
+  height: 100% !important;
+  max-height: none;
 }
 
 .deck-collection-row__thumb .spell-card__svg,
@@ -441,10 +443,12 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-collection-row__info {
-  flex: 1;
+  grid-column: 2;
+  grid-row: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 0.15rem;
   cursor: pointer;
 }
@@ -466,15 +470,17 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-collection-row__action {
+  grid-column: 3;
+  grid-row: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: auto;
   min-height: 2.85rem;
-  padding: 0.5rem 0.75rem;
+  padding: 0.45rem 0.5rem;
   border: none;
   border-radius: 10px;
-  font-size: 0.88rem;
+  font-size: 0.72rem;
   font-weight: 700;
   line-height: 1.15;
   text-align: center;
@@ -765,32 +771,17 @@ body.deck-editing .game-nav.tabs {
   }
 
   .deck-collection-row {
-    display: grid;
     grid-template-columns: 3rem 1fr minmax(7rem, 8.5rem);
-    grid-template-rows: auto;
-    align-items: center;
     gap: 0.5rem;
   }
 
-  .deck-collection-row__main {
-    display: contents;
+  .deck-collection-row__art {
+    width: 3rem;
   }
 
   .deck-collection-row__action {
-    width: auto;
-    height: 100%;
+    font-size: 0.88rem;
+    padding: 0.5rem 0.75rem;
     min-height: 2.75rem;
-    grid-column: 3;
-    grid-row: 1;
-  }
-
-  .deck-collection-row__art {
-    grid-column: 1;
-    grid-row: 1;
-  }
-
-  .deck-collection-row__info {
-    grid-column: 2;
-    grid-row: 1;
   }
 }
