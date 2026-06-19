@@ -1249,8 +1249,8 @@ function showAdventureMap() {
 
 
 function getMapSceneryMarkup(theme) {
-  const ocean = theme === "frost" ? "#1a3050" : theme === "ember" ? "#2a1810" : theme === "void" ? "#12082a" : theme === "legend" ? "#1a1830" : "#0d2848";
-  const land = theme === "frost" ? "#5a7a6a" : theme === "ember" ? "#6a4a30" : theme === "void" ? "#4a3868" : theme === "legend" ? "#6a5a38" : "#3d7a48";
+  const ocean = theme === "frost" ? "#1a3050" : theme === "ember" ? "#2a1810" : theme === "void" ? "#12082a" : theme === "legend" ? "#0a1a10" : "#0d2848";
+  const land = theme === "frost" ? "#5a7a6a" : theme === "ember" ? "#6a4a30" : theme === "void" ? "#4a3868" : theme === "legend" ? "#2d6a4f" : "#3d7a48";
   const beach = theme === "frost" ? "#9ab8c8" : theme === "ember" ? "#c8a070" : "#c4b090";
   return `<svg class="adventure-map-scenery-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
