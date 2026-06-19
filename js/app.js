@@ -894,7 +894,10 @@ function appendCollectionCard(parent, def, opts = {}) {
     const ownedLabel = owned > 0 ? `Owned ${owned}/${cap}` : "Not in collection";
     info.innerHTML = `
       <strong class="deck-collection-row__name">${escapeHtml(def.name)}${isCardNew(profile, def.id) ? '<span class="deck-collection-row__new">New</span>' : ""}</strong>
-      <span class="deck-collection-row__meta">${ownedLabel} · In deck ${inDeck}/${cap}</span>`;
+      <span class="deck-collection-row__meta">
+        <span class="deck-collection-row__meta-line">${ownedLabel}</span>
+        <span class="deck-collection-row__meta-line">In deck ${inDeck}/${cap}</span>
+      </span>`;
     info.addEventListener("click", () => openInspect());
 
     main.append(art, info);

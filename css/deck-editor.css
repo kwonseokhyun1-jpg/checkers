@@ -511,9 +511,16 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-collection-row__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
   font-size: 0.62rem;
   color: var(--text-muted);
   line-height: 1.25;
+}
+
+.deck-collection-row__meta-line {
+  display: block;
 }
 
 .deck-collection-row__action {
