@@ -937,6 +937,10 @@ body {
   background: #302e2b;
 }
 
+.spell-card__art--raster {
+  background: #0a1628;
+}
+
 .spell-card__art-shine {
   display: none;
 }
