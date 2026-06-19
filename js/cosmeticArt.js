@@ -180,6 +180,54 @@ const AVATAR_ART = {
       <circle cx="38" cy="28" r="1" fill="#fff" opacity="0.7"/>
       <circle cx="30" cy="38" r="1.2" fill="#fff" opacity="0.6"/>`,
   },
+  avatar_scout: {
+    bg: ["#2d5016", "#1a2e0e"],
+    glow: "#86efac",
+    svg: `<ellipse cx="32" cy="38" rx="14" ry="16" fill="#1a3010"/>
+      <circle cx="32" cy="24" r="11" fill="#c5e8b7"/>
+      <path d="M20 18 Q32 8 44 18 L42 24 Q32 20 22 24 Z" fill="#3d6b28"/>
+      <circle cx="28" cy="24" r="2" fill="#1a3010"/>
+      <circle cx="36" cy="24" r="2" fill="#1a3010"/>
+      <path d="M28 30 Q32 34 36 30" fill="none" stroke="#4ade80" stroke-width="1.5"/>`,
+  },
+  avatar_crystal: {
+    bg: ["#0e7490", "#164e63"],
+    glow: "#67e8f9",
+    svg: `<path d="M32 10 L44 28 L38 50 L26 50 L20 28 Z" fill="#083344" stroke="#67e8f9" stroke-width="1.5"/>
+      <circle cx="32" cy="30" r="9" fill="#042f2e" stroke="#a5f3fc" stroke-width="2"/>
+      <circle cx="32" cy="30" r="4" fill="#22d3ee"/>
+      <path d="M28 26 L32 22 L36 26 L32 34 Z" fill="#ecfeff" opacity="0.6"/>`,
+  },
+  avatar_moon: {
+    bg: ["#1e293b", "#0f172a"],
+    glow: "#cbd5e1",
+    svg: `<circle cx="32" cy="30" r="16" fill="#334155"/>
+      <circle cx="38" cy="26" r="13" fill="#0f172a"/>
+      <circle cx="26" cy="28" r="2" fill="#e2e8f0" opacity="0.9"/>
+      <circle cx="34" cy="32" r="1.5" fill="#e2e8f0" opacity="0.7"/>
+      <path d="M22 48 Q32 40 42 48" fill="#475569"/>`,
+  },
+  avatar_flame: {
+    bg: ["#9a3412", "#431407"],
+    glow: "#fdba74",
+    svg: `<path d="M32 8 Q38 22 34 32 Q40 28 42 38 Q32 52 22 38 Q24 28 30 32 Q26 22 32 8" fill="#ea580c" stroke="#fed7aa" stroke-width="1"/>
+      <circle cx="32" cy="34" r="8" fill="#7c2d12"/>
+      <circle cx="29" cy="32" r="2" fill="#fef3c7"/>
+      <circle cx="35" cy="32" r="2" fill="#fef3c7"/>
+      <path d="M28 38 Q32 42 36 38" fill="#c2410c"/>`,
+  },
+  avatar_cosmos: {
+    bg: ["#1a0533", "#4c1d95"],
+    glow: "#e879f9",
+    svg: `<circle cx="32" cy="32" r="20" fill="#0a0118"/>
+      <ellipse cx="32" cy="32" rx="16" ry="8" fill="none" stroke="#c084fc" stroke-width="2" transform="rotate(-30 32 32)"/>
+      <ellipse cx="32" cy="32" rx="12" ry="5" fill="none" stroke="#f0abfc" stroke-width="1.5" transform="rotate(20 32 32)"/>
+      <circle cx="32" cy="32" r="5" fill="#581c87"/>
+      <circle cx="32" cy="32" r="2" fill="#fae8ff"/>
+      <circle cx="20" cy="22" r="1.2" fill="#fff" opacity="0.8"/>
+      <circle cx="44" cy="28" r="1" fill="#fff" opacity="0.6"/>
+      <circle cx="38" cy="42" r="1.3" fill="#fff" opacity="0.7"/>`,
+  },
 };
 
 export function bannerStyleFor(id) {
@@ -189,6 +237,11 @@ export function bannerStyleFor(id) {
     banner_crimson: "linear-gradient(135deg,#3a1018,#8b2030 50%,#1a0a10)",
     banner_storm: "linear-gradient(135deg,#1a2840,#3d7ab8 45%,#9ad4ff)",
     banner_aurora: "linear-gradient(135deg,#0f3d3a,#5ce1e6 40%,#9f7aea 80%,#1a0a20)",
+    banner_forest: "linear-gradient(135deg,#1a2e0e,#2d5016 50%,#0f1a08)",
+    banner_sunset: "linear-gradient(135deg,#431407,#c2410c 45%,#fdba74 75%,#1a0a04)",
+    banner_midnight: "linear-gradient(135deg,#0f172a,#1e3a5f 50%,#020617)",
+    banner_ocean: "linear-gradient(135deg,#042f2e,#0e7490 45%,#164e63 80%,#020617)",
+    banner_eclipse: "linear-gradient(135deg,#0a0a0a,#1a1a2e 35%,#fbbf24 50%,#0a0a0a 65%,#312e81)",
   };
   return map[id] || map.banner_default;
 }
