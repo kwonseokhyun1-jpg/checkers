@@ -2069,7 +2069,25 @@ body.tutorial-match-active .card-preview-modal {
   50% { opacity: 1; }
 }
 
-/* Epic / legendary / rare FX */
+/* Epic / legendary / rare / uncommon / common FX */
+.spell-card--common-fx .spell-card__fx--common,
+.spell-card.common .spell-card__fx--common {
+  position: absolute;
+  inset: -1px;
+  border-radius: 12px;
+  pointer-events: none;
+  background: linear-gradient(120deg, transparent, rgba(156, 163, 175, 0.18), transparent);
+  animation: common-sheen 3.6s linear infinite;
+}
+.spell-card--uncommon-fx .spell-card__fx--uncommon,
+.spell-card.uncommon .spell-card__fx--uncommon {
+  position: absolute;
+  inset: -2px;
+  border-radius: 12px;
+  pointer-events: none;
+  background: linear-gradient(120deg, transparent, rgba(91, 143, 212, 0.28), transparent);
+  animation: uncommon-sheen 3.2s linear infinite;
+}
 .spell-card--rare-fx .spell-card__fx--rare,
 .spell-card.rare .spell-card__fx--rare {
   position: absolute;
@@ -2111,6 +2129,16 @@ body.tutorial-match-active .card-preview-modal {
   font-weight: 700;
 }
 
+@keyframes common-sheen {
+  0% { transform: translateX(-100%) rotate(8deg); opacity: 0; }
+  40% { opacity: 0.45; }
+  100% { transform: translateX(100%) rotate(8deg); opacity: 0; }
+}
+@keyframes uncommon-sheen {
+  0% { transform: translateX(-100%) rotate(8deg); opacity: 0; }
+  40% { opacity: 0.55; }
+  100% { transform: translateX(100%) rotate(8deg); opacity: 0; }
+}
 @keyframes rare-sheen {
   0% { transform: translateX(-100%) rotate(8deg); opacity: 0; }
   40% { opacity: 0.7; }

@@ -99,6 +99,42 @@ function legendaryBleed(id, top, bottom, inner) {
   ${inner}`;
 }
 
+/** Premium common art with slate radial gradient. */
+function commonBleed(id, top, bottom, inner) {
+  const gid = `cm-${id}`;
+  return `<defs>
+    <radialGradient id="${gid}" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="${top}"/>
+      <stop offset="55%" stop-color="${bottom}"/>
+      <stop offset="100%" stop-color="${bottom}" stop-opacity="0.94"/>
+    </radialGradient>
+    <filter id="${gid}-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="0.7" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="64" height="64" fill="url(#${gid})"/>
+  ${inner}`;
+}
+
+/** Premium uncommon art with teal-blue radial gradient. */
+function uncommonBleed(id, top, bottom, inner) {
+  const gid = `uc-${id}`;
+  return `<defs>
+    <radialGradient id="${gid}" cx="50%" cy="38%" r="72%">
+      <stop offset="0%" stop-color="${top}"/>
+      <stop offset="52%" stop-color="${bottom}"/>
+      <stop offset="100%" stop-color="${bottom}" stop-opacity="0.93"/>
+    </radialGradient>
+    <filter id="${gid}-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="64" height="64" fill="url(#${gid})"/>
+  ${inner}`;
+}
+
 /** Premium rare art with violet radial gradient. */
 function rareBleed(id, top, bottom, inner) {
   const gid = `ra-${id}`;
@@ -141,6 +177,49 @@ function ally(x, y, r = 5) {
 }
 
 export const FULL_BLEED_EFFECTS = new Set([
+  "nudge",
+  "backstep",
+  "retreat_3",
+  "anchor_2",
+  "recall",
+  "repel",
+  "leapfrog",
+  "random_teleport",
+  "rally",
+  "coin_flip",
+  "butterfly",
+  "ignore",
+  "iron_will",
+  "demote",
+  "quicksand",
+  "create_foe",
+  "barrier",
+  "panic",
+  "swap_friendly",
+  "sidestep",
+  "press",
+  "shield_1",
+  "snowball",
+  "long_step",
+  "shield_2",
+  "poison_3",
+  "deflect_1",
+  "forward_bolt",
+  "crown",
+  "blink_2",
+  "landmine",
+  "reverse_only_2",
+  "root_2",
+  "sacrifice",
+  "scatter",
+  "mass_nudge",
+  "sanctuary_pulse",
+  "last_stand",
+  "cryo_bolt",
+  "collapse",
+  "last_king",
+  "snipe",
+  "dominion",
   "backstab",
   "bomb",
   "berserk",
@@ -166,7 +245,6 @@ export const FULL_BLEED_EFFECTS = new Set([
   "quick_march",
   "revive",
   "shockwave",
-  "coin_flip",
   "bishop_2",
   "rook_2",
   "offering",
@@ -688,93 +766,375 @@ function tricksterMotif() {
     <path d="M24 22 L40 38 M40 22 L24 38" stroke="#e9d5ff" stroke-width="1.2" opacity="0.4"/>`;
 }
 
+/* ── Common spell motifs ── */
+
+function nudgeMotif() {
+  return `${ally(18, 44, 5.5)}
+    <circle cx="40" cy="26" r="6" fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="3 2" opacity="0.65"/>
+    <path d="M24 40 L34 32" stroke="#e2e8f0" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M34 32 L30 30 M34 32 L32 36" stroke="#e2e8f0" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+}
+
+function backstepMotif() {
+  return `${ally(32, 22, 5.5)}
+    <circle cx="32" cy="46" r="6" fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="3 2" opacity="0.65"/>
+    <path d="M32 28 L32 40" stroke="#e2e8f0" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M32 40 L28 36 M32 40 L36 36" stroke="#e2e8f0" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+}
+
+function retreatMotif() {
+  return `${ally(32, 28, 5.5)}
+    <path d="M32 34 L32 50" stroke="#93c5fd" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M32 50 L28 44 M32 50 L36 44" stroke="#93c5fd" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <text x="42" y="48" font-size="8" fill="#cbd5e1" opacity="0.85">×3</text>`;
+}
+
+function anchorMotif() {
+  return `${ally(22, 36, 4.5)}${ally(42, 36, 4.5)}
+    <path d="M32 12 V28 M32 28 C32 34 26 36 26 42 C26 46 32 48 32 48 C32 48 38 46 38 42 C38 36 32 34 32 28 Z" fill="#94a3b8" opacity="0.65" stroke="#e2e8f0" stroke-width="1.4"/>`;
+}
+
+function recallMotif() {
+  return `${ally(32, 26, 5.5)}
+    <path d="M32 32 L32 44" stroke="#93c5fd" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M10 50 H54" stroke="#64748b" stroke-width="2" opacity="0.55"/>
+    <rect x="12" y="48" width="40" height="5" rx="1" fill="#475569" opacity="0.4"/>
+    <text x="14" y="47" font-size="5" fill="#cbd5e1" opacity="0.7">back row</text>`;
+}
+
+function repelMotif() {
+  return `${ally(22, 36, 5)}${token(38, 36, 5)}
+    <circle cx="52" cy="36" r="5" fill="none" stroke="#fca5a5" stroke-width="1.4" stroke-dasharray="2 2" opacity="0.55"/>
+    <path d="M28 36 L48 36" stroke="#fde68a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M48 36 L44 32 M48 36 L44 40" stroke="#fde68a" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+}
+
+function leapfrogMotif() {
+  return `${ally(14, 48, 4.5)}${ally(28, 34, 4)}
+    <circle cx="44" cy="20" r="5" fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="3 2" opacity="0.65"/>
+    <path d="M18 44 Q28 20 42 24" stroke="#93c5fd" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M40 26 L44 22 M40 26 L44 30" stroke="#93c5fd" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+}
+
+function randomTeleportMotif() {
+  return `${ally(32, 40, 5.5)}
+    <path d="M16 16 Q32 6 48 16 Q40 30 32 26 Q24 30 16 16" stroke="#c4b5fd" stroke-width="1.8" fill="none" opacity="0.55" stroke-dasharray="3 2"/>
+    <text x="40" y="20" font-size="12" fill="#fde68a" opacity="0.9">?</text>
+    <circle cx="26" cy="18" r="4" fill="#2563eb" opacity="0.35" stroke="#93c5fd" stroke-width="1.2" stroke-dasharray="2 2"/>`;
+}
+
+function rallyMotif() {
+  return `${ally(32, 32, 6)}${ally(16, 46, 3.5)}${ally(48, 46, 3.5)}
+    <circle cx="32" cy="32" r="18" fill="none" stroke="#93c5fd" stroke-width="1.6" opacity="0.45"/>
+  <path d="M16 46 L22 38 M48 46 L42 38" stroke="#60a5fa" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.55"/>`;
+}
+
+function butterflyMotif() {
+  return `<rect x="18" y="18" width="28" height="28" rx="2" fill="#334155" opacity="0.35" stroke="#64748b" stroke-width="1.2"/>
+    ${ally(24, 26, 3)}${ally(38, 28, 3)}${token(28, 40, 3)}${token(40, 38, 3)}
+    <path d="M24 26 Q32 16 38 28 Q32 44 28 40" stroke="#cbd5e1" stroke-width="1.6" fill="none" opacity="0.55"/>`;
+}
+
+function ignoreMotif() {
+  return `${ally(32, 36, 6)}
+    <path d="M14 18 L22 26 M22 18 L14 26" stroke="#f87171" stroke-width="2.6" stroke-linecap="round"/>
+    <text x="36" y="20" font-size="8" fill="#cbd5e1" opacity="0.75">skip</text>`;
+}
+
+function ironWillMotif() {
+  return `${ally(32, 34, 6)}
+    <path d="M16 22 C24 34 20 46 32 46 C44 46 40 34 48 22" stroke="#94a3b8" stroke-width="2.2" fill="none"/>
+    <path d="M20 30 L28 38 M44 30 L36 38" stroke="#e2e8f0" stroke-width="2.4" stroke-linecap="round"/>`;
+}
+
+function demoteMotif() {
+  return `${token(32, 38, 6)}
+    <path d="M22 14 L26 6 L30 12 L32 4 L34 12 L38 6 L42 14 L42 20 H22 Z" fill="#fbbf24" opacity="0.55" stroke="#b45309" stroke-width="1"/>
+    <path d="M24 16 L40 32 M40 16 L24 32" stroke="#fca5a5" stroke-width="2.2" opacity="0.75"/>`;
+}
+
+function quicksandMotif() {
+  return `<rect x="18" y="22" width="28" height="28" rx="2" fill="#44403c" opacity="0.45" stroke="#78716c" stroke-width="1.2"/>
+    <path d="M20 42 C26 36 38 36 44 42 C38 48 26 48 20 42 Z" fill="#a8a29e" opacity="0.5"/>
+    <text x="38" y="20" font-size="8" fill="#d6d3d1" opacity="0.55">?</text>`;
+}
+
+function createFoeMotif() {
+  return `<rect x="20" y="22" width="24" height="24" rx="2" fill="#292524" opacity="0.35" stroke="#57534e" stroke-width="1.2"/>
+    ${token(32, 34, 6)}
+    <text x="40" y="20" font-size="9" fill="#fca5a5" opacity="0.85">+</text>`;
+}
+
+function barrierMotif() {
+  return `<rect x="22" y="18" width="20" height="28" rx="2" fill="#334155" opacity="0.3" stroke="#64748b" stroke-width="1.2"/>
+    <path d="M26 20 V44 M38 20 V44" stroke="#cbd5e1" stroke-width="3" opacity="0.8"/>
+    <path d="M24 24 H40 M24 32 H40 M24 40 H40" stroke="#94a3b8" stroke-width="1" opacity="0.35"/>`;
+}
+
+function panicMotif() {
+  return `${token(32, 24, 6)}
+    <path d="M32 32 L32 48" stroke="#fca5a5" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M26 48 L32 42 L38 48" stroke="#fca5a5" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+}
+
+function shadowSwapMotif() {
+  return `${ally(18, 34, 5.5)}${ally(46, 34, 5.5)}
+    <path d="M24 34 L40 34" stroke="#93c5fd" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M40 30 L24 30" stroke="#c4b5fd" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M32 26 L32 42" stroke="#fde68a" stroke-width="1.4" stroke-dasharray="2 2" opacity="0.5"/>`;
+}
+
+function sidestepMotif() {
+  return `${ally(14, 34, 5.5)}
+    <circle cx="48" cy="34" r="6" fill="none" stroke="#cbd5e1" stroke-width="1.6" stroke-dasharray="3 2" opacity="0.65"/>
+    <path d="M20 34 L42 34" stroke="#e2e8f0" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M42 34 L38 30 M42 34 L38 38" stroke="#e2e8f0" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+}
+
+function pressMotif() {
+  return `${token(32, 30, 6)}
+    <path d="M32 38 L32 52" stroke="#fca5a5" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M32 52 L28 46 M32 52 L36 46" stroke="#fca5a5" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M24 52 L40 52" stroke="#64748b" stroke-width="1.4" opacity="0.45"/>`;
+}
+
+function wardMotif() {
+  return `${ally(32, 38, 6)}
+    <path d="M32 18 L42 24 V36 C42 44 32 50 32 50 C32 50 22 44 22 36 V24 Z" fill="#60a5fa" opacity="0.35" stroke="#93c5fd" stroke-width="1.8"/>`;
+}
+
+function snowballMotif() {
+  return `${ally(32, 36, 6)}
+    <circle cx="18" cy="20" r="7" fill="#e0f2fe" opacity="0.45" stroke="#7dd3fc" stroke-width="1.4"/>
+    <text x="14" y="24" font-size="9" fill="#0c4a6e" opacity="0.85">❄</text>
+    <path d="M20 26 L30 32" stroke="#bae6fd" stroke-width="1.6" stroke-dasharray="2 2" opacity="0.55"/>`;
+}
+
+/* ── Uncommon spell motifs ── */
+
+function longStepMotif() {
+  return `${ally(16, 48, 5.5)}
+    <circle cx="48" cy="16" r="6" fill="none" stroke="#7dd3fc" stroke-width="1.6" stroke-dasharray="3 2" opacity="0.65"/>
+    <path d="M20 44 L44 20" stroke="#bae6fd" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+    <path d="M44 20 L40 18 M44 20 L42 24" stroke="#bae6fd" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+}
+
+function aegisMotif() {
+  return `${ally(32, 38, 6)}
+    <path d="M32 16 L44 22 V36 C44 44 32 50 32 50 C32 50 20 44 20 36 V22 Z" fill="#38bdf8" opacity="0.35" stroke="#7dd3fc" stroke-width="1.8"/>
+    <circle cx="32" cy="36" r="16" fill="none" stroke="#bae6fd" stroke-width="1.4" opacity="0.45"/>`;
+}
+
+function poisonMotif() {
+  return `${token(32, 32, 6)}
+    <text x="26" y="18" font-size="13" fill="#86efac" opacity="0.95">☠</text>
+    <path d="M26 44 H38" stroke="#4ade80" stroke-width="2.2" opacity="0.55"/>
+    <path d="M28 48 H36" stroke="#22c55e" stroke-width="1.4" opacity="0.35"/>`;
+}
+
+function deflectMotif() {
+  return `${ally(24, 38, 5.5)}
+    <path d="M24 30 L30 24 V36 C30 42 24 46 24 46 C24 46 18 42 18 36 V24 Z" fill="#38bdf8" opacity="0.3" stroke="#7dd3fc" stroke-width="1.4"/>
+    <path d="M32 26 L48 18" stroke="#fde68a" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    ${token(50, 16, 4)}
+    <path d="M34 28 L38 22" stroke="#fbbf24" stroke-width="1.6" opacity="0.65"/>
+    <text x="14" y="52" font-size="6" fill="#cbd5e1" opacity="0.5">trap</text>`;
+}
+
+function stabMotif() {
+  return `${ally(22, 48, 4.5)}${token(42, 24, 5.5)}
+    <path d="M26 44 L38 30" stroke="#fde68a" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M36 28 L42 22 L40 32 L46 30 Z" fill="#e2e8f0" stroke="#64748b" stroke-width="1"/>`;
+}
+
+function crownMotif() {
+  return `${ally(32, 40, 6)}
+    <path d="M22 18 L26 8 L30 14 L32 4 L34 14 L38 8 L42 18 L42 24 H22 Z" fill="#fbbf24" opacity="0.85" stroke="#b45309" stroke-width="1.2"/>
+    <circle cx="32" cy="28" r="8" fill="#fbbf24" opacity="0.15"/>`;
+}
+
+function blinkMotif() {
+  return `${ally(18, 46, 5)}${token(44, 18, 4.5)}
+    <circle cx="44" cy="18" r="10" fill="none" stroke="#7dd3fc" stroke-width="1.6" opacity="0.55"/>
+    <path d="M24 42 L38 24" stroke="#bae6fd" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-dasharray="4 3"/>
+    <circle cx="44" cy="18" r="3" fill="#38bdf8" opacity="0.65"/>`;
+}
+
+function landmineMotif() {
+  return `<rect x="18" y="22" width="28" height="28" rx="2" fill="#292524" opacity="0.4" stroke="#57534e" stroke-width="1.2"/>
+    <circle cx="32" cy="36" r="5" fill="#dc2626" stroke="#7f1d1d" stroke-width="1.4"/>
+    <path d="M28 32 L36 40 M36 32 L28 40" stroke="#fca5a5" stroke-width="1.8"/>
+    <text x="38" y="20" font-size="7" fill="#d6d3d1" opacity="0.5">?</text>`;
+}
+
+function backpedalMotif() {
+  return `${token(32, 22, 6)}
+    <path d="M32 30 L32 48" stroke="#fca5a5" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <path d="M24 50 H40" stroke="#64748b" stroke-width="1.8" opacity="0.45"/>
+    <path d="M26 48 L32 42 L38 48" stroke="#fca5a5" stroke-width="1.6" fill="none" opacity="0.55"/>`;
+}
+
+function rootMotif() {
+  return `${token(32, 26, 6)}
+    <path d="M22 42 C28 34 36 34 42 42 M24 48 C30 40 34 40 40 48" stroke="#86efac" stroke-width="2" fill="none" opacity="0.75"/>
+    <path d="M28 46 L32 38 L36 46" stroke="#4ade80" stroke-width="1.4" fill="none" opacity="0.5"/>`;
+}
+
+function sacrificeMotif() {
+  return `${ally(18, 42, 5, 0.4)}${token(46, 24, 6)}
+    <path d="M24 38 L42 28" stroke="#fde68a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M44 22 L48 26 M44 28 L48 24 M40 26 L48 26 M44 22 L44 30" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>`;
+}
+
+function scatterMotif() {
+  return `<rect x="28" y="28" width="8" height="8" rx="1" fill="#475569" opacity="0.45" stroke="#94a3b8" stroke-width="1"/>
+    ${ally(32, 14, 3)}${token(50, 32, 3)}${ally(32, 50, 3)}${token(14, 32, 3)}
+    <path d="M32 24 L32 16" stroke="#bae6fd" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M36 32 L46 32" stroke="#bae6fd" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M32 36 L32 46" stroke="#bae6fd" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M28 32 L18 32" stroke="#bae6fd" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+}
+
+function displacementMotif() {
+  return `${ally(14, 42, 4.5)}${ally(32, 42, 4.5)}
+    <path d="M18 38 L14 28" stroke="#93c5fd" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M36 38 L40 28" stroke="#93c5fd" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <circle cx="14" cy="26" r="4" fill="none" stroke="#7dd3fc" stroke-width="1.2" stroke-dasharray="2 2" opacity="0.55"/>
+    <circle cx="40" cy="26" r="4" fill="none" stroke="#7dd3fc" stroke-width="1.2" stroke-dasharray="2 2" opacity="0.55"/>`;
+}
+
+function sanctuaryPulseMotif() {
+  return `<path d="M8 44 H56" stroke="#64748b" stroke-width="2.2" opacity="0.5"/>
+    ${ally(14, 44, 3.5)}${ally(28, 44, 3.5)}${ally(42, 44, 3.5)}
+    <path d="M24 36 L28 40 L24 44 L20 40 Z" fill="#38bdf8" opacity="0.45" stroke="#7dd3fc" stroke-width="1.2" transform="translate(4, 0)"/>`;
+}
+
+function lastStandMotif() {
+  return `${ally(32, 34, 6)}
+    <path d="M32 20 L42 26 V38 C42 46 32 52 32 52 C32 52 22 46 22 38 V26 Z" fill="#38bdf8" opacity="0.35" stroke="#7dd3fc" stroke-width="1.6"/>
+    <path d="M16 50 L28 38" stroke="#fde68a" stroke-width="2.2" opacity="0.55"/>
+    <text x="12" y="18" font-size="7" fill="#cbd5e1" opacity="0.5">?</text>`;
+}
+
+function cryoBoltMotif() {
+  return `${token(42, 22, 5.5)}${ally(20, 48, 4.5)}
+    <path d="M24 44 L38 28" stroke="#e0f2fe" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M40 16 L44 22 L36 22 Z" fill="#7dd3fc" opacity="0.65"/>
+    <text x="46" y="16" font-size="8" fill="#bae6fd" opacity="0.85">❄</text>`;
+}
+
+function collapseMotif() {
+  return `<rect x="18" y="22" width="28" height="28" rx="2" fill="#292524" opacity="0.35" stroke="#57534e" stroke-width="1.2"/>
+    ${ally(32, 34, 4)}
+    <path d="M22 44 L32 34 L42 44 M24 50 L40 50" stroke="#a8a29e" stroke-width="2" opacity="0.65" stroke-linecap="round"/>
+    <path d="M28 30 L36 38 M36 30 L28 38" stroke="#78716c" stroke-width="1.4" opacity="0.45"/>`;
+}
+
+function lastKingMotif() {
+  return `${ally(32, 38, 7)}
+    <path d="M22 16 L26 6 L30 12 L32 2 L34 12 L38 6 L42 16 L42 22 H22 Z" fill="#fbbf24" opacity="0.8" stroke="#b45309" stroke-width="1.2"/>
+    <path d="M32 28 L36 34 L32 40 L28 34 Z" fill="#38bdf8" opacity="0.4" stroke="#7dd3fc" stroke-width="1.2"/>`;
+}
+
+function snipeMotif() {
+  return `${ally(16, 50, 4)}${token(50, 12, 5.5)}
+    <path d="M20 46 L46 16" stroke="#fde68a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+    <circle cx="50" cy="12" r="8" fill="none" stroke="#fca5a5" stroke-width="1.4" opacity="0.45"/>
+    <path d="M44 18 L50 12 L48 20" stroke="#ef4444" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+}
+
+function dominionMotif() {
+  return `${ally(20, 26, 4.5)}${ally(44, 26, 4.5)}
+    <path d="M20 32 L20 48" stroke="#93c5fd" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M44 32 L44 48" stroke="#93c5fd" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M20 48 L16 42 M20 48 L24 42" stroke="#93c5fd" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M44 48 L40 42 M44 48 L48 42" stroke="#93c5fd" stroke-width="1.8" fill="none" stroke-linecap="round"/>`;
+}
+
 export const EFFECT_ILLUSTRATIONS = {
-  nudge: () => wrap(`${piece(18, 42)} ${ghost(36, 28)} ${arrow(24, 38, 32, 32)}`),
-  backstep: () => wrap(`${piece(32, 24)} ${ghost(32, 44)} ${arrow(32, 30, 32, 40)}`),
-  retreat_3: () => wrap(`${piece(32, 30)} ${arrow(32, 34, 32, 48)}<text x="44" y="46" font-size="8" fill="currentColor" opacity="0.7">×3</text>`),
-  leapfrog: () => wrap(`${piece(14, 46)} ${piece(28, 34, 4.5)} ${ghost(44, 22)} ${arcJump(18, 42, 28, 34, 42, 24)}`),
-  long_step: () => wrap(`${piece(18, 46)} ${ghost(46, 18)} ${arrow(22, 42, 42, 22, 2.4)}`),
-  sidestep: () => wrap(`${piece(14, 32)} ${ghost(46, 32)} ${arrow(20, 32, 42, 32, 2.4)}`),
-  blink_2: () => wrap(`${piece(20, 44)} ${ring(44, 20, 8)} ${piece(44, 20, 4, 0.35)} ${arrow(26, 40, 38, 26)}<circle cx="44" cy="20" r="3" fill="currentColor" opacity="0.6"/>`),
-  random_teleport: () =>
-    wrap(
-      `${piece(32, 40, 5)}<path d="M18 18 Q32 8 46 18 Q38 32 32 28 Q26 32 18 18" stroke="currentColor" stroke-width="1.6" fill="none" opacity="0.45" stroke-dasharray="3 2"/><text x="40" y="22" font-size="11" fill="currentColor" opacity="0.75">?</text>${piece(28, 20, 3.5, 0.4)}`
-    ),
-  recall: () => wrap(`${piece(32, 28)} ${arrow(32, 32, 32, 44)}<path d="M14 48 H50" stroke="currentColor" stroke-width="2" opacity="0.45"/><text x="18" y="46" font-size="6" fill="currentColor" opacity="0.55">back row</text>`),
-  repel: () => wrap(`${piece(24, 36)} ${enemy(40, 36)} ${ghost(54, 36)} ${arrow(30, 36, 48, 36)}`),
-  mass_nudge: () => wrap(`${piece(16, 40)} ${piece(32, 40)} ${arrow(20, 36, 16, 28)} ${arrow(36, 36, 40, 28)}`),
-  swap_friendly: () => wrap(`${piece(18, 32)} ${piece(46, 32)} ${arrow(24, 32, 40, 32)} ${arrow(40, 28, 24, 28)}`),
-  dominion: () => wrap(`${piece(22, 28)} ${piece(42, 28)} ${arrow(22, 32, 22, 44)} ${arrow(42, 32, 42, 44)}`),
+  nudge: () => commonBleed("nu", "#94a3b8", "#1e293b", nudgeMotif()),
+  backstep: () => commonBleed("bs", "#9ca3af", "#1f2937", backstepMotif()),
+  retreat_3: () => commonBleed("ret", "#93c5fd", "#1e3a5f", retreatMotif()),
+  leapfrog: () => commonBleed("lf", "#94a3b8", "#1e293b", leapfrogMotif()),
+  long_step: () => uncommonBleed("ls", "#7dd3fc", "#1e3a5f", longStepMotif()),
+  sidestep: () => commonBleed("ss", "#9ca3af", "#1f2937", sidestepMotif()),
+  blink_2: () => uncommonBleed("bl", "#38bdf8", "#0c4a6e", blinkMotif()),
+  random_teleport: () => commonBleed("rtp", "#a78bfa", "#312e81", randomTeleportMotif()),
+  recall: () => commonBleed("rc", "#93c5fd", "#1e3a5f", recallMotif()),
+  repel: () => commonBleed("rp", "#94a3b8", "#1e293b", repelMotif()),
+  mass_nudge: () => uncommonBleed("mn", "#7dd3fc", "#1e3a5f", displacementMotif()),
+  swap_friendly: () => commonBleed("sw", "#a78bfa", "#312e81", shadowSwapMotif()),
+  dominion: () => uncommonBleed("dm", "#60a5fa", "#1e3a5f", dominionMotif()),
 
-  shield_1: () => wrap(`${piece(32, 36, 6)} ${shield(32, 34, 0.9)}`),
-  shield_2: () => wrap(`${piece(32, 36, 6)} ${shield(32, 34, 0.85)} ${ring(32, 36, 16)}`),
+  shield_1: () => commonBleed("s1", "#60a5fa", "#1e3a5f", wardMotif()),
+  shield_2: () => uncommonBleed("s2", "#38bdf8", "#0c4a6e", aegisMotif()),
   bulwark: () => rareBleed("bw", "#b794f4", "#553c7a", bulwarkMotif()),
-  barrier: () => wrap(`${square(32, 32, 14, 0.2)}<path d="M26 20 V44 M38 20 V44" stroke="currentColor" stroke-width="2.5" opacity="0.75"/>`),
-  last_stand: () => wrap(`${piece(32, 34, 6)} ${shield(32, 32, 0.8)}<path d="M18 48 L28 38" stroke="currentColor" stroke-width="2" opacity="0.5"/>`),
+  barrier: () => commonBleed("br", "#94a3b8", "#1f2937", barrierMotif()),
+  last_stand: () => uncommonBleed("ls", "#38bdf8", "#0c4a6e", lastStandMotif()),
   fortify: () => rareBleed("fo", "#a78bfa", "#4c1d95", fortifyMotif()),
-  sanctuary_pulse: () => wrap(`<path d="M12 42 H52" stroke="currentColor" stroke-width="2" opacity="0.4"/>${piece(16, 42, 4)}${piece(28, 42, 4)}${piece(40, 42, 4)}${piece(52, 42, 4, 0.35)}${shield(28, 40, 0.55)}`),
+  sanctuary_pulse: () => uncommonBleed("sp", "#7dd3fc", "#1e3a5f", sanctuaryPulseMotif()),
   sanctuary: () => rareBleed("sa", "#c4b5fd", "#4c1d95", sanctuaryMotif()),
-  deflect_1: () => wrap(`${piece(24, 36)} ${shield(24, 34, 0.65)} ${arrow(34, 30, 48, 24)} ${enemy(50, 22, 4)}<path d="M30 28 L36 22" stroke="currentColor" stroke-width="1.8" opacity="0.6"/>`),
-  anchor_2: () => wrap(`${piece(24, 34)} ${piece(40, 34)}<path d="M32 14 V28 M32 28 C32 34 26 36 26 42 C26 46 32 48 32 48 C32 48 38 46 38 42 C38 36 32 34 32 28 Z" fill="currentColor" opacity="0.55"/>`),
-  iron_will: () => wrap(`${piece(32, 34, 6)}<path d="M18 24 C24 34 20 44 32 44 C44 44 40 34 46 24" stroke="currentColor" stroke-width="2" fill="none"/><path d="M22 30 L28 36 M42 30 L36 36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>`),
+  deflect_1: () => uncommonBleed("df", "#38bdf8", "#0c4a6e", deflectMotif()),
+  anchor_2: () => commonBleed("an", "#94a3b8", "#1f2937", anchorMotif()),
+  iron_will: () => commonBleed("iw", "#9ca3af", "#1f2937", ironWillMotif()),
   vengeance: () => rareBleed("vg", "#9f7aea", "#3b0764", vengeanceMotif()),
-  rally: () => wrap(`${piece(32, 34, 6)} ${piece(18, 42, 4)} ${piece(46, 42, 4)} ${ring(32, 34, 20)}`),
+  rally: () => commonBleed("rl", "#60a5fa", "#1e3a5f", rallyMotif()),
 
-  forward_bolt: () => wrap(`${piece(24, 44)} ${enemy(40, 28, 5)} ${bolt(28, 40, 38, 32)}`),
+  forward_bolt: () => uncommonBleed("fb", "#fde68a", "#1e3a5f", stabMotif()),
   destroy_unshielded: () => legendaryBleed("sh", "#4338ca", "#1e1b4b", shatterMotif()),
   pyromancy: () => legendaryBleed("py", "#ea580c", "#431407", pyromancyMotif()),
-  snipe: () => wrap(`${piece(18, 48, 4)} ${enemy(50, 14, 5)} ${arrow(22, 44, 46, 18, 2)}`),
-  duel: () => fullBleed("#d4b896", duelMotif()),
-  sacrifice: () => wrap(`${piece(20, 40, 5, 0.35)} ${arrow(26, 36, 44, 28)} ${enemy(46, 26, 6)} ${xMark(46, 26, 5)}`),
+  snipe: () => uncommonBleed("sn", "#fde68a", "#1e3a5f", snipeMotif()),
+  duel: () => commonBleed("du", "#d4b896", "#3d2817", duelMotif()),
+  sacrifice: () => uncommonBleed("sc", "#fca5a5", "#1e3a5f", sacrificeMotif()),
   cull: () => epicBleed("cu", "#a78bfa", "#2e1065", cullMotif()),
   execution: () => epicBleed("ex", "#d4a574", "#3d2817", executionMotif()),
   chain_lightning: () => legendaryBleed("cl", "#2563eb", "#0c1929", chainLightningMotif()),
-  backstab: () => fullBleed("#c4a574", backstabMotif()),
-  cryo_bolt: () => wrap(`${enemy(40, 26, 5)} ${piece(22, 44, 4)} ${bolt(26, 40, 36, 30)}<path d="M40 18 L44 22 L36 22 Z" fill="currentColor" opacity="0.5"/>`),
+  backstab: () => uncommonBleed("bk", "#c4a574", "#2d4a6e", backstabMotif()),
+  cryo_bolt: () => uncommonBleed("cb", "#7dd3fc", "#0c4a6e", cryoBoltMotif()),
   bomb: () => legendaryBleed("bm", "#f59e0b", "#78350f", bombMotif()),
   shockwave: () => epicBleed("sw", "#c4b5fd", "#3b1f6e", shockwaveMotif()),
   magnet: () => epicBleed("mg", "#f0c060", "#312e81", magnetMotif()),
 
-  poison_3: () => wrap(`${enemy(32, 30, 6)}<text x="27" y="18" font-size="11" fill="currentColor" opacity="0.85">☠</text><path d="M28 40 H36" stroke="currentColor" stroke-width="2" opacity="0.45"/>`),
-  root_2: () => wrap(`${enemy(32, 28, 6)}<path d="M24 40 C28 34 36 34 40 40 M26 44 C30 38 34 38 38 44" stroke="currentColor" stroke-width="1.8" fill="none" opacity="0.65"/>`),
-  panic: () => wrap(`${enemy(32, 26, 6)} ${arrow(32, 32, 32, 46)}<path d="M26 48 L32 42 L38 48" stroke="currentColor" stroke-width="1.6" fill="none"/>`),
+  poison_3: () => uncommonBleed("po", "#86efac", "#14532d", poisonMotif()),
+  root_2: () => uncommonBleed("ro", "#86efac", "#14532d", rootMotif()),
+  panic: () => commonBleed("pn", "#fca5a5", "#1f2937", panicMotif()),
   blizzard: () => rareBleed("bz", "#7dd3fc", "#1e3a5f", blizzardMotif()),
-  snowball: () => wrap(`${piece(32, 34, 6)}<circle cx="20" cy="22" r="5" fill="currentColor" opacity="0.35"/><text x="16" y="25" font-size="8" fill="currentColor" opacity="0.7">❄</text>`),
+  snowball: () => commonBleed("sb", "#bae6fd", "#0c4a6e", snowballMotif()),
   berserk: () => legendaryBleed("bk", "#991b1b", "#450a0a", berserkMotif()),
-  create_foe: () => wrap(`${square(32, 34, 16, 0.15)}${enemy(32, 34, 6)}<text x="38" y="22" font-size="7" fill="currentColor" opacity="0.55">+</text>`),
+  create_foe: () => commonBleed("cf", "#78716c", "#292524", createFoeMotif()),
   deep_freeze: () => epicBleed("df", "#7dd3fc", "#0c4a6e", deepFreezeMotif()),
-  reverse_only_2: () => wrap(`${enemy(32, 24, 6)} ${arrow(32, 28, 32, 44)}<path d="M24 48 H40" stroke="currentColor" stroke-width="1.8" opacity="0.4"/>`),
-  press: () => wrap(`${enemy(32, 32, 6)} ${arrow(32, 38, 32, 48)}`),
+  reverse_only_2: () => uncommonBleed("rv", "#fca5a5", "#1e3a5f", backpedalMotif()),
+  press: () => commonBleed("pr", "#fca5a5", "#1f2937", pressMotif()),
   tangle: () => rareBleed("tg", "#93c5fd", "#312e81", tangleMotif()),
   blind: () => rareBleed("bl", "#a78bfa", "#4c1d95", blindMotif()),
   confusion: () => epicBleed("cf", "#c4b5fd", "#4c1d95", confusionMotif()),
   fog_2: () => wrap(`${piece(32, 34, 6)}<ellipse cx="32" cy="24" rx="16" ry="8" fill="currentColor" opacity="0.22"/>`),
 
-  crown: () => wrap(`${piece(32, 38, 6)} ${crown(32, 24)}`),
-  demote: () => wrap(`${enemy(32, 36, 6)} ${crown(32, 18)}<path d="M24 16 L40 32 M40 16 L24 32" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>`),
+  crown: () => uncommonBleed("cr", "#fbbf24", "#451a03", crownMotif()),
+  demote: () => commonBleed("dm", "#fca5a5", "#1f2937", demoteMotif()),
   fusion: () => rareBleed("fu", "#8b5cf6", "#4c1d95", fusionMotif()),
   clone: () => epicBleed("cln", "#93c5fd", "#312e81", cloneMotif()),
   chameleon: () => rareBleed("ch", "#86efac", "#312e81", chameleonMotif()),
   hibernation: () => rareBleed("hi", "#c4b5fd", "#4c1d95", hibernationMotif()),
 
-  quicksand: () => wrap(`${square(32, 34, 16, 0.15)}<path d="M20 40 C26 36 38 36 44 40 C38 44 26 44 20 40 Z" fill="currentColor" opacity="0.35"/><text x="38" y="24" font-size="7" fill="currentColor" opacity="0.45">?</text>`),
-  landmine: () => wrap(`${square(32, 34, 16, 0.15)}<circle cx="32" cy="34" r="4" fill="currentColor" opacity="0.55"/><path d="M28 30 L36 38 M36 30 L28 38" stroke="currentColor" stroke-width="1.5"/>`),
-  collapse: () => wrap(`${square(32, 34, 16, 0.2)} ${piece(32, 34, 4)}<path d="M24 42 L32 34 L40 42 M26 46 L38 46" stroke="currentColor" stroke-width="1.6" opacity="0.55"/>`),
+  quicksand: () => commonBleed("qs", "#a8a29e", "#292524", quicksandMotif()),
+  landmine: () => uncommonBleed("lm", "#78716c", "#292524", landmineMotif()),
+  collapse: () => uncommonBleed("co", "#78716c", "#292524", collapseMotif()),
   darkness: () => rareBleed("dk", "#6d28d9", "#1e1b4b", darknessMotif()),
-  scatter: () => wrap(`${square(32, 32, 8, 0.25)}${piece(32, 20, 3)}${piece(48, 32, 3)}${piece(32, 44, 3)}${piece(16, 32, 3)}${arrow(32, 28, 32, 22)}${arrow(36, 32, 44, 32)}`),
-  butterfly: () => wrap(`${square(32, 32, 18, 0.12)}${piece(26, 28, 3)}${piece(38, 30, 3)}${piece(30, 38, 3)}${piece(40, 36, 3)}<path d="M26 28 Q32 20 38 30 Q32 42 30 38" stroke="currentColor" stroke-width="1.4" fill="none" opacity="0.5"/>`),
+  scatter: () => uncommonBleed("st", "#7dd3fc", "#1e3a5f", scatterMotif()),
+  butterfly: () => commonBleed("bf", "#a78bfa", "#312e81", butterflyMotif()),
   call_forward: () => rareBleed("cfw", "#fca5a5", "#4c1d95", callForwardMotif()),
   earthquake: () => legendaryBleed("eq", "#78716c", "#292524", earthquakeMotif()),
 
   coin_flip: () => coinFlipMotif(),
-  ignore: () => wrap(`${piece(32, 36, 6)}<path d="M14 20 L22 28 M22 20 L14 28" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><text x="36" y="22" font-size="8" fill="currentColor" opacity="0.55">skip</text>`),
+  ignore: () => commonBleed("ig", "#94a3b8", "#1f2937", ignoreMotif()),
   counterspell: () => epicBleed("cs", "#a78bfa", "#2e1065", counterspellMotif()),
   purify: () => epicBleed("pu", "#fde68a", "#4a3520", purifyMotif()),
   trickster: () => rareBleed("tr", "#c4b5fd", "#553c7a", tricksterMotif()),
   offering: () => rareBleed("of", "#d8b4fe", "#553c7a", offeringMotif()),
   quick_march: () => epicBleed("qm", "#60a5fa", "#1e3a5f", quickMarchMotif()),
   constitution: () => epicBleed("co", "#fbbf24", "#451a03", constitutionMotif()),
-  last_king: () => wrap(`${piece(32, 36, 7)} ${crown(32, 20)} ${shield(32, 34, 0.65)}`),
+  last_king: () => uncommonBleed("lk", "#fbbf24", "#1e3a5f", lastKingMotif()),
   revive: () => legendaryBleed("rv", "#15803d", "#052e16", reviveMotif()),
   mind_control: () => epicBleed("mc", "#c4b5fd", "#3b0764", mindControlMotif()),
   bounty: () => epicBleed("bo", "#fbbf24", "#451a03", bountyMotif()),

@@ -200,6 +200,8 @@ export function renderSpellCardEl(def, opts = {}) {
     def.rarity === "rare" ? "spell-card--rare-fx" : "",
     def.rarity === "epic" ? "spell-card--epic-fx" : "",
     def.rarity === "legendary" ? "spell-card--legendary-fx" : "",
+    def.rarity === "uncommon" ? "spell-card--uncommon-fx" : "",
+    def.rarity === "common" ? "spell-card--common-fx" : "",
     `theme-${theme}`,
     opts.disabled ? "disabled" : "",
     opts.selected ? "selected" : "",
@@ -221,7 +223,11 @@ export function renderSpellCardEl(def, opts = {}) {
         ? '<div class="spell-card__fx spell-card__fx--epic" aria-hidden="true"></div>'
         : def.rarity === "rare"
           ? '<div class="spell-card__fx spell-card__fx--rare" aria-hidden="true"></div>'
-          : "";
+          : def.rarity === "uncommon"
+            ? '<div class="spell-card__fx spell-card__fx--uncommon" aria-hidden="true"></div>'
+            : def.rarity === "common"
+              ? '<div class="spell-card__fx spell-card__fx--common" aria-hidden="true"></div>'
+              : "";
 
   const fullBleedArt = def?.effect && isFullBleedEffect(def.effect);
 
