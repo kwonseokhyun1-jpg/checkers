@@ -221,7 +221,7 @@ body.deck-editing .game-nav.tabs {
   overflow-y: hidden;
   padding: 0.25rem 0 0.4rem;
   -webkit-overflow-scrolling: touch;
-  min-height: 5.75rem;
+  min-height: 6.25rem;
   max-height: none;
   align-items: flex-start;
 }
@@ -256,8 +256,10 @@ body.deck-editing .game-nav.tabs {
 .deck-slot-wrap--strip .spell-card__art-frame {
   order: 1;
   padding: 0;
-  flex: 1 1 auto;
-  min-height: 2.85rem;
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 7 / 6;
+  min-height: 0;
   position: relative;
 }
 
@@ -275,7 +277,6 @@ body.deck-editing .game-nav.tabs {
   width: 100%;
   height: 100%;
   border-width: 0;
-  aspect-ratio: unset;
 }
 
 .deck-slot-wrap--strip .spell-card__title-frame {
@@ -520,8 +521,10 @@ body.deck-editing .game-nav.tabs {
 }
 
 #deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art-frame {
-  flex: 1 1 auto;
-  min-height: 5rem;
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 7 / 6;
+  min-height: 0;
   position: relative;
   padding: 0;
 }
@@ -531,7 +534,6 @@ body.deck-editing .game-nav.tabs {
   inset: 0;
   width: 100%;
   height: 100%;
-  aspect-ratio: unset;
 }
 
 #deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__svg:not(.spell-card__svg--full-bleed) {
@@ -690,8 +692,8 @@ body.deck-editing .game-nav.tabs {
     width: auto;
   }
 
-  .deck-slot-wrap--strip .spell-card__art-frame {
-    min-height: 4.5rem;
+  .deck-editor__strip {
+    min-height: 7.5rem;
   }
 
   .deck-slot-wrap--strip .spell-card__name {
