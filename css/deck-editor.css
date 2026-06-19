@@ -3,7 +3,7 @@
  */
 
 :root {
-  --deck-editor-nav-space: calc(var(--nav-height, 4.25rem) + var(--game-safe-bottom, 0px) + 0.75rem);
+  --deck-editor-save-bar-space: calc(var(--game-safe-bottom, 0px) + 4.5rem);
 }
 
 /* ── Full-screen edit mode ── */
@@ -47,13 +47,7 @@ body.deck-editing #view-deck {
 }
 
 body.deck-editing .game-nav.tabs {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 40;
-  margin: 0 auto;
-  max-width: 480px;
+  display: none;
 }
 
 #deck-subview-edit:not(.hidden) {
@@ -359,7 +353,7 @@ body.deck-editing .game-nav.tabs {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding-bottom: calc(var(--deck-editor-nav-space) + 4.5rem);
+  padding-bottom: var(--deck-editor-save-bar-space);
   scroll-padding-top: 0.5rem;
 }
 
@@ -574,7 +568,7 @@ body.deck-editing .game-nav.tabs {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--nav-height, 4.25rem) + var(--game-safe-bottom, 0px));
+  bottom: calc(var(--game-safe-bottom, 0px) + 0.5rem);
   z-index: 35;
   margin: 0 auto;
   max-width: 480px;
@@ -636,7 +630,7 @@ body.deck-editing .game-nav.tabs {
   }
 
   body.deck-editing .game-nav.tabs {
-    position: static;
+    display: none;
   }
 
   .deck-editor {
