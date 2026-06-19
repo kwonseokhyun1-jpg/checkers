@@ -46,6 +46,7 @@ import {
   COSMETICS_UNLOCK_MESSAGE,
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
+import { syncExplorer } from "./achievements.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { smallMysteryBoxSvgMarkup, bigMysteryBoxSvgMarkup } from "./mysteryBoxArt.js";
@@ -1576,6 +1577,7 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
         const result = recordLevelClear(profile, levelId, stars);
         const { gems, stars: bestStars, starsGained } = result;
         profile.gems += gems;
+        syncExplorer(profile);
         saveProfile(profile);
         updateCurrencyHeader();
         syncNavUnlockState();

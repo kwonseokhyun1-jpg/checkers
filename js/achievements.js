@@ -1,6 +1,7 @@
 /**
  * Achievements catalog, progress, and title claim flow.
  */
+import { countClearedLevelsInWorld } from "./adventure.js";
 import { getPlayableCards } from "./cardCatalog.js";
 import { normalizeCosmetics } from "./cosmetics.js";
 import { unlockTitleForAchievement, TITLE_BY_ACHIEVEMENT, MAGE_TITLE_BY_ID } from "./mageTitles.js";
@@ -91,6 +92,13 @@ export const ACHIEVEMENTS = [
     target: 100,
     track: "state",
   },
+  {
+    id: "explorer",
+    title: "Explorer",
+    description: "Clear all 10 stages in Adventure chapter 5 (Legend's End).",
+    target: 10,
+    track: "state",
+  },
 ];
 
 export const ACHIEVEMENT_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
@@ -98,6 +106,8 @@ export const ACHIEVEMENT_BY_ID = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.i
 const ARCANE_MASTERY_TARGET = 50;
 const ARCANE_MASTERY_COPIES = 3;
 const CHAMPION_TARGET = 100;
+const EXPLORER_CHAPTER = 5;
+const EXPLORER_TARGET = 10;
 
 const PLAYABLE_SPELL_IDS = getPlayableCards().map((c) => c.id);
 
@@ -132,6 +142,7 @@ export function isAchievementComplete(profile, id) {
   if (!def) return false;
   if (id === "arcane_mastery") return hasArcaneMastery(profile);
   if (id === "champion") return getPvpWinCount(profile) >= CHAMPION_TARGET;
+  if (id === "explorer") return countChapter5StagesCleared(profile) >= EXPLORER_TARGET;
   return getAchievementProgress(profile, id) >= def.target;
 }
 
@@ -193,6 +204,10 @@ export function hasArcaneMastery(profile) {
   return countTripledSpells(profile) >= ARCANE_MASTERY_TARGET;
 }
 
+export function countChapter5StagesCleared(profile) {
+  return countClearedLevelsInWorld(profile?.adventure, EXPLORER_CHAPTER);
+}
+
 /** Sync arcane_mastery progress from collection; returns newly completed ids */
 export function syncArcaneMastery(profile) {
   profile.achievements = normalizeAchievements(profile.achievements);
@@ -213,6 +228,16 @@ export function syncChampion(profile) {
   return [];
 }
 
+/** Sync explorer progress from Adventure chapter 5 clears; returns newly completed ids */
+export function syncExplorer(profile) {
+  profile.achievements = normalizeAchievements(profile.achievements);
+  const count = Math.min(EXPLORER_TARGET, countChapter5StagesCleared(profile));
+  const prev = profile.achievements.progress.explorer || 0;
+  profile.achievements.progress.explorer = count;
+  if (count >= EXPLORER_TARGET && prev < EXPLORER_TARGET) return ["explorer"];
+  return [];
+}
+
 export function achievementRewardTitle(id) {
   const titleId = TITLE_BY_ACHIEVEMENT[id]?.id;
   return titleId ? MAGE_TITLE_BY_ID[titleId] : null;
@@ -229,6 +254,10 @@ export function progressLabel(profile, id) {
     const wins = Math.min(CHAMPION_TARGET, getPvpWinCount(profile));
     return `${wins} / ${CHAMPION_TARGET} PvP wins`;
   }
+  if (id === "explorer") {
+    const cleared = Math.min(EXPLORER_TARGET, countChapter5StagesCleared(profile));
+    return `${cleared} / ${EXPLORER_TARGET} chapter 5 stages`;
+  }
   const cur = Math.min(def.target, getAchievementProgress(profile, id));
   return `${cur} / ${def.target}`;
 }
@@ -242,6 +271,9 @@ export function achievementProgressRatio(profile, id) {
   }
   if (id === "champion") {
     return Math.min(1, getPvpWinCount(profile) / def.target);
+  }
+  if (id === "explorer") {
+    return Math.min(1, countChapter5StagesCleared(profile) / def.target);
   }
   return Math.min(1, getAchievementProgress(profile, id) / def.target);
 }
