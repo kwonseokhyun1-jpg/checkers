@@ -1043,6 +1043,38 @@ body {
 .spell-card--compact .spell-card__desc,
 .spell-card.compact .spell-card__desc { -webkit-line-clamp: 2; }
 
+/* Gallery cards — chest-pull proportions, hint instead of rules text */
+.spell-card--gallery {
+  max-width: none;
+}
+.spell-card--gallery .spell-card__art-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.spell-card--gallery .spell-card__art {
+  height: auto;
+  aspect-ratio: 5 / 6;
+  min-height: 4.75rem;
+  max-height: none;
+}
+.spell-card--gallery .spell-card__svg:not(.spell-card__svg--full-bleed) {
+  width: 72%;
+  height: 72%;
+}
+.spell-card--gallery .spell-card__text-frame--hint {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 0.18rem 0.35rem 0.22rem;
+  text-align: center;
+}
+.spell-card--gallery .spell-card__hint {
+  margin: 0;
+  font-size: 0.58rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.2;
+}
+
 .spell-card--small { max-width: 100px; }
 .spell-card--small .spell-card__art { height: 56px; }
 .spell-card--small .spell-card__svg:not(.spell-card__svg--full-bleed) { width: 48px; height: 48px; }

@@ -878,39 +878,35 @@ function appendCollectionCard(parent, def, opts = {}) {
 
   if (deckEdit) {
     const wrap = document.createElement("div");
-    wrap.className = "deck-collection-row" + (isCardNew(profile, def.id) ? " deck-collection-row--new" : "");
+    wrap.className = "deck-editor-tile" + (isCardNew(profile, def.id) ? " deck-editor-tile--new" : "");
 
-    const main = document.createElement("div");
-    main.className = "deck-collection-row__main";
-
-    const art = document.createElement("div");
-    art.className = "deck-collection-row__art";
-    art.addEventListener("click", () => openInspect());
-    const card = renderSpellCardEl(def, { static: true, small: true });
-    card.classList.add("deck-collection-row__card");
-    art.appendChild(card);
+    const card = renderSpellCardEl(def, {
+      button: true,
+      gallery: true,
+      onClick: () => openInspect(),
+    });
+    card.classList.add("deck-editor-tile__card");
+    card.title = `${def.name} — tap for full card`;
 
     const ownedLabel = owned > 0 ? `Owned ${owned}/${cap}` : "Not in collection";
     const meta = document.createElement("div");
-    meta.className = "deck-collection-row__meta";
-    meta.innerHTML = `${ownedLabel} · In deck ${inDeck}/${cap}${isCardNew(profile, def.id) ? '<span class="deck-collection-row__new">New</span>' : ""}`;
+    meta.className = "deck-editor-tile__meta";
+    meta.innerHTML = `${ownedLabel} · In deck ${inDeck}/${cap}${isCardNew(profile, def.id) ? '<span class="deck-editor-tile__new">New</span>' : ""}`;
     meta.addEventListener("click", () => openInspect());
-
-    main.append(art, meta);
 
     const action = document.createElement("button");
     action.type = "button";
-    action.className = "deck-collection-row__action";
+    action.className = "deck-editor-tile__action";
 
     if (addCheck.ok) {
-      action.classList.add("deck-collection-row__action--add");
+      action.classList.add("deck-editor-tile__action--add");
       action.textContent = "+ Add to deck";
       action.addEventListener("click", (e) => {
         e.stopPropagation();
         addCardToWorkingDeck(def.id);
       });
     } else if (showBuyAdd) {
-      action.classList.add("deck-collection-row__action--buy");
+      action.classList.add("deck-editor-tile__action--buy");
       action.textContent = canAfford ? `Add for ${cost} gems` : `Need ${cost} gems`;
       action.disabled = !canAfford;
       action.addEventListener("click", (e) => {
@@ -918,7 +914,7 @@ function appendCollectionCard(parent, def, opts = {}) {
         buyAndAddCardToWorkingDeck(def.id, statusEl);
       });
     } else {
-      action.classList.add("deck-collection-row__action--disabled");
+      action.classList.add("deck-editor-tile__action--disabled");
       action.disabled = true;
       if (workingDeck.length >= DECK_SIZE) action.textContent = `Deck full (${DECK_SIZE}/${DECK_SIZE})`;
       else if (inDeck >= cap) action.textContent = "Max copies in deck";
@@ -927,7 +923,7 @@ function appendCollectionCard(parent, def, opts = {}) {
       else action.textContent = "Can't add";
     }
 
-    wrap.append(main, action);
+    wrap.append(card, meta, action);
     parent.appendChild(wrap);
     return;
   }
