@@ -2,7 +2,6 @@
  * Full-size card inspect modal (art + name + description)
  */
 import { renderSpellCardEl } from "./cardArt.js";
-import { hasCardArt } from "./cardArtManifest.js";
 
 function $(id) {
   return document.getElementById(id);
@@ -36,12 +35,6 @@ export function showCardPreview(def, opts = {}) {
 
   mount.innerHTML = "";
   mount.appendChild(renderSpellCardEl(def, { static: true }));
-  if (hasCardArt(def.id) && def.desc) {
-    const desc = document.createElement("p");
-    desc.className = "card-preview-desc";
-    desc.textContent = def.desc;
-    mount.appendChild(desc);
-  }
 
   if (actions) {
     actions.innerHTML = "";

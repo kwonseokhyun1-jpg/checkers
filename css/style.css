@@ -816,77 +816,6 @@ body {
   50% { transform: translateX(30%) rotate(0deg); opacity: 0.85; }
 }
 .spell-card__svg { width: 64px; height: 64px; }
-
-/* Portrait raster art — uploaded images are complete card faces */
-.spell-card--portrait-art {
-  padding: 0;
-  max-width: none;
-}
-.spell-card--portrait-art .spell-card__frame {
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  border-radius: 8px;
-  overflow: hidden;
-}
-.spell-card--portrait-art:not(.disabled):hover .spell-card__frame {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
-}
-.spell-card--portrait-art.selected .spell-card__frame {
-  box-shadow: 0 0 0 2px var(--accent-gold);
-}
-.spell-card--portrait-art .spell-card__art {
-  height: auto;
-  aspect-ratio: 276 / 294;
-  background: transparent;
-  display: block;
-}
-.spell-card--portrait-art .spell-card__img {
-  position: static;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  display: block;
-}
-.spell-card--portrait-art .spell-card__art-shine,
-.spell-card--portrait-art .spell-card__sigil,
-.spell-card--portrait-art .spell-card__body {
-  display: none;
-}
-.spell-card--portrait-art .spell-card__art-fallback {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.spell-card--portrait-art .spell-card__art-fallback .spell-card__svg {
-  width: 64px;
-  height: 64px;
-}
-
-.spell-card__img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-  display: block;
-}
-.spell-card__art-fallback {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.spell-card__art-fallback .spell-card__svg {
-  width: 64px;
-  height: 64px;
-}
 .spell-card__sigil {
   position: absolute;
   bottom: 4px;
@@ -954,23 +883,8 @@ body {
 
 .spell-card--compact,
 .spell-card.compact { max-width: 140px; }
-.spell-card--portrait-art.spell-card--compact,
-.spell-card--portrait-art.compact {
-  max-width: 120px;
-}
-.spell-card--portrait-art.spell-card--small .spell-card__art {
-  height: auto;
-}
-.spell-card--portrait-art.spell-card--tiny .spell-card__art,
-.spell-card--portrait-art.tiny .spell-card__art {
-  height: auto;
-}
 .spell-card--compact .spell-card__art,
 .spell-card.compact .spell-card__art { height: 72px; }
-.spell-card--portrait-art.spell-card--compact .spell-card__art,
-.spell-card--portrait-art.compact .spell-card__art {
-  height: auto;
-}
 .spell-card--compact .spell-card__name,
 .spell-card.compact .spell-card__name { font-size: 0.75rem; }
 .spell-card--compact .spell-card__desc,
@@ -1189,12 +1103,6 @@ body {
   padding: 0.25rem;
   scroll-snap-align: start;
 }
-.hand.spell-hand .spell-card--portrait-art {
-  flex: 0 0 4.35rem;
-  width: 4.35rem;
-  max-width: 4.35rem;
-  padding: 0;
-}
 .hand.spell-hand.spell-hand--crowded {
   gap: 0.35rem;
   scroll-snap-type: x proximity;
@@ -1204,16 +1112,8 @@ body {
   width: 4.85rem;
   max-width: 4.85rem;
 }
-.hand.spell-hand.spell-hand--crowded .spell-card--portrait-art {
-  flex-basis: 3.85rem;
-  width: 3.85rem;
-  max-width: 3.85rem;
-}
 .hand.spell-hand.spell-hand--crowded .spell-card__art {
   height: 2.85rem;
-}
-.hand.spell-hand .spell-card--portrait-art .spell-card__art {
-  height: auto;
 }
 
 .hand.spell-hand .spell-card__body {
@@ -1898,21 +1798,11 @@ body.tutorial-match-active .card-preview-modal {
 }
 .card-preview-mount {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.65rem;
+  justify-content: center;
 }
 .card-preview-mount .spell-card {
   max-width: 200px;
   pointer-events: none;
-}
-.card-preview-desc {
-  margin: 0;
-  max-width: 280px;
-  font-size: 0.82rem;
-  line-height: 1.45;
-  color: var(--text-muted);
-  text-align: center;
 }
 .card-preview-mount .spell-card__desc {
   -webkit-line-clamp: unset;
