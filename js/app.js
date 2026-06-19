@@ -1091,7 +1091,6 @@ function renderDeckEditor() {
   const status = $("deck-status");
   const heading = $("edit-deck-heading");
   const countBadge = $("deck-count-badge");
-  const countBadgeBottom = $("deck-count-badge-bottom");
   const progressBar = $("deck-progress-bar");
   if (!collEl || !deckEl) return;
 
@@ -1110,10 +1109,6 @@ function renderDeckEditor() {
   if (countBadge) {
     countBadge.textContent = countLabel;
     countBadge.classList.toggle("deck-editor__count--ready", val.valid);
-  }
-  if (countBadgeBottom) {
-    countBadgeBottom.textContent = countLabel;
-    countBadgeBottom.classList.toggle("deck-editor__count--ready", val.valid);
   }
   const progressFill = $("deck-progress-fill");
   const pct = Math.min(100, (workingDeck.length / DECK_SIZE) * 100);
@@ -1777,7 +1772,6 @@ function init() {
   });
   $("btn-auto-finish-deck")?.addEventListener("click", autoFinishDeck);
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
-  $("btn-save-deck-bottom")?.addEventListener("click", saveWorkingDeck);
   $("btn-back-adventure")?.addEventListener("click", closeAdventurePrebattle);
   $("adventure-stage-backdrop")?.addEventListener("click", closeAdventurePrebattle);
   $("btn-start-adventure")?.addEventListener("click", startAdventureMatch);

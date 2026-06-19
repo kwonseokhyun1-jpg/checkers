@@ -2,10 +2,6 @@
  * Deck editor — full-screen mobile layout, chest-pull style collection tiles
  */
 
-:root {
-  --deck-editor-save-bar-space: calc(var(--game-safe-bottom, 0px) + 4.5rem);
-}
-
 /* ── Full-screen edit mode ── */
 body.deck-editing {
   overflow: hidden;
@@ -379,7 +375,7 @@ body.deck-editing .game-nav.tabs {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  padding-bottom: var(--deck-editor-save-bar-space);
+  padding-bottom: calc(var(--game-safe-bottom, 0px) + 0.75rem);
   scroll-padding-top: 0.5rem;
 }
 
@@ -557,48 +553,6 @@ body.deck-editing .game-nav.tabs {
   margin-bottom: 0;
 }
 
-
-/* ── Mobile bottom save bar (always reachable while scrolling) ── */
-.deck-editor__save-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-shrink: 0;
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: calc(var(--game-safe-bottom, 0px) + 0.5rem);
-  z-index: 35;
-  margin: 0 auto;
-  max-width: 480px;
-  padding: 0.45rem 0.65rem;
-  background: rgba(38, 36, 33, 0.96);
-  border-top: 1px solid #4a4845;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.4);
-}
-
-.deck-editor__save-bar-count {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  white-space: nowrap;
-}
-
-.deck-editor__save-bar-count.deck-editor__count--ready {
-  color: var(--accent-primary, #81b64c);
-}
-
-.deck-editor__save-bar-btn {
-  flex: 1;
-  max-width: 12rem;
-  min-height: 2.65rem;
-  margin: 0;
-  padding: 0.5rem 1rem;
-  font-size: 0.88rem;
-}
-
 @media (min-width: 900px) {
   body.deck-editing {
     overflow: auto;
@@ -668,10 +622,6 @@ body.deck-editing .game-nav.tabs {
     gap: 0.75rem;
     min-height: 0;
     overflow: hidden;
-  }
-
-  .deck-editor__save-bar {
-    display: none;
   }
 
   .deck-editor__deck-zone {
