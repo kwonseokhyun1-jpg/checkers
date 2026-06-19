@@ -4,6 +4,11 @@
 import { getCardEffectTags, formatEffectTooltip } from "./cardEffectTags.js";
 import { illustrationForCard } from "./cardIllustrations.js";
 
+/** Custom raster art for spell cards (fills the art panel edge-to-edge). */
+const CARD_RASTER_ART = {
+  chain_lightning: "assets/cards/chain_lightning.webp",
+};
+
 const THEME_STYLES = {
   movement: { symbol: "↗", label: "Motion", anim: "movement" },
   combat: { symbol: "⚔", label: "Strike", anim: "combat" },
@@ -121,6 +126,14 @@ function themeIllustration(theme, variant) {
   return shapes[theme] || shapes.arcane;
 }
 
+function cardArtHtml(theme, hue, cardId, def) {
+  const raster = CARD_RASTER_ART[def?.id];
+  if (raster) {
+    return `<img class="spell-card__raster" src="${raster}" alt="" aria-hidden="true"/>`;
+  }
+  return artSvg(theme, hue, cardId, def);
+}
+
 function artSvg(theme, hue, cardId, def) {
   const gid = safeId(cardId);
   const accent = (hue + 42) % 360;
@@ -210,12 +223,14 @@ export function renderSpellCardEl(def, opts = {}) {
         ? '<div class="spell-card__fx spell-card__fx--epic" aria-hidden="true"></div>'
         : "";
 
+  const hasRasterArt = Boolean(CARD_RASTER_ART[def.id]);
+
   el.innerHTML = `
     ${fxLayer}
     <div class="spell-card__frame">
-      <div class="spell-card__art spell-card__art--animated" aria-hidden="true">
+      <div class="spell-card__art spell-card__art--animated${hasRasterArt ? " spell-card__art--raster" : ""}" aria-hidden="true">
         <div class="spell-card__art-shine"></div>
-        ${artSvg(theme, hue, def.id, def)}
+        ${cardArtHtml(theme, hue, def.id, def)}
         <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
       </div>
       <div class="spell-card__body">
