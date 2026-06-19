@@ -1463,16 +1463,29 @@ function openAdventurePrebattle(levelId) {
     try {
       for (const { def, count } of getEnemyDeckPreview(pendingEnemyDeck)) {
         if (!def) continue;
+        const wrap = document.createElement("div");
+        wrap.className = "enemy-deck-tile";
+
         const card = renderSpellCardEl(def, {
           button: true,
-          small: true,
-          meta: count > 1 ? `×${count} in deck` : undefined,
+          gallery: true,
           onClick: () =>
             showCardPreview(def, {
               meta: count > 1 ? `${count} copies in enemy deck` : "Enemy deck",
             }),
         });
-        preview.appendChild(card);
+        card.classList.add("enemy-deck-tile__card");
+        card.title = `${def.name} — tap for full card`;
+        wrap.appendChild(card);
+
+        if (count > 1) {
+          const stack = document.createElement("span");
+          stack.className = "enemy-deck-tile__count";
+          stack.textContent = `×${count}`;
+          wrap.appendChild(stack);
+        }
+
+        preview.appendChild(wrap);
       }
     } catch (err) {
       console.error("Enemy preview failed", err);
