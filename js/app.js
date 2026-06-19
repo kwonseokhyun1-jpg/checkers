@@ -889,18 +889,13 @@ function appendCollectionCard(parent, def, opts = {}) {
     card.classList.add("deck-collection-row__card");
     art.appendChild(card);
 
-    const info = document.createElement("div");
-    info.className = "deck-collection-row__info";
     const ownedLabel = owned > 0 ? `Owned ${owned}/${cap}` : "Not in collection";
-    info.innerHTML = `
-      <strong class="deck-collection-row__name">${escapeHtml(def.name)}${isCardNew(profile, def.id) ? '<span class="deck-collection-row__new">New</span>' : ""}</strong>
-      <span class="deck-collection-row__meta">
-        <span class="deck-collection-row__meta-line">${ownedLabel}</span>
-        <span class="deck-collection-row__meta-line">In deck ${inDeck}/${cap}</span>
-      </span>`;
-    info.addEventListener("click", () => openInspect());
+    const meta = document.createElement("div");
+    meta.className = "deck-collection-row__meta";
+    meta.innerHTML = `${ownedLabel} · In deck ${inDeck}/${cap}${isCardNew(profile, def.id) ? '<span class="deck-collection-row__new">New</span>' : ""}`;
+    meta.addEventListener("click", () => openInspect());
 
-    main.append(art, info);
+    main.append(art, meta);
 
     const action = document.createElement("button");
     action.type = "button";
