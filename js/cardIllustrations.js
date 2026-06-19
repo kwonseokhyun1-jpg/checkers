@@ -492,14 +492,14 @@ function purifyMotif() {
     <circle cx="32" cy="24" r="14" fill="#fbbf24" opacity="0.12"/>`;
 }
 
-/** Wanted mark on enemy with gold bounty reward. */
+/** Wanted poster with checker piece — mark enemy for jump-capture reward. */
 function bountyMotif() {
-  return `${token(28, 36, 6)}
-    <rect x="38" y="14" width="18" height="22" rx="2" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
-    <circle cx="47" cy="22" r="5" fill="#dc2626" opacity="0.65"/>
-    <text x="43" y="34" font-size="7" fill="#92400e" font-weight="bold">$</text>
-    <circle cx="32" cy="36" r="12" fill="none" stroke="#fbbf24" stroke-width="2.2" opacity="0.8"/>
-    <path d="M32 24 L34 30 H40 L35 34 L37 40 L32 36 L27 40 L29 34 L24 30 H30 Z" fill="#fbbf24" opacity="0.7"/>`;
+  return `<rect x="12" y="6" width="40" height="52" rx="3" fill="#fef3c7" stroke="#d97706" stroke-width="2.2"/>
+    <text x="32" y="18" text-anchor="middle" font-size="7.5" font-weight="bold" fill="#92400e" font-family="Georgia,serif">WANTED</text>
+    <line x1="16" y1="22" x2="48" y2="22" stroke="#d97706" stroke-width="1.2"/>
+    <circle cx="32" cy="38" r="12" fill="#dc2626" stroke="#7f1d1d" stroke-width="2"/>
+    <ellipse cx="28" cy="34" rx="4.5" ry="3" fill="rgba(255,255,255,0.35)"/>
+    <text x="32" y="52" text-anchor="middle" font-size="6" font-weight="bold" fill="#b45309">REWARD</text>`;
 }
 
 /** Two enemies chained by a glowing fate thread. */
