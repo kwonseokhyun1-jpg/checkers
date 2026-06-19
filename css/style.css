@@ -2069,7 +2069,16 @@ body.tutorial-match-active .card-preview-modal {
   50% { opacity: 1; }
 }
 
-/* Epic / legendary FX */
+/* Epic / legendary / rare FX */
+.spell-card--rare-fx .spell-card__fx--rare,
+.spell-card.rare .spell-card__fx--rare {
+  position: absolute;
+  inset: -2px;
+  border-radius: 12px;
+  pointer-events: none;
+  background: linear-gradient(120deg, transparent, rgba(159, 122, 234, 0.32), transparent);
+  animation: rare-sheen 3s linear infinite;
+}
 .spell-card--epic-fx .spell-card__fx--epic,
 .spell-card.epic .spell-card__fx--epic {
   position: absolute;
@@ -2102,6 +2111,11 @@ body.tutorial-match-active .card-preview-modal {
   font-weight: 700;
 }
 
+@keyframes rare-sheen {
+  0% { transform: translateX(-100%) rotate(8deg); opacity: 0; }
+  40% { opacity: 0.7; }
+  100% { transform: translateX(100%) rotate(8deg); opacity: 0; }
+}
 @keyframes epic-sheen {
   0% { transform: translateX(-100%) rotate(8deg); opacity: 0; }
   40% { opacity: 0.8; }
@@ -2113,8 +2127,14 @@ body.tutorial-match-active .card-preview-modal {
   100% { transform: translateX(100%) rotate(8deg); opacity: 0; }
 }
 
+.spell-card--rare-burst { animation: rare-burst 0.9s ease-out; }
 .spell-card--epic-burst { animation: epic-burst 1s ease-out; }
 .spell-card--legendary-burst { animation: legendary-burst 1.2s ease-out; }
+@keyframes rare-burst {
+  0% { transform: scale(0.65) rotate(-4deg); filter: brightness(1.6); }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
 @keyframes epic-burst {
   0% { transform: scale(0.6) rotate(-8deg); filter: brightness(2); }
   60% { transform: scale(1.08); }
