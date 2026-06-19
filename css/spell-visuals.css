@@ -47,9 +47,15 @@
     0 8px 24px rgba(0, 0, 0, 0.45),
     0 0 28px rgba(255, 200, 60, 0.35);
 }
-.spell-coin-face span {
+.spell-coin-face span,
+.spell-coin-face .spell-coin-emblem {
   font-size: 1.75rem;
   line-height: 1;
+  width: 2.2rem;
+  height: 2.2rem;
+}
+.spell-coin-face .spell-coin-emblem {
+  display: block;
 }
 .spell-coin-face small {
   font-size: 0.55rem;
@@ -60,12 +66,12 @@
 }
 .spell-coin-face--heads {
   background: radial-gradient(circle at 35% 30%, #fff6c8, #d4a017 55%, #8a6010);
-  color: #3d2a06;
+  color: #5c3d08;
   transform: rotateY(0deg);
 }
 .spell-coin-face--tails {
-  background: radial-gradient(circle at 35% 30%, #e8eef5, #7a8a9a 55%, #3a4550);
-  color: #1a2228;
+  background: radial-gradient(circle at 35% 30%, #f1f5f9, #94a3b8 55%, #3a4550);
+  color: #334155;
   transform: rotateY(180deg);
 }
 .spell-coin-caption {
