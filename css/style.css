@@ -796,6 +796,25 @@ body {
   overflow: hidden;
 }
 
+.spell-card__art--raster {
+  background: #0a1628;
+  padding: 0;
+}
+
+.spell-card__raster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.spell-card__art--raster .spell-card__art-shine {
+  opacity: 0.45;
+}
+
 .spell-card__art-shine {
   position: absolute;
   inset: -40% -20%;
