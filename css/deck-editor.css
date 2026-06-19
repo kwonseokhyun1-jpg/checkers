@@ -408,14 +408,25 @@ body.deck-editing .game-nav.tabs {
 
 .deck-collection-row__thumb .spell-card__frame {
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .deck-collection-row__thumb .spell-card__art {
-  height: 2rem;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.deck-collection-row__thumb .spell-card__svg,
+.deck-collection-row__thumb .spell-card__raster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .deck-collection-row__thumb .spell-card__body {
-  padding: 0.15rem;
+  display: none !important;
 }
 
 .deck-collection-row__thumb .spell-card__name {
