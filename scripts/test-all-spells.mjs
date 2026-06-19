@@ -240,23 +240,26 @@ for (const card of cards) {
   console.log("Trickster back rank test: OK");
 }
 
-// Revive cannot place on your back rank
+// Revive cannot place on your back row
 {
   const revive = cards.find((c) => c.id === "revive");
   const s = baseState();
   s.captured[COLOR] = [{ king: false }];
+  const backRows = COLOR === COLORS.RED ? [5, 6, 7] : [0, 1, 2];
   const targets = getValidTargets(s, COLOR, revive, []);
-  if (targets.some(([r]) => r === SIZE - 1)) throw new Error("Revive must not target red back rank");
-  const backRankDark = DARK.find(([r]) => r === SIZE - 1);
-  if (backRankDark) {
-    const failRes = applyCard(s, COLOR, revive, [backRankDark]);
-    if (failRes.success) throw new Error("Revive should fail on back rank");
+  if (targets.some(([r]) => backRows.includes(r))) throw new Error("Revive must not target your back row");
+  for (const row of backRows) {
+    const backRowDark = DARK.find(([r]) => r === row);
+    if (backRowDark) {
+      const failRes = applyCard(s, COLOR, revive, [backRowDark]);
+      if (failRes.success) throw new Error(`Revive should fail on back row (row ${row})`);
+    }
   }
   const safe = targets[0];
   if (!safe) throw new Error("Revive needs at least one valid square");
   const okRes = applyCard(s, COLOR, revive, [safe]);
-  if (!okRes.success || !at(s, safe[0], safe[1])) throw new Error("Revive should succeed off back rank");
-  console.log("Revive back rank test: OK");
+  if (!okRes.success || !at(s, safe[0], safe[1])) throw new Error("Revive should succeed off back row");
+  console.log("Revive back row test: OK");
 }
 
 // Backrank Protection shields only the furthest back rank
