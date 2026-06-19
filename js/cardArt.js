@@ -133,12 +133,12 @@ function artSvg(theme, hue, cardId, def) {
   const fullBleed = def?.effect && isFullBleedEffect(def.effect) && inner;
 
   if (fullBleed) {
-    return `<svg class="spell-card__svg spell-card__svg--full-bleed" viewBox="0 0 70 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice">${inner}</svg>`;
+    return `<svg class="spell-card__svg spell-card__svg--full-bleed" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice">${inner}</svg>`;
   }
 
   const stars = starField(gid, hue, variant);
 
-  return `<svg class="spell-card__svg" viewBox="0 0 70 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  return `<svg class="spell-card__svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs>
       <radialGradient id="${gid}-bg" cx="50%" cy="35%" r="65%">
         <stop offset="0%" stop-color="hsl(${hue} 75% 58% / 0.95)"/>
@@ -155,9 +155,9 @@ function artSvg(theme, hue, cardId, def) {
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <rect width="70" height="60" fill="url(#${gid}-bg)"/>
-    <rect width="70" height="60" fill="url(#${gid}-beam)" opacity="0.9"/>
-    <rect x="4" y="4" width="62" height="52" rx="8" fill="none" stroke="hsl(${hue} 60% 70% / 0.35)" stroke-width="1"/>
+    <rect width="64" height="64" fill="url(#${gid}-bg)"/>
+    <rect width="64" height="64" fill="url(#${gid}-beam)" opacity="0.9"/>
+    <rect x="4" y="4" width="56" height="56" rx="8" fill="none" stroke="hsl(${hue} 60% 70% / 0.35)" stroke-width="1"/>
     ${stars}
     <g filter="url(#${gid}-glow)" color="hsl(${hue} 88% 88%)">${inner}</g>
   </svg>`;
