@@ -9,6 +9,12 @@ export function staggerCardReveal(container, selector = ".spell-card") {
   });
 }
 
+export function playRareReveal(cardEl) {
+  if (!cardEl) return;
+  cardEl.classList.add("spell-card--rare-burst");
+  setTimeout(() => cardEl.classList.remove("spell-card--rare-burst"), 900);
+}
+
 export function playEpicReveal(cardEl) {
   if (!cardEl) return;
   cardEl.classList.add("spell-card--epic-burst");
@@ -24,4 +30,5 @@ export function playLegendaryReveal(cardEl) {
 export function onCardRevealed(cardEl, rarity) {
   if (rarity === "legendary") playLegendaryReveal(cardEl);
   else if (rarity === "epic") playEpicReveal(cardEl);
+  else if (rarity === "rare") playRareReveal(cardEl);
 }
