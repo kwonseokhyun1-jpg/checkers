@@ -257,6 +257,11 @@ body.deck-editing .game-nav.tabs {
   gap: 2px;
 }
 
+.deck-slot-wrap--strip .spell-card__art-frame {
+  order: 1;
+  padding: 1px;
+}
+
 .deck-slot-wrap--strip .spell-card__art-frame,
 .deck-slot-wrap--strip .spell-card__title-frame {
   border-width: 1px;
@@ -265,16 +270,13 @@ body.deck-editing .game-nav.tabs {
     inset 0 -1px 0 var(--frame-shadow);
 }
 
-.deck-slot-wrap--strip .spell-card__art-frame {
-  padding: 1px;
-}
-
 .deck-slot-wrap--strip .spell-card__art {
   height: 2.85rem;
   border-width: 0;
 }
 
 .deck-slot-wrap--strip .spell-card__title-frame {
+  order: 2;
   padding: 0.15rem 0.2rem;
 }
 
@@ -296,8 +298,8 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-slot-wrap--strip .deck-stack-count {
-  top: auto;
-  bottom: 4px;
+  top: 4px;
+  bottom: auto;
   left: 4px;
 }
 
