@@ -84,9 +84,9 @@ const STEPS = [
     title: "Save your deck",
     body: `When you are happy with your list, tap Save. You need ${DECK_SIZE} cards before battling in Adventure.`,
     hint: "Tap Save in the deck editor.",
-    highlight: "#btn-save-deck, #btn-save-deck-bottom",
-    allowed: ["#btn-save-deck", "#btn-save-deck-bottom"],
-    actionSelector: "#btn-save-deck, #btn-save-deck-bottom",
+    highlight: "#btn-save-deck",
+    allowed: ["#btn-save-deck"],
+    actionSelector: "#btn-save-deck",
   },
   {
     id: "done",
