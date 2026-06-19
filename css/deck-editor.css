@@ -1,5 +1,5 @@
 /**
- * Deck editor — full-screen mobile layout, three-zone card rows (art | info | action)
+ * Deck editor — full-screen mobile layout, chest-pull style collection tiles
  */
 
 :root {
@@ -399,124 +399,33 @@ body.deck-editing .game-nav.tabs {
   letter-spacing: 0.04em;
 }
 
-/* ── Card tile: art + info on top, full-width action below ── */
-.deck-collection-row {
+/* ── Card tile: chest-pull style card, meta, full-width action ── */
+.deck-editor-tile {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.35rem;
   min-width: 0;
-  padding: 0.45rem;
+  padding: 0.4rem;
   background: var(--bg-panel, #302e2b);
   border: 1px solid #4a4845;
   border-radius: 10px;
 }
 
-.deck-collection-row__main {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.35rem;
-  min-width: 0;
-}
-
-.deck-collection-row__art {
-  flex: 0 0 auto;
-  width: 2.5rem;
-  height: 3.25rem;
-  overflow: hidden;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.deck-collection-row__thumb.spell-card {
+.deck-editor-tile__card {
   width: 100%;
-  height: 100%;
+  max-width: none;
   padding: 0;
-  pointer-events: none;
 }
 
-.deck-collection-row__thumb .spell-card__frame {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  border-width: 1px;
-  padding: 1px;
-  gap: 0;
-}
-
-.deck-collection-row__thumb .spell-card__art-frame {
-  border-width: 1px;
-  padding: 0;
-  box-shadow: none;
-  flex: 1;
-  min-height: 0;
-}
-
-.deck-collection-row__thumb .spell-card__art {
-  flex: 1;
-  min-height: 0;
-  height: 100% !important;
-  max-height: none;
-  border-width: 0;
-  border-radius: 3px;
-}
-
-.deck-collection-row__thumb .spell-card__svg,
-.deck-collection-row__thumb .spell-card__raster {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.deck-collection-row__thumb .spell-card__art--full-bleed > .spell-card__svg {
-  position: absolute;
-  inset: 0;
-}
-
-.deck-collection-row__thumb .spell-card__title-frame,
-.deck-collection-row__thumb .spell-card__type-frame,
-.deck-collection-row__thumb .spell-card__text-frame {
-  display: none !important;
-}
-
-.deck-collection-row__thumb .spell-card__name {
-  display: none !important;
-}
-
-.deck-collection-row__thumb .spell-card__desc,
-.deck-collection-row__thumb .spell-card__rarity,
-.deck-collection-row__thumb .spell-card__meta,
-.deck-collection-row__thumb .spell-card__tooltip {
-  display: none !important;
-}
-
-.deck-collection-row__info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  gap: 0.15rem;
-  cursor: pointer;
-}
-
-.deck-collection-row__name {
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--text-primary, #f0ead6);
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.deck-collection-row__meta {
+.deck-editor-tile__meta {
+  margin: 0;
   font-size: 0.62rem;
   color: var(--text-muted);
+  text-align: center;
   line-height: 1.25;
 }
 
-.deck-collection-row__action {
+.deck-editor-tile__action {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -536,49 +445,56 @@ body.deck-editing .game-nav.tabs {
   letter-spacing: 0;
 }
 
-.deck-collection-row__action--add {
+.deck-editor-tile__action--add {
   background: var(--accent-primary, #81b64c);
   color: #1a1a18;
 }
 
-.deck-collection-row__action--add:active:not(:disabled) {
+.deck-editor-tile__action--add:active:not(:disabled) {
   filter: brightness(0.92);
 }
 
-.deck-collection-row__action--buy {
+.deck-editor-tile__action--buy {
   background: linear-gradient(180deg, #ffe566 0%, #c9a227 100%);
   color: #1a1208;
   border: 2px solid rgba(255, 255, 255, 0.25);
 }
 
-.deck-collection-row__action--buy:not(:disabled):active {
+.deck-editor-tile__action--buy:not(:disabled):active {
   filter: brightness(0.95);
 }
 
-.deck-collection-row__action--disabled,
-.deck-collection-row__action:disabled {
+.deck-editor-tile__action--disabled,
+.deck-editor-tile__action:disabled {
   background: rgba(255, 255, 255, 0.04);
   color: var(--text-muted);
   cursor: not-allowed;
   border: 1px solid #3a3835;
 }
 
-.deck-collection-row--new {
+.deck-editor-tile--new {
   border-color: rgba(129, 182, 76, 0.45);
 }
 
-.deck-collection-row__new {
-  display: inline-block;
-  margin-left: 0.35rem;
-  padding: 0.05rem 0.35rem;
-  border-radius: 999px;
-  font-size: 0.58rem;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  vertical-align: middle;
-  background: rgba(129, 182, 76, 0.22);
-  color: #c8e6a0;
+#deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__frame {
+  height: 100%;
+}
+
+#deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art-frame {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+#deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art {
+  height: auto;
+  aspect-ratio: 5 / 6;
+  min-height: 5rem;
+  max-height: none;
+}
+
+#deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__svg:not(.spell-card__svg--full-bleed) {
+  width: 72%;
+  height: 72%;
 }
 
 .deck-editor__hint {
@@ -815,22 +731,17 @@ body.deck-editing .game-nav.tabs {
     overflow: visible;
   }
 
-  .deck-collection-row__art {
-    width: 2.75rem;
-    height: 3.5rem;
-  }
-
-  .deck-collection-row__name {
-    font-size: 0.82rem;
-  }
-
-  .deck-collection-row__meta {
+  .deck-editor-tile__meta {
     font-size: 0.66rem;
   }
 
-  .deck-collection-row__action {
+  .deck-editor-tile__action {
     font-size: 0.72rem;
     padding: 0.4rem 0.5rem;
     min-height: 2.5rem;
+  }
+
+  #deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art {
+    min-height: 5.5rem;
   }
 }

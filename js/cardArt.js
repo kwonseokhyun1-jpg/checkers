@@ -185,7 +185,7 @@ export function renderSpellCardEl(def, opts = {}) {
   const hue = cardHue(def.id);
   const style = THEME_STYLES[theme] || THEME_STYLES.arcane;
   const size = resolveSize(opts);
-  const showDesc = size !== "tiny";
+  const showDesc = size !== "tiny" && !opts.gallery;
   const tag = opts.button ? "button" : "div";
   const el = document.createElement(tag);
   if (opts.button) el.type = "button";
@@ -208,6 +208,7 @@ export function renderSpellCardEl(def, opts = {}) {
     opts.static ? "static" : "",
     opts.deal ? "spell-card--deal" : "",
     opts.fullDesc ? "spell-card--full-desc" : "",
+    opts.gallery ? "spell-card--gallery" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -248,7 +249,13 @@ export function renderSpellCardEl(def, opts = {}) {
         <span class="spell-card__rarity">${def.rarity}</span>
         ${opts.meta ? `<span class="spell-card__meta">${escapeHtml(opts.meta)}</span>` : ""}
       </div>
-      ${showDesc ? `<div class="spell-card__text-frame"><p class="spell-card__desc">${escapeHtml(def.desc)}</p></div>` : ""}
+      ${
+        opts.gallery
+          ? `<div class="spell-card__text-frame spell-card__text-frame--hint"><p class="spell-card__hint">Tap for full card</p></div>`
+          : showDesc
+            ? `<div class="spell-card__text-frame"><p class="spell-card__desc">${escapeHtml(def.desc)}</p></div>`
+            : ""
+      }
     </div>
     <div class="spell-card__tooltip" role="tooltip">
       <strong>${escapeHtml(def.name)}</strong>
