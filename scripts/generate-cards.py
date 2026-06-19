@@ -128,7 +128,6 @@ SPELLS = [
     # === CHAOS ===
     ("wild_magic", "Wild Magic", "Apply a random card effect from the entire pool.", "epic", 2, "instant", "wild_magic"),
     ("coin_flip", "Coin Flip", "50% destroy random enemy; 50% destroy random friendly.", "rare", 3, "instant", "coin_flip"),
-    ("butterfly_effect", "Butterfly Effect", "Shuffle pieces on the 4 center dark squares randomly.", "rare", 3, "instant", "butterfly"),
     ("rules_lawyer", "Rules Lawyer", "Jumps are optional for you this turn (not mandatory).", "uncommon", 4, "instant", "rules_lawyer"),
     ("pocket_dimension", "Pocket Dimension", "Remove a friendly piece for 1 turn; it returns to the same square.", "rare", 3, "friendly", "pocket"),
     ("uno_reverse", "Uno Reverse", "Opponent must capture with a specific piece if possible next turn.", "rare", 3, "enemy", "uno_reverse"),

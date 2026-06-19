@@ -730,7 +730,6 @@ const EFFECTS = {
       coinFlipVictimColor: victimColor,
     });
   },
-  butterfly(state, color, picks) { const cells=[[3,2],[3,4],[4,3],[4,5]]; const pieces=cells.map(([r,c])=>at(state,r,c)).filter(Boolean); const spots=cells.filter(([r,c])=>!at(state,r,c)); let i=0; for(const p of pieces){ if(i>=spots.length) break; const [r,c]=spots[i++]; movePiece(state.board,p.row,p.col,r,c);} return ok(); },
   ignore(state, color, picks) {
     if (!hasMandatoryJumps(state.board, color, state)) return fail("Ignore only when capture is mandatory.");
     state.meta.optionalJumps[color] = true;
