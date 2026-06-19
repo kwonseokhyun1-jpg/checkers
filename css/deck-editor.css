@@ -295,12 +295,19 @@ body.deck-editing .game-nav.tabs {
   display: none !important;
 }
 
-.deck-slot-remove--visible {
+.deck-slot-wrap--strip .deck-stack-count {
+  top: auto;
+  bottom: 4px;
+  left: 4px;
+}
+
+.deck-slot-wrap--strip .deck-slot-remove.deck-slot-remove--visible {
   display: flex;
   width: 1.1rem;
   height: 1.1rem;
   font-size: 0.75rem;
-  top: 0;
+  top: auto;
+  bottom: 0;
   right: 0;
   opacity: 1;
 }
