@@ -38,6 +38,7 @@ import {
   getLevelStars,
   MAP_PIN_LAYOUT,
   repairAdventureProgress,
+  getNextPlayableLevelId,
   getWorldForLevel,
   isQuestsAndPvpUnlocked,
   QUESTS_PVP_UNLOCK_MESSAGE,
@@ -1354,6 +1355,7 @@ function renderAdventureMap() {
   const pinsLayer = map.querySelector(".adventure-map-pins");
   const points = [];
   const levels = getLevelsForWorld(selectedAdventureWorldId);
+  const nextId = getNextPlayableLevelId(progress);
 
   levels.forEach((level, i) => {
     const pos = MAP_PIN_LAYOUT[i] || MAP_PIN_LAYOUT[MAP_PIN_LAYOUT.length - 1];
