@@ -369,6 +369,17 @@ export function isLevelCleared(progress, levelId) {
   return !!progress?.cleared?.[String(levelId)];
 }
 
+export function countClearedLevelsInWorld(progress, worldId) {
+  const repaired = repairAdventureProgress(progress);
+  const world = WORLDS.find((w) => w.id === worldId);
+  if (!world) return 0;
+  let count = 0;
+  for (let id = world.levelStart; id <= world.levelEnd; id++) {
+    if (isLevelCleared(repaired, id)) count++;
+  }
+  return count;
+}
+
 export const QUESTS_PVP_UNLOCK_LEVEL = 1;
 export const QUESTS_PVP_UNLOCK_MESSAGE = "Clear Adventure stage 1 to unlock";
 
