@@ -229,17 +229,21 @@ export function renderSpellCardEl(def, opts = {}) {
   el.innerHTML = `
     ${fxLayer}
     <div class="spell-card__frame">
-      <div class="spell-card__art spell-card__art--animated${hasRasterArt ? " spell-card__art--raster" : ""}" aria-hidden="true">
-        <div class="spell-card__art-shine"></div>
-        ${cardArtHtml(theme, hue, def.id, def)}
-        <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
+      <div class="spell-card__art-frame">
+        <div class="spell-card__art spell-card__art--animated${hasRasterArt ? " spell-card__art--raster" : ""}" aria-hidden="true">
+          <div class="spell-card__art-shine"></div>
+          ${cardArtHtml(theme, hue, def.id, def)}
+          <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
+        </div>
       </div>
-      <div class="spell-card__body">
-        <span class="spell-card__rarity">${def.rarity}</span>
+      <div class="spell-card__title-frame">
         <h3 class="spell-card__name">${escapeHtml(def.name)}</h3>
-        ${opts.meta ? `<p class="spell-card__meta">${escapeHtml(opts.meta)}</p>` : ""}
-        ${showDesc ? `<p class="spell-card__desc">${escapeHtml(def.desc)}</p>` : ""}
       </div>
+      <div class="spell-card__type-frame">
+        <span class="spell-card__rarity">${def.rarity}</span>
+        ${opts.meta ? `<span class="spell-card__meta">${escapeHtml(opts.meta)}</span>` : ""}
+      </div>
+      ${showDesc ? `<div class="spell-card__text-frame"><p class="spell-card__desc">${escapeHtml(def.desc)}</p></div>` : ""}
     </div>
     <div class="spell-card__tooltip" role="tooltip">
       <strong>${escapeHtml(def.name)}</strong>
