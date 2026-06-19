@@ -11,14 +11,14 @@ export const SMALL_MYSTERY_BOX_COSMETIC_CHANCE = 0.5;
 
 const CARD_TIERS = [
   { id: "bronze", name: "Bronze Chest", cards: 3, weights: { common: 70, uncommon: 25, rare: 5, epic: 0 } },
-  { id: "silver", name: "Silver Chest", cards: 6, weights: { common: 50, uncommon: 35, rare: 12, epic: 3 } },
-  { id: "gold", name: "Gold Chest", cards: 9, weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 } },
+  { id: "silver", name: "Silver Chest", cards: 5, weights: { common: 50, uncommon: 35, rare: 12, epic: 3 } },
+  { id: "gold", name: "Gold Chest", cards: 8, weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 } },
 ];
 
 const COS_TIERS = [
   { id: "bronze", name: "Bronze Cosmetic Box", pulls: 3, weights: { common: 70, uncommon: 25, rare: 5, epic: 0 } },
-  { id: "silver", name: "Silver Cosmetic Box", pulls: 6, weights: { common: 50, uncommon: 35, rare: 12, epic: 3 } },
-  { id: "gold", name: "Gold Cosmetic Box", pulls: 9, weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 } },
+  { id: "silver", name: "Silver Cosmetic Box", pulls: 5, weights: { common: 50, uncommon: 35, rare: 12, epic: 3 } },
+  { id: "gold", name: "Gold Cosmetic Box", pulls: 8, weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 } },
 ];
 
 function pickTier(tiers, { premium = false } = {}) {

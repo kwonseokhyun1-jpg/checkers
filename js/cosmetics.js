@@ -50,14 +50,14 @@ export const COSMETIC_BOXES = [
     id: "silver",
     name: "Silver Cosmetic Box",
     cost: 50,
-    pulls: 6,
+    pulls: 5,
     weights: { common: 50, uncommon: 35, rare: 12, epic: 3 },
   },
   {
     id: "gold",
     name: "Gold Cosmetic Box",
     cost: 100,
-    pulls: 9,
+    pulls: 8,
     weights: { common: 32, uncommon: 38, rare: 22, epic: 6, legendary: 2 },
   },
 ];
