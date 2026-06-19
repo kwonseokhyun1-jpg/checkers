@@ -542,10 +542,32 @@ export function getAllMovesForColor(board, color, state = null) {
   return steps;
 }
 
-/** True when this friendly piece has at least one legal move right now. */
+/** True when this piece has at least one legal move under current turn rules (e.g. mandatory jumps). */
 export function pieceHasLegalMoves(board, color, state, row, col) {
+  const piece = getPiece(board, row, col);
+  if (!piece || piece.color !== color) return false;
   return getAllMovesForColor(board, color, state).some(
-    (m) => m.from[0] === row && m.from[1] === col
+    (m) => m.from[0] === piece.row && m.from[1] === piece.col
+  );
+}
+
+/**
+ * True when this piece could step or jump on its own, ignoring mandatory-capture
+ * obligations on other pieces (used by Execution targeting).
+ */
+export function pieceHasIntrinsicMoves(board, color, state, row, col) {
+  const piece = getPiece(board, row, col);
+  if (!piece || piece.color !== color) return false;
+
+  const panicked = findPanicPiece(board, color);
+  if (panicked) {
+    if (panicked.row !== piece.row || panicked.col !== piece.col) return false;
+    return getBackwardStepMoves(board, panicked, state).length > 0;
+  }
+
+  return (
+    getJumpMoves(board, piece, color, state).length > 0 ||
+    getStepMoves(board, piece, color, state).length > 0
   );
 }
 
