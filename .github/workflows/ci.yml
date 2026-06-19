@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate JavaScript
+        run: bash scripts/validate-js.sh
+
+      - name: Smoke test
+        run: |
+          npm install playwright --no-save
+          npx playwright install chromium
+          python3 -m http.server 8765 &
+          sleep 2
+          node scripts/smoke-test.mjs http://127.0.0.1:8765/index.html
