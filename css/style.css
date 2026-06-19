@@ -744,6 +744,10 @@ body {
 /* Spell cards */
 .spell-card {
   --card-hue: 200;
+  --frame-border: hsl(var(--card-hue) 50% 42%);
+  --frame-highlight: hsl(var(--card-hue) 55% 58%);
+  --frame-shadow: hsl(var(--card-hue) 30% 16%);
+  --frame-mat: #0a0e14;
   border: none;
   padding: 0;
   background: transparent;
@@ -761,23 +765,53 @@ body {
   filter: grayscale(0.9) brightness(0.72);
 }
 .spell-card.disabled .spell-card__frame {
-  border-color: #4a5568;
+  --frame-border: #4a5568;
+  --frame-highlight: #6b7280;
+  --frame-shadow: #2d3748;
   box-shadow: none;
 }
 .hand.spell-hand.spell-hand--locked .spell-card.disabled {
   opacity: 0.38;
 }
-.spell-card.selected .spell-card__frame { box-shadow: 0 0 0 2px var(--accent-gold); }
+.spell-card.selected .spell-card__frame { box-shadow: 0 0 0 2px var(--accent-gold), 0 4px 18px rgba(0, 0, 0, 0.5); }
+
+/* MTG-style layered card frame */
 .spell-card__frame {
   border-radius: 10px;
   overflow: hidden;
-  border: 2px solid hsl(var(--card-hue) 50% 42%);
+  border: 3px solid var(--frame-border);
   background:
     linear-gradient(165deg, hsl(var(--card-hue) 38% 22%) 0%, #0e1218 48%, hsl(var(--card-hue) 32% 10%) 100%);
   box-shadow:
     0 4px 18px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   transition: transform 0.15s, box-shadow 0.15s;
+}
+
+/* Shared inner section frame (art, title, type, text) */
+.spell-card__art-frame,
+.spell-card__title-frame,
+.spell-card__type-frame,
+.spell-card__text-frame {
+  border: 2px solid var(--frame-border);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 1px 0 var(--frame-highlight),
+    inset 0 -1px 0 var(--frame-shadow),
+    0 0 0 1px rgba(0, 0, 0, 0.45);
+}
+
+/* Art window */
+.spell-card__art-frame {
+  padding: 2px;
+  background: linear-gradient(180deg, var(--frame-shadow) 0%, var(--frame-mat) 100%);
+  overflow: hidden;
+  flex-shrink: 0;
 }
 .spell-card:not(.disabled):hover .spell-card__frame {
   transform: translateY(-3px);
@@ -786,6 +820,8 @@ body {
 .spell-card__art {
   position: relative;
   height: 88px;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
   background:
     radial-gradient(ellipse 90% 70% at 50% 0%, hsl(var(--card-hue) 65% 45% / 0.45), transparent 65%),
     linear-gradient(180deg, hsl(var(--card-hue) 40% 14% / 0.9) 0%, #0a0e14 100%);
@@ -852,35 +888,69 @@ body {
 .spell-card__svg .card-motif {
   color: hsl(var(--card-hue) 92% 92%);
 }
-.spell-card__body { padding: 0.5rem 0.55rem 0.6rem; }
+/* Title bar */
+.spell-card__title-frame {
+  text-align: center;
+  padding: 0.22rem 0.4rem;
+  background: linear-gradient(180deg, hsl(var(--card-hue) 32% 18%) 0%, #0e1218 100%);
+  flex-shrink: 0;
+}
+.spell-card__name {
+  font-family: var(--font-heading); font-weight: 600;
+  font-size: 0.82rem;
+  margin: 0;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+/* Type line (rarity + meta) */
+.spell-card__type-frame {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  padding: 0.12rem 0.4rem;
+  background: linear-gradient(180deg, hsl(var(--card-hue) 28% 14%) 0%, #0a0e14 100%);
+  flex-shrink: 0;
+}
 .spell-card__rarity {
   font-size: 0.62rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
 }
-.spell-card__name {
-  font-family: var(--font-heading); font-weight: 600;
-  font-size: 0.82rem;
-  margin: 0.15rem 0 0.2rem;
-  line-height: 1.2;
-  color: var(--text);
+.spell-card__meta {
+  font-size: 0.62rem;
+  color: var(--accent-gem);
+  margin: 0;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.spell-card__meta { font-size: 0.68rem; color: var(--accent-gem); margin: 0; }
+
+/* Rules text box */
+.spell-card__text-frame {
+  flex: 1;
+  padding: 0.35rem 0.45rem 0.4rem;
+  background: linear-gradient(180deg, #12161e 0%, var(--frame-mat) 100%);
+  min-height: 2.4rem;
+}
 .spell-card__desc {
   font-size: 0.68rem;
   color: var(--text-muted);
-  margin: 0.25rem 0 0;
+  margin: 0;
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.spell-card.common .spell-card__frame { border-color: #6b7280; }
-.spell-card.uncommon .spell-card__frame { border-color: #5b8fd4; }
-.spell-card.rare .spell-card__frame { border-color: #9f7aea; }
-.spell-card.epic .spell-card__frame { border-color: #e8a838; }
+
+.spell-card.common { --frame-border: #6b7280; --frame-highlight: #9ca3af; --frame-shadow: #374151; }
+.spell-card.uncommon { --frame-border: #5b8fd4; --frame-highlight: #7eb0e8; --frame-shadow: #2d4a6e; }
+.spell-card.rare { --frame-border: #9f7aea; --frame-highlight: #b794f4; --frame-shadow: #553c7a; }
+.spell-card.epic { --frame-border: #e8a838; --frame-highlight: #f0c060; --frame-shadow: #7a5518; }
 
 .spell-card--full,
 .spell-card:not(.spell-card--compact):not(.spell-card--small):not(.spell-card--tiny) {
@@ -919,13 +989,17 @@ body {
 .spell-card.tiny { max-width: 72px; }
 .spell-card--tiny .spell-card__art,
 .spell-card.tiny .spell-card__art { height: 48px; }
-.spell-card--tiny .spell-card__body,
-.spell-card.tiny .spell-card__body { padding: 0.25rem; }
+.spell-card--tiny .spell-card__title-frame,
+.spell-card.tiny .spell-card__title-frame { padding: 0.15rem 0.2rem; }
 .spell-card--tiny .spell-card__name,
 .spell-card.tiny .spell-card__name { font-size: 0.58rem; margin: 0; }
+.spell-card--tiny .spell-card__type-frame,
+.spell-card--tiny .spell-card__text-frame,
 .spell-card--tiny .spell-card__rarity,
 .spell-card--tiny .spell-card__desc,
 .spell-card--tiny .spell-card__meta,
+.spell-card.tiny .spell-card__type-frame,
+.spell-card.tiny .spell-card__text-frame,
 .spell-card.tiny .spell-card__rarity,
 .spell-card.tiny .spell-card__desc,
 .spell-card.tiny .spell-card__meta { display: none; }
@@ -1164,10 +1238,12 @@ body {
   height: 2.85rem;
 }
 
-.hand.spell-hand .spell-card__body {
-  padding: 0.2rem 0.15rem 0.25rem;
+.hand.spell-hand .spell-card__title-frame {
+  padding: 0.15rem 0.2rem;
 }
 
+.hand.spell-hand .spell-card__type-frame,
+.hand.spell-hand .spell-card__text-frame,
 .hand.spell-hand .spell-card__desc,
 .hand.spell-hand .spell-card__meta,
 .hand.spell-hand .spell-card__rarity {
@@ -1966,9 +2042,17 @@ body.tutorial-match-active .card-preview-modal {
   box-shadow: 0 0 24px rgba(255, 120, 200, 0.35), 0 0 40px rgba(232, 197, 71, 0.25);
   animation: legendary-orbit 3s linear infinite;
 }
+.spell-card.legendary {
+  --frame-border: #f6ad55;
+  --frame-highlight: #fbd38d;
+  --frame-shadow: #7a4418;
+}
 .spell-card.legendary .spell-card__frame {
-  border-color: #f6ad55;
-  box-shadow: 0 0 16px rgba(246, 173, 85, 0.45);
+  box-shadow:
+    0 0 16px rgba(246, 173, 85, 0.45),
+    0 4px 18px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 .spell-card__rarity { text-transform: capitalize; }
 .spell-card.legendary .spell-card__rarity {
