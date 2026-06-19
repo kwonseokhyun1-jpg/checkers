@@ -32,7 +32,6 @@ export const CARD_REGISTRY = [
   { id: "random_teleport", name: "Random Teleportation", desc: "Select a piece and it jumps to a random empty square. If it ends up on the back rank, it automatically becomes a king.", rarity: "common", weight: 6, mode: "friendly", effect: "random_teleport" },
   { id: "rally", name: "Rally", desc: "All pieces adjacent to a friendly piece gain retreat for 1 turn.", rarity: "common", weight: 6, mode: "friendly", effect: "rally" },
   { id: "coin_flip", name: "Coin Flip", desc: "50% destroy random enemy; 50% destroy random friendly.", rarity: "common", weight: 6, mode: "instant", effect: "coin_flip" },
-  { id: "butterfly", name: "Butterfly Effect", desc: "Shuffle pieces on the 4 center dark squares randomly.", rarity: "common", weight: 6, mode: "instant", effect: "butterfly" },
   { id: "ignore", name: "Ignore", desc: "Jumps are optional for you this turn — only playable when capture is mandatory.", rarity: "common", weight: 6, mode: "instant", effect: "ignore" },
   { id: "iron_will", name: "Iron Will", desc: "A frozen or rooted friendly piece may move once (consumes debuff).", rarity: "common", weight: 5, mode: "friendly", effect: "iron_will" },
   { id: "demote", name: "Demote", desc: "Turn an enemy king back into a man.", rarity: "common", weight: 6, mode: "enemy", effect: "demote" },
