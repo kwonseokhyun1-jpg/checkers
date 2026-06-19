@@ -451,7 +451,7 @@ body.deck-editing .game-nav.tabs {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.15rem;
   cursor: pointer;
 }
