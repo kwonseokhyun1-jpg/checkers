@@ -66,6 +66,75 @@ function ring(x, y, r) {
   return `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.55"/>`;
 }
 
+/** Red game-token disc used in combat spell art. */
+function token(x, y, r = 4) {
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="#dc2626" stroke="#7f1d1d" stroke-width="1.2"/>`;
+}
+
+/** Jagged impact / burst shape. */
+function burst(x, y, s = 6, fill = "#fbbf24", stroke = "#b45309") {
+  return `<path d="M${x} ${y - s} L${x + s * 0.4} ${y - s * 0.4} L${x + s} ${y} L${x + s * 0.4} ${y + s * 0.4} L${x} ${y + s} L${x - s * 0.4} ${y + s * 0.4} L${x - s} ${y} L${x - s * 0.4} ${y - s * 0.4} Z" fill="${fill}" stroke="${stroke}" stroke-width="0.8"/>`;
+}
+
+/** Branching lightning bolt. */
+function lightningBolt() {
+  return `<path d="M28 8 L22 24 L30 24 L18 44 L34 26 L26 26 L36 8 Z" fill="#f8fafc" stroke="#1e3a5f" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M34 26 L42 18 L38 28 L46 24 L40 34" fill="none" stroke="#f8fafc" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M22 24 L14 20 L18 28 L10 26" fill="none" stroke="#f8fafc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M44 16 L46 14 M50 22 L52 20 M16 18 L14 16 M12 30 L10 28" stroke="#93c5fd" stroke-width="1.4" stroke-linecap="round"/>`;
+}
+
+/** Gloved hand holding a dagger (backstab). */
+function backstabArt() {
+  return `${token(22, 44, 3.5)}${token(34, 44, 3.5)}
+    <path d="M28 10 C26 14 24 20 26 28 L28 36" stroke="#1a1a1a" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M28 10 C26 14 24 20 26 28 L28 36" stroke="#2d2d2d" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+    <path d="M28 36 L26 48" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M28 36 L34 42 L30 44 L26 40 Z" fill="#cbd5e1" stroke="#1a1a1a" stroke-width="1"/>
+    ${burst(30, 42, 4, "#ef4444", "#991b1b")}`;
+}
+
+/** Spherical bomb with fuse and explosion. */
+function bombArt() {
+  return `<path d="M18 28 C18 18 26 12 36 14 C46 16 50 26 48 36 C46 46 36 50 28 46 C20 42 16 34 18 28 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1" opacity="0.7"/>
+    <circle cx="32" cy="32" r="12" fill="#1a1a1a" stroke="#0a0a0a" stroke-width="1.5"/>
+    <path d="M36 22 C40 18 42 14 40 10" stroke="#78716c" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <circle cx="40" cy="9" r="2.5" fill="#f97316" stroke="#ea580c" stroke-width="0.8"/>
+    <path d="M41 7 L43 5 M39 8 L37 6 M42 10 L44 9" stroke="#fbbf24" stroke-width="1" stroke-linecap="round"/>`;
+}
+
+/** Shadow hand culling a lone token. */
+function cullArt() {
+  return `${token(32, 46, 4)}
+    <path d="M20 8 C18 16 16 24 18 32 C20 38 24 42 28 40" fill="#4c1d95" stroke="#2e1065" stroke-width="1.2"/>
+    <path d="M28 40 L30 36 L34 38 L36 34 L40 36 L42 32 L44 34" fill="none" stroke="#1e1b4b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M22 14 C24 20 26 26 28 32" stroke="#a78bfa" stroke-width="1.5" fill="none" opacity="0.6"/>
+    <path d="M38 10 C36 18 34 26 36 34" stroke="#a78bfa" stroke-width="1.5" fill="none" opacity="0.5"/>
+    <circle cx="48" cy="14" r="1.5" fill="#e9d5ff" opacity="0.8"/>`;
+}
+
+/** Two knights dueling with crossed blades. */
+function duelArt() {
+  const knight = (x, plume) =>
+    `<g transform="translate(${x}, 36)">
+      <rect x="-5" y="-2" width="10" height="14" rx="2" fill="#9ca3af" stroke="#374151" stroke-width="1"/>
+      <path d="M-6 -2 L0 -10 L6 -2 Z" fill="#6b7280" stroke="#374151" stroke-width="1"/>
+      <path d="M0 -10 L0 -14" stroke="${plume}" stroke-width="3" stroke-linecap="round"/>
+      <path d="M4 4 L10 -6" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+    </g>`;
+  return `${knight(20, "#dc2626")}${knight(44, "#2563eb")}${burst(32, 30, 5)}`;
+}
+
+/** Bloodied axe striking a token. */
+function executionArt() {
+  return `${token(38, 46, 4)}
+    <path d="M14 50 L14 28" stroke="#92400e" stroke-width="3" stroke-linecap="round"/>
+    <path d="M14 28 L14 18 L28 14 L30 22 L26 30 Z" fill="#9ca3af" stroke="#374151" stroke-width="1.2"/>
+    <path d="M18 20 L24 18 L26 24 L20 26 Z" fill="#dc2626" opacity="0.7"/>
+    <path d="M32 38 L38 44" stroke="#78716c" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <circle cx="36" cy="42" r="1.5" fill="#a16207" opacity="0.7"/>`;
+}
+
 function tickMarks(x, y, count, size = 5, gap = 6) {
   return Array.from({ length: count }, (_, i) =>
     `<rect x="${x + i * gap}" y="${y}" width="${size}" height="${size}" rx="1" fill="currentColor" opacity="0.75"/>`
@@ -112,14 +181,14 @@ export const EFFECT_ILLUSTRATIONS = {
       `${enemy(22, 34, 5)}${square(44, 34, 14, 0.2)}<path d="M18 28 L22 16 L26 28 Z" fill="#f97316" opacity="0.9"/><path d="M40 28 L44 14 L48 28 Z" fill="#f97316" opacity="0.9"/><path d="M20 32 Q22 36 24 32" stroke="#fb923c" stroke-width="1.2" fill="none"/><path d="M42 32 Q44 36 46 32" stroke="#fb923c" stroke-width="1.2" fill="none"/>`
     ),
   snipe: () => wrap(`${piece(18, 48, 4)} ${enemy(50, 14, 5)} ${arrow(22, 44, 46, 18, 2)}`),
-  duel: () => wrap(`${piece(22, 38, 5)} ${enemy(42, 38, 5)} ${xMark(32, 38, 5)}`),
+  duel: () => wrap(duelArt()),
   sacrifice: () => wrap(`${piece(20, 40, 5, 0.35)} ${arrow(26, 36, 44, 28)} ${enemy(46, 26, 6)} ${xMark(46, 26, 5)}`),
-  cull: () => wrap(`${enemy(32, 34, 6)}<text x="26" y="38" font-size="9" fill="currentColor" opacity="0.65">♟</text> ${xMark(32, 34, 7)}`),
-  execution: () => wrap(`${enemy(32, 34, 6)}<path d="M18 48 H46 M24 48 V42 M40 48 V42" stroke="currentColor" stroke-width="1.8" opacity="0.45"/> ${xMark(32, 34, 6)}`),
-  chain_lightning: () => wrap(`${piece(16, 44, 4)} ${bolt(22, 38, 32, 30)} ${bolt(32, 30, 42, 22)} ${enemy(46, 18, 4)} ${xMark(44, 18, 4)}`),
-  backstab: () => wrap(`${piece(28, 40, 5)} ${enemy(40, 28, 5)} ${arrow(32, 36, 38, 32)}`),
+  cull: () => wrap(cullArt()),
+  execution: () => wrap(executionArt()),
+  chain_lightning: () => wrap(lightningBolt()),
+  backstab: () => wrap(backstabArt()),
   cryo_bolt: () => wrap(`${enemy(40, 26, 5)} ${piece(22, 44, 4)} ${bolt(26, 40, 36, 30)}<path d="M40 18 L44 22 L36 22 Z" fill="currentColor" opacity="0.5"/>`),
-  bomb: () => wrap(`${piece(32, 36, 6)}<circle cx="32" cy="36" r="10" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5"/><path d="M32 20 V26" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="18" r="2.5" fill="currentColor" opacity="0.8"/>`),
+  bomb: () => wrap(bombArt()),
   shockwave: () => wrap(`${piece(32, 36, 6)}<circle cx="32" cy="36" r="8" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.45"/><circle cx="32" cy="36" r="14" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.35"/><circle cx="32" cy="36" r="20" fill="none" stroke="currentColor" stroke-width="1" opacity="0.25"/>`),
   magnet: () => wrap(`${piece(20, 36, 5)} ${enemy(48, 36, 5)} ${arrow(44, 36, 28, 36)}<text x="12" y="22" font-size="10" fill="currentColor" opacity="0.6">U</text>`),
 
