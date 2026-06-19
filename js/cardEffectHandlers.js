@@ -4,7 +4,7 @@
 import {
   SIZE, COLORS, isDarkSquare, inBounds, movePiece, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
-  createPiece, getAllMovesForColor, pieceHasLegalMoves, hasMandatoryJumps, countPieces,
+  createPiece, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
   tryPromoteOnFarRow,
 } from "./board.js";
@@ -344,7 +344,7 @@ const EFFECTS = {
   detonate(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r+dr,c+dc); if(t&&t.color!==color) kill(state,r+dr,c+dc,color);} return ok(); },
   ricochet(state, color, picks) { state.meta.pendingRicochet[color]=true; return ok(); },
   duel(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); if(Math.max(Math.abs(r1-r2),Math.abs(c1-c2))!==1) return fail(); kill(state,r1,c1,color); kill(state,r2,c2,color); return ok(); },
-  execution(state, color, picks) { const [r,c]=p0(picks); const t=at(state,r,c); if(!t||t.color===color) return fail(); const ms=getAllMovesForColor(state.board,t.color).filter(m=>m.from[0]===r&&m.from[1]===c); if(ms.length) return fail('Has moves'); kill(state,r,c,color); return ok(); },
+  execution(state, color, picks) { const [r,c]=p0(picks); const t=at(state,r,c); if(!t||t.color===color) return fail(); if(pieceHasIntrinsicMoves(state.board,t.color,state,r,c)) return fail('Has moves'); kill(state,r,c,color); return ok(); },
   deport(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
@@ -730,7 +730,6 @@ const EFFECTS = {
       coinFlipVictimColor: victimColor,
     });
   },
-  butterfly(state, color, picks) { const cells=[[3,2],[3,4],[4,3],[4,5]]; const pieces=cells.map(([r,c])=>at(state,r,c)).filter(Boolean); const spots=cells.filter(([r,c])=>!at(state,r,c)); let i=0; for(const p of pieces){ if(i>=spots.length) break; const [r,c]=spots[i++]; movePiece(state.board,p.row,p.col,r,c);} return ok(); },
   ignore(state, color, picks) {
     if (!hasMandatoryJumps(state.board, color, state)) return fail("Ignore only when capture is mandatory.");
     state.meta.optionalJumps[color] = true;

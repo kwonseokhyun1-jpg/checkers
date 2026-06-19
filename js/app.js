@@ -750,8 +750,9 @@ function renderChests(options = {}) {
           const pulled = renderSpellCardEl(def, {
             button: true,
             deal: true,
-            meta: "Added to collection",
-            onClick: () => showCardPreview(def, { meta: "Added to collection" }),
+            hideDesc: true,
+            showViewFullHint: true,
+            onClick: () => showCardPreview(def),
           });
           pulled.style.animationDelay = `${i * 0.12}s`;
           grid.appendChild(pulled);
@@ -888,9 +889,10 @@ function appendCollectionCard(parent, def, opts = {}) {
     card.title = `${def.name} — tap for full card`;
 
     const ownedLabel = owned > 0 ? `Owned ${owned}/${cap}` : "Not in collection";
-    const meta = document.createElement("p");
+    const meta = document.createElement("div");
     meta.className = "deck-editor-tile__meta";
-    meta.textContent = `${ownedLabel} · In deck ${inDeck}/${cap}${isCardNew(profile, def.id) ? " · New" : ""}`;
+    meta.innerHTML = `${ownedLabel} · In deck ${inDeck}/${cap}${isCardNew(profile, def.id) ? '<span class="deck-editor-tile__new">New</span>' : ""}`;
+    meta.addEventListener("click", () => openInspect());
 
     const action = document.createElement("button");
     action.type = "button";

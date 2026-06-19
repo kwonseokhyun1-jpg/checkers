@@ -18,10 +18,10 @@ const THEME_STYLES = {
 export const THEME_KEYS = [
   ["movement", ["nudge", "backstep", "long_step", "leapfrog", "recall", "teleport", "random_teleport", "displacement", "berserk"]],
   ["combat", ["stab", "shatter", "destroy", "snipe", "duel", "execution", "cull", "pyromancy", "backstab", "sacrifice", "chain_lightning", "cryo", "bomb", "magnet"]],
-  ["special", ["create_foe", "butterfly", "clone", "earthquake"]],
+  ["special", ["create_foe", "clone", "earthquake"]],
   ["defense", ["shield", "ward", "aegis", "bulwark", "stall", "sanctuary", "barrier", "anchor", "iron_will", "backrank_protection", "hibernation"]],
   ["debuff", ["root", "panic", "backpedal", "blizzard", "deep_freeze", "snowball", "blind", "confusion", "press", "tangle", "shockwave"]],
-  ["board", ["quicksand", "landmine", "collapse", "darkness", "earthquake", "scatter", "butterfly", "call_forward"]],
+  ["board", ["quicksand", "landmine", "collapse", "darkness", "earthquake", "scatter", "call_forward"]],
   ["meta", ["counterspell", "vengeance", "last_stand", "purify", "trickster", "ignore", "offering", "quick_march", "dominion", "constitution", "last_king", "revive", "mind_control"]],
 ];
 
@@ -185,7 +185,9 @@ export function renderSpellCardEl(def, opts = {}) {
   const hue = cardHue(def.id);
   const style = THEME_STYLES[theme] || THEME_STYLES.arcane;
   const size = resolveSize(opts);
-  const showDesc = size !== "tiny" && !opts.gallery;
+  const hideRulesText = opts.hideDesc || opts.gallery;
+  const showDesc = !hideRulesText && size !== "tiny";
+  const showViewFullHint = opts.showViewFullHint || opts.gallery;
   const tag = opts.button ? "button" : "div";
   const el = document.createElement(tag);
   if (opts.button) el.type = "button";
@@ -245,17 +247,12 @@ export function renderSpellCardEl(def, opts = {}) {
           <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
         </div>
       </div>
-      <div class="spell-card__type-frame">
+      <div class="spell-card__type-frame${showViewFullHint ? " spell-card__type-frame--with-hint" : ""}">
         <span class="spell-card__rarity">${def.rarity}</span>
+        ${showViewFullHint ? '<span class="spell-card__view-full">Click to see full card</span>' : ""}
         ${opts.meta ? `<span class="spell-card__meta">${escapeHtml(opts.meta)}</span>` : ""}
       </div>
-      ${
-        opts.gallery
-          ? `<div class="spell-card__text-frame spell-card__text-frame--hint"><p class="spell-card__hint">Tap for full card</p></div>`
-          : showDesc
-            ? `<div class="spell-card__text-frame"><p class="spell-card__desc">${escapeHtml(def.desc)}</p></div>`
-            : ""
-      }
+      ${showDesc ? `<div class="spell-card__text-frame"><p class="spell-card__desc">${escapeHtml(def.desc)}</p></div>` : ""}
     </div>
     <div class="spell-card__tooltip" role="tooltip">
       <strong>${escapeHtml(def.name)}</strong>

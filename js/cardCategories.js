@@ -28,7 +28,6 @@ const ID_TO_CATEGORY = {
   bomb: "attack",
   shockwave: "control",
   bulwark: "defense",
-  butterfly: "special",
   create_foe: "special",
   call_forward: "movement",
   chain_lightning: "attack",

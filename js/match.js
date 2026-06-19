@@ -1664,7 +1664,7 @@ ${starLine}`;
     let overlay = null;
     frame?.classList.add(`board-frame--spell-${spec.type}`);
     if (spec.visual) frame?.classList.add(`board-frame--fx-${spec.visual}`);
-    if (spec.overlay) overlay = mountSpellOverlay(frame, spec.overlay);
+    if (spec.overlay) overlay = mountSpellOverlay(board, spec.overlay);
     if (spec.shake) {
       frame?.classList.add("board-frame--spell-impact");
       board?.classList.add("board--spell-shake");

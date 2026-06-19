@@ -39,7 +39,6 @@ export const EFFECT_VISUAL = {
   swap_friendly: "swap",
   hostile_swap: "swap",
   tangle: "swap",
-  butterfly: "swap",
   fusion: "fusion",
   scatter: "scatter",
   earthquake: "quake",

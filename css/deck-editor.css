@@ -417,12 +417,39 @@ body.deck-editing .game-nav.tabs {
   padding: 0;
 }
 
+.deck-editor-tile__card .spell-card__tooltip {
+  display: none;
+}
+
 .deck-editor-tile__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
   margin: 0;
   font-size: 0.62rem;
   color: var(--text-muted);
   text-align: center;
   line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.deck-editor-tile__new {
+  display: inline-block;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  background: rgba(129, 182, 76, 0.22);
+  color: #c8e6a0;
 }
 
 .deck-editor-tile__action {
@@ -732,7 +759,7 @@ body.deck-editing .game-nav.tabs {
   }
 
   .deck-editor-tile__meta {
-    font-size: 0.66rem;
+    font-size: 0.64rem;
   }
 
   .deck-editor-tile__action {
