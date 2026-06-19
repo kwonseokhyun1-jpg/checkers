@@ -187,7 +187,6 @@ export const FULL_BLEED_EFFECTS = new Set([
   "random_teleport",
   "rally",
   "coin_flip",
-  "butterfly",
   "ignore",
   "iron_will",
   "demote",
@@ -829,12 +828,6 @@ function rallyMotif() {
   <path d="M16 46 L22 38 M48 46 L42 38" stroke="#60a5fa" stroke-width="1.8" fill="none" stroke-linecap="round" opacity="0.55"/>`;
 }
 
-function butterflyMotif() {
-  return `<rect x="18" y="18" width="28" height="28" rx="2" fill="#334155" opacity="0.35" stroke="#64748b" stroke-width="1.2"/>
-    ${ally(24, 26, 3)}${ally(38, 28, 3)}${token(28, 40, 3)}${token(40, 38, 3)}
-    <path d="M24 26 Q32 16 38 28 Q32 44 28 40" stroke="#cbd5e1" stroke-width="1.6" fill="none" opacity="0.55"/>`;
-}
-
 function ignoreMotif() {
   return `${ally(32, 36, 6)}
     <path d="M14 18 L22 26 M22 18 L14 26" stroke="#f87171" stroke-width="2.6" stroke-linecap="round"/>
@@ -1122,7 +1115,6 @@ export const EFFECT_ILLUSTRATIONS = {
   collapse: () => uncommonBleed("co", "#78716c", "#292524", collapseMotif()),
   darkness: () => rareBleed("dk", "#6d28d9", "#1e1b4b", darknessMotif()),
   scatter: () => uncommonBleed("st", "#7dd3fc", "#1e3a5f", scatterMotif()),
-  butterfly: () => commonBleed("bf", "#a78bfa", "#312e81", butterflyMotif()),
   call_forward: () => rareBleed("cfw", "#fca5a5", "#4c1d95", callForwardMotif()),
   earthquake: () => legendaryBleed("eq", "#78716c", "#292524", earthquakeMotif()),
 
