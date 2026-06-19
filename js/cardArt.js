@@ -6,6 +6,7 @@ import { illustrationForCard } from "./cardIllustrations.js";
 
 /** Custom raster art for spell cards (fills the art panel edge-to-edge). */
 const CARD_RASTER_ART = {
+  bomb: "assets/cards/bomb.webp",
   chain_lightning: "assets/cards/chain_lightning.webp",
 };
 
