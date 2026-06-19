@@ -2,7 +2,7 @@
  * Spell card UI — illustrated SVG art, rarity frames, tooltips
  */
 import { getCardEffectTags, formatEffectTooltip } from "./cardEffectTags.js";
-import { illustrationForCard } from "./cardIllustrations.js";
+import { illustrationForCard, isFullBleedEffect } from "./cardIllustrations.js";
 
 const THEME_STYLES = {
   movement: { symbol: "↗", label: "Motion", anim: "movement" },
@@ -130,6 +130,12 @@ function artSvg(theme, hue, cardId, def) {
   const accent = (hue + 42) % 360;
   const variant = cardVariant(cardId);
   const inner = (def && illustrationForCard(def, variant)) || themeIllustration(theme, variant);
+  const fullBleed = def?.effect && isFullBleedEffect(def.effect) && inner;
+
+  if (fullBleed) {
+    return `<svg class="spell-card__svg spell-card__svg--full-bleed" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice">${inner}</svg>`;
+  }
+
   const stars = starField(gid, hue, variant);
 
   return `<svg class="spell-card__svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -214,6 +220,8 @@ export function renderSpellCardEl(def, opts = {}) {
         ? '<div class="spell-card__fx spell-card__fx--epic" aria-hidden="true"></div>'
         : "";
 
+  const fullBleedArt = def?.effect && isFullBleedEffect(def.effect);
+
   el.innerHTML = `
     ${fxLayer}
     <div class="spell-card__frame">
@@ -221,7 +229,7 @@ export function renderSpellCardEl(def, opts = {}) {
         <h3 class="spell-card__name">${escapeHtml(def.name)}</h3>
       </div>
       <div class="spell-card__art-frame">
-        <div class="spell-card__art spell-card__art--animated" aria-hidden="true">
+        <div class="spell-card__art spell-card__art--animated${fullBleedArt ? " spell-card__art--full-bleed" : ""}" aria-hidden="true">
           <div class="spell-card__art-shine"></div>
           ${cardArtHtml(theme, hue, def.id, def)}
           <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
