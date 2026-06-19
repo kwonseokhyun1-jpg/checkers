@@ -98,6 +98,14 @@ export const DEFAULT_COSMETICS = {
   equippedTitle: null,
 };
 
+/** Free starter items — never awarded from boxes (players already own them). */
+export const STARTER_COSMETIC_IDS = new Set([
+  "avatar_default",
+  "frame_default",
+  "banner_default",
+  "skin_classic",
+]);
+
 export function normalizeCosmetics(raw) {
   const base = structuredClone(DEFAULT_COSMETICS);
   if (!raw || typeof raw !== "object") return base;
@@ -140,23 +148,32 @@ function pickRarity(weights) {
   return "common";
 }
 
-function poolOfRarity(rarity) {
-  return COSMETIC_ITEMS.filter((c) => c.rarity === rarity);
+function poolOfRarity(rarity, { excludeStarters = false } = {}) {
+  return COSMETIC_ITEMS.filter(
+    (c) => c.rarity === rarity && (!excludeStarters || !STARTER_COSMETIC_IDS.has(c.id))
+  );
 }
 
+function unownedPullablePool(profile, rarity) {
+  return poolOfRarity(rarity, { excludeStarters: true }).filter(
+    (c) => !profile.cosmetics.owned[c.type].includes(c.id)
+  );
+}
 
 export function drawCosmeticItem(profile, weightsOrBox) {
   const weights = weightsOrBox.weights || weightsOrBox;
   profile.cosmetics = normalizeCosmetics(profile.cosmetics);
   for (let attempt = 0; attempt < 40; attempt++) {
     const rarity = pickRarity(weights);
-    const pool = poolOfRarity(rarity);
-    const pick = pool[Math.floor(Math.random() * pool.length)];
-    if (!pick) continue;
-    if (!profile.cosmetics.owned[pick.type].includes(pick.id)) {
+    const unowned = unownedPullablePool(profile, rarity);
+    if (unowned.length) {
+      const pick = unowned[Math.floor(Math.random() * unowned.length)];
       profile.cosmetics.owned[pick.type].push(pick.id);
       return { ...pick, duplicate: false };
     }
+    const ownedPool = poolOfRarity(rarity, { excludeStarters: true });
+    if (!ownedPool.length) continue;
+    const pick = ownedPool[Math.floor(Math.random() * ownedPool.length)];
     const gemRefund = RARITY_GEM_DUPE[pick.rarity] || 5;
     return { ...pick, duplicate: true, gemRefund };
   }
