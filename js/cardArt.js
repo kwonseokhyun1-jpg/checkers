@@ -3,7 +3,6 @@
  */
 import { getCardEffectTags, formatEffectTooltip } from "./cardEffectTags.js";
 import { illustrationForCard } from "./cardIllustrations.js";
-import { cardArtUrl, hasCardArt } from "./cardArtManifest.js";
 
 const THEME_STYLES = {
   movement: { symbol: "↗", label: "Motion", anim: "movement" },
@@ -122,15 +121,6 @@ function themeIllustration(theme, variant) {
   return shapes[theme] || shapes.arcane;
 }
 
-function artMarkup(theme, hue, cardId, def) {
-  const url = def?.id ? cardArtUrl(def.id) : null;
-  if (url) {
-    return `<img class="spell-card__img" src="${escapeHtml(url)}" alt="" decoding="async"/>
-      <div class="spell-card__art-fallback" hidden aria-hidden="true">${artSvg(theme, hue, cardId, def)}</div>`;
-  }
-  return artSvg(theme, hue, cardId, def);
-}
-
 function artSvg(theme, hue, cardId, def) {
   const gid = safeId(cardId);
   const accent = (hue + 42) % 360;
@@ -192,12 +182,9 @@ export function renderSpellCardEl(def, opts = {}) {
 
   const rarityClass = def.rarity === "legendary" ? "legendary" : def.rarity;
 
-  const usePortraitArt = hasCardArt(def.id);
-
   el.className = [
     "spell-card",
     `spell-card--${size}`,
-    usePortraitArt ? "spell-card--portrait-art" : "",
     `spell-card--anim-${style.anim}`,
     rarityClass,
     def.rarity === "epic" ? "spell-card--epic-fx" : "",
@@ -223,40 +210,26 @@ export function renderSpellCardEl(def, opts = {}) {
         ? '<div class="spell-card__fx spell-card__fx--epic" aria-hidden="true"></div>'
         : "";
 
-  const showBody = !usePortraitArt || opts.showBody;
-
   el.innerHTML = `
     ${fxLayer}
     <div class="spell-card__frame">
       <div class="spell-card__art spell-card__art--animated" aria-hidden="true">
         <div class="spell-card__art-shine"></div>
-        ${artMarkup(theme, hue, def.id, def)}
+        ${artSvg(theme, hue, def.id, def)}
         <span class="spell-card__sigil spell-card__sigil--effect" aria-hidden="true">${style.symbol}</span>
       </div>
-      ${showBody ? `<div class="spell-card__body">
+      <div class="spell-card__body">
         <span class="spell-card__rarity">${def.rarity}</span>
         <h3 class="spell-card__name">${escapeHtml(def.name)}</h3>
         ${opts.meta ? `<p class="spell-card__meta">${escapeHtml(opts.meta)}</p>` : ""}
         ${showDesc ? `<p class="spell-card__desc">${escapeHtml(def.desc)}</p>` : ""}
-      </div>` : ""}
+      </div>
     </div>
     <div class="spell-card__tooltip" role="tooltip">
       <strong>${escapeHtml(def.name)}</strong>
       ${buildEffectListHtml(def)}
     </div>
   `;
-
-  const img = el.querySelector(".spell-card__img");
-  if (img) {
-    img.addEventListener("error", () => {
-      img.hidden = true;
-      const fallback = el.querySelector(".spell-card__art-fallback");
-      if (fallback) {
-        fallback.hidden = false;
-        el.classList.remove("spell-card--portrait-art");
-      }
-    });
-  }
 
   if (opts.onClick) {
     el.addEventListener("click", (e) => {
