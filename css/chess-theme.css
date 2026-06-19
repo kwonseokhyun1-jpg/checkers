@@ -943,6 +943,10 @@ body {
   background: #0a1628;
 }
 
+.spell-card__art--full-bleed {
+  background: none;
+}
+
 .spell-card__art-shine {
   display: none;
 }
