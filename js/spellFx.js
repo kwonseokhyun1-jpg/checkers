@@ -242,13 +242,29 @@ export function applySquareSpellFx(square, visual, animRole, ctx) {
   }
 }
 
+function coinFaceStarSvg() {
+  return `<svg class="spell-coin-emblem" viewBox="0 0 32 32" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <polygon points="16,4 19.5,12.5 28.5,12.5 21.5,18 24,27 16,21.5 8,27 10.5,18 3.5,12.5 12.5,12.5" fill="currentColor"/>
+  </svg>`;
+}
+
+function coinFaceSkullSvg() {
+  return `<svg class="spell-coin-emblem" viewBox="0 0 32 32" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="16" cy="14" rx="10" ry="11" fill="currentColor" opacity="0.92"/>
+    <ellipse cx="11" cy="14" rx="3.2" ry="3.8" fill="#1a2228"/>
+    <ellipse cx="21" cy="14" rx="3.2" ry="3.8" fill="#1a2228"/>
+    <path d="M11 20 Q16 25 21 20" fill="none" stroke="#1a2228" stroke-width="1.4"/>
+    <path d="M12.5 24 V28 M16 22.5 V28 M19.5 24 V28" stroke="#334155" stroke-width="1.6" stroke-linecap="round"/>
+  </svg>`;
+}
+
 function coinOverlayMarkup() {
   return `
     <div class="spell-coin-stage" aria-hidden="true">
       <div class="spell-coin-scene">
         <div class="spell-coin-flipper">
-          <div class="spell-coin-face spell-coin-face--heads"><span>★</span><small>Heads</small></div>
-          <div class="spell-coin-face spell-coin-face--tails"><span>☠</span><small>Tails</small></div>
+          <div class="spell-coin-face spell-coin-face--heads">${coinFaceStarSvg()}<small>Heads</small></div>
+          <div class="spell-coin-face spell-coin-face--tails">${coinFaceSkullSvg()}<small>Tails</small></div>
         </div>
       </div>
       <p class="spell-coin-caption">Flipping…</p>

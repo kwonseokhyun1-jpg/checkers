@@ -148,6 +148,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "quick_march",
   "revive",
   "shockwave",
+  "coin_flip",
 ]);
 
 /** @param {string} [effect] */
@@ -417,6 +418,70 @@ function constitutionMotif() {
     <path d="M24 34 L32 28 L40 34" fill="#2563eb" opacity="0.35" stroke="#1e3a8a" stroke-width="1.2"/>`;
 }
 
+/** Gold star heads + silver skull tails — coin frozen mid-spin with 50/50 fate trails. */
+function coinFlipMotif() {
+  const star = (cx, cy, r) => {
+    const pts = [];
+    for (let i = 0; i < 5; i++) {
+      const outer = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+      const inner = outer + Math.PI / 5;
+      pts.push([cx + Math.cos(outer) * r, cy + Math.sin(outer) * r]);
+      pts.push([cx + Math.cos(inner) * r * 0.42, cy + Math.sin(inner) * r * 0.42]);
+    }
+    return `<polygon points="${pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ")}" fill="#fde68a" stroke="#b45309" stroke-width="0.8"/>`;
+  };
+
+  const skull = (cx, cy, s) => `
+    <ellipse cx="${cx}" cy="${cy - s * 0.15}" rx="${s * 0.72}" ry="${s * 0.82}" fill="#cbd5e1" stroke="#475569" stroke-width="0.9"/>
+    <ellipse cx="${cx - s * 0.28}" cy="${cy - s * 0.1}" rx="${s * 0.2}" ry="${s * 0.24}" fill="#1e293b"/>
+    <ellipse cx="${cx + s * 0.28}" cy="${cy - s * 0.1}" rx="${s * 0.2}" ry="${s * 0.24}" fill="#1e293b"/>
+    <path d="M${cx - s * 0.22} ${cy + s * 0.18} Q${cx} ${cy + s * 0.42} ${cx + s * 0.22} ${cy + s * 0.18}" fill="none" stroke="#475569" stroke-width="0.8"/>
+    <path d="M${cx - s * 0.16} ${cy + s * 0.34} V${cy + s * 0.58} M${cx} ${cy + s * 0.3} V${cy + s * 0.58} M${cx + s * 0.16} ${cy + s * 0.34} V${cy + s * 0.58}" stroke="#64748b" stroke-width="0.7"/>`;
+
+  const coinRim = (cx, cy, r, stroke) =>
+    `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${stroke}" stroke-width="1.1" opacity="0.55"/>
+     <circle cx="${cx}" cy="${cy}" r="${r - 2.2}" fill="none" stroke="${stroke}" stroke-width="0.6" opacity="0.35" stroke-dasharray="1.8 1.4"/>`;
+
+  return `<defs>
+    <radialGradient id="cf-gold" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#fff6c8"/>
+      <stop offset="55%" stop-color="#d4a017"/>
+      <stop offset="100%" stop-color="#6b4a0a"/>
+    </radialGradient>
+    <radialGradient id="cf-silver" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#f1f5f9"/>
+      <stop offset="55%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#334155"/>
+    </radialGradient>
+    <radialGradient id="cf-bg" cx="50%" cy="50%" r="72%">
+      <stop offset="0%" stop-color="#2a2218"/>
+      <stop offset="45%" stop-color="#14100c"/>
+      <stop offset="100%" stop-color="#080604"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" fill="url(#cf-bg)"/>
+  <ellipse cx="32" cy="56" rx="20" ry="4" fill="#000" opacity="0.35"/>
+  <path d="M6 34 C14 28 20 24 28 22" stroke="#fbbf24" stroke-width="1.6" fill="none" opacity="0.55" stroke-linecap="round"/>
+  <path d="M58 30 C50 24 44 20 36 18" stroke="#93c5fd" stroke-width="1.6" fill="none" opacity="0.5" stroke-linecap="round"/>
+  <circle cx="12" cy="30" r="1.4" fill="#fde68a" opacity="0.8"/>
+  <circle cx="18" cy="26" r="1" fill="#fbbf24" opacity="0.65"/>
+  <circle cx="52" cy="28" r="1.4" fill="#cbd5e1" opacity="0.75"/>
+  <circle cx="46" cy="22" r="1" fill="#94a3b8" opacity="0.55"/>
+  <g transform="translate(20, 34) rotate(-18)">
+    <circle cx="0" cy="0" r="15" fill="url(#cf-gold)" stroke="#b45309" stroke-width="1.6"/>
+    ${coinRim(0, 0, 15, "#fbbf24")}
+    ${star(0, 0, 6.5)}
+  </g>
+  <g transform="translate(44, 30) rotate(22)">
+    <circle cx="0" cy="0" r="14" fill="url(#cf-silver)" stroke="#64748b" stroke-width="1.6"/>
+    ${coinRim(0, 0, 14, "#cbd5e1")}
+    ${skull(0, 0, 9)}
+  </g>
+  <path d="M26 48 C30 44 34 44 38 48" stroke="#fbbf24" stroke-width="1.4" fill="none" opacity="0.45"/>
+  <text x="32" y="60" text-anchor="middle" font-size="6.5" fill="#fde68a" opacity="0.7" font-weight="700">50 / 50</text>
+  ${token(14, 50, 3.2)}${ally(50, 50, 3.2)}`;
+}
+
 /** Enemy pulled back through a portal to its starting square. */
 function deportMotif() {
   return `${token(46, 22, 5.5)}
@@ -515,7 +580,7 @@ export const EFFECT_ILLUSTRATIONS = {
   call_forward: () => wrap(`${enemy(40, 28, 5)} ${ghost(24, 40)} ${arrow(36, 32, 28, 38)}`),
   earthquake: () => legendaryBleed("eq", "#78716c", "#292524", earthquakeMotif()),
 
-  coin_flip: () => wrap(`<circle cx="32" cy="32" r="14" fill="currentColor" opacity="0.25" stroke="currentColor" stroke-width="2"/><text x="27" y="36" font-size="10" fill="currentColor" opacity="0.8">50</text>`),
+  coin_flip: () => coinFlipMotif(),
   ignore: () => wrap(`${piece(32, 36, 6)}<path d="M14 20 L22 28 M22 20 L14 28" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><text x="36" y="22" font-size="8" fill="currentColor" opacity="0.55">skip</text>`),
   counterspell: () => epicBleed("cs", "#a78bfa", "#2e1065", counterspellMotif()),
   purify: () => epicBleed("pu", "#fde68a", "#4a3520", purifyMotif()),
