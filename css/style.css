@@ -266,7 +266,7 @@ body {
 }
 
 .card-mini.legendary {
-  border-color: #e53e3e;
+  border-color: #c9a227;
 }
 
 .btn-secondary,
@@ -978,7 +978,7 @@ body {
 .spell-card.uncommon { --frame-border: #5b8fd4; --frame-highlight: #7eb0e8; --frame-shadow: #2d4a6e; }
 .spell-card.rare { --frame-border: #9f7aea; --frame-highlight: #b794f4; --frame-shadow: #553c7a; }
 .spell-card.epic { --frame-border: #e8a838; --frame-highlight: #f0c060; --frame-shadow: #7a5518; }
-.spell-card.legendary { --frame-border: #dc2626; --frame-highlight: #f87171; --frame-shadow: #7f1d1d; }
+.spell-card.legendary { --frame-border: #c9a227; --frame-highlight: #daa038; --frame-shadow: #5c4208; }
 
 .spell-card--full,
 .spell-card:not(.spell-card--compact):not(.spell-card--small):not(.spell-card--tiny) {
@@ -2085,20 +2085,20 @@ body.tutorial-match-active .card-preview-modal {
   inset: -3px;
   border-radius: 12px;
   pointer-events: none;
-  background: linear-gradient(120deg, transparent, rgba(220, 38, 38, 0.35), transparent);
-  box-shadow: 0 0 24px rgba(220, 38, 38, 0.4), 0 0 40px rgba(185, 28, 28, 0.25);
+  background: linear-gradient(120deg, transparent, rgba(201, 162, 39, 0.35), transparent);
+  box-shadow: 0 0 24px rgba(201, 162, 39, 0.4), 0 0 40px rgba(139, 105, 20, 0.25);
   animation: legendary-sheen 2.4s linear infinite;
 }
 .spell-card.legendary .spell-card__frame {
   box-shadow:
-    0 0 16px rgba(220, 38, 38, 0.5),
+    0 0 16px rgba(201, 162, 39, 0.5),
     0 4px 18px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 .spell-card__rarity { text-transform: capitalize; }
 .spell-card.legendary .spell-card__rarity {
-  color: #fca5a5;
+  color: #daa038;
   font-weight: 700;
 }
 
@@ -2121,8 +2121,8 @@ body.tutorial-match-active .card-preview-modal {
   100% { transform: scale(1); }
 }
 @keyframes legendary-burst {
-  0% { transform: scale(0.4); box-shadow: 0 0 0 rgba(220, 38, 38, 0); }
-  50% { transform: scale(1.12); box-shadow: 0 0 48px rgba(239, 68, 68, 0.9); }
+  0% { transform: scale(0.4); box-shadow: 0 0 0 rgba(201, 162, 39, 0); }
+  50% { transform: scale(1.12); box-shadow: 0 0 48px rgba(201, 151, 40, 0.9); }
   100% { transform: scale(1); }
 }
 
@@ -4763,8 +4763,8 @@ body.chest-open-active {
 .cosmetic-reveal-card.rarity-rare .cosmetic-reveal-card__frame { border-color: rgba(126, 200, 255, 0.6); }
 .cosmetic-reveal-card.rarity-epic .cosmetic-reveal-card__frame { border-color: rgba(196, 168, 255, 0.65); }
 .cosmetic-reveal-card.rarity-legendary .cosmetic-reveal-card__frame {
-  border-color: rgba(248, 113, 113, 0.85);
-  box-shadow: 0 0 24px rgba(220, 38, 38, 0.35);
+  border-color: rgba(201, 162, 39, 0.85);
+  box-shadow: 0 0 24px rgba(201, 162, 39, 0.35);
 }
 
 .cosmetic-reveal-card__rarity {
@@ -4901,8 +4901,8 @@ body.chest-open-active {
 .profile-cosmetic-card.rarity-rare { border-color: rgba(126, 200, 255, 0.45); }
 .profile-cosmetic-card.rarity-epic { border-color: rgba(196, 168, 255, 0.5); }
 .profile-cosmetic-card.rarity-legendary {
-  border-color: rgba(248, 113, 113, 0.55);
-  box-shadow: 0 0 18px rgba(220, 38, 38, 0.2);
+  border-color: rgba(201, 162, 39, 0.55);
+  box-shadow: 0 0 18px rgba(201, 162, 39, 0.2);
 }
 .profile-cosmetic-card__rarity {
   font-size: 0.6rem;
@@ -4911,7 +4911,7 @@ body.chest-open-active {
   opacity: 0.85;
   margin-bottom: 0.35rem;
 }
-.profile-cosmetic-card.rarity-legendary .profile-cosmetic-card__rarity { color: #f87171; }
+.profile-cosmetic-card.rarity-legendary .profile-cosmetic-card__rarity { color: #daa038; }
 .profile-cosmetic-card.rarity-epic .profile-cosmetic-card__rarity { color: #c4a8ff; }
 .profile-cosmetic-card.rarity-rare .profile-cosmetic-card__rarity { color: #7ec8ff; }
 .profile-cosmetic-card.rarity-uncommon .profile-cosmetic-card__rarity { color: #8fd4a8; }
@@ -6629,7 +6629,7 @@ body.tutorial-match-active.card-preview-open .tutorial-match-card {
 .mage-title--uncommon { color: #e8b86d; border-color: rgba(232, 184, 109, 0.45); }
 .mage-title--rare { color: #7ec8ff; border-color: rgba(126, 200, 255, 0.45); }
 .mage-title--epic { color: #c4a8ff; border-color: rgba(196, 168, 255, 0.45); }
-.mage-title--legendary { color: #f87171; border-color: rgba(248, 113, 113, 0.5); }
+.mage-title--legendary { color: #daa038; border-color: rgba(201, 162, 39, 0.5); }
 .mage-title--mythic {
   background: linear-gradient(90deg, #ff6b9d, #c4a8ff, #5ce1e6, #ffd87a);
   -webkit-background-clip: text;
