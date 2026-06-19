@@ -74,7 +74,7 @@ const STEPS = [
       ".deck-collection-row__action--add",
       ".deck-collection-row__action--buy",
       ".deck-collection-row__main",
-      ".deck-collection-row__thumb",
+      ".deck-collection-row__card",
       ".card-preview-modal",
       ".card-preview-modal *",
     ],

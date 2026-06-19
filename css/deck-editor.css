@@ -399,7 +399,7 @@ body.deck-editing .game-nav.tabs {
   letter-spacing: 0.04em;
 }
 
-/* ── Card tile: art + info on top, full-width action below ── */
+/* ── Card tile: full card + info on top, full-width action below ── */
 .deck-collection-row {
   display: flex;
   flex-direction: column;
@@ -420,73 +420,18 @@ body.deck-editing .game-nav.tabs {
 
 .deck-collection-row__art {
   flex: 0 0 auto;
-  width: 2.5rem;
-  height: 3.25rem;
-  overflow: hidden;
-  border-radius: 6px;
+  width: 5.5rem;
   cursor: pointer;
 }
 
-.deck-collection-row__thumb.spell-card {
+.deck-collection-row__card.spell-card {
   width: 100%;
-  height: 100%;
-  padding: 0;
+  max-width: 5.5rem;
   pointer-events: none;
 }
 
-.deck-collection-row__thumb .spell-card__frame {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  border-width: 1px;
-  padding: 1px;
-  gap: 0;
-}
-
-.deck-collection-row__thumb .spell-card__art-frame {
-  border-width: 1px;
-  padding: 0;
-  box-shadow: none;
-  flex: 1;
-  min-height: 0;
-}
-
-.deck-collection-row__thumb .spell-card__art {
-  flex: 1;
-  min-height: 0;
-  height: 100% !important;
-  max-height: none;
-  border-width: 0;
-  border-radius: 3px;
-}
-
-.deck-collection-row__thumb .spell-card__svg,
-.deck-collection-row__thumb .spell-card__raster {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.deck-collection-row__thumb .spell-card__art--full-bleed > .spell-card__svg {
-  position: absolute;
-  inset: 0;
-}
-
-.deck-collection-row__thumb .spell-card__title-frame,
-.deck-collection-row__thumb .spell-card__type-frame,
-.deck-collection-row__thumb .spell-card__text-frame {
-  display: none !important;
-}
-
-.deck-collection-row__thumb .spell-card__name {
-  display: none !important;
-}
-
-.deck-collection-row__thumb .spell-card__desc,
-.deck-collection-row__thumb .spell-card__rarity,
-.deck-collection-row__thumb .spell-card__meta,
-.deck-collection-row__thumb .spell-card__tooltip {
-  display: none !important;
+.deck-collection-row__card .spell-card__tooltip {
+  display: none;
 }
 
 .deck-collection-row__info {
@@ -823,8 +768,11 @@ body.deck-editing .game-nav.tabs {
   }
 
   .deck-collection-row__art {
-    width: 2.75rem;
-    height: 3.5rem;
+    width: 6rem;
+  }
+
+  .deck-collection-row__card.spell-card {
+    max-width: 6rem;
   }
 
   .deck-collection-row__name {
