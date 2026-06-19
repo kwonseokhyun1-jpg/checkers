@@ -11,7 +11,7 @@ SPELLS = [
     ("frost", "Frost Bind", "Freeze an enemy piece — it cannot move on its owner's next turn.", "uncommon", 6, "enemy", "freeze_1"),
     ("retreat", "Retreat", "Grant a piece backward movement for 3 turns.", "uncommon", 6, "friendly", "retreat_3"),    ("crown", "Royal Decree", "Instantly crown one of your pieces (king movement).", "rare", 4, "friendly", "crown"),
     ("swap", "Shadow Swap", "Swap positions of two of your pieces.", "uncommon", 5, "f_f", "swap_friendly"),
-    ("double", "Quick March", "After your normal move, move the same piece again (non-capture step).", "rare", 3, "instant", "quick_march"),
+    ("double", "Bonus Step", "After your normal move, move the same piece again (non-capture step).", "rare", 3, "instant", "quick_march"),
     ("gem_cache", "Gem Cache", "Gain 20 gems immediately.", "common", 7, "instant", "gems_20"),
     ("shatter", "Shatter", "Destroy any enemy piece on the board (not shielded).", "epic", 2, "enemy", "destroy_unshielded"),
     ("teleport", "Blink", "Teleport your piece to any empty dark square within 2 steps (Chebyshev).", "rare", 4, "f_empty", "blink_2"),
