@@ -258,8 +258,8 @@ body.deck-editing .game-nav.tabs {
   height: 2.85rem;
 }
 
-.deck-slot-wrap--strip .spell-card__body {
-  padding: 0.2rem 0.15rem 0.25rem;
+.deck-slot-wrap--strip .spell-card__title-frame {
+  padding: 0.15rem 0.2rem;
 }
 
 .deck-slot-wrap--strip .spell-card__name {
@@ -271,6 +271,8 @@ body.deck-editing .game-nav.tabs {
   margin: 0;
 }
 
+.deck-slot-wrap--strip .spell-card__type-frame,
+.deck-slot-wrap--strip .spell-card__text-frame,
 .deck-slot-wrap--strip .spell-card__desc,
 .deck-slot-wrap--strip .spell-card__rarity,
 .deck-slot-wrap--strip .spell-card__meta {
@@ -426,7 +428,9 @@ body.deck-editing .game-nav.tabs {
   object-fit: cover;
 }
 
-.deck-collection-row__thumb .spell-card__body {
+.deck-collection-row__thumb .spell-card__title-frame,
+.deck-collection-row__thumb .spell-card__type-frame,
+.deck-collection-row__thumb .spell-card__text-frame {
   display: none !important;
 }
 
