@@ -312,6 +312,48 @@ body.match-active #view-match:not(.hidden) {
   min-height: 3.25rem;
 }
 
+/* Deck list — compact tile grid (mobile-first) */
+#deck-subview-list.game-panel {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+#deck-subview-list.game-panel::before,
+#deck-subview-list.game-panel::after {
+  display: none;
+}
+
+.deck-list-header {
+  margin-bottom: 0.85rem;
+}
+
+.deck-list-header .panel-head__desc {
+  font-size: 0.82rem;
+  max-width: 16rem;
+}
+
+.deck-list {
+  max-width: 100%;
+}
+
+.deck-row {
+  min-height: 6.75rem;
+  border-radius: 14px;
+}
+
+.deck-row-name {
+  font-size: 0.9rem;
+}
+
+@media (min-width: 520px) {
+  .deck-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
 @media (min-width: 769px) {
   .game-shell {
     max-width: 1100px;

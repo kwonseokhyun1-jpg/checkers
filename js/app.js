@@ -1079,8 +1079,8 @@ function renderDeckList() {
     row.innerHTML = `
       <div class="deck-row-info">
         <h3 class="deck-row-name">${deck.name}</h3>
-        <p class="deck-status ${statusClass}">${deck.cardIds.length}/${DECK_SIZE} cards${val.valid ? " · Ready to play" : " · Incomplete"}</p>
-        <p class="deck-row-hint">Tap to view & edit</p>
+        <p class="deck-status ${statusClass}">${deck.cardIds.length}/${DECK_SIZE}${val.valid ? " · Ready" : " · Incomplete"}</p>
+        <p class="deck-row-hint">Tap to edit</p>
       </div>
       <span class="deck-row-chevron" aria-hidden="true">›</span>
     `;
