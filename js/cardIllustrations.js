@@ -447,7 +447,6 @@ function confusionMotif() {
   return `${token(32, 34, 6)}
     <path d="M18 18 C26 26 18 34 26 42 C34 34 42 42 46 28 C42 18 34 22 28 16" stroke="#c4b5fd" stroke-width="2.2" fill="none" opacity="0.75"/>
     <path d="M22 14 C30 20 24 28 32 24" stroke="#a78bfa" stroke-width="1.6" fill="none" opacity="0.55"/>
-    <text x="44" y="16" font-size="9" fill="#fde68a" opacity="0.9">?</text>
     <text x="12" y="48" font-size="8" fill="#fde68a" opacity="0.7">?</text>
     <path d="M26 30 L30 26 M34 30 L38 34 M30 38 L26 42" stroke="#f0e6ff" stroke-width="1.6" stroke-linecap="round" opacity="0.6"/>`;
 }
