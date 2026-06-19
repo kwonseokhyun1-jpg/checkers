@@ -99,18 +99,55 @@ function legendaryBleed(id, top, bottom, inner) {
   ${inner}`;
 }
 
+/** Premium epic art with gold-to-purple radial gradient. */
+function epicBleed(id, top, bottom, inner) {
+  const gid = `ep-${id}`;
+  return `<defs>
+    <radialGradient id="${gid}" cx="50%" cy="36%" r="74%">
+      <stop offset="0%" stop-color="${top}"/>
+      <stop offset="50%" stop-color="${bottom}"/>
+      <stop offset="100%" stop-color="${bottom}" stop-opacity="0.94"/>
+    </radialGradient>
+    <filter id="${gid}-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="64" height="64" fill="url(#${gid})"/>
+  ${inner}`;
+}
+
+/** Blue ally token used in epic spell art. */
+function ally(x, y, r = 5) {
+  return `<circle cx="${x}" cy="${y}" r="${r}" fill="#2563eb" stroke="#1e3a8a" stroke-width="1.4"/>`;
+}
+
 export const FULL_BLEED_EFFECTS = new Set([
   "backstab",
   "bomb",
   "berserk",
+  "bounty",
   "chain_lightning",
+  "clone",
+  "confusion",
+  "constitution",
+  "counterspell",
   "cull",
+  "deep_freeze",
+  "deport",
   "destroy_unshielded",
   "duel",
   "earthquake",
   "execution",
+  "hostile_swap",
+  "link_fate",
+  "magnet",
+  "mind_control",
+  "purify",
   "pyromancy",
+  "quick_march",
   "revive",
+  "shockwave",
 ]);
 
 /** @param {string} [effect] */
@@ -247,6 +284,152 @@ function executionMotif() {
     <circle cx="38" cy="46" r="1.5" fill="#a16207" opacity="0.55"/>`;
 }
 
+/** Horseshoe magnet yanking an enemy toward an ally. */
+function magnetMotif() {
+  return `${ally(20, 38, 5.5)}${token(50, 38, 5.5)}
+    <path d="M28 14 C20 14 14 22 14 32 C14 42 20 50 28 50" fill="none" stroke="#dc2626" stroke-width="5" stroke-linecap="round"/>
+    <path d="M36 14 C44 14 50 22 50 32 C50 42 44 50 36 50" fill="none" stroke="#1d4ed8" stroke-width="5" stroke-linecap="round"/>
+    <rect x="26" y="10" width="12" height="6" rx="2" fill="#64748b" stroke="#334155" stroke-width="1"/>
+    <path d="M44 38 L30 38" stroke="#fbbf24" stroke-width="2.2" stroke-dasharray="3 2" opacity="0.85"/>
+    <path d="M40 38 L32 38 M32 38 L34 36 M32 38 L34 40" stroke="#fde68a" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+}
+
+/** Piece taking two rapid marching steps. */
+function quickMarchMotif() {
+  return `${ally(32, 44, 6)}
+    <path d="M32 38 L32 26" stroke="#93c5fd" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M32 26 L32 14" stroke="#60a5fa" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+    <path d="M32 38 L28 34 M32 38 L36 34" stroke="#93c5fd" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M32 26 L28 22 M32 26 L36 22" stroke="#60a5fa" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="24" cy="50" rx="5" ry="3" fill="#1e3a8a" opacity="0.35"/>
+    <ellipse cx="40" cy="50" rx="5" ry="3" fill="#1e3a8a" opacity="0.35"/>
+    <circle cx="32" cy="10" r="4" fill="#2563eb" opacity="0.25" stroke="#93c5fd" stroke-width="1.2" stroke-dasharray="2 2"/>`;
+}
+
+/** Armed piece releasing a paralyzing shockwave. */
+function shockwaveMotif() {
+  return `${ally(32, 36, 6)}
+    <circle cx="32" cy="36" r="10" fill="none" stroke="#c4b5fd" stroke-width="2" opacity="0.7" filter="url(#ep-sw-glow)"/>
+    <circle cx="32" cy="36" r="16" fill="none" stroke="#a78bfa" stroke-width="1.6" opacity="0.55"/>
+    <circle cx="32" cy="36" r="22" fill="none" stroke="#8b5cf6" stroke-width="1.2" opacity="0.4"/>
+    ${token(14, 28, 3.5)}${token(50, 28, 3.5)}${token(14, 44, 3.5)}${token(50, 44, 3.5)}
+    <path d="M14 28 L12 24 M50 28 L52 24 M14 44 L12 48 M50 44 L52 48" stroke="#e9d5ff" stroke-width="1.4" stroke-linecap="round" opacity="0.65"/>
+    <path d="M28 20 L30 16 L34 20" stroke="#fbbf24" stroke-width="1.6" fill="none" stroke-linecap="round"/>`;
+}
+
+/** Hypnotic beam converting an enemy to your side. */
+function mindControlMotif() {
+  return `${token(46, 30, 6)}
+    <circle cx="46" cy="30" r="9" fill="none" stroke="#f87171" stroke-width="1.4" opacity="0.5"/>
+    <circle cx="24" cy="30" r="12" fill="none" stroke="#c4b5fd" stroke-width="2" opacity="0.75"/>
+    <circle cx="24" cy="30" r="5" fill="#7c3aed" opacity="0.55" stroke="#e9d5ff" stroke-width="1.4"/>
+    <circle cx="24" cy="30" r="2" fill="#f0e6ff"/>
+    <path d="M24 18 C30 22 30 38 24 42 C18 38 18 22 24 18 Z" fill="#a78bfa" opacity="0.35"/>
+    <path d="M36 30 L40 30" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M30 24 C34 28 34 32 30 36" stroke="#fde68a" stroke-width="1.8" fill="none" opacity="0.7"/>
+    <path d="M46 30 L40 30" stroke="#fca5a5" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.6"/>`;
+}
+
+/** Dizzy enemy with chaotic random paths. */
+function confusionMotif() {
+  return `${token(32, 34, 6)}
+    <path d="M18 18 C26 26 18 34 26 42 C34 34 42 42 46 28 C42 18 34 22 28 16" stroke="#c4b5fd" stroke-width="2.2" fill="none" opacity="0.75"/>
+    <path d="M22 14 C30 20 24 28 32 24" stroke="#a78bfa" stroke-width="1.6" fill="none" opacity="0.55"/>
+    <text x="44" y="16" font-size="9" fill="#fde68a" opacity="0.9">?</text>
+    <text x="12" y="48" font-size="8" fill="#fde68a" opacity="0.7">?</text>
+    <path d="M26 30 L30 26 M34 30 L38 34 M30 38 L26 42" stroke="#f0e6ff" stroke-width="1.6" stroke-linecap="round" opacity="0.6"/>`;
+}
+
+/** Hidden trap rune cancelling an incoming spell. */
+function counterspellMotif() {
+  return `<path d="M32 48 L44 36 L38 30 L50 18 L42 16 L32 26 L22 16 L14 18 L26 30 L20 36 Z" fill="#4c1d95" opacity="0.45" stroke="#a78bfa" stroke-width="1.4"/>
+    <path d="M32 48 L44 36 L38 30 L50 18 L42 16 L32 26 L22 16 L14 18 L26 30 L20 36 Z" fill="none" stroke="#c4b5fd" stroke-width="0.8" opacity="0.5"/>
+    <path d="M24 28 L40 44 M40 28 L24 44" stroke="#f87171" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M10 10 L22 22 L16 28 L28 40" fill="none" stroke="#fbbf24" stroke-width="2.4" stroke-linecap="round" opacity="0.65"/>
+    <circle cx="10" cy="10" r="4" fill="#fde68a" opacity="0.5"/>`;
+}
+
+/** Diagonal ice beam freezing enemies in a line. */
+function deepFreezeMotif() {
+  return `${ally(32, 50, 4.5)}
+    <path d="M8 56 L56 8" stroke="#bae6fd" stroke-width="3" opacity="0.55"/>
+    <path d="M8 56 L56 8" stroke="#e0f2fe" stroke-width="1.4" opacity="0.85"/>
+    ${token(20, 44, 4)}${token(32, 32, 4)}${token(44, 20, 4)}
+    <path d="M18 40 L22 36 M26 28 L30 24 M38 16 L42 12" stroke="#e0f2fe" stroke-width="1.4" stroke-linecap="round"/>
+    <path d="M16 38 L20 42 M24 26 L28 30 M36 14 L40 18" stroke="#7dd3fc" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+    <text x="46" y="14" font-size="8" fill="#e0f2fe" opacity="0.85">❄</text>`;
+}
+
+/** Two pieces crossing to swap positions. */
+function hostileSwapMotif() {
+  return `${ally(20, 40, 5.5)}${token(44, 24, 5.5)}
+    <path d="M26 36 C32 30 38 28 44 28" stroke="#93c5fd" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M38 28 L44 28 L42 24 M44 28 L42 32" stroke="#93c5fd" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M38 32 C32 38 26 40 20 40" stroke="#fca5a5" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M26 40 L20 40 L22 36 M20 40 L22 44" stroke="#fca5a5" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M28 34 L36 30" stroke="#fde68a" stroke-width="1.5" stroke-dasharray="2 2" opacity="0.6"/>`;
+}
+
+/** Cleansing light washing debuffs from allied pieces. */
+function purifyMotif() {
+  return `${ally(20, 44, 4)}${ally(44, 44, 4)}
+    <path d="M32 8 L34 20 H44 L36 26 L38 38 L32 32 L26 38 L28 26 L20 20 H30 Z" fill="#fde68a" opacity="0.75" stroke="#f59e0b" stroke-width="1.2" filter="url(#ep-pu-glow)"/>
+    <path d="M16 36 L20 40 M48 36 L44 40" stroke="#86efac" stroke-width="1.6" stroke-linecap="round" opacity="0.65"/>
+    <path d="M18 30 L22 34 M46 30 L42 34" stroke="#fca5a5" stroke-width="1.4" stroke-linecap="round" opacity="0.4"/>
+    <circle cx="32" cy="24" r="14" fill="#fbbf24" opacity="0.12"/>`;
+}
+
+/** Wanted mark on enemy with gold bounty reward. */
+function bountyMotif() {
+  return `${token(28, 36, 6)}
+    <rect x="38" y="14" width="18" height="22" rx="2" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/>
+    <circle cx="47" cy="22" r="5" fill="#dc2626" opacity="0.65"/>
+    <text x="43" y="34" font-size="7" fill="#92400e" font-weight="bold">$</text>
+    <circle cx="32" cy="36" r="12" fill="none" stroke="#fbbf24" stroke-width="2.2" opacity="0.8"/>
+    <path d="M32 24 L34 30 H40 L35 34 L37 40 L32 36 L27 40 L29 34 L24 30 H30 Z" fill="#fbbf24" opacity="0.7"/>`;
+}
+
+/** Two enemies chained by a glowing fate thread. */
+function linkFateMotif() {
+  return `${token(18, 34, 5.5)}${token(46, 34, 5.5)}
+    <path d="M24 34 H40" stroke="#c4b5fd" stroke-width="2.5"/>
+    <circle cx="32" cy="34" r="4" fill="#7c3aed" stroke="#e9d5ff" stroke-width="1.4"/>
+    <path d="M24 34 C28 28 36 28 40 34 C36 40 28 40 24 34 Z" fill="none" stroke="#a78bfa" stroke-width="1.6" opacity="0.65"/>
+    <path d="M18 34 L14 30 M18 34 L14 38 M46 34 L50 30 M46 34 L50 38" stroke="#f87171" stroke-width="1.4" stroke-linecap="round" opacity="0.55"/>`;
+}
+
+/** Original piece with a translucent duplicate beside it. */
+function cloneMotif() {
+  return `${ally(22, 36, 5.5)}
+    <circle cx="42" cy="36" r="5.5" fill="#2563eb" opacity="0.35" stroke="#93c5fd" stroke-width="1.6" stroke-dasharray="3 2"/>
+    <path d="M28 36 L36 36" stroke="#fde68a" stroke-width="2" stroke-dasharray="3 2" opacity="0.7"/>
+    <path d="M42 36 L42 30 M42 36 L42 42 M36 36 L48 36" stroke="#93c5fd" stroke-width="1.2" opacity="0.45"/>
+    <circle cx="42" cy="36" r="9" fill="#7c3aed" opacity="0.1"/>`;
+}
+
+/** Crowned king protected by a golden constitution scroll. */
+function constitutionMotif() {
+  return `${ally(32, 40, 6)}
+    <path d="M22 14 L26 6 L30 12 L32 4 L34 12 L38 6 L42 14 L42 48 L22 48 Z" fill="#fef3c7" stroke="#d97706" stroke-width="1.4" opacity="0.85"/>
+    <path d="M26 20 H38 M26 26 H38 M26 32 H34" stroke="#92400e" stroke-width="1.2" opacity="0.55"/>
+    <path d="M22 10 L26 4 L30 10 L32 2 L34 10 L38 4 L42 10" fill="#fbbf24" stroke="#b45309" stroke-width="1"/>
+    <path d="M32 40 L32 28" stroke="#93c5fd" stroke-width="2" opacity="0.45"/>
+    <path d="M24 34 L32 28 L40 34" fill="#2563eb" opacity="0.35" stroke="#1e3a8a" stroke-width="1.2"/>`;
+}
+
+/** Enemy pulled back through a portal to its starting square. */
+function deportMotif() {
+  return `${token(46, 22, 5.5)}
+    <ellipse cx="20" cy="42" rx="12" ry="10" fill="#4c1d95" opacity="0.45" stroke="#a78bfa" stroke-width="1.6"/>
+    <ellipse cx="20" cy="42" rx="7" ry="5" fill="#1e1b4b" opacity="0.55"/>
+    <circle cx="20" cy="42" r="3" fill="#c4b5fd" opacity="0.65"/>
+    <path d="M40 26 C34 30 28 34 24 38" stroke="#fca5a5" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <path d="M24 38 L20 42 L16 38" stroke="#fca5a5" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M10 50 H30" stroke="#78716c" stroke-width="2" opacity="0.5"/>
+    <rect x="12" y="50" width="16" height="4" rx="1" fill="#57534e" opacity="0.4"/>
+    <text x="12" y="49" font-size="5" fill="#d6d3d1" opacity="0.7">start</text>`;
+}
+
 function tickMarks(x, y, count, size = 5, gap = 6) {
   return Array.from({ length: count }, (_, i) =>
     `<rect x="${x + i * gap}" y="${y}" width="${size}" height="${size}" rx="1" fill="currentColor" opacity="0.75"/>`
@@ -292,14 +475,14 @@ export const EFFECT_ILLUSTRATIONS = {
   snipe: () => wrap(`${piece(18, 48, 4)} ${enemy(50, 14, 5)} ${arrow(22, 44, 46, 18, 2)}`),
   duel: () => fullBleed("#d4b896", duelMotif()),
   sacrifice: () => wrap(`${piece(20, 40, 5, 0.35)} ${arrow(26, 36, 44, 28)} ${enemy(46, 26, 6)} ${xMark(46, 26, 5)}`),
-  cull: () => fullBleed("#7c3aed", cullMotif()),
-  execution: () => fullBleed("#5c3d2e", executionMotif()),
+  cull: () => epicBleed("cu", "#a78bfa", "#2e1065", cullMotif()),
+  execution: () => epicBleed("ex", "#d4a574", "#3d2817", executionMotif()),
   chain_lightning: () => legendaryBleed("cl", "#2563eb", "#0c1929", chainLightningMotif()),
   backstab: () => fullBleed("#c4a574", backstabMotif()),
   cryo_bolt: () => wrap(`${enemy(40, 26, 5)} ${piece(22, 44, 4)} ${bolt(26, 40, 36, 30)}<path d="M40 18 L44 22 L36 22 Z" fill="currentColor" opacity="0.5"/>`),
   bomb: () => legendaryBleed("bm", "#f59e0b", "#78350f", bombMotif()),
-  shockwave: () => wrap(`${piece(32, 36, 6)}<circle cx="32" cy="36" r="8" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.45"/><circle cx="32" cy="36" r="14" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.35"/><circle cx="32" cy="36" r="20" fill="none" stroke="currentColor" stroke-width="1" opacity="0.25"/>`),
-  magnet: () => wrap(`${piece(20, 36, 5)} ${enemy(48, 36, 5)} ${arrow(44, 36, 28, 36)}<text x="12" y="22" font-size="10" fill="currentColor" opacity="0.6">U</text>`),
+  shockwave: () => epicBleed("sw", "#c4b5fd", "#3b1f6e", shockwaveMotif()),
+  magnet: () => epicBleed("mg", "#f0c060", "#312e81", magnetMotif()),
 
   poison_3: () => wrap(`${enemy(32, 30, 6)}<text x="27" y="18" font-size="11" fill="currentColor" opacity="0.85">☠</text><path d="M28 40 H36" stroke="currentColor" stroke-width="2" opacity="0.45"/>`),
   root_2: () => wrap(`${enemy(32, 28, 6)}<path d="M24 40 C28 34 36 34 40 40 M26 44 C30 38 34 38 38 44" stroke="currentColor" stroke-width="1.8" fill="none" opacity="0.65"/>`),
@@ -308,18 +491,18 @@ export const EFFECT_ILLUSTRATIONS = {
   snowball: () => wrap(`${piece(32, 34, 6)}<circle cx="20" cy="22" r="5" fill="currentColor" opacity="0.35"/><text x="16" y="25" font-size="8" fill="currentColor" opacity="0.7">❄</text>`),
   berserk: () => legendaryBleed("bk", "#991b1b", "#450a0a", berserkMotif()),
   create_foe: () => wrap(`${square(32, 34, 16, 0.15)}${enemy(32, 34, 6)}<text x="38" y="22" font-size="7" fill="currentColor" opacity="0.55">+</text>`),
-  deep_freeze: () => wrap(`${piece(32, 48, 4)}<path d="M10 54 L54 10" stroke="currentColor" stroke-width="2" opacity="0.45"/>${enemy(22, 40, 3)}${enemy(32, 30, 3)}${enemy(42, 20, 3)}`),
+  deep_freeze: () => epicBleed("df", "#7dd3fc", "#0c4a6e", deepFreezeMotif()),
   reverse_only_2: () => wrap(`${enemy(32, 24, 6)} ${arrow(32, 28, 32, 44)}<path d="M24 48 H40" stroke="currentColor" stroke-width="1.8" opacity="0.4"/>`),
   press: () => wrap(`${enemy(32, 32, 6)} ${arrow(32, 38, 32, 48)}`),
   tangle: () => wrap(`${enemy(22, 32, 5)} ${enemy(42, 32, 5)} ${arrow(28, 32, 36, 32)} ${arrow(36, 28, 28, 28)}<path d="M22 26 L42 38 M42 26 L22 38" stroke="currentColor" stroke-width="1.2" opacity="0.4"/>`),
   blind: () => wrap(`<path d="M16 28 C24 22 40 22 48 28 C40 34 24 34 16 28 Z" fill="currentColor" opacity="0.35"/><path d="M22 28 H42" stroke="currentColor" stroke-width="2"/>`),
-  confusion: () => wrap(`${enemy(32, 32, 6)}<path d="M20 20 C28 28 20 36 28 44 C36 36 44 44 44 28" stroke="currentColor" stroke-width="1.8" fill="none" opacity="0.65"/>`),
+  confusion: () => epicBleed("cf", "#c4b5fd", "#4c1d95", confusionMotif()),
   fog_2: () => wrap(`${piece(32, 34, 6)}<ellipse cx="32" cy="24" rx="16" ry="8" fill="currentColor" opacity="0.22"/>`),
 
   crown: () => wrap(`${piece(32, 38, 6)} ${crown(32, 24)}`),
   demote: () => wrap(`${enemy(32, 36, 6)} ${crown(32, 18)}<path d="M24 16 L40 32 M40 16 L24 32" stroke="currentColor" stroke-width="1.8" opacity="0.55"/>`),
   fusion: () => wrap(`${piece(20, 38, 5)} ${piece(44, 38, 5)} ${arrow(26, 38, 38, 38)} ${piece(32, 30, 7, 0.55)}`),
-  clone: () => wrap(`${piece(24, 34, 5)} ${piece(42, 34, 5, 0.45)} ${arrow(30, 34, 36, 34)}`),
+  clone: () => epicBleed("cln", "#93c5fd", "#312e81", cloneMotif()),
   chameleon: () => wrap(`${piece(32, 34, 6)}<path d="M18 22 H46 M18 30 H46 M18 38 H46" stroke="currentColor" stroke-width="1.2" opacity="0.25"/><circle cx="20" cy="22" r="3" fill="currentColor" opacity="0.5"/><circle cx="44" cy="30" r="3" fill="currentColor" opacity="0.35"/>`),
   hibernation: () => wrap(`${piece(32, 36, 6)}<text x="24" y="22" font-size="9" fill="currentColor" opacity="0.55">zzz</text>${crown(32, 48)}`),
 
@@ -334,17 +517,17 @@ export const EFFECT_ILLUSTRATIONS = {
 
   coin_flip: () => wrap(`<circle cx="32" cy="32" r="14" fill="currentColor" opacity="0.25" stroke="currentColor" stroke-width="2"/><text x="27" y="36" font-size="10" fill="currentColor" opacity="0.8">50</text>`),
   ignore: () => wrap(`${piece(32, 36, 6)}<path d="M14 20 L22 28 M22 20 L14 28" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><text x="36" y="22" font-size="8" fill="currentColor" opacity="0.55">skip</text>`),
-  counterspell: () => wrap(`${shield(32, 30, 0.9)}<path d="M26 30 L38 42 M38 30 L26 42" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`),
-  purify: () => wrap(`${piece(24, 34, 4)} ${enemy(40, 34, 4)}<path d="M32 14 L34 22 H42 L35 27 L38 35 L32 30 L26 35 L29 27 L22 22 H30 Z" fill="currentColor" opacity="0.45"/>`),
+  counterspell: () => epicBleed("cs", "#a78bfa", "#2e1065", counterspellMotif()),
+  purify: () => epicBleed("pu", "#fde68a", "#4a3520", purifyMotif()),
   trickster: () => wrap(`${piece(18, 22, 3)}${piece(46, 22, 3)}${piece(18, 46, 3)}${piece(46, 46, 3)}<path d="M18 22 L46 46 M46 22 L18 46" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>`),
   offering: () => wrap(`${piece(24, 40, 5, 0.35)}<path d="M40 18 L48 26 L40 34 L32 26 Z" fill="currentColor" opacity="0.35"/><text x="34" y="28" font-size="7" fill="currentColor" opacity="0.65">+2</text>`),
-  quick_march: () => wrap(`${piece(32, 38, 6)} ${arrow(32, 34, 32, 24)} ${arrow(32, 34, 32, 14)}`),
-  constitution: () => wrap(`${piece(32, 36, 6)} ${crown(32, 20)} ${shield(32, 34, 0.7)}<text x="42" y="48" font-size="7" fill="currentColor" opacity="0.5">5t</text>`),
+  quick_march: () => epicBleed("qm", "#60a5fa", "#1e3a5f", quickMarchMotif()),
+  constitution: () => epicBleed("co", "#fbbf24", "#451a03", constitutionMotif()),
   last_king: () => wrap(`${piece(32, 36, 7)} ${crown(32, 20)} ${shield(32, 34, 0.65)}`),
   revive: () => legendaryBleed("rv", "#15803d", "#052e16", reviveMotif()),
-  mind_control: () => wrap(`${enemy(44, 30, 6)}<circle cx="32" cy="32" r="9" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.7"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.85"/><path d="M32 20 V26 M32 38 V44 M20 32 H26 M38 32 H44" stroke="currentColor" stroke-width="1.4" opacity="0.55"/>`),
-  bounty: () => wrap(`${enemy(32, 32, 6)}<circle cx="32" cy="32" r="14" fill="none" stroke="currentColor" stroke-width="1.6" opacity="0.55"/><text x="26" y="20" font-size="10" fill="currentColor" opacity="0.85">$</text><rect x="42" y="40" width="12" height="16" rx="2" fill="currentColor" opacity="0.35"/><rect x="44" y="44" width="8" height="2" fill="currentColor" opacity="0.5"/>`),
-  link_fate: () => wrap(`${enemy(22, 32, 5)} ${enemy(42, 32, 5)}<path d="M28 32 H36" stroke="currentColor" stroke-width="2"/><circle cx="32" cy="32" r="3" fill="currentColor" opacity="0.6"/>`),
+  mind_control: () => epicBleed("mc", "#c4b5fd", "#3b0764", mindControlMotif()),
+  bounty: () => epicBleed("bo", "#fbbf24", "#451a03", bountyMotif()),
+  link_fate: () => epicBleed("lf", "#a78bfa", "#2e1065", linkFateMotif()),
   bishop_2: () =>
     wrap(
       `${piece(32, 48, 5)}<path d="M32 44 L14 26 M32 44 L50 26" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/><text x="44" y="22" font-size="13" fill="currentColor" opacity="0.9">♗</text>${tickMarks(38, 26, 2)}`
@@ -353,8 +536,8 @@ export const EFFECT_ILLUSTRATIONS = {
     wrap(
       `${piece(32, 48, 5)}<path d="M32 44 V18 M32 44 H14 M32 44 H50" stroke="currentColor" stroke-width="2" opacity="0.55" stroke-dasharray="5 3"/><text x="44" y="22" font-size="13" fill="currentColor" opacity="0.9">♜</text>${tickMarks(38, 26, 2)}`
     ),
-  hostile_swap: () => wrap(`${piece(22, 36, 5)} ${enemy(42, 36, 5)} ${arrow(28, 36, 36, 36)} ${arrow(36, 32, 28, 32)}`),
-  deport: () => wrap(`${enemy(44, 28, 5)} ${ghost(20, 40)} ${arrow(40, 30, 24, 38)}<path d="M14 48 H50" stroke="currentColor" stroke-width="2" opacity="0.45"/><text x="14" y="46" font-size="6" fill="currentColor" opacity="0.55">start</text>`),
+  hostile_swap: () => epicBleed("hs", "#93c5fd", "#312e81", hostileSwapMotif()),
+  deport: () => epicBleed("dp", "#c4b5fd", "#1e1b4b", deportMotif()),
 };
 
 /**
