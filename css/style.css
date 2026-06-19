@@ -1158,9 +1158,8 @@ body {
 
 .chest-pulls {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.65rem;
-  justify-content: center;
   margin-top: 1rem;
   min-height: 0;
 }
@@ -2197,6 +2196,18 @@ body.chest-open-active .card-preview-modal {
     inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 .spell-card__rarity { text-transform: capitalize; }
+.spell-card.uncommon .spell-card__rarity {
+  color: #7eb0e8;
+  font-weight: 600;
+}
+.spell-card.rare .spell-card__rarity {
+  color: #b794f4;
+  font-weight: 700;
+}
+.spell-card.epic .spell-card__rarity {
+  color: #f0c060;
+  font-weight: 700;
+}
 .spell-card.legendary .spell-card__rarity {
   color: #daa038;
   font-weight: 700;
@@ -2980,6 +2991,16 @@ body.chest-open-active {
 .chest-open-cards__grid .spell-card {
   width: 100%;
   max-width: none;
+}
+
+.chest-open-cards__grid .spell-card--gallery,
+.chest-pulls__grid .spell-card--gallery {
+  padding: 0;
+}
+
+.chest-open-cards__grid .spell-card--gallery .spell-card__frame,
+.chest-pulls__grid .spell-card--gallery .spell-card__frame {
+  height: 100%;
 }
 
 .chest-open-cards__grid .spell-card__meta,
