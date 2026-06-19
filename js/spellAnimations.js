@@ -1,7 +1,7 @@
 /**
  * Spell cast animations — every board-affecting spell gets ≥1s visual feedback.
  */
-import { SIZE, inBounds, isDarkSquare } from "./board.js";
+import { SIZE, inBounds, isDarkSquare, diagonalDirectionFromPick } from "./board.js";
 import { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS } from "./cullAnimation.js";
 import { visualForEffect, metaOverlayForEffect, durationForVisual } from "./spellFx.js";
 
@@ -438,15 +438,27 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
   }
 
   if (effect === "deep_freeze" && p.length >= 2) {
+    const [from, to] = p;
+    const dir = diagonalDirectionFromPick(from[0], from[1], to[0], to[1]);
+    let lineSquares = squaresBetween(from, to);
+    if (dir) {
+      const [dr, dc] = dir;
+      lineSquares = [];
+      for (let i = -SIZE + 1; i < SIZE; i++) {
+        const r = from[0] + dr * i;
+        const c = from[1] + dc * i;
+        if (inBounds(r, c) && isDarkSquare(r, c)) lineSquares.push([r, c]);
+      }
+    }
     return finishSpec({
       type: "debuff",
       visual: "freeze",
       duration: animDurationForEffect("deep_freeze"),
       label,
       squares: p.slice(0, 2),
-      from: p[0],
-      to: p[1],
-      lineSquares: squaresBetween(p[0], p[1]),
+      from,
+      to,
+      lineSquares,
     }, effect);
   }
 
