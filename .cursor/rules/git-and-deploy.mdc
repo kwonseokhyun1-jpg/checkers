@@ -1,0 +1,26 @@
+---
+description: Git workflow and deployment — always use pull requests
+alwaysApply: true
+---
+
+# Git and deploy workflow
+
+Never push feature or fix work directly to `main`.
+
+## Required flow
+
+1. Create a descriptive branch from `main` (e.g. `cursor/enemy-deck-4-up-grid`).
+2. Commit changes on that branch only.
+3. Push the branch to `origin`.
+4. Open a **draft PR** into `main` with a clear title and summary.
+5. Share the PR link with the user.
+
+## Deploy
+
+- Do **not** deploy by pushing to `main` yourself.
+- Deployment happens when the user merges the PR (GitHub Pages on merge; Vercel if connected).
+- If the user asks to "deploy", interpret that as: **open or update the PR** and tell them to merge it.
+
+## Exceptions
+
+- Only push to `main` when the user explicitly says to bypass the PR process or merge themselves after review.
