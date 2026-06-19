@@ -185,7 +185,7 @@ export function renderSpellCardEl(def, opts = {}) {
   const hue = cardHue(def.id);
   const style = THEME_STYLES[theme] || THEME_STYLES.arcane;
   const size = resolveSize(opts);
-  const showDesc = size !== "tiny";
+  const showDesc = !opts.hideDesc && size !== "tiny";
   const tag = opts.button ? "button" : "div";
   const el = document.createElement(tag);
   if (opts.button) el.type = "button";

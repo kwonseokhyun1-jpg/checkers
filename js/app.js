@@ -750,8 +750,8 @@ function renderChests(options = {}) {
           const pulled = renderSpellCardEl(def, {
             button: true,
             deal: true,
-            meta: "Added to collection",
-            onClick: () => showCardPreview(def, { meta: "Added to collection" }),
+            hideDesc: true,
+            onClick: () => showCardPreview(def, { hideDesc: true }),
           });
           pulled.style.animationDelay = `${i * 0.12}s`;
           grid.appendChild(pulled);
