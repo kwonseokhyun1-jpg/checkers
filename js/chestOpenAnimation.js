@@ -112,7 +112,8 @@ export function playChestOpenAnimation({ tier, tierLabel, pulls }) {
           button: true,
           deal: true,
           hideDesc: true,
-          onClick: () => showCardPreview(def, { hideDesc: true }),
+          showViewFullHint: true,
+          onClick: () => showCardPreview(def),
         });
         card.style.animationDelay = `${i * 0.14}s`;
         grid.appendChild(card);
