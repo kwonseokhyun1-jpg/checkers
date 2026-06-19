@@ -1,5 +1,6 @@
 import { getCurrentUser, fetchProfileRow, upsertProfileRow, isAuthAvailable } from "./auth.js";
 import { readProfileFromStorage, saveProfile, repairProfile, isDefaultProfile } from "./storage.js";
+import { mergeMonotonicProfileStats, resolveProfileConflict } from "./profileStats.js";
 
 let cloudSaveTimer = null;
 
@@ -40,16 +41,17 @@ export async function pullCloudProfile() {
   }
 
   if (isDefaultProfile(local)) {
-    return applyRemoteProfile({ ...remote });
+    return applyRemoteProfile(resolveProfileConflict(local, remote));
   }
 
   const remoteTime = remote.savedAt || 0;
   const localTime = local.savedAt || 0;
 
   if (remoteTime >= localTime) {
-    return applyRemoteProfile({ ...remote });
+    return applyRemoteProfile(resolveProfileConflict(local, remote));
   }
 
+  mergeMonotonicProfileStats(local, remote);
   saveProfile(local);
   return local;
 }
