@@ -2021,6 +2021,9 @@ body.tutorial-match-active .card-preview-modal {
 body.chest-open-active .card-preview-modal {
   z-index: 600;
 }
+body.adventure-stage-open .card-preview-modal {
+  z-index: 10000;
+}
 .card-preview-modal.hidden { display: none; }
 .card-preview-backdrop {
   position: absolute;
