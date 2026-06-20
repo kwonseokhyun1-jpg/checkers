@@ -520,8 +520,9 @@ body.deck-editing .game-nav.tabs {
 }
 
 #deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art-frame {
-  flex: 1 1 auto;
-  min-height: 5rem;
+  flex: 0 0 auto;
+  width: 100%;
+  aspect-ratio: 7 / 6;
   position: relative;
   padding: 0;
 }
@@ -737,7 +738,4 @@ body.deck-editing .game-nav.tabs {
     min-height: 2.5rem;
   }
 
-  #deck-subview-edit .deck-editor-tile__card.spell-card--gallery .spell-card__art {
-    min-height: 5.5rem;
-  }
 }
