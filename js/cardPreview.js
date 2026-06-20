@@ -7,6 +7,13 @@ function $(id) {
   return document.getElementById(id);
 }
 
+function ensureCardPreviewOnBody() {
+  const modal = $("card-preview-modal");
+  if (modal && modal.parentElement !== document.body) {
+    document.body.appendChild(modal);
+  }
+}
+
 function setPreviewBodyState(open) {
   document.body.classList.toggle("card-preview-open", open);
   window.dispatchEvent(new CustomEvent("card-preview-change", { detail: { open } }));
@@ -29,6 +36,7 @@ export function closeCardPreview() {
  * @param {string} [opts.meta] — extra line under card
  */
 export function showCardPreview(def, opts = {}) {
+  ensureCardPreviewOnBody();
   const modal = $("card-preview-modal");
   const mount = $("card-preview-mount");
   const actions = $("card-preview-actions");
