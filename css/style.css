@@ -2743,103 +2743,33 @@ body.chest-open-active .card-preview-modal {
   margin-bottom: 1rem;
 }
 
-/* Enemy prebattle deck — 4-up gallery tiles (deck-editor proportions, smaller) */
-.enemy-deck-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+/* Enemy prebattle deck — spell name list (one per row) */
+.enemy-deck-list {
+  display: flex;
+  flex-direction: column;
   gap: 0.35rem;
-  max-height: 320px;
+  max-height: 280px;
   overflow-y: auto;
   margin: 0.5rem 0 1rem;
   -webkit-overflow-scrolling: touch;
 }
 
-.enemy-deck-tile {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  padding: 0.25rem;
-  background: var(--bg-panel, #302e2b);
+.enemy-deck-spell-btn {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  text-align: left;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--accent-gem);
+  background: var(--bg-panel-elevated, #383533);
   border: 1px solid #4a4845;
   border-radius: 8px;
+  cursor: pointer;
 }
 
-.enemy-deck-tile__card {
-  width: 100%;
-  max-width: none;
-  padding: 0;
-  flex: 1 1 auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.enemy-deck-tile__card .spell-card__frame {
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.enemy-deck-tile__card .spell-card__tooltip {
-  display: none;
-}
-
-.enemy-deck-tile__card .spell-card__title-frame {
-  padding: 0.12rem 0.22rem;
-}
-
-.enemy-deck-tile__card .spell-card__name {
-  font-size: 0.58rem;
-  line-height: 1.15;
-}
-
-.enemy-deck-tile__card .spell-card__art-frame {
-  flex: 0 0 auto;
-  width: 100%;
-  aspect-ratio: 7 / 6;
-  position: relative;
-  padding: 0;
-}
-
-.enemy-deck-tile__card .spell-card__art {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  aspect-ratio: unset;
-}
-
-.enemy-deck-tile__card .spell-card__svg:not(.spell-card__svg--full-bleed) {
-  width: 72%;
-  height: 72%;
-}
-
-.enemy-deck-tile__card .spell-card__type-frame {
-  padding: 0.1rem 0.2rem 0.14rem;
-}
-
-.enemy-deck-tile__card .spell-card__rarity {
-  font-size: 0.48rem;
-}
-
-.enemy-deck-tile__card .spell-card__view-full {
-  font-size: 0.44rem;
-}
-
-.enemy-deck-tile__count {
-  position: absolute;
-  top: 0.18rem;
-  right: 0.18rem;
-  z-index: 2;
-  padding: 0.04rem 0.28rem;
-  border-radius: 999px;
-  font-size: 0.52rem;
-  font-weight: 700;
-  line-height: 1.2;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  pointer-events: none;
+.enemy-deck-spell-btn:hover {
+  background: #403d39;
 }
 
 .game-over-stars {
