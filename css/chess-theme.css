@@ -926,7 +926,8 @@ body {
 }
 
 .deck-list-item:hover,
-.deck-row--open:hover {
+.deck-row--open:hover,
+.enemy-deck-spell-btn:hover {
   background: #403d39;
   transform: none;
 }
