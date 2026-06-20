@@ -133,7 +133,7 @@ function artSvg(theme, hue, cardId, def) {
   const fullBleed = def?.effect && isFullBleedEffect(def.effect) && inner;
 
   if (fullBleed) {
-    return `<svg class="spell-card__svg spell-card__svg--full-bleed" viewBox="0 0 70 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice">${inner}</svg>`;
+    return `<svg class="spell-card__svg spell-card__svg--full-bleed" viewBox="0 0 70 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
   }
 
   const stars = starField(gid, hue, variant);
