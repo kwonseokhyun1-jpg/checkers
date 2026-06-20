@@ -926,9 +926,27 @@ body {
 }
 
 .deck-list-item:hover,
-.deck-row--open:hover,
-.enemy-deck-spell-btn:hover {
+.deck-row--open:hover {
   background: #403d39;
+  transform: none;
+}
+
+.enemy-deck-spell-btn {
+  color: var(--text);
+  background: linear-gradient(180deg, #2e2c29 0%, #252320 100%);
+  border-color: #3d3b38;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.enemy-deck-spell-btn__count {
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.4);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.enemy-deck-spell-btn:hover {
+  background: linear-gradient(180deg, #353330 0%, #2c2a27 100%);
+  border-color: #4a4845;
   transform: none;
 }
 

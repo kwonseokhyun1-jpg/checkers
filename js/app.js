@@ -1466,8 +1466,19 @@ function openAdventurePrebattle(levelId) {
         const btn = document.createElement("button");
         btn.type = "button";
         btn.className = "enemy-deck-spell-btn";
-        btn.textContent = `${def.name} ×${count}`;
         btn.title = `View ${def.name}`;
+
+        const name = document.createElement("span");
+        name.className = "enemy-deck-spell-btn__name";
+        name.textContent = def.name;
+        btn.appendChild(name);
+
+        if (count > 1) {
+          const qty = document.createElement("span");
+          qty.className = "enemy-deck-spell-btn__count";
+          qty.textContent = `×${count}`;
+          btn.appendChild(qty);
+        }
         btn.addEventListener("click", () =>
           showCardPreview(def, {
             meta: count > 1 ? `${count} copies in enemy deck` : "Enemy deck",
