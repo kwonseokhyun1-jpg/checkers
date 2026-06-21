@@ -38,7 +38,7 @@ SPELLS = [
     ("mine", "Mine", "Place a trap on an empty dark square; next enemy to land there is destroyed.", "uncommon", 5, "empty", "mine"),
     ("detonate", "Detonate", "Destroy your own piece to also destroy all adjacent enemies (not shielded).", "rare", 3, "friendly", "detonate"),
     ("ricochet", "Ricochet", "Arm your next capture to also remove an enemy 2 squares behind the captured piece.", "rare", 3, "instant", "ricochet"),
-    ("duel", "Duel", "Choose your piece and an adjacent enemy; both are destroyed unless shielded.", "uncommon", 4, "f_e_adj", "duel"),
+    ("duel", "Duel", "Choose your piece and an adjacent enemy; both are destroyed unless shielded. If the enemy is frozen or paralyzed, your piece survives.", "uncommon", 4, "f_e_adj", "duel"),
     ("execution", "Execution", "Destroy an enemy piece that has no legal moves.", "uncommon", 4, "enemy", "execution"),
     ("cull", "Cull", "Destroy the weakest enemy (non-king preferred, fewest escape squares).", "rare", 3, "instant", "cull"),
     ("venom", "Venom", "Enemy takes 1 damage; 2 damage destroys it (shield blocks 1 tick).", "common", 5, "enemy", "venom"),
