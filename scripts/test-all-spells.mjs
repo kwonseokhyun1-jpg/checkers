@@ -240,26 +240,29 @@ for (const card of cards) {
   console.log("Trickster back rank test: OK");
 }
 
-// Revive cannot place on your back row
+// Revive can only place on your side of the board (including back row)
 {
   const revive = cards.find((c) => c.id === "revive");
   const s = baseState();
   s.captured[COLOR] = [{ king: false }];
-  const backRows = COLOR === COLORS.RED ? [5, 6, 7] : [0, 1, 2];
+  const ownRows = COLOR === COLORS.RED ? [4, 5, 6, 7] : [0, 1, 2, 3];
+  const enemyRows = COLOR === COLORS.RED ? [0, 1, 2, 3] : [4, 5, 6, 7];
   const targets = getValidTargets(s, COLOR, revive, []);
-  if (targets.some(([r]) => backRows.includes(r))) throw new Error("Revive must not target your back row");
-  for (const row of backRows) {
-    const backRowDark = DARK.find(([r]) => r === row);
-    if (backRowDark) {
-      const failRes = applyCard(s, COLOR, revive, [backRowDark]);
-      if (failRes.success) throw new Error(`Revive should fail on back row (row ${row})`);
+  if (targets.some(([r]) => enemyRows.includes(r))) throw new Error("Revive must not target enemy side");
+  if (!targets.some(([r]) => ownRows.includes(r))) throw new Error("Revive must target your side");
+  for (const row of enemyRows) {
+    const enemyDark = DARK.find(([r]) => r === row);
+    if (enemyDark) {
+      const failRes = applyCard(s, COLOR, revive, [enemyDark]);
+      if (failRes.success) throw new Error(`Revive should fail on enemy side (row ${row})`);
     }
   }
-  const safe = targets[0];
-  if (!safe) throw new Error("Revive needs at least one valid square");
-  const okRes = applyCard(s, COLOR, revive, [safe]);
-  if (!okRes.success || !at(s, safe[0], safe[1])) throw new Error("Revive should succeed off back row");
-  console.log("Revive back row test: OK");
+  const backRowDark = DARK.find(([r]) => r === (COLOR === COLORS.RED ? 7 : 0));
+  if (backRowDark) {
+    const backRes = applyCard(s, COLOR, revive, [backRowDark]);
+    if (!backRes.success || !at(s, backRowDark[0], backRowDark[1])) throw new Error("Revive should succeed on your back row");
+  }
+  console.log("Revive own-side test: OK");
 }
 
 // Backrank Protection shields only the furthest back rank
