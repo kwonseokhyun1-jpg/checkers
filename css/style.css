@@ -2372,6 +2372,9 @@ body.adventure-stage-open .card-preview-modal {
   margin: 0;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
 }
+.piece--move-hidden {
+  opacity: 0 !important;
+}
 .square.ai-capture { box-shadow: inset 0 0 0 3px #fc8181; }
 .square.explosion-flash {
   animation: explosion-flash 0.65s ease-out;
