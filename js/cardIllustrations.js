@@ -1567,7 +1567,7 @@ function scatterMotif() {
     ${sparkles([[32, 8, 0.6], [56, 32, 0.6], [32, 56, 0.6], [8, 32, 0.6]], "#bae6fd", 0.4)}`;
 }
 
-function displacementMotif() {
+function massNudgeMotif() {
   return `${groundShadow(26, 54, 20, 4)}
     ${allyPro(12, 42, 4.5)}${allyPro(30, 42, 4.5)}
     <path d="M16 38 L8 24" stroke="#0f172a" stroke-width="3" fill="none" stroke-linecap="round" opacity="0.2"/>
@@ -1578,6 +1578,24 @@ function displacementMotif() {
     <path d="M18 36 L28 36" stroke="#60a5fa" stroke-width="1.6" opacity="0.4"/>
     ${motionArrow(14, 38, 10, 26, "#93c5fd", 2.2)}${motionArrow(32, 38, 40, 26, "#93c5fd", 2.2)}
     ${sparkles([[8, 20, 0.6], [42, 20, 0.6]], "#bae6fd", 0.4)}`;
+}
+
+function displacementMotif() {
+  return `${groundShadow(32, 54, 22, 4)}
+    <path d="M4 30 H60" stroke="#0f172a" stroke-width="2.8" opacity="0.18"/>
+    <path d="M4 30 H60" stroke="#64748b" stroke-width="2" opacity="0.45" stroke-dasharray="5 3"/>
+    <rect x="6" y="30" width="52" height="22" rx="2" fill="#1e3a8a" opacity="0.14" stroke="#334155" stroke-width="1.2"/>
+    <text x="10" y="38" font-size="5" fill="#93c5fd" opacity="0.75" font-weight="700">YOUR SIDE</text>
+    ${ghost(44, 18, 5)}
+    ${allyPro(18, 48, 5)}
+    ${destRing(44, 18, 5.5, "#7dd3fc")}
+    <path d="M22 44 Q34 20 44 18" stroke="#0f172a" stroke-width="3.6" fill="none" stroke-linecap="round" opacity="0.2"/>
+    <path d="M22 44 Q34 20 44 18" stroke="#bae6fd" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-dasharray="5 3"/>
+    ${energyArc(22, 44, 44, 18, "#38bdf8", 2.4)}
+    <circle cx="44" cy="18" r="10" fill="#38bdf8" opacity="0.1" stroke="#0f172a" stroke-width="1.4"/>
+    <circle cx="44" cy="18" r="10" fill="none" stroke="#7dd3fc" stroke-width="1.4" opacity="0.55"/>
+    <path d="M40 14 L48 22 M48 14 L40 22" stroke="#e0f2fe" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
+    ${sparkles([[44, 10, 0.75], [30, 28, 0.55], [20, 46, 0.5]], "#bae6fd", 0.5)}`;
 }
 
 function sanctuaryPulseMotif() {
@@ -1661,7 +1679,7 @@ export const EFFECT_ILLUSTRATIONS = {
   random_teleport: () => commonBleed("rtp", "#a78bfa", "#312e81", randomTeleportMotif()),
   recall: () => commonBleed("rc", "#93c5fd", "#1e3a5f", recallMotif()),
   repel: () => commonBleed("rp", "#94a3b8", "#1e293b", repelMotif()),
-  mass_nudge: () => uncommonBleed("mn", "#7dd3fc", "#1e3a5f", displacementMotif()),
+  mass_nudge: () => uncommonBleed("mn", "#7dd3fc", "#1e3a5f", massNudgeMotif()),
   displacement: () => uncommonBleed("dp", "#7dd3fc", "#1e3a5f", displacementMotif()),
   swap_friendly: () => commonBleed("sw", "#a78bfa", "#312e81", shadowSwapMotif()),
   dominion: () => uncommonBleed("dm", "#60a5fa", "#1e3a5f", dominionMotif()),
