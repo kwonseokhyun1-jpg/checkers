@@ -46,7 +46,7 @@
 - **Last Stand** — If this piece would be captured, it survives with an ultra shield for 3 turns instead.
 - **Leapfrog** — Jump your piece over a friendly piece to land on the empty square beyond.
 - **Long Step** — Move one of your pieces 2 squares diagonally if the path is clear (no capture).
-- **Mass Nudge** — Move up to 2 friendly pieces 1 square each (adjacent empty).
+- **Displacement** — Teleport one of your pieces to any empty dark square on your side of the board.
 - **Mine** — Place a trap on an empty dark square; next enemy to land there is destroyed.
 - **Mulligan** — Discard your hand and draw the same number of new cards.
 - **Obstacle** — Mark a light square as permanently impassable.

@@ -239,6 +239,20 @@ function en(state, color) { return enemyPieces(state.board, color); }
 function markMove(state, color) { state.meta.movementCardPlayed[color] = true; }
 function backRow(color) { return color === COLORS.RED ? [5, 6, 7] : [0, 1, 2]; }
 function ownBackRank(color) { return color === COLORS.RED ? SIZE - 1 : 0; }
+
+export function ownSideRows(color) {
+  return color === COLORS.RED ? [4, 5, 6, 7] : [0, 1, 2, 3];
+}
+
+export function getDisplacementDestinations(state, color) {
+  const spots = [];
+  for (const r of ownSideRows(color)) {
+    for (let c = 0; c < SIZE; c++) {
+      if (emptyDark(state, r, c)) spots.push([r, c]);
+    }
+  }
+  return spots;
+}
 export function reviveSquareAllowed(color, r) { return !backRow(color).includes(r); }
 function promoRow(color) { return color === COLORS.RED ? 0 : 7; }
 
@@ -649,6 +663,18 @@ const EFFECTS = {
       displacePiece(state, r1, c1, r2, c2);
       markMove(state, color);
     }
+    return ok();
+  },
+  displacement(state, color, picks) {
+    const [r1, c1] = p0(picks);
+    const [r2, c2] = p1(picks);
+    const p = at(state, r1, c1);
+    if (!p || p.color !== color) return fail();
+    if (!getDisplacementDestinations(state, color).some(([r, c]) => r === r2 && c === c2)) {
+      return fail("Invalid destination");
+    }
+    movePiece(state.board, r1, c1, r2, c2);
+    markMove(state, color);
     return ok();
   },
   chain_lightning(state, color, picks) {
