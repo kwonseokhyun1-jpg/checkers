@@ -54,7 +54,7 @@ SPELLS = [
     ("last_stand", "Last Stand", "Hidden trap on a friendly piece — if it would be captured or destroyed, it survives with an ultra shield for 3 turns instead (invisible until it triggers).", "uncommon", 4, "friendly", "last_stand"),
     ("decoy", "Decoy", "Place a decoy on an empty dark square; blocks one enemy move then vanishes.", "common", 5, "empty", "decoy"),
     ("iron_will", "Iron Will", "A frozen or rooted friendly piece may move once (consumes debuff).", "common", 5, "friendly", "iron_will"),
-    ("revive", "Revive", "Return a captured man to any empty dark square except your back row.", "epic", 2, "empty", "revive"),
+    ("revive", "Revive", "Return a captured man to any empty dark square on your side of the board.", "epic", 2, "empty", "revive"),
     ("ghost_guard", "Ghost Guard", "When a friendly piece is captured, its square blocks enemies for 2 turns.", "rare", 3, "friendly", "ghost_guard"),
     ("fortify", "Fortify", "Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.", "rare", 3, "friendly", "fortify"),
     # === CROWD CONTROL ===

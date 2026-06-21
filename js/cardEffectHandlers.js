@@ -268,7 +268,7 @@ export function getDisplacementDestinations(state, color) {
   }
   return spots;
 }
-export function reviveSquareAllowed(color, r) { return !backRow(color).includes(r); }
+export function reviveSquareAllowed(color, r) { return ownSideRows(color).includes(r); }
 function promoRow(color) { return color === COLORS.RED ? 0 : 7; }
 
 /** Move a friendly piece via spell; crown and message when landing on the far row. */
@@ -480,7 +480,7 @@ const EFFECTS = {
   hibernation(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(p.hibernationTurns>0) return fail("Already hibernating."); p.hibernationTurns=2; p.bearAwakened=false; return ok("Hibernation — wakes as a king in 2 turns."); },
   barrier(state, color, picks) { const [r,c]=p0(picks); if(!darkSquare(state,r,c)) return fail(); const sq=getSq(state,r,c); sq.barrier={owner:color,turnsLeft:2}; return ok(); },
   iron_will(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.frozenTurns=0; p.rooted=0; return ok(); },
-  revive(state, color, picks) { const [r,c]=p0(picks); const cap=state.captured[color]; if(!cap?.length) return fail('Revive requires a captured piece'); if(!reviveSquareAllowed(color,r)) return fail('Cannot revive on your back row'); if(!emptyDark(state,r,c)) return fail(); const data=cap.pop(); const p=createPiece(color,r,c,data.king); p.revivedNoCapture=true; state.board[r][c]=p; return ok('Piece revived — it cannot capture this turn.'); },
+  revive(state, color, picks) { const [r,c]=p0(picks); const cap=state.captured[color]; if(!cap?.length) return fail('Revive requires a captured piece'); if(!reviveSquareAllowed(color,r)) return fail('Can only revive on your side of the board'); if(!emptyDark(state,r,c)) return fail(); const data=cap.pop(); const p=createPiece(color,r,c,data.king); p.revivedNoCapture=true; state.board[r][c]=p; return ok('Piece revived — it cannot capture this turn.'); },
   ghost_guard(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.ghostGuard=true; return ok(); },
   fortify(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.fortifyTurns=2; return ok(); },
   reverse_only_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.reverseOnlyTurns=2; p.noCaptureTurns=2; return ok(); },
