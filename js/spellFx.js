@@ -31,6 +31,7 @@ export const EFFECT_VISUAL = {
   blink_2: "move",
   random_teleport: "move",
   mass_nudge: "move",
+  displacement: "move",
   magnet: "move",
   deport: "move",
   call_forward: "move",

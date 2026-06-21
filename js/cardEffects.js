@@ -3,7 +3,7 @@
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, longStepOk, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 
 export { applyCard, applyEffect };
@@ -86,6 +86,9 @@ export function getCardHint(card) {
   if (card.effect === "snowball") return hints.snowball_hint;
   if (card.effect === "deep_freeze") return "Click your piece, then an adjacent diagonal square to choose direction.";
   if (card.effect === "barrier") return "Click a dark square — enemies cannot enter it next turn.";
+  if (card.effect === "displacement") {
+    return "Click your piece, then an empty square on your side of the board.";
+  }
   if (card.effect === "mass_nudge") {
     return "Click your piece, then where it moves; optionally pick a second piece and destination.";
   }
@@ -335,6 +338,9 @@ function fEmptyFirstPickTargets(state, color, card) {
   if (card.effect === "berserk") {
     return getBerserkDestinations(state, color).length ? friends : [];
   }
+  if (card.effect === "displacement") {
+    return getDisplacementDestinations(state, color).length ? friends : [];
+  }
   if (card.effect === "nudge") {
     return filter((piece) => getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
   }
@@ -470,6 +476,7 @@ export function getValidTargets(state, color, card, picks) {
         return spots;
       }
       if (card.effect === "berserk") return getBerserkDestinations(state, color);
+      if (card.effect === "displacement") return getDisplacementDestinations(state, color);
       return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
     }
     case "f_f":

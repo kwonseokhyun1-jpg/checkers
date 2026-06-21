@@ -1649,6 +1649,7 @@ export const EFFECT_ILLUSTRATIONS = {
   recall: () => commonBleed("rc", "#93c5fd", "#1e3a5f", recallMotif()),
   repel: () => commonBleed("rp", "#94a3b8", "#1e293b", repelMotif()),
   mass_nudge: () => uncommonBleed("mn", "#7dd3fc", "#1e3a5f", displacementMotif()),
+  displacement: () => uncommonBleed("dp", "#7dd3fc", "#1e3a5f", displacementMotif()),
   swap_friendly: () => commonBleed("sw", "#a78bfa", "#312e81", shadowSwapMotif()),
   dominion: () => uncommonBleed("dm", "#60a5fa", "#1e3a5f", dominionMotif()),
 
