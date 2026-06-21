@@ -937,6 +937,22 @@ export function getAdjacentForwardBoltTarget(board, piece) {
   return targets;
 }
 
+/** One forward-diagonal square for Dash — empty or enemy (not friendly). */
+export function getDashDestinations(state, piece) {
+  const dir = piece.color === COLORS.RED ? -1 : 1;
+  const out = [];
+  for (const dc of [-1, 1]) {
+    const r = piece.row + dir;
+    const c = piece.col + dc;
+    if (!inBounds(r, c) || !isDarkSquare(r, c)) continue;
+    if (squareBlocked(state, r, c, piece.color)) continue;
+    const cell = state.board[r][c];
+    if (cell && cell.color === piece.color) continue;
+    out.push([r, c]);
+  }
+  return out;
+}
+
 /** One empty square backward-diagonal behind your piece (Backstep). */
 export function getBackstepTarget(board, piece, state = null) {
   const forward =

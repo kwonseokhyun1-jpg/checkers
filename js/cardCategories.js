@@ -41,6 +41,7 @@ const ID_TO_CATEGORY = {
   cryo_bolt: "attack",
   cull: "attack",
   darkness: "defense",
+  dash: "movement",
   deep_freeze: "control",
   deflect: "trap",
   demote: "control",
