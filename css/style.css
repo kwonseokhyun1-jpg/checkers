@@ -283,7 +283,7 @@ body {
 }
 
 .card-mini.epic {
-  border-color: #f6ad55;
+  border-color: #34d399;
 }
 
 .card-mini.legendary {
@@ -1014,7 +1014,7 @@ body {
 .spell-card.common { --frame-border: #6b7280; --frame-highlight: #9ca3af; --frame-shadow: #374151; }
 .spell-card.uncommon { --frame-border: #5b8fd4; --frame-highlight: #7eb0e8; --frame-shadow: #2d4a6e; }
 .spell-card.rare { --frame-border: #9f7aea; --frame-highlight: #b794f4; --frame-shadow: #553c7a; }
-.spell-card.epic { --frame-border: #e8a838; --frame-highlight: #f0c060; --frame-shadow: #7a5518; }
+.spell-card.epic { --frame-border: #34d399; --frame-highlight: #6ee7b7; --frame-shadow: #065f46; }
 .spell-card.legendary { --frame-border: #c9a227; --frame-highlight: #daa038; --frame-shadow: #5c4208; }
 
 .spell-card--full,
@@ -2187,7 +2187,7 @@ body.adventure-stage-open .card-preview-modal {
   inset: -2px;
   border-radius: 12px;
   pointer-events: none;
-  background: linear-gradient(120deg, transparent, rgba(232, 168, 56, 0.35), transparent);
+  background: linear-gradient(120deg, transparent, rgba(52, 211, 153, 0.35), transparent);
   animation: epic-sheen 2.8s linear infinite;
 }
 .spell-card--legendary-fx .spell-card__fx--legendary,
@@ -2217,7 +2217,7 @@ body.adventure-stage-open .card-preview-modal {
   font-weight: 700;
 }
 .spell-card.epic .spell-card__rarity {
-  color: #f0c060;
+  color: #6ee7b7;
   font-weight: 700;
 }
 .spell-card.legendary .spell-card__rarity {
