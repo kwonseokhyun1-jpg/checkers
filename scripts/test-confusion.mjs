@@ -67,8 +67,20 @@ function testConfusionHandlerTargetsOpponent() {
   assert.equal(state.meta.confuseNext[ai], false);
 }
 
+function testAiSkipsSpellsWhenConfused() {
+  const state = createMatchState(Array(40).fill("nudge"));
+  state.turn = ai;
+  state.meta.confused[ai] = true;
+  state.hands[ai] = [getCardById("nudge"), getCardById("nudge")];
+  const { log } = planAiTurnWork(state, "Opponent", ai);
+  assert.ok(!log.some((e) => e.type === "spell"), "confused AI should not cast spells");
+  assert.ok(log.some((e) => e.type === "message" && /confused/i.test(e.text)));
+  assert.ok(log.some((e) => e.type === "move" && e.confused));
+}
+
 testConfuseNextActivatesOnTurnStart();
 testAiCastSetsConfusionForHuman();
 testPickConfusedMoveUsesFullPool();
 testConfusionHandlerTargetsOpponent();
+testAiSkipsSpellsWhenConfused();
 console.log("test-confusion.mjs: all passed");
