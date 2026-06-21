@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -302,6 +302,15 @@ function prioritizeFrontRowTargets(state, color, card, targets) {
   return targets;
 }
 
+/** True when dash landing on this square removes the occupant. */
+function dashWouldKillAt(state, color, r, c) {
+  const t = at(state, r, c);
+  if (!t || t.color === color) return false;
+  if (pieceCloakedByDarkness(state, r, c)) return false;
+  if (t.shieldTurns > 0 || isFortified(t)) return false;
+  return true;
+}
+
 function fEmptyFirstPickTargets(state, color, card) {
   const friends = getValidTargets(state, color, { mode: "friendly" }, []);
   const filter = (hasDest) => friends.filter(([r, c]) => {
@@ -331,6 +340,9 @@ function fEmptyFirstPickTargets(state, color, card) {
     return filter((piece, r, c) =>
       [[r + 2, c + 2], [r + 2, c - 2], [r - 2, c + 2], [r - 2, c - 2]].some(([tr, tc]) => longStepOk(state, r, c, tr, tc))
     );
+  }
+  if (card.effect === "dash") {
+    return filter((piece) => getDashDestinations(state, piece).length > 0);
   }
   if (card.effect === "blink_2" || card.effect === "teleport") {
     return filter((piece) => getTeleportTargets(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
@@ -456,6 +468,13 @@ export function getValidTargets(state, color, card, picks) {
         return [[pr + 2, pc + 2], [pr + 2, pc - 2], [pr - 2, pc + 2], [pr - 2, pc - 2]].filter(
           ([r, c]) => longStepOk(state, pr, pc, r, c)
         );
+      if (card.effect === "dash") {
+        return getDashDestinations(state, p).filter(([r, c]) => {
+          const cell = at(state, r, c);
+          if (!cell || cell.color === color) return true;
+          return !pieceCloakedByDarkness(state, r, c) && cell.shieldTurns <= 0 && !isFortified(cell);
+        });
+      }
       if (card.effect === "sidestep")
         return [
           [pr, pc - 2],
@@ -654,6 +673,26 @@ function* pickSequences(state, color, card, max = 24) {
         if (++n >= max) return;
       }
       for (const seq of otherSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      return;
+    }
+    if (card.effect === "dash") {
+      const killSeqs = [];
+      const moveSeqs = [];
+      for (const a of t0) {
+        const t1 = getValidTargets(state, color, card, [a]);
+        for (const b of t1) {
+          if (dashWouldKillAt(state, color, b[0], b[1])) killSeqs.push([a, b]);
+          else moveSeqs.push([a, b]);
+        }
+      }
+      for (const seq of killSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      for (const seq of moveSeqs) {
         yield seq;
         if (++n >= max) return;
       }
