@@ -85,7 +85,7 @@ export const CARD_REGISTRY = [
   { id: "bomb", name: "Bomb", desc: "Arm a friendly piece; when it moves, it explodes on adjacent squares (including itself).", rarity: "legendary", weight: 1, mode: "friendly", effect: "bomb" },
   { id: "shockwave", name: "Shockwave", desc: "Arm a friendly piece; when it moves, paralyze all adjacent pieces for 1 turn.", rarity: "epic", weight: 2, mode: "friendly", effect: "shockwave" },
   { id: "chain_lightning", name: "Chain Lightning", desc: "Destroy up to 2 chained adjacent enemies from your piece.", rarity: "legendary", weight: 1, mode: "friendly", effect: "chain_lightning" },
-  { id: "revive", name: "Revive", desc: "Return your most recently captured man to any empty dark square except your back row; no capture the turn it returns.", rarity: "legendary", weight: 1, mode: "empty", effect: "revive" },
+  { id: "revive", name: "Revive", desc: "Return your most recently captured man to any empty dark square on your side of the board; no capture the turn it returns.", rarity: "legendary", weight: 1, mode: "empty", effect: "revive" },
   { id: "mind_control", name: "Mind Control", desc: "Convert an enemy man to your color for 2 of your turns, then it reverts to the enemy.", rarity: "epic", weight: 2, mode: "enemy", effect: "mind_control" },
   { id: "cull", name: "Cull", desc: "Destroy the weakest enemy (non-king preferred).", rarity: "epic", weight: 2, mode: "instant", effect: "cull" },
   { id: "execution", name: "Execution", desc: "Destroy an enemy piece that has no legal moves.", rarity: "epic", weight: 2, mode: "enemy", effect: "execution" },
