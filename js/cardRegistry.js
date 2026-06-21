@@ -64,7 +64,7 @@ export const CARD_REGISTRY = [
   { id: "tangle", name: "Tangle", desc: "Swap two adjacent enemies and freeze both for 1 turn.", rarity: "rare", weight: 3, mode: "e_e_adj", effect: "tangle" },
   { id: "bishops_mark", name: "Bishop's Mark", desc: "For 2 turns, a piece may slide along either diagonal over empty dark squares.", rarity: "rare", weight: 3, mode: "friendly", effect: "bishop_2" },
   { id: "rooks_mark", name: "Rook's Mark", desc: "For 2 turns, a piece may slide along a rank or file over empty dark squares.", rarity: "rare", weight: 3, mode: "friendly", effect: "rook_2" },
-  { id: "magnet", name: "Magnet", desc: "Pull an enemy 2 squares away to an adjacent empty square next to your piece.", rarity: "epic", weight: 2, mode: "friendly", effect: "magnet" },
+  { id: "magnet", name: "Magnet", desc: "Pull every enemy 2 squares away on a diagonal to an adjacent empty square next to your piece.", rarity: "epic", weight: 2, mode: "friendly", effect: "magnet" },
   { id: "call_forward", name: "Call Forward", desc: "Move an enemy up to 2 squares along a diagonal to an empty dark square with a clear path.", rarity: "rare", weight: 3, mode: "e_empty", effect: "call_forward" },
   { id: "blizzard", name: "Blizzard", desc: "Freeze all enemy men on a row of dark squares you choose.", rarity: "rare", weight: 3, mode: "row", effect: "blizzard" },
   { id: "bulwark", name: "Bulwark", desc: "All your pieces on one diagonal line gain shield for 2 turns.", rarity: "rare", weight: 3, mode: "friendly", effect: "bulwark" },

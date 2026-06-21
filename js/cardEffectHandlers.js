@@ -221,6 +221,21 @@ export function executeTrickster(state, plan) {
 export function chainLightningCanTarget(state, pr, pc, color) {
   return enemySquaresAdjacentTo(state, pr, pc, color).length > 0;
 }
+
+const MAGNET_DIRS = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
+
+function magnetPullOk(state, color, r, c, dr, dc) {
+  const er = r + dr * 2;
+  const ec = c + dc * 2;
+  const lr = r + dr;
+  const lc = c + dc;
+  const e = at(state, er, ec);
+  return e && e.color !== color && enemyCardCanMove(e) && emptyDark(state, lr, lc);
+}
+
+export function magnetHasPull(state, color, r, c) {
+  return MAGNET_DIRS.some(([dr, dc]) => magnetPullOk(state, color, r, c, dr, dc));
+}
 function bestChainLightningHits(state, pr, pc, color) {
   const first = enemySquaresAdjacentTo(state, pr, pc, color);
   if (!first.length) return [];
@@ -421,16 +436,22 @@ const EFFECTS = {
   },
   last_stand(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.lastStand=true; return ok("Last Stand armed — hidden."); },
   magnet(state, color, picks) {
-    const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail();
-    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-      if(!dr&&!dc) continue;
-      const er=r+dr*2, ec=c+dc*2, lr=r+dr, lc=c+dc;
-      const e=at(state,er,ec);
-      if(e&&e.color!==color&&enemyCardCanMove(e)&&emptyDark(state,lr,lc)){
-        displacePiece(state,er,ec,lr,lc); markMove(state,color); return ok();
-      }
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color !== color) return fail();
+    let n = 0;
+    for (const [dr, dc] of MAGNET_DIRS) {
+      if (!magnetPullOk(state, color, r, c, dr, dc)) continue;
+      const er = r + dr * 2;
+      const ec = c + dc * 2;
+      const lr = r + dr;
+      const lc = c + dc;
+      displacePiece(state, er, ec, lr, lc);
+      n++;
     }
-    return fail("No enemy 2 away to pull");
+    if (!n) return fail("No enemy 2 away to pull");
+    markMove(state, color);
+    return ok(n > 1 ? `Magnet — ${n} pulled.` : undefined);
   },
   press(state, color, picks) { state.meta.pendingPressMove[opp(color)] = true; return ok("Press — opponent must move again next turn."); },
   vengeance(state, color, picks) {
