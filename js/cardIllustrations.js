@@ -283,7 +283,7 @@ function rareBleed(id, top, bottom, inner) {
   <g filter="url(#${gid}-glow)">${artScene(inner)}</g>`;
 }
 
-/** Premium epic art with gold-to-purple radial gradient. */
+/** Premium epic art with emerald radial gradient. */
 function epicBleed(id, top, bottom, inner) {
   const gid = `ep-${id}`;
   return `<defs>
@@ -1674,13 +1674,13 @@ export const EFFECT_ILLUSTRATIONS = {
   duel: () => commonBleed("du", "#d4b896", "#3d2817", duelMotif()),
   sacrifice: () => uncommonBleed("sc", "#fca5a5", "#1e3a5f", sacrificeMotif()),
   cull: () => epicBleed("cu", "#a78bfa", "#2e1065", cullMotif()),
-  execution: () => epicBleed("ex", "#d4a574", "#3d2817", executionMotif()),
+  execution: () => epicBleed("ex", "#6ee7b7", "#14532d", executionMotif()),
   chain_lightning: () => legendaryBleed("cl", "#2563eb", "#0c1929", chainLightningMotif()),
   backstab: () => uncommonBleed("bk", "#c4a574", "#2d4a6e", backstabMotif()),
   cryo_bolt: () => uncommonBleed("cb", "#7dd3fc", "#0c4a6e", cryoBoltMotif()),
   bomb: () => legendaryBleed("bm", "#f59e0b", "#78350f", bombMotif()),
   shockwave: () => epicBleed("sw", "#c4b5fd", "#3b1f6e", shockwaveMotif()),
-  magnet: () => epicBleed("mg", "#f0c060", "#312e81", magnetMotif()),
+  magnet: () => epicBleed("mg", "#6ee7b7", "#14532d", magnetMotif()),
 
   poison_3: () => uncommonBleed("po", "#86efac", "#14532d", poisonMotif()),
   root_2: () => uncommonBleed("ro", "#86efac", "#14532d", rootMotif()),
@@ -1715,15 +1715,15 @@ export const EFFECT_ILLUSTRATIONS = {
   coin_flip: () => coinFlipMotif(),
   ignore: () => commonBleed("ig", "#94a3b8", "#1f2937", ignoreMotif()),
   counterspell: () => epicBleed("cs", "#a78bfa", "#2e1065", counterspellMotif()),
-  purify: () => epicBleed("pu", "#fde68a", "#4a3520", purifyMotif()),
+  purify: () => epicBleed("pu", "#6ee7b7", "#14532d", purifyMotif()),
   trickster: () => rareBleed("tr", "#c4b5fd", "#553c7a", tricksterMotif()),
   offering: () => rareBleed("of", "#d8b4fe", "#553c7a", offeringMotif()),
   quick_march: () => epicBleed("qm", "#60a5fa", "#1e3a5f", quickMarchMotif()),
-  constitution: () => epicBleed("co", "#fbbf24", "#451a03", constitutionMotif()),
+  constitution: () => epicBleed("co", "#4ade80", "#14532d", constitutionMotif()),
   last_king: () => uncommonBleed("lk", "#fbbf24", "#1e3a5f", lastKingMotif()),
   revive: () => legendaryBleed("rv", "#15803d", "#052e16", reviveMotif()),
   mind_control: () => epicBleed("mc", "#c4b5fd", "#3b0764", mindControlMotif()),
-  bounty: () => epicBleed("bo", "#fbbf24", "#451a03", bountyMotif()),
+  bounty: () => epicBleed("bo", "#4ade80", "#14532d", bountyMotif()),
   link_fate: () => epicBleed("lf", "#a78bfa", "#2e1065", linkFateMotif()),
   bishop_2: () => rareBleed("bp", "#b794f4", "#4c1d95", bishopMarkMotif()),
   rook_2: () => rareBleed("rk", "#a78bfa", "#4c1d95", rookMarkMotif()),
