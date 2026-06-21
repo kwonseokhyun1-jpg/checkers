@@ -36,7 +36,7 @@
 - **Vengeance** — Hidden trap: the next enemy capture of your piece destroys the capturer; your piece survives 2 turns (blood counters), then dies.
 - **Deep Freeze** — Enemy cannot move for 2 of its owner's turns.
 - **Dominion** — All your men may move backward this turn.
-- **Duel** — Choose your piece and an adjacent enemy; both are destroyed unless shielded.
+- **Duel** — Choose your piece and an adjacent enemy; both are destroyed unless shielded. If the enemy is frozen or paralyzed, your piece survives.
 - **Execution** — Destroy an enemy piece that has no legal moves.
 - **Flank** — Move your piece to any empty dark square up to 3 steps away along a diagonal.
 - **Forward Bolt** — Eliminate the first enemy piece directly ahead along your piece's forward diagonal.
