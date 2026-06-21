@@ -683,9 +683,7 @@ const EFFECTS = {
     if (!getDisplacementDestinations(state, color).some(([r, c]) => r === r2 && c === c2)) {
       return fail("Invalid destination");
     }
-    movePiece(state.board, r1, c1, r2, c2);
-    markMove(state, color);
-    return ok();
+    return friendlySpellMove(state, color, r1, c1, r2, c2, "Displacement!");
   },
   chain_lightning(state, color, picks) {
     const [r, c] = p0(picks);
