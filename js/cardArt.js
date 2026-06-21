@@ -16,7 +16,7 @@ const THEME_STYLES = {
 };
 
 export const THEME_KEYS = [
-  ["movement", ["nudge", "backstep", "long_step", "leapfrog", "recall", "teleport", "random_teleport", "displacement", "berserk"]],
+  ["movement", ["nudge", "backstep", "long_step", "leapfrog", "recall", "teleport", "random_teleport", "displacement", "berserk", "dash"]],
   ["combat", ["stab", "shatter", "destroy", "snipe", "duel", "execution", "cull", "pyromancy", "backstab", "sacrifice", "chain_lightning", "cryo", "bomb", "magnet"]],
   ["special", ["create_foe", "clone", "earthquake"]],
   ["defense", ["shield", "ward", "aegis", "bulwark", "stall", "sanctuary", "barrier", "anchor", "iron_will", "backrank_protection", "hibernation"]],

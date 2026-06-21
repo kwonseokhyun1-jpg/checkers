@@ -35,6 +35,7 @@ export const EFFECT_VISUAL = {
   magnet: "move",
   deport: "move",
   call_forward: "move",
+  dash: "move",
   retreat_3: "move",
 
   swap_friendly: "swap",

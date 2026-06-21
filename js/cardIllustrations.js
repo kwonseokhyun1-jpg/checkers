@@ -383,6 +383,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "offering",
   "tangle",
   "call_forward",
+  "dash",
   "blizzard",
   "bulwark",
   "darkness",
@@ -985,6 +986,18 @@ function callForwardMotif() {
     <path d="M50 12 L54 8 M12 48 L8 52" stroke="#e9d5ff" stroke-width="1.6" stroke-linecap="round" opacity="0.55"/>
     <path d="M28 32 L36 24" stroke="#fde68a" stroke-width="1.6" stroke-dasharray="3 2" opacity="0.55"/>
     ${sparkles([[36, 26, 0.7], [22, 38, 0.6]], "#fca5a5", 0.5)}`;
+}
+
+/** Forward-diagonal dash with impact on enemy square. */
+function dashMotif() {
+  return `${groundShadow(30, 54, 18, 4)}
+    ${allyPro(18, 50, 5)}
+    ${tokenPro(44, 28, 5)}
+    ${motionArrow(22, 46, 40, 32, "#c4b5fd", 2.8)}
+    ${destRing(42, 30, 5, "#a78bfa")}
+    ${burst(44, 28, 5, "#ef4444", "#991b1b")}
+    <path d="M34 36 L46 24" stroke="#fde68a" stroke-width="1.4" stroke-dasharray="3 2" opacity="0.5"/>
+    ${sparkles([[38, 34, 0.7]], "#e9d5ff", 0.5)}`;
 }
 
 /** Horizontal blizzard freezing a row of enemies. */
@@ -1710,6 +1723,7 @@ export const EFFECT_ILLUSTRATIONS = {
   darkness: () => rareBleed("dk", "#6d28d9", "#1e1b4b", darknessMotif()),
   scatter: () => uncommonBleed("st", "#7dd3fc", "#1e3a5f", scatterMotif()),
   call_forward: () => rareBleed("cfw", "#fca5a5", "#4c1d95", callForwardMotif()),
+  dash: () => rareBleed("ds", "#c4b5fd", "#4c1d95", dashMotif()),
   earthquake: () => legendaryBleed("eq", "#78716c", "#292524", earthquakeMotif()),
 
   coin_flip: () => coinFlipMotif(),

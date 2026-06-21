@@ -3,7 +3,7 @@
  */
 import {
   SIZE, COLORS, isDarkSquare, inBounds, displacePiece, resolveLandingTraps, removePiece, resolveCapture,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
   tryPromoteOnFarRow,
@@ -315,6 +315,24 @@ const EFFECTS = {
   },
   blink_2(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const d=Math.max(Math.abs(r2-r1),Math.abs(c2-c1)); if(d<1||d>2||!emptyDark(state,r2,c2)) return fail(); displacePiece(state,r1,c1,r2,c2); markMove(state,color); return ok(); },
   long_step(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!longStepOk(state,r1,c1,r2,c2)) return fail(); return friendlySpellMove(state,color,r1,c1,r2,c2); },
+  dash(state, color, picks) {
+    if (picks.length < 2) return fail();
+    const [r1, c1] = p0(picks);
+    const [r2, c2] = p1(picks);
+    const p = at(state, r1, c1);
+    if (!p || p.color !== color) return fail();
+    const allowed = getDashDestinations(state, p);
+    if (!allowed.some(([r, c]) => r === r2 && c === c2)) return fail("Invalid dash");
+    const victim = at(state, r2, c2);
+    if (victim) {
+      const hadLastStand = victim.lastStand;
+      if (!spellKill(state, r2, c2, color)) return fail("Blocked");
+      if (hadLastStand && at(state, r2, c2)) {
+        return ok("Last Stand — target survives with ultra shield.");
+      }
+    }
+    return friendlySpellMove(state, color, r1, c1, r2, c2, victim ? "Dash!" : undefined);
+  },
   sidestep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||r1!==r2||Math.abs(c2-c1)!==2||!emptyDark(state,r2,c2)) return fail(); displacePiece(state,r1,c1,r2,c2); markMove(state,color); return ok(); },
   chain_pull(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const e=at(state,r+dr,c+dc); if(e&&e.color!==color){ const nr=r+dr*2,nc=c+dc*2; if(emptyDark(state,nr,nc)) displacePiece(state,e.row,e.col,nr,nc); return ok();}} return fail(); },
   repel(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const e=at(state,r+dr,c+dc); if(e&&e.color!==color){ const nr=e.row+dr,nc=e.col+dc; if(emptyDark(state,nr,nc)) displacePiece(state,e.row,e.col,nr,nc); return ok();}} return fail(); },
