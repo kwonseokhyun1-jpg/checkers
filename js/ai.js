@@ -226,6 +226,8 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     log.push({ type: "message", text: `${opponentName} is reeling from spell backlash — no spells this turn.` });
   } else if (state.meta.blinded?.[color]) {
     log.push({ type: "message", text: `${opponentName} is blinded — skips spells.` });
+  } else if (isConfused(state.meta, color)) {
+    log.push({ type: "message", text: `${opponentName} is confused — skips spells.` });
   } else if (!state.spellPlayed[aiColor] && hand.length) {
     while (!state.spellPlayed[aiColor] && hand.length) {
       const playable = hand.filter((c) => canAiPlay(state, color, c));

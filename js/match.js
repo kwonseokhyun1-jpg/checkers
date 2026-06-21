@@ -197,6 +197,7 @@ export class MatchSession {
     this._suppressScrollClickTimer = null;
     this._handScrollBound = false;
     this.aiHighlight = null;
+    this._moveAnimHideFrom = null;
     this.cullAnimation = null;
     this.coinFlipVictimAnim = null;
     this.spellAnimation = null;
@@ -503,6 +504,7 @@ export class MatchSession {
       !s.spellPlayed[this.localColor] &&
       !s.meta.shatterSilenced?.[this.localColor] &&
       !s.meta.blinded?.[this.localColor] &&
+      !isConfused(s.meta, this.localColor) &&
       !this.actionBusy &&
       !this.cardPlay
     );
@@ -514,9 +516,74 @@ export class MatchSession {
     clearConfusion(s.meta, color);
     const pool = getAllMovesForColor(s.board, color, s);
     if (!pool.length) return null;
-    const move = pool[Math.floor(Math.random() * pool.length)];
-    if (color === this.localColor) this.setMessage("Confusion — random move!");
-    return move;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  async playPieceMoveAnimation(move, { message = null } = {}) {
+    const board = this.$("board");
+    if (!board) {
+      await delay(AI_PACE.moveAnnounce);
+      return;
+    }
+
+    const [fr, fc] = move.from;
+    const [tr, tc] = move.to;
+    this.aiHighlight = {
+      from: move.from,
+      to: move.to,
+      captures: move.captures || [],
+    };
+    if (message) this.setMessage(message);
+    this._moveAnimHideFrom = [fr, fc];
+    this.render();
+
+    await delay(280);
+
+    const fromSq = board.querySelector(`[data-row="${fr}"][data-col="${fc}"]`);
+    const toSq = board.querySelector(`[data-row="${tr}"][data-col="${tc}"]`);
+    const pieceEl = fromSq?.querySelector(".piece");
+    if (!fromSq || !toSq || !pieceEl) {
+      this._moveAnimHideFrom = null;
+      this.aiHighlight = null;
+      this.render();
+      return;
+    }
+
+    const boardRect = board.getBoundingClientRect();
+    const fromRect = fromSq.getBoundingClientRect();
+    const toRect = toSq.getBoundingClientRect();
+    const inset = 0.14;
+
+    const flyer = pieceEl.cloneNode(true);
+    flyer.classList.add("piece--ai-flying");
+    flyer.style.position = "absolute";
+    flyer.style.margin = "0";
+    flyer.style.pointerEvents = "none";
+    flyer.style.zIndex = "30";
+    flyer.style.transition =
+      "left 0.6s cubic-bezier(0.4, 0, 0.2, 1), top 0.6s cubic-bezier(0.4, 0, 0.2, 1)";
+
+    const w = fromRect.width * (1 - 2 * inset);
+    const h = fromRect.height * (1 - 2 * inset);
+    flyer.style.left = `${fromRect.left - boardRect.left + fromRect.width * inset}px`;
+    flyer.style.top = `${fromRect.top - boardRect.top + fromRect.height * inset}px`;
+    flyer.style.width = `${w}px`;
+    flyer.style.height = `${h}px`;
+    board.appendChild(flyer);
+
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    flyer.style.left = `${toRect.left - boardRect.left + toRect.width * inset}px`;
+    flyer.style.top = `${toRect.top - boardRect.top + toRect.height * inset}px`;
+
+    await new Promise((resolve) => {
+      const finish = () => resolve();
+      flyer.addEventListener("transitionend", finish, { once: true });
+      setTimeout(finish, 680);
+    });
+
+    flyer.remove();
+    this._moveAnimHideFrom = null;
+    this.aiHighlight = null;
   }
 
   showPieceInfo(piece, row, col) {
@@ -624,7 +691,18 @@ export class MatchSession {
     } else if (color === this.localColor && s.meta.blinded?.[color]) {
       this.setMessage("You are blinded — no spells this turn. Select a piece to move.");
     } else if (color === this.localColor && isConfused(s.meta, color)) {
-      this.setMessage("Confusion — your move will be random. Cast a spell or skip to move.");
+      this.setMessage("Confusion — no spells. A random move will be chosen…");
+      queueMicrotask(() => {
+        if (
+          s.turn === color &&
+          s.phase === PHASE.CARDS &&
+          !s.gameOver &&
+          isConfused(s.meta, color) &&
+          !this.actionBusy
+        ) {
+          void this.beginMovePhase();
+        }
+      });
     } else if (color === this.localColor && s.meta.pendingPressMove?.[color]) {
       this.setMessage("Press — you'll move again after your normal move. Select a piece.");
     }
@@ -1165,6 +1243,8 @@ export class MatchSession {
             ? "Spell backlash — no spells this turn"
             : s.meta.blinded?.[this.localColor]
               ? "Blinded — no spells this turn"
+              : isConfused(s.meta, this.localColor)
+                ? "Confused — no spells this turn"
               : s.spellPlayed[this.localColor]
               ? "Already cast a spell this turn"
               : !hasTargets
@@ -2347,18 +2427,22 @@ ${starLine}`;
           await delay(AI_PACE.afterSpellBeforeMove);
           afterSpell = false;
         }
-        this.aiHighlight = {
-          from: entry.from,
-          to: entry.to,
-          captures: entry.captures || [],
-        };
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--move">♟ ${entry.text}</div>`;
           aiLog.scrollTop = aiLog.scrollHeight;
         }
         this.setMessage(entry.text);
-        this.render();
-        await delay(AI_PACE.moveAnnounce);
+        if (entry.confused) {
+          await this.playPieceMoveAnimation(entry, { message: entry.text });
+        } else {
+          this.aiHighlight = {
+            from: entry.from,
+            to: entry.to,
+            captures: entry.captures || [],
+          };
+          this.render();
+          await delay(AI_PACE.moveAnnounce);
+        }
         if (applyEntries) {
           applyAiReplayEntry(this.state, entry, oc);
           this.recordHistoryFromReplayEntry(entry);
@@ -2469,6 +2553,7 @@ ${starLine}`;
       console.error("AI presentation failed:", err);
     } finally {
       this.aiHighlight = null;
+      this._moveAnimHideFrom = null;
       this.cullAnimation = null;
       this.coinFlipVictimAnim = null;
       this.spellAnimation = null;
@@ -2483,7 +2568,7 @@ ${starLine}`;
     await this.finishOpponentTurn(capBefore);
   }
 
-  beginMovePhase({ afterSpell = false, spellMessage = null } = {}) {
+  async beginMovePhase({ afterSpell = false, spellMessage = null } = {}) {
     const s = this.state;
     if (s.gameOver || s.turn !== this.localColor) return;
     this.cancelCardPlay();
@@ -2491,6 +2576,12 @@ ${starLine}`;
     if (isConfused(s.meta, this.localColor)) {
       const forced = this.pickConfusedMove(this.localColor);
       if (forced) {
+        this.actionBusy = true;
+        try {
+          await this.playPieceMoveAnimation(forced, { message: "Confusion — random move!" });
+        } finally {
+          this.actionBusy = false;
+        }
         this.executeHumanMove(forced);
       } else {
         this.setMessage("Confusion — no moves available.");
@@ -2822,6 +2913,12 @@ ${starLine}`;
           } else if (animRole === "kill" && this.spellAnimation?.type === "kill") {
             el.classList.add("piece--spell-kill-victim");
           }
+          if (
+            this._moveAnimHideFrom?.[0] === row &&
+            this._moveAnimHideFrom?.[1] === col
+          ) {
+            el.classList.add("piece--move-hidden");
+          }
           sq.appendChild(el);
           if (piece.shieldTurns > 0 || showArmedLastStand) {
             const ultra =
@@ -3140,7 +3237,7 @@ ${starLine}`;
           : s.meta.blinded?.[this.localColor]
             ? "No spells (Blinded) · "
             : isConfused(s.meta, this.localColor)
-              ? "Confusion — random move · "
+              ? "No spells (Confusion) · "
             : s.spellPlayed[this.localColor]
             ? "Spell used · "
             : "1 spell available · ";
