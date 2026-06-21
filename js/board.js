@@ -357,6 +357,60 @@ export function movePiece(board, fromR, fromC, toR, toC) {
   return piece;
 }
 
+/** Resolve square traps when a piece lands (moves, spell displacement, swaps). */
+export function resolveLandingTraps(board, state, row, col, piece) {
+  if (!piece || !state) return piece;
+  const sq = getSq(state, row, col);
+  if (sq?.sanctified === piece.color && !piece.king) piece.king = true;
+  if (sq?.hiddenQuicksand) {
+    const qsOwner = sq.hiddenQuicksand.owner;
+    delete sq.hiddenQuicksand;
+    queueTrapHistoryReveal(state, { effect: "quicksand", color: qsOwner, picks: [[row, col]] });
+    applyFreezeToPiece(board, state, row, col, 1, { deferEndTick: true });
+    state?.meta?.achievementHook?.onTrapTriggered?.(qsOwner, piece.color);
+  }
+  if (sq?.hiddenMine) {
+    revealMine(sq);
+    const mineOwner = getMineOwner(sq);
+    if (mineOwner && mineOwner !== piece.color) {
+      queueTrapHistoryReveal(state, { effect: "landmine", color: mineOwner, picks: [[row, col]] });
+      queueBoardFx(state, "mine", row, col, [[row, col]]);
+      state?.meta?.achievementHook?.onTrapTriggered?.(mineOwner, piece.color);
+      removePiece(board, row, col);
+      sq.mine = null;
+      return null;
+    }
+  } else {
+    const mineOwner = getMineOwner(sq);
+    if (mineOwner && mineOwner !== piece.color) {
+      queueBoardFx(state, "mine", row, col, [[row, col]]);
+      state?.meta?.achievementHook?.onTrapTriggered?.(mineOwner, piece.color);
+      removePiece(board, row, col);
+      sq.mine = null;
+      return null;
+    }
+  }
+  if (piece.shockwaveArmed) {
+    piece.shockwaveArmed = false;
+    shockwavePulseAt(board, state, row, col);
+    queueBoardFx(state, "shockwave", row, col);
+  }
+  if (piece.bombArmed) {
+    piece.bombArmed = false;
+    explodeBombAt(board, state, row, col);
+    queueBoardFx(state, "bomb", row, col);
+    return null;
+  }
+  return piece;
+}
+
+/** Spell or forced displacement: move then resolve landing traps. */
+export function displacePiece(state, fromR, fromC, toR, toC) {
+  const piece = movePiece(state.board, fromR, fromC, toR, toC);
+  if (!piece) return null;
+  return resolveLandingTraps(state.board, state, toR, toC, piece);
+}
+
 function isProtected(piece, state = null, r = null, c = null) {
   if (!piece) return false;
   if (piece.cloneNoCaptureThisTurn) return true;
@@ -643,51 +697,7 @@ export function applyMove(board, move, state = null) {
     if (captured && bountyVictim) payBountyOnCapture(state, bountyVictim, piece.color);
   }
   if (!piece) return null;
-  tryPromoteOnFarRow(piece, tr);
-  const sq = state ? getSq(state, tr, tc) : null;
-  if (sq?.sanctified === piece.color && !piece.king) piece.king = true;
-  if (sq?.hiddenQuicksand) {
-    const qsOwner = sq.hiddenQuicksand.owner;
-    delete sq.hiddenQuicksand;
-    if (piece) {
-      queueTrapHistoryReveal(state, { effect: "quicksand", color: qsOwner, picks: [[tr, tc]] });
-      applyFreezeToPiece(board, state, tr, tc, 1, { deferEndTick: true });
-      state?.meta?.achievementHook?.onTrapTriggered?.(qsOwner, piece.color);
-    }
-  }
-  if (sq?.hiddenMine) {
-    revealMine(sq);
-    const mineOwner = getMineOwner(sq);
-    if (mineOwner && mineOwner !== piece.color && piece) {
-      queueTrapHistoryReveal(state, { effect: "landmine", color: mineOwner, picks: [[tr, tc]] });
-      queueBoardFx(state, "mine", tr, tc);
-      state?.meta?.achievementHook?.onTrapTriggered?.(mineOwner, piece.color);
-      removePiece(board, tr, tc);
-      sq.mine = null;
-      return null;
-    }
-  } else {
-    const mineOwner = getMineOwner(sq);
-    if (mineOwner && mineOwner !== piece.color && piece) {
-      queueBoardFx(state, "mine", tr, tc);
-      state?.meta?.achievementHook?.onTrapTriggered?.(mineOwner, piece.color);
-      removePiece(board, tr, tc);
-      sq.mine = null;
-      return null;
-    }
-  }
-  if (piece && piece.shockwaveArmed) {
-    piece.shockwaveArmed = false;
-    shockwavePulseAt(board, state, tr, tc);
-    if (state) queueBoardFx(state, "shockwave", tr, tc);
-  }
-  if (piece && piece.bombArmed) {
-    piece.bombArmed = false;
-    explodeBombAt(board, state, tr, tc);
-    if (state) queueBoardFx(state, "bomb", tr, tc);
-    return null;
-  }
-  return piece;
+  return resolveLandingTraps(board, state, tr, tc, piece);
 }
 
 
