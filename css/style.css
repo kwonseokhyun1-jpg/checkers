@@ -6601,7 +6601,7 @@ body.adventure-stage-open {
   flex-direction: column;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.4rem 0.25rem;
+  padding: 0.4rem 0.2rem;
   border: 2px solid var(--card-border);
   border-radius: 12px 12px 16px 16px;
   background: var(--bg-panel-elevated);
@@ -6611,7 +6611,6 @@ body.adventure-stage-open {
   font-weight: 700;
   color: var(--text-muted);
   min-width: 0;
-  max-width: 4.5rem;
 }
 .adventure-world-shield__icon {
   width: 1.85rem;
@@ -6621,10 +6620,11 @@ body.adventure-stage-open {
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 .adventure-world-shield__label {
+  width: 100%;
   max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  text-align: center;
+  line-height: 1.1;
 }
 .adventure-world-shield.active {
   border-color: var(--accent-gem);
