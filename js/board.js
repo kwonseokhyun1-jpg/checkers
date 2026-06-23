@@ -132,6 +132,7 @@ export function createPiece(color, row, col, king = false) {
     bloodTurns: 0,
     plagueTurns: 0,
     plagueSeed: false,
+    plagueDeferBeginTick: false,
   };
 }
 
@@ -196,6 +197,7 @@ export function applyPlagueToPiece(board, state, row, col, turns = PLAGUE_TURNS)
   if (destroyPieceIfClone(board, state, row, col)) return true;
   if (!piece) return false;
   piece.plagueTurns = turns;
+  if (state?.turn && piece.color !== state.turn) piece.plagueDeferBeginTick = true;
   return true;
 }
 
@@ -843,7 +845,7 @@ export function tickEffects(board, color, state = null) {
         if (p.bloodTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
       }
       if (p.plagueTurns > 0) {
-        p.plagueTurns--;
+        tickDeferredTurnDebuff(p, "plagueTurns", "plagueDeferBeginTick");
         if (p.plagueTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
       }
       if (p.mindControlTurns > 0) {
