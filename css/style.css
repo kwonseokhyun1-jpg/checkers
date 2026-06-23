@@ -6676,6 +6676,12 @@ body.adventure-stage-open {
   border: 2px solid rgba(201, 162, 39, 0.35);
   box-shadow: var(--shadow);
 }
+.game-over-card--tie {
+  border-color: rgba(148, 163, 184, 0.45);
+}
+.game-over-card--tie #game-over-title {
+  color: #cbd5e1;
+}
 .game-over-stars {
   font-size: clamp(2.5rem, 12vw, 4rem);
   letter-spacing: 0.2em;
