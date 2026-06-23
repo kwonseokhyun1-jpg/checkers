@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -173,6 +173,26 @@ function adjacentEnemiesTo(state, color, row, col) {
     }
   }
   return res;
+}
+
+/** True when this piece has a legal move landing adjacent to an enemy (shockwave pulse). */
+function shockwaveCanHitAdjacentEnemy(state, color, row, col) {
+  if (!pieceHasLegalMoves(state.board, color, state, row, col)) return false;
+  const o = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  const moves = getAllMovesForColor(state.board, color, state).filter(
+    (m) => m.from[0] === row && m.from[1] === col
+  );
+  for (const move of moves) {
+    const [tr, tc] = move.to;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (!dr && !dc) continue;
+        const p = at(state, tr + dr, tc + dc);
+        if (p && p.color === o && !pieceCloakedByDarkness(state, tr + dr, tc + dc)) return true;
+      }
+    }
+  }
+  return false;
 }
 
 function at(state, r, c) {
@@ -380,6 +400,7 @@ export function getValidTargets(state, color, card, picks) {
           if (!p || p.color !== color) continue;
           if (pieceCloakedByDarkness(state, r, c)) continue;
           if (FRIENDLY_REQUIRES_MOVABLE.has(card.effect) && !pieceHasLegalMoves(state.board, color, state, r, c)) continue;
+          if (card.effect === "shockwave" && !shockwaveCanHitAdjacentEnemy(state, color, r, c)) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
           if (card.effect === "magnet" && !magnetHasPull(state, color, r, c)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
