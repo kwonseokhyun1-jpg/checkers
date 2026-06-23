@@ -55,6 +55,7 @@ export const SIGIL_MOVES = 2;
 /** Shield turns granted when Last Stand triggers on capture. */
 export const LAST_STAND_SHIELD_TURNS = 3;
 export const VENGEANCE_BLOOD_TURNS = 2;
+export const PLAGUE_TURNS = 2;
 
 export function hasKnightSigil(piece) {
   return piece && (piece.knightTurns > 0 || piece.isKnight) && !piece.silenced;
@@ -129,6 +130,7 @@ export function createPiece(color, row, col, king = false) {
     freezeDeferEndTick: false,
     paralyzeDeferEndTick: false,
     bloodTurns: 0,
+    plagueTurns: 0,
   };
 }
 
@@ -137,7 +139,7 @@ export function isFortified(piece) {
   return !!(piece && piece.fortifyTurns > 0);
 }
 
-/** Clones are destroyed instantly by freeze, poison, or burn instead of receiving the debuff. */
+/** Clones are destroyed instantly by freeze, poison, burn, or plague instead of receiving the debuff. */
 export function destroyPieceIfClone(board, state, row, col) {
   const p = board[row][col];
   if (!p?.isClone) return false;
@@ -183,6 +185,16 @@ export function applyVenomToPiece(board, state, row, col, amount) {
   if (destroyPieceIfClone(board, state, row, col)) return true;
   if (!piece) return false;
   piece.venom = amount;
+  return true;
+}
+
+export function applyPlagueToPiece(board, state, row, col, turns = PLAGUE_TURNS) {
+  if (state && isInDarknessZone(state, row, col)) return false;
+  const piece = board[row][col];
+  if (isFortified(piece)) return false;
+  if (destroyPieceIfClone(board, state, row, col)) return true;
+  if (!piece) return false;
+  piece.plagueTurns = turns;
   return true;
 }
 
@@ -804,6 +816,10 @@ export function tickEffects(board, color, state = null) {
       if (p.bloodTurns > 0) {
         p.bloodTurns--;
         if (p.bloodTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
+      }
+      if (p.plagueTurns > 0) {
+        p.plagueTurns--;
+        if (p.plagueTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
       }
       if (p.mindControlTurns > 0) {
         p.mindControlTurns--;

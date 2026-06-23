@@ -27,6 +27,7 @@ const ID_TO_CATEGORY = {
   berserk: "movement",
   bomb: "attack",
   shockwave: "control",
+  plague: "control",
   bulwark: "defense",
   create_foe: "special",
   call_forward: "movement",
