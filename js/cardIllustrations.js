@@ -378,6 +378,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "quick_march",
   "revive",
   "shockwave",
+  "plague",
   "bishop_2",
   "rook_2",
   "offering",
@@ -655,6 +656,22 @@ function shockwaveMotif() {
     <path d="M28 18 L32 12 L36 18" stroke="#fbbf24" stroke-width="2" fill="none" stroke-linecap="round"/>
     ${burst(32, 36, 6, "#c4b5fd", "#7c3aed")}
     ${sparkles([[32, 14, 0.9], [8, 36, 0.7], [56, 36, 0.7]], "#e9d5ff", 0.6)}`;
+}
+
+/** Infected ally spreading plague to adjacent enemies. */
+function plagueMotif() {
+  return `${groundShadow(32, 54, 22, 4)}
+    ${allyPro(32, 36, 6)}
+    <circle cx="32" cy="36" r="9" fill="#22c55e" opacity="0.18"/>
+    <circle cx="32" cy="36" r="9" fill="none" stroke="#86efac" stroke-width="2.2" opacity="0.85"/>
+    ${tokenPro(14, 28, 4)}${tokenPro(50, 28, 4)}${tokenPro(14, 44, 4)}${tokenPro(50, 44, 4)}
+    <circle cx="14" cy="28" r="5" fill="#22c55e" opacity="0.35" stroke="#86efac" stroke-width="1.6"/>
+    <circle cx="50" cy="28" r="5" fill="#22c55e" opacity="0.35" stroke="#86efac" stroke-width="1.6"/>
+    <circle cx="14" cy="44" r="5" fill="#22c55e" opacity="0.35" stroke="#86efac" stroke-width="1.6"/>
+    <circle cx="50" cy="44" r="5" fill="#22c55e" opacity="0.35" stroke="#86efac" stroke-width="1.6"/>
+    <path d="M32 36 L14 28 M32 36 L50 28 M32 36 L14 44 M32 36 L50 44" stroke="#4ade80" stroke-width="1.6" stroke-linecap="round" opacity="0.65"/>
+    <text x="28" y="34" font-size="8" fill="#bbf7d0" font-weight="700">☣</text>
+    ${sparkles([[32, 22, 0.85], [10, 24, 0.6], [54, 24, 0.6]], "#86efac", 0.55)}`;
 }
 
 /** Hypnotic beam converting an enemy to your side. */
@@ -1711,6 +1728,7 @@ export const EFFECT_ILLUSTRATIONS = {
   cryo_bolt: () => uncommonBleed("cb", "#7dd3fc", "#0c4a6e", cryoBoltMotif()),
   bomb: () => legendaryBleed("bm", "#f59e0b", "#78350f", bombMotif()),
   shockwave: () => epicBleed("sw", "#c4b5fd", "#3b1f6e", shockwaveMotif()),
+  plague: () => epicBleed("pg", "#86efac", "#14532d", plagueMotif()),
   magnet: () => epicBleed("mg", "#6ee7b7", "#14532d", magnetMotif()),
 
   poison_3: () => uncommonBleed("po", "#86efac", "#14532d", poisonMotif()),

@@ -6,6 +6,7 @@ import {
   COLORS,
   LAST_STAND_SHIELD_TURNS,
   VENGEANCE_BLOOD_TURNS,
+  PLAGUE_TURNS,
   isDarkSquare,
   createInitialBoard,
   getAllMovesForColor,
@@ -2898,6 +2899,7 @@ ${starLine}`;
           if (piece.venom > 0) el.classList.add("poisoned");
           if (piece.blazeTurns > 0) el.classList.add("burning");
           if (piece.bloodTurns > 0) el.classList.add("vengeance-mark");
+          if (piece.plagueTurns > 0) el.classList.add("plagued");
           if (
             this.cullAnimation &&
             this.cullAnimation.row === row &&
@@ -3019,6 +3021,30 @@ ${starLine}`;
             blood.appendChild(mark);
             blood.appendChild(bar);
             sq.appendChild(blood);
+          }
+          if (piece.plagueTurns > 0) {
+            const plague = document.createElement("div");
+            plague.className = "plague-indicator";
+            const mark = document.createElement("span");
+            mark.className = "plague-indicator__mark";
+            mark.textContent = "☣";
+            mark.setAttribute("aria-hidden", "true");
+            const bar = document.createElement("div");
+            bar.className = "plague-indicator__bar";
+            bar.setAttribute("role", "meter");
+            bar.setAttribute("aria-label", `Plague — ${piece.plagueTurns} turn${piece.plagueTurns === 1 ? "" : "s"} left`);
+            bar.setAttribute("aria-valuenow", String(piece.plagueTurns));
+            bar.setAttribute("aria-valuemin", "0");
+            bar.setAttribute("aria-valuemax", String(PLAGUE_TURNS));
+            for (let i = 0; i < PLAGUE_TURNS; i++) {
+              const block = document.createElement("span");
+              block.className =
+                "plague-indicator__block" + (i < piece.plagueTurns ? " plague-indicator__block--filled" : "");
+              bar.appendChild(block);
+            }
+            plague.appendChild(mark);
+            plague.appendChild(bar);
+            sq.appendChild(plague);
           }
           if (piece.bishopTurns > 0) {
             const bishop = document.createElement("div");

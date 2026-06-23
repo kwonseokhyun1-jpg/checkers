@@ -214,6 +214,7 @@ body {
 .board-frame--local-flipped .poison-indicator,
 .board-frame--local-flipped .fire-indicator,
 .board-frame--local-flipped .blood-indicator,
+.board-frame--local-flipped .plague-indicator,
 .board-frame--local-flipped .fire-tile-indicator,
 .board-frame--local-flipped .landmine-indicator,
 .board-frame--local-flipped .linked-fate-indicator,
@@ -589,6 +590,57 @@ body {
   background: linear-gradient(180deg, #fca5a5 0%, #b91c1c 100%);
   border-color: rgba(252, 165, 165, 0.9);
   box-shadow: 0 0 4px rgba(185, 28, 28, 0.75);
+}
+
+.piece.plagued {
+  box-shadow:
+    0 0 0 2px rgba(74, 222, 128, 0.75),
+    0 0 14px rgba(34, 197, 94, 0.45);
+  animation: piece-plague-pulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes piece-plague-pulse {
+  from { filter: brightness(1); }
+  to { filter: brightness(1.1) hue-rotate(8deg); }
+}
+
+.plague-indicator {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.plague-indicator__mark {
+  font-size: clamp(0.45rem, 2.4vw, 0.62rem);
+  line-height: 1;
+  color: #86efac;
+  text-shadow: 0 0 4px rgba(34, 197, 94, 0.85);
+}
+
+.plague-indicator__bar {
+  display: flex;
+  gap: 2px;
+}
+
+.plague-indicator__block {
+  width: clamp(5px, 2.2vw, 7px);
+  height: clamp(5px, 2.2vw, 7px);
+  border-radius: 1px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.plague-indicator__block--filled {
+  background: linear-gradient(180deg, #bbf7d0 0%, #16a34a 100%);
+  border-color: rgba(134, 239, 172, 0.85);
+  box-shadow: 0 0 3px rgba(34, 197, 94, 0.65);
 }
 
 .square.has-fire-tile {
