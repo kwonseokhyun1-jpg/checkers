@@ -344,6 +344,7 @@ export function defaultAdventureProgress() {
 
 export function starsForRemainingPieces(remaining) {
   const n = Number(remaining) || 0;
+  if (n === 0) return 0;
   if (n >= 3) return 3;
   if (n === 2) return 2;
   return 1;
@@ -416,7 +417,7 @@ export function recordLevelClear(profile, levelId, starsEarned) {
   unlockNextLevel(profile.adventure, Number(levelId));
   const gems = firstTime ? ADVENTURE_FIRST_CLEAR_GEMS : ADVENTURE_REPEAT_CLEAR_GEMS;
   const prevBest = profile.adventure.stars[key] || 0;
-  const stars = Math.max(prevBest, Math.min(3, Math.max(1, Number(starsEarned) || 1)));
+  const stars = Math.max(prevBest, Math.min(3, Math.max(0, Number(starsEarned) || 0)));
   profile.adventure.stars[key] = stars;
   const starsGained = Math.max(0, stars - prevBest);
   if (starsGained > 0) profile.stars = (profile.stars ?? 0) + starsGained;

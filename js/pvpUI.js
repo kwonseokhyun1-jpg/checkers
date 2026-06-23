@@ -1,7 +1,7 @@
 import { fetchProfileRow, getCurrentUser, isAuthAvailable } from "./auth.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { COLORS } from "./board.js";
-import { MatchSession, isPvpTerminalBoard } from "./match.js";
+import { MatchSession, isPvpTerminalBoard, isMutualElimination } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import {
   enterMatchMode,
@@ -500,18 +500,22 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       pvpService._lastAppliedFingerprint = matchRowFingerprint(row);
       if (ver > (pvpService?._lastVersion ?? -1)) pvpService._lastVersion = ver;
     }
-    if (!matchSession._gameOverUiShown && finished && row.winner_id) {
-      const user = getCurrentUser();
-      const won = user?.id === row.winner_id;
-      const forfeited = !isPvpTerminalBoard(row.state_json, pvpService.localColor);
-      void matchSession.showGameOver(
-        won ? "Victory!" : "Defeat",
-        won
-          ? forfeited
-            ? "Your opponent left the match."
-            : "You won the match!"
-          : "You lost the match."
-      );
+    if (!matchSession._gameOverUiShown && finished) {
+      if (!row.winner_id && isMutualElimination(row.state_json)) {
+        void matchSession.showGameOver("Tie!", "Both players lost all their pieces.");
+      } else if (row.winner_id) {
+        const user = getCurrentUser();
+        const won = user?.id === row.winner_id;
+        const forfeited = !isPvpTerminalBoard(row.state_json, pvpService.localColor);
+        void matchSession.showGameOver(
+          won ? "Victory!" : "Defeat",
+          won
+            ? forfeited
+              ? "Your opponent left the match."
+              : "You won the match!"
+            : "You lost the match."
+        );
+      }
     }
     if (!matchSession._gameOverUiShown) {
       matchSession.setMessage(
@@ -684,6 +688,10 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
           onPvpWin: async (won) => {
             const currentUser = getCurrentUser();
             if (!currentUser) return;
+            if (won === null) {
+              await pvpService.finishMatch(null);
+              return;
+            }
             if (won) {
               const profile = getProfile();
               recordPvpWin(profile);
