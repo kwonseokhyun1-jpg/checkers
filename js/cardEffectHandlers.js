@@ -5,7 +5,7 @@ import {
   SIZE, COLORS, isDarkSquare, inBounds, displacePiece, resolveLandingTraps, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
   createPiece, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
-  applyFreezeToPiece, applyVenomToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
+  applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
   tryPromoteOnFarRow,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMeta.js";
@@ -747,6 +747,18 @@ const EFFECTS = {
     const wasClone = p.isClone;
     applyVenomToPiece(state.board, state, r, c, 3);
     return ok(wasClone ? "Poison — clone destroyed." : "Poison — dies in 3 turns.");
+  },
+  plague(state, color, picks) {
+    const [r, c] = p0(picks);
+    const seed = at(state, r, c);
+    if (!seed || seed.color !== color) return fail();
+    const targets = [[r, c], ...enemySquaresAdjacentTo(state, r, c, color)];
+    let infected = 0;
+    for (const [tr, tc] of targets) {
+      if (applyPlagueToPiece(state.board, state, tr, tc)) infected++;
+    }
+    if (!infected) return fail("No valid targets.");
+    return ok(`Plague — ${infected} piece${infected === 1 ? "" : "s"} infected.`);
   },
   deflect_1(state, color, picks) {
     const [r, c] = p0(picks);

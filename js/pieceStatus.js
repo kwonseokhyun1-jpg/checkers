@@ -33,6 +33,7 @@ const CURSE_RULES = [
   { key: "venom", label: "Venom", turns: true },
   { key: "blazeTurns", label: "Burning", turns: true },
   { key: "bloodTurns", label: "Vengeance Blood", turns: true },
+  { key: "plagueTurns", label: "Plague", turns: true },
   { key: "slowed", label: "Slowed", turns: true },
   { key: "reverseOnlyTurns", label: "Reverse March", turns: true },
   { key: "anchored", label: "Anchored", turns: true },
@@ -99,6 +100,7 @@ export function cleanseDebuffs(piece) {
   piece.rooted = 0;
   piece.silenced = 0;
   piece.venom = 0;
+  piece.plagueTurns = 0;
   piece.blazeTurns = 0;
   piece.blazeBy = null;
   piece.linkedFateId = null;
