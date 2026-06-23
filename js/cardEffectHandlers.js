@@ -752,10 +752,14 @@ const EFFECTS = {
     const [r, c] = p0(picks);
     const seed = at(state, r, c);
     if (!seed || seed.color !== color) return fail();
-    const targets = [[r, c], ...enemySquaresAdjacentTo(state, r, c, color)];
     let infected = 0;
-    for (const [tr, tc] of targets) {
-      if (applyPlagueToPiece(state.board, state, tr, tc)) infected++;
+    if (applyPlagueToPiece(state.board, state, r, c)) {
+      seed.plagueSeed = true;
+      infected++;
+    }
+    for (const [ar, ac] of adjacentSquares(r, c)) {
+      if (isInDarknessZone(state, ar, ac)) continue;
+      if (at(state, ar, ac) && applyPlagueToPiece(state.board, state, ar, ac)) infected++;
     }
     if (!infected) return fail("No valid targets.");
     return ok(`Plague — ${infected} piece${infected === 1 ? "" : "s"} infected.`);

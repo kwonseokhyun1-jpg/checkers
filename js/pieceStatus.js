@@ -101,6 +101,7 @@ export function cleanseDebuffs(piece) {
   piece.silenced = 0;
   piece.venom = 0;
   piece.plagueTurns = 0;
+  piece.plagueSeed = false;
   piece.blazeTurns = 0;
   piece.blazeBy = null;
   piece.linkedFateId = null;

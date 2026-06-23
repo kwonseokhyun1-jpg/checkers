@@ -131,6 +131,7 @@ export function createPiece(color, row, col, king = false) {
     paralyzeDeferEndTick: false,
     bloodTurns: 0,
     plagueTurns: 0,
+    plagueSeed: false,
   };
 }
 
@@ -196,6 +197,29 @@ export function applyPlagueToPiece(board, state, row, col, turns = PLAGUE_TURNS)
   if (!piece) return false;
   piece.plagueTurns = turns;
   return true;
+}
+
+function adjacentDarkSquares(row, col) {
+  const out = [];
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue;
+      const nr = row + dr, nc = col + dc;
+      if (inBounds(nr, nc) && isDarkSquare(nr, nc)) out.push([nr, nc]);
+    }
+  }
+  return out;
+}
+
+/** Infect every piece adjacent to the plague seed (both colors). */
+export function spreadPlagueFromSeed(board, state, row, col) {
+  const seed = board[row][col];
+  if (!seed?.plagueSeed) return 0;
+  let infected = 0;
+  for (const [ar, ac] of adjacentDarkSquares(row, col)) {
+    if (board[ar][ac] && applyPlagueToPiece(board, state, ar, ac)) infected++;
+  }
+  return infected;
 }
 
 export function applyBurnToPiece(board, state, row, col, turns, byColor = null) {
@@ -413,6 +437,7 @@ export function resolveLandingTraps(board, state, row, col, piece) {
     queueBoardFx(state, "bomb", row, col);
     return null;
   }
+  if (piece.plagueSeed) spreadPlagueFromSeed(board, state, row, col);
   return piece;
 }
 
