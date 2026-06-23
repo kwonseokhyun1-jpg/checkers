@@ -102,6 +102,11 @@ const AI_PACE = {
   replayTimeout: 14000,
 };
 
+export function isMutualElimination(state) {
+  if (!state?.board) return false;
+  return countPieces(state.board, COLORS.RED) === 0 && countPieces(state.board, COLORS.BLACK) === 0;
+}
+
 export function isPvpTerminalBoard(state, localColor) {
   if (!state?.board) return false;
   const opp = localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
@@ -825,6 +830,10 @@ export class MatchSession {
   applyPvpOutcomeFromBoard() {
     if (!this.isPvp || this._gameOverUiShown) return;
     if (!isPvpTerminalBoard(this.state, this.localColor)) return;
+    if (isMutualElimination(this.state)) {
+      void this.showGameOver("Tie!", "Both players lost all their pieces.");
+      return;
+    }
     if (countPieces(this.state.board, this.opponentColor) === 0) {
       void this.showGameOver("Victory!", "You won the match!");
       return;
@@ -1637,6 +1646,13 @@ export class MatchSession {
   checkWin() {
     if (this.tutorialHooks) return false;
     const s = this.state;
+    if (isMutualElimination(s)) {
+      this.showGameOver(
+        this.isPvp ? "Tie!" : "Victory!",
+        this.isPvp ? "Both players lost all their pieces." : "You cleared the stage!"
+      );
+      return true;
+    }
     if (countPieces(s.board, this.opponentColor) === 0) {
       this.showGameOver("Victory!", this.isPvp ? "You won the match!" : "You captured all enemy pieces.");
       return true;
@@ -1654,6 +1670,7 @@ export class MatchSession {
     this.state.gameOver = title;
     if (!this.isPvp) clearMatchCheckpoint();
     const won = title.startsWith("Victory");
+    const isTie = title.startsWith("Tie");
     if (this.isPvp) {
       try {
         await this.pushPvpState();
@@ -1684,6 +1701,10 @@ ${starLine}`;
     }
     const overlay = this.root.querySelector("#game-over");
     if (overlay) {
+      const card = overlay.querySelector(".game-over-card");
+      card?.classList.toggle("game-over-card--tie", isTie);
+      card?.classList.toggle("game-over-card--victory", won);
+      card?.classList.toggle("game-over-card--defeat", !won && !isTie);
       this.root.querySelector("#game-over-title").textContent = title;
       const textEl = this.root.querySelector("#game-over-text");
       if (textEl) textEl.textContent = displayText;
@@ -1709,7 +1730,7 @@ ${starLine}`;
       }
     }
     if (this.isPvp) {
-      this.onPvpWin?.(won);
+      this.onPvpWin?.(isTie ? null : won);
     }
     this.cancelCardPlay();
     this.actionBusy = false;
@@ -2491,6 +2512,10 @@ ${starLine}`;
     tickEndTurnEffects(s.board, this.opponentColor, s);
     tickMeta(s, this.opponentColor);
 
+    if (isMutualElimination(s)) {
+      this.showGameOver("Victory!", "You cleared the stage!");
+      return;
+    }
     if (countPieces(s.board, this.localColor) === 0) {
       this.showGameOver("Defeat", "You lost all your pieces.");
       return;
