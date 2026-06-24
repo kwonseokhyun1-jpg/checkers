@@ -666,10 +666,41 @@ body.match-active .game-main {
     width: 100%;
     max-width: 100%;
     max-height: min(92dvh, 720px);
+    min-height: min(72dvh, 560px);
     border-radius: 24px 24px 0 0;
     border-bottom: none;
     padding-bottom: calc(1rem + var(--game-safe-bottom));
     animation: sheet-up 0.28s ease;
+    overflow: hidden;
+  }
+
+  .adventure-prebattle {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0.25rem;
+  }
+
+  .adventure-prebattle__scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .adventure-prebattle__footer {
+    position: relative;
+    z-index: 1;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    padding-bottom: calc(0.25rem + var(--game-safe-bottom));
+    background: linear-gradient(
+      180deg,
+      rgba(18, 22, 36, 0) 0%,
+      rgba(18, 22, 36, 0.92) 28%,
+      rgba(18, 22, 36, 1) 100%
+    );
   }
 
   @keyframes sheet-up {
@@ -1371,13 +1402,18 @@ body.install-banner-visible.deck-editing .game-shell {
     min-height: 44px;
   }
 
+  .adventure-prebattle .prebattle-deck-field {
+    margin-top: 0.5rem;
+  }
+
   .adventure-prebattle #btn-start-adventure {
     min-height: 48px;
     width: 100%;
   }
 
   .adventure-prebattle .enemy-deck-list {
-    max-height: min(28dvh, 12rem);
+    max-height: none;
+    flex: 1 1 auto;
     -webkit-overflow-scrolling: touch;
   }
 

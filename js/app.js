@@ -1597,7 +1597,7 @@ function openAdventurePrebattle(levelId) {
     return;
   }
 
-  if (opponent) opponent.textContent = "Review the enemy spell deck below, then choose your grimoire.";
+  if (opponent) opponent.textContent = "Choose your grimoire, then review the enemy spell deck below.";
   const gemHint = $("prebattle-gem-hint");
   if (gemHint) {
     const gems = gemsForLevelClear(profile.adventure, levelId);
@@ -1657,9 +1657,6 @@ function openAdventurePrebattle(levelId) {
     sel.appendChild(opt);
     sel.disabled = true;
     $("btn-start-adventure").disabled = true;
-    requestAnimationFrame(() => {
-      $("btn-start-adventure")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
     return;
   }
   sel.disabled = false;
@@ -1676,12 +1673,6 @@ function openAdventurePrebattle(levelId) {
   }
   profile.selectedDeckId = preferredId;
   $("btn-start-adventure").disabled = false;
-  const startBtn = $("btn-start-adventure");
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      startBtn?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  });
 }
 
 
