@@ -112,7 +112,7 @@ function profileHeroStatsHtml(profile) {
     </div>`;
 }
 
-function profileHeroCardHtml(cos, profile, { username, email }) {
+function profileHeroCardHtml(cos, profile, { username }) {
   const titleBadge = profileTitleBadgeHtml(profile);
   const displayName = username || "Player";
   const initial = displayName.charAt(0).toUpperCase() || "?";
@@ -129,7 +129,6 @@ function profileHeroCardHtml(cos, profile, { username, email }) {
               <h2 id="profile-hero-username" class="profile-hero-card__username">${escapeHtml(displayName)}</h2>
               ${titleBadge ? `<span class="profile-hero-card__title-badge">${titleBadge}</span>` : ""}
             </div>
-            ${email ? `<p class="profile-hero-card__email muted">${escapeHtml(email)}</p>` : ""}
           </div>
         </div>
       </div>
@@ -311,7 +310,7 @@ export function renderProfileTab(profile, root, { onGemsChange, onTitleChanged }
 
   root.innerHTML = `
     <section class="panel game-panel profile-panel">
-      ${profileHeroCardHtml(cos, profile, { username: "", email: signedIn ? user?.email || "" : "" })}
+      ${profileHeroCardHtml(cos, profile, { username: "" })}
       <div class="profile-section-tabs" role="tablist" aria-label="Profile sections">
         <button type="button" class="profile-section-tab active" role="tab" data-profile-section="cosmetics">Cosmetics</button>
         <button type="button" class="profile-section-tab" role="tab" data-profile-section="titles">Titles</button>
