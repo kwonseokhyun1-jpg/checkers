@@ -2956,6 +2956,7 @@ body.adventure-stage-open .card-preview-modal {
 .adventure-prebattle .custom-select--open .custom-select__list {
   z-index: 21;
 }
+.adventure-prebattle .custom-select__trigger,
 .adventure-prebattle #adventure-deck-select {
   display: block;
   width: 100%;
@@ -2966,10 +2967,11 @@ body.adventure-stage-open .card-preview-modal {
   cursor: pointer;
   position: relative;
   z-index: 3;
+}
+.adventure-prebattle #adventure-deck-select {
   -webkit-appearance: menulist;
   appearance: auto;
 }
-.adventure-prebattle .custom-select__trigger {
 .prebattle-opponent {
   color: var(--text-muted);
   margin: 0.25rem 0 0.75rem;
