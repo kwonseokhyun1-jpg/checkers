@@ -10,7 +10,9 @@
     "sync:www": "sh scripts/sync-www.sh",
     "cap:sync": "npm run sync:www && npx cap sync",
     "cap:open:android": "npx cap open android",
-    "cap:open:ios": "npx cap open ios"
+    "cap:open:ios": "npx cap open ios",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android"
   },
   "dependencies": {
     "@capacitor/android": "^7.0.0",
@@ -23,6 +25,6 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0",
-    "playwright": "^1.49.0"
+    "playwright": "^1.52.0"
   }
 }

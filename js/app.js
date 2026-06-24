@@ -98,6 +98,7 @@ import {
   readMatchCheckpoint,
   saveMatchCheckpoint,
 } from "./matchLifecycle.js";
+import { mobileConfirm } from "./mobileConfirm.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
@@ -106,9 +107,7 @@ import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardP
 import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
 import { playChestOpenAnimation } from "./chestOpenAnimation.js";
 import { getBuyCost, tryBuyCardCopy } from "./cardShop.js";
-import { showConfirm } from "./confirmModal.js";
 import { initNavIcons } from "./navIcons.js";
-import { showBootSplash } from "./splash.js";
 import { initSettings } from "./settings.js";
 import { initAudio, setAudioMode, AudioSfx } from "./audio.js";
 import { initOrientation, lockPortrait, unlockForMatch } from "./orientation.js";
@@ -117,7 +116,6 @@ import { initCapacitor } from "./capacitorInit.js";
 import { showMatchLoading } from "./matchLoadingScreen.js";
 import { hapticLight } from "./haptics.js";
 
-let hideBootSplashFn = null;
 let profile;
 
 try {
@@ -292,13 +290,16 @@ async function showTab(tab) {
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
     const label = TAB_LABELS[tab] || tab;
-    if (!(await showConfirm({
-      title: "Leave match?",
-      message: `Leave your current match to open ${label}?`,
-      confirmLabel: "Leave match",
-      cancelLabel: "Stay",
-      danger: true,
-    }))) return;
+    if (
+      !(await mobileConfirm(`Leave your current match to open ${label}?`, {
+        title: "Leave match?",
+        confirmLabel: "Leave",
+        cancelLabel: "Stay",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     setPendingNavigationTab(tab);
     armLeaveConfirmSkip();
     document.querySelector("#btn-leave-match")?.click();
@@ -1667,12 +1668,13 @@ async function tryResumeSavedMatch() {
     clearMatchCheckpoint();
     return false;
   }
-  if (!(await showConfirm({
-    title: "Resume match?",
-    message: "Resume your adventure match where you left off?",
-    confirmLabel: "Resume",
-    cancelLabel: "Discard",
-  }))) {
+  if (
+    !(await mobileConfirm("Resume your adventure match where you left off?", {
+      title: "Resume match?",
+      confirmLabel: "Resume",
+      cancelLabel: "Discard",
+    }))
+  ) {
     clearMatchCheckpoint();
     return false;
   }
@@ -1735,7 +1737,6 @@ function openAdventureStage(levelId) {
 }
 
 function init() {
-  hideBootSplashFn = showBootSplash();
   initSettings();
   initNavIcons();
   initNetworkBanner();
@@ -1773,13 +1774,16 @@ function init() {
     if (!editingDeckId || editingDeckId === "new") return;
     const deck = profile.decks.find((d) => d.id === editingDeckId);
     if (!deck) return;
-    if (!(await showConfirm({
-      title: "Delete deck?",
-      message: `Delete deck "${deck.name}"? This cannot be undone.`,
-      confirmLabel: "Delete",
-      cancelLabel: "Cancel",
-      danger: true,
-    }))) return;
+    if (
+      !(await mobileConfirm(`Delete "${deck.name}"? This cannot be undone.`, {
+        title: "Delete deck?",
+        confirmLabel: "Delete",
+        cancelLabel: "Keep",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     deleteDeck(profile, deck.id);
     editingDeckId = null;
     workingDeck = [];
@@ -2115,35 +2119,18 @@ async function bootstrapAfterAuth() {
 
   if (requiresAuthGate()) {
     authGate?.show();
-    if (hideBootSplashFn) await hideBootSplashFn();
     return;
   }
   authGate?.hide();
 
-  if (maybeStartInteractiveTutorial()) {
-    if (hideBootSplashFn) await hideBootSplashFn();
-    return;
-  }
-  if (maybeStartMetaTutorial()) {
-    if (hideBootSplashFn) await hideBootSplashFn();
-    return;
-  }
-  if (maybeStartPostStage1Tutorials()) {
-    if (hideBootSplashFn) await hideBootSplashFn();
-    return;
-  }
-  if (maybeStartPostStage5CosmeticsTutorial()) {
-    if (hideBootSplashFn) await hideBootSplashFn();
-    return;
-  }
-  if (tutorialRunning) {
-    if (hideBootSplashFn) await hideBootSplashFn();
-    return;
-  }
+  if (maybeStartInteractiveTutorial()) return;
+  if (maybeStartMetaTutorial()) return;
+  if (maybeStartPostStage1Tutorials()) return;
+  if (maybeStartPostStage5CosmeticsTutorial()) return;
+  if (tutorialRunning) return;
   if (!(await tryResumeSavedMatch())) await showTab("deck");
   reconcileMatchShellState();
   setAudioMode("hub");
-  if (hideBootSplashFn) await hideBootSplashFn();
 }
 
 init();

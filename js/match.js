@@ -63,7 +63,7 @@ import {
   consumeLeaveConfirmSkip,
   clearPendingNavigationTab,
 } from "./matchLifecycle.js";
-import { showConfirm } from "./confirmModal.js";
+import { mobileConfirm } from "./mobileConfirm.js";
 import { createMatchAchievementTracker } from "./achievementTracker.js";
 import { recordSpellPlayed } from "./profileStats.js";
 import { saveProfile } from "./storage.js";
@@ -421,13 +421,15 @@ export class MatchSession {
       }
       const skipConfirm = consumeLeaveConfirmSkip();
       if (this.isPvp) {
-        if (!skipConfirm && !(await showConfirm({
-          title: "Leave match?",
-          message: "Leave this match? Your opponent wins automatically.",
-          confirmLabel: "Forfeit",
-          cancelLabel: "Stay",
-          danger: true,
-        }))) {
+        if (
+          !skipConfirm &&
+          !(await mobileConfirm("Leave this match? Your opponent wins automatically.", {
+            title: "Leave match?",
+            confirmLabel: "Leave",
+            cancelLabel: "Stay",
+            destructive: true,
+          }))
+        ) {
           clearPendingNavigationTab();
           return;
         }
@@ -435,12 +437,14 @@ export class MatchSession {
         this.onExit?.();
         return;
       }
-      if (!skipConfirm && !(await showConfirm({
-        title: "Leave match?",
-        message: "Leave this match? Your progress is saved — you can resume when you return.",
-        confirmLabel: "Leave",
-        cancelLabel: "Stay",
-      }))) {
+      if (
+        !skipConfirm &&
+        !(await mobileConfirm("Leave this match? Your progress is saved — you can resume when you return.", {
+          title: "Leave match?",
+          confirmLabel: "Leave",
+          cancelLabel: "Stay",
+        }))
+      ) {
         clearPendingNavigationTab();
         return;
       }

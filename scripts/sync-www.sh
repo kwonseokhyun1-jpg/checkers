@@ -5,7 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/www"
 rm -rf "$OUT"
 mkdir -p "$OUT"
-for item in index.html css js assets supabase; do
+for item in index.html manifest.json css js assets icons supabase; do
   if [ -e "$ROOT/$item" ]; then
     cp -R "$ROOT/$item" "$OUT/"
   fi
