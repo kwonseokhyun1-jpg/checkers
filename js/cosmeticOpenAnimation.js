@@ -2,6 +2,7 @@
  * Fullscreen cosmetic box opening — same beats as spell chests
  */
 import { COSMETIC_BOX_TIERS, cosmeticBoxStageSvg, renderCosmeticRevealEl } from "./cosmeticArt.js";
+import { lockBodyScroll, unlockBodyScroll } from "./scrollLock.js";
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -63,6 +64,7 @@ export function playCosmeticOpenAnimation({ boxId, boxLabel, pulls }) {
 
     document.body.appendChild(overlay);
     document.body.classList.add("chest-open-active", "cosmetic-open-active");
+    lockBodyScroll();
 
     const stage = overlay.querySelector(".chest-open-stage");
     const status = overlay.querySelector(".chest-open-status");
@@ -75,6 +77,7 @@ export function playCosmeticOpenAnimation({ boxId, boxLabel, pulls }) {
     const finish = () => {
       overlay.classList.add("chest-open-overlay--out");
       document.body.classList.remove("chest-open-active", "cosmetic-open-active");
+      unlockBodyScroll();
       setTimeout(() => {
         overlay.remove();
         resolve();
