@@ -79,9 +79,14 @@ export function reconcileMatchShellState() {
   return true;
 }
 
+function syncMatchShellPresentation(active) {
+  document.querySelector(".game-shell")?.classList.toggle("game-shell--in-match", active);
+}
+
 export function enterMatchMode(meta) {
   checkpointMeta = meta;
   document.body.classList.add("match-active");
+  syncMatchShellPresentation(true);
 }
 
 export function clearMatchCheckpoint() {
@@ -96,6 +101,7 @@ export function clearMatchCheckpoint() {
 export function exitMatchMode(options = {}) {
   checkpointMeta = null;
   document.body.classList.remove("match-active");
+  syncMatchShellPresentation(false);
   if (options.clearCheckpoint) clearMatchCheckpoint();
 }
 

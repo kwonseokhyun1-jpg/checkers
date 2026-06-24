@@ -9,10 +9,13 @@
 }
 
 html {
+  -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
 
 body {
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
   overscroll-behavior-y: none;
   touch-action: manipulation;
 }
@@ -70,23 +73,36 @@ body {
 
 
 
-body.match-active .game-main {
-  padding-bottom: calc(0.75rem + var(--game-safe-bottom, 0px));
+/* Game shell — phone frame */
+.game-shell {
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  padding-top: calc(0.75rem + var(--game-safe-top));
+  padding-left: max(0.75rem, env(safe-area-inset-left));
+  padding-right: max(0.75rem, env(safe-area-inset-right));
+  padding-bottom: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
 }
 
-@media (max-width: 768px) {
-  body.match-active .game-nav.tabs {
-    display: none;
-  }
+.game-shell--in-match,
+body.match-active .game-shell {
+  padding-bottom: calc(0.75rem + var(--game-safe-bottom));
+}
 
-  body.match-active .game-shell {
-    padding-bottom: calc(0.75rem + var(--game-safe-bottom));
-  }
+.game-shell--in-match .game-nav.tabs,
+body.match-active .game-nav.tabs {
+  display: none;
 }
 
 body.match-active #view-match:not(.hidden) {
   display: block;
   width: 100%;
+}
+
+body.match-active .game-main {
+  padding-bottom: calc(0.75rem + var(--game-safe-bottom, 0px));
 }
 
 /* Spell hand — allow horizontal scroll without starting a cast */
@@ -100,15 +116,7 @@ body.match-active #view-match:not(.hidden) {
   touch-action: pan-x;
 }
 
-/* Game shell — phone frame */
-.game-shell {
-  max-width: 480px;
-  padding-top: calc(0.75rem + var(--game-safe-top));
-  padding-left: max(0.75rem, env(safe-area-inset-left));
-  padding-right: max(0.75rem, env(safe-area-inset-right));
-  padding-bottom: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
-}
-
+/* Game shell — phone frame (continued) */
 .game-shell::before {
   inset: 0.35rem;
   border-width: 2px;
@@ -420,5 +428,114 @@ body.match-active #view-match:not(.hidden) {
   .adventure-world-shield__icon {
     width: 1.4rem;
     height: 1.55rem;
+  }
+}
+
+/* Match + meta screens — phone presentation */
+@media (max-width: 768px) {
+  .match-scene {
+    padding: 0;
+  }
+
+  .game-layout {
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+  }
+
+  .panel-opponent,
+  .panel-player {
+    max-width: 100%;
+  }
+
+  .board-wrap {
+    max-width: min(100vw - 1.5rem, 420px);
+    margin: 0 auto;
+  }
+
+  .hand.spell-hand {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  .hand.spell-hand::-webkit-scrollbar {
+    display: none;
+  }
+
+  .hand.spell-hand .spell-card {
+    flex: 0 0 auto;
+    width: 88px;
+  }
+
+  .card-preview-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .card-preview-dialog {
+    max-width: 100%;
+    width: 100%;
+    border-radius: var(--radius) var(--radius) 0 0;
+    padding: 1rem 1rem calc(1rem + var(--game-safe-bottom));
+    max-height: 85dvh;
+    overflow-y: auto;
+  }
+
+  .card-preview-close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .collection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adventure-map {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: none;
+  }
+
+  .adventure-node {
+    min-height: 44px;
+  }
+
+  .profile-showcase {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .profile-showcase__hero {
+    justify-content: center;
+  }
+
+  .profile-cosmetic-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .profile-cosmetic-filters {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .profile-filter-btn {
+    flex: 0 0 auto;
+    min-height: 44px;
+  }
+
+  .chest-open-overlay,
+  .cosmetic-open-overlay {
+    padding:
+      var(--game-safe-top)
+      env(safe-area-inset-right, 0px)
+      var(--game-safe-bottom)
+      env(safe-area-inset-left, 0px);
+  }
+}
+
+@media (min-width: 390px) and (max-width: 768px) {
+  .collection-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
