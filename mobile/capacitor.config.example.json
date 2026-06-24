@@ -11,7 +11,9 @@
   "plugins": {
     "SplashScreen": {
       "launchAutoHide": true,
-      "backgroundColor": "#080a12"
+      "backgroundColor": "#080a12",
+      "androidSplashResourceName": "splash",
+      "iosSpinnerStyle": "small"
     }
   }
 }
