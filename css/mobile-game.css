@@ -1651,6 +1651,7 @@ body.install-banner-visible.deck-editing .game-shell {
 
   .chest-card {
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: stretch;
     padding: 0.85rem;
     text-align: left;
@@ -1692,7 +1693,9 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   .chest-card__btn {
-    margin-top: 0.5rem;
+    flex: 1 1 100%;
+    width: 100%;
+    margin-top: 0.65rem;
   }
 
   /* Profile + quests — scrollable section tabs, denser titles */
