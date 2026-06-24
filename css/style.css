@@ -1429,13 +1429,13 @@ body.tutorial-match-active .spell-drag-ghost {
   position: relative;
   max-width: 1100px;
   margin: 0 auto;
-  padding: 1.25rem 1rem 2rem;
+  padding: 0 1rem 2rem;
 }
 
 .game-shell::before {
   content: "";
   position: absolute;
-  inset: 0.5rem;
+  inset: 0 0.5rem 0.5rem 0.5rem;
   border: 1px solid rgba(201, 162, 39, 0.22);
   border-radius: 20px;
   pointer-events: none;
@@ -1447,10 +1447,10 @@ body.tutorial-match-active .spell-drag-ghost {
 .game-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 1rem;
   margin-bottom: 1.25rem;
-  padding: 0.85rem 1.1rem;
+  padding: calc(0.85rem + var(--game-safe-top, 0px)) 1.1rem 0.85rem;
   background: linear-gradient(180deg, var(--bg-panel-elevated) 0%, var(--bg-panel) 100%);
   border: 1px solid rgba(201, 162, 39, 0.25);
   border-radius: var(--radius);

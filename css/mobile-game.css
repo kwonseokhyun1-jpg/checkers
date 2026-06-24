@@ -74,7 +74,7 @@ body {
   max-width: 480px;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
-  padding-top: calc(0.75rem + var(--game-safe-top));
+  padding-top: 0;
   padding-left: max(0.75rem, env(safe-area-inset-left));
   padding-right: max(0.75rem, env(safe-area-inset-right));
   padding-bottom: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
@@ -112,7 +112,7 @@ body.match-active .game-main {
 
 /* Game shell — phone frame (continued) */
 .game-shell::before {
-  inset: 0.35rem;
+  inset: 0 0.35rem 0.35rem 0.35rem;
   border-width: 2px;
   border-radius: 24px;
   border-color: rgba(201, 162, 39, 0.35);
@@ -122,11 +122,12 @@ body.match-active .game-main {
 }
 
 .game-header {
-  padding: 0.65rem 0.85rem;
+  padding: calc(0.65rem + var(--game-safe-top)) 0.85rem 0.65rem;
   border-radius: 16px;
   background: linear-gradient(180deg, #243048 0%, #141c2a 100%);
   border: 2px solid rgba(201, 162, 39, 0.3);
   margin-bottom: 0.85rem;
+  justify-content: flex-end;
 }
 
 .game-header__title {
@@ -359,7 +360,16 @@ body.match-active .game-main {
 @media (min-width: 769px) {
   .game-shell {
     max-width: 1100px;
+    padding-top: 1.25rem;
     padding-bottom: 2rem;
+  }
+
+  .game-shell::before {
+    inset: 0.5rem;
+  }
+
+  .game-header {
+    padding-top: 0.85rem;
   }
 
   .game-nav.tabs {
@@ -643,10 +653,6 @@ body.match-active .game-main {
 
 /* Standalone / home-screen launch — tighter shell, no browser chrome assumptions */
 @media (display-mode: standalone) {
-  .game-shell {
-    padding-top: calc(0.5rem + var(--game-safe-top));
-  }
-
   body.match-active .game-shell {
     padding-top: calc(0.25rem + var(--game-safe-top));
   }
@@ -1576,30 +1582,9 @@ body.install-banner-visible.deck-editing .game-shell {
     align-items: center;
     text-align: left;
     gap: 0.5rem;
-    padding: 0.55rem 0.7rem;
+    padding: calc(0.55rem + var(--game-safe-top)) 0.7rem 0.55rem;
     margin-bottom: 0.65rem;
-  }
-
-  .game-header__brand {
-    flex-direction: row;
-    flex: 1 1 auto;
-    min-width: 0;
-    gap: 0.55rem;
-  }
-
-  .game-header__titles {
-    min-width: 0;
-  }
-
-  .game-header__title {
-    font-size: 1.05rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .game-header__eyebrow {
-    display: none;
+    justify-content: flex-end;
   }
 
   .game-header__actions {
