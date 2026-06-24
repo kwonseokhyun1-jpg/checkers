@@ -387,8 +387,22 @@ body.match-active .game-main {
 }
 
 .deck-row {
-  min-height: 8.25rem;
+  min-height: 7.25rem;
   border-radius: 16px;
+}
+
+.deck-row__cats {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .deck-row {
+    min-height: 8.25rem;
+  }
+
+  .deck-row__cats {
+    display: flex;
+  }
 }
 
 .deck-row-name {
