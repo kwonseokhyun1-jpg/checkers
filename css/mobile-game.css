@@ -1438,7 +1438,7 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   .adventure-prebattle #adventure-deck-select,
-  .adventure-prebattle .select-input {
+  .adventure-prebattle .custom-select__trigger {
     min-height: 44px;
   }
 
@@ -1629,7 +1629,16 @@ body.install-banner-visible.deck-editing .game-shell {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
   }
 
-  /* Adventure — stage list clears bottom nav */
+  /* Adventure — lock page scroll; stage list scrolls inside panel */
+  body.adventure-active:not(.adventure-stage-open):not(.match-active) {
+    overflow: hidden;
+  }
+
+  body.adventure-active:not(.adventure-stage-open):not(.match-active) .game-shell {
+    display: flex;
+    flex-direction: column;
+  }
+
   #view-play .adventure-panel {
     padding-bottom: 0.25rem;
   }
@@ -1640,6 +1649,10 @@ body.install-banner-visible.deck-editing .game-shell {
     padding-bottom: 0.35rem;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
+  }
+
+  body.adventure-active:not(.adventure-stage-open) .adventure-stage-list {
+    max-height: none;
   }
 
   .adventure-stage-row {
