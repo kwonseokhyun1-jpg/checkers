@@ -11,6 +11,7 @@ import { MatchSession, PHASE } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
+import { mobileConfirm } from "./mobileConfirm.js";
 import { dismissInteractiveTutorial, shouldShowInteractiveTutorial } from "./tutorial.js";
 
 const TUTORIAL_DECK = buildStarterDeckCardIds();
@@ -320,10 +321,17 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
     onComplete?.();
   }
 
-  function askSkip() {
-    if (window.confirm("Skip the tutorial? You can always practice in Adventure mode.")) {
-      finishTutorial();
-    }
+  async function askSkip() {
+    const ok = await mobileConfirm(
+      "Skip the tutorial? You can always practice in Adventure mode.",
+      {
+        title: "Skip tutorial?",
+        confirmLabel: "Skip",
+        cancelLabel: "Keep going",
+        destructive: true,
+      }
+    );
+    if (ok) finishTutorial();
   }
 
   skipBtn?.addEventListener("click", askSkip);
