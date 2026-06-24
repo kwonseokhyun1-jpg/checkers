@@ -5501,6 +5501,24 @@ body.chest-open-active {
   gap: 0.5rem;
   flex-shrink: 0;
 }
+.game-header__start {
+  flex: 1;
+  min-width: 0;
+}
+.game-header__username {
+  font-family: var(--font-display, "Fraunces", serif);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #f4f6fb;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.game-header__username.hidden {
+  display: none;
+}
 .auth-header-btn {
   white-space: nowrap;
   min-height: 40px;
