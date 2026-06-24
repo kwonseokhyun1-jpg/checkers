@@ -511,6 +511,7 @@ export class MatchSession {
       !(
         !this.isViewingHistory() &&
         s.turn === this.localColor &&
+        s.phase === PHASE.MOVE &&
         !s.gameOver &&
         !this.actionBusy &&
         !this.cardPlay &&
@@ -1040,7 +1041,9 @@ export class MatchSession {
         return;
       }
       const moveMsg = msg ? `${msg} Select a piece to move.` : undefined;
-      this.beginMovePhase({ afterSpell: true, spellMessage: moveMsg });
+      if (this.canMovePieces()) {
+        this.beginMovePhase({ afterSpell: true, spellMessage: moveMsg });
+      }
     }
   }
 

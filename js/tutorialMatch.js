@@ -275,6 +275,16 @@ function syncMatchTutorialInset() {
   document.documentElement.style.setProperty("--tutorial-match-inset", `${Math.ceil(inset)}px`);
 }
 
+/** Start a lesson turn — move-phase steps skip the spell phase. */
+function beginTutorialStepTurn(session, state, step) {
+  if (state.phase === PHASE.MOVE && state.spellPlayed?.[COLORS.RED]) {
+    session.beginMovePhase({ spellMessage: step.hint || "Choose destination." });
+    return;
+  }
+  session.beginPlayerTurn();
+  if (step.hint) session.setMessage(step.hint);
+}
+
 /**
  * @param {{ profile: object, saveProfile: (p: object) => void, onComplete: () => void }} opts
  */
@@ -361,6 +371,7 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
       onLeaveRequest: askSkip,
       spellPhaseBlockMessage: step.hint || "Play the spell shown in the lesson first.",
       canMovePieces() {
+        if (spellValidated) return false;
         if (step.validateSpell) return false;
         return true;
       },
@@ -405,8 +416,7 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
       matchSession.validMoves = [];
       matchSession.validTargets = [];
       matchSession.actionBusy = false;
-      matchSession.beginPlayerTurn();
-      if (step.hint) matchSession.setMessage(step.hint);
+      beginTutorialStepTurn(matchSession, state, step);
       matchSession.render();
       return;
     }
@@ -433,7 +443,12 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
       opponentName: "Training dummy",
     });
 
-    if (step.hint) matchSession.setMessage(step.hint);
+    if (state.phase === PHASE.MOVE && state.spellPlayed?.[COLORS.RED]) {
+      matchSession.state = state;
+      beginTutorialStepTurn(matchSession, state, step);
+    } else if (step.hint) {
+      matchSession.setMessage(step.hint);
+    }
     matchSession.render();
   }
 
