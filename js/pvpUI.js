@@ -32,7 +32,9 @@ import {
   matchRowFingerprint,
   shouldApplyPvpRow,
 } from "./pvp.js";
-import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
+import { showMatchLoading } from "./matchLoadingScreen.js";
+import { unlockForMatch, lockPortrait } from "./orientation.js";
+import { setAudioMode } from "./audio.js";
 import { syncChampion } from "./achievements.js";
 import { recordPvpWin } from "./profileStats.js";
 import { saveProfile } from "./storage.js";
@@ -184,14 +186,14 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
           <h3 class="pvp-room-section__title">Your rooms</h3>
           <p class="pvp-room-section__hint">Rooms you are hosting. Cancel anytime before someone joins.</p>
           <ul id="pvp-your-list" class="pvp-open-list" aria-live="polite">
-            <li class="pvp-open-empty">Loading…</li>
+            <li class="pvp-open-empty meta-skeleton"><span class="meta-skeleton__row"></span></li>
           </ul>
         </div>
         <div class="pvp-room-section pvp-open-rooms">
           <h3 class="pvp-room-section__title">Open rooms</h3>
           <p class="pvp-room-section__hint">Rooms hosted by other players — tap to join.</p>
           <ul id="pvp-open-list" class="pvp-open-list" aria-live="polite">
-            <li class="pvp-open-empty">Loading…</li>
+            <li class="pvp-open-empty meta-skeleton"><span class="meta-skeleton__row"></span></li>
           </ul>
         </div>
         <p id="pvp-status" class="pvp-status${isError ? " pvp-status--error" : ""}" role="status">${escapeHtml(message)}</p>
@@ -625,7 +627,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     const opponentCosmetics = cosmeticsWithPieceSkin(opponentCosmeticsBase, opponentMatchSkin);
 
     if (!resume) {
-      await showPvpMatchLoading(root, {
+      await showMatchLoading(root, {
+        mode: "pvp",
         local: { username: localName, cosmetics: localCosmetics },
         opponent: { username: opponentName, cosmetics: opponentCosmetics },
       });
@@ -654,6 +657,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
           matchSession = null;
           matchLaunching = false;
           exitMatchMode();
+          void lockPortrait();
+          setAudioMode("hub");
           clearActivePvpMatchId();
           pvpService?.dispose();
           pvpService = null;
@@ -717,6 +722,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     }
 
     enterMatchMode({ kind: "pvp" });
+    await unlockForMatch();
+    setAudioMode("match");
 
     matchSession.setMessage(
       resume
