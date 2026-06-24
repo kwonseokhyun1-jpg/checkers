@@ -1,15 +1,30 @@
 {
   "name": "arcane-checkers",
+  "version": "1.0.0",
   "private": true,
-  "description": "Arcane Checkers — static web game with optional Capacitor native wrap",
+  "description": "Arcane Checkers — checkers with collectible spell cards",
+  "type": "module",
   "scripts": {
-    "screenshots": "node scripts/capture-screenshots.mjs",
-    "cap:init": "npm install @capacitor/core @capacitor/cli @capacitor/ios @capacitor/android @capacitor/splash-screen && npx cap init \"Arcane Checkers\" com.example.arcanecheckers --web-dir . && cp mobile/capacitor.config.example.json capacitor.config.json",
-    "cap:sync": "npx cap sync",
+    "icons": "node scripts/generate-app-icons.mjs",
+    "screenshots": "node scripts/generate-store-placeholders.mjs",
+    "sync:www": "sh scripts/sync-www.sh",
+    "cap:sync": "npm run sync:www && npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
     "cap:ios": "npx cap open ios",
     "cap:android": "npx cap open android"
   },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/haptics": "^7.0.0",
+    "@capacitor/ios": "^7.0.0",
+    "@capacitor/screen-orientation": "^7.0.0",
+    "@capacitor/splash-screen": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0"
+  },
   "devDependencies": {
+    "@capacitor/cli": "^7.0.0",
     "playwright": "^1.52.0"
   }
 }

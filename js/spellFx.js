@@ -36,6 +36,7 @@ export const EFFECT_VISUAL = {
   deport: "move",
   call_forward: "move",
   dash: "move",
+  sidestep: "move",
   retreat_3: "move",
 
   swap_friendly: "swap",
