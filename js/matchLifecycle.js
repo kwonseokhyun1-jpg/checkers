@@ -37,6 +37,8 @@ function unlockBodyScrollForMatch() {
 
 let pendingNavigationTab = null;
 let skipNextLeaveConfirm = false;
+/** @type {object|null} */
+let checkpointMeta = null;
 
 export function isMatchActive() {
   return document.body.classList.contains("match-active");
