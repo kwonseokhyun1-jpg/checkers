@@ -1731,10 +1731,20 @@ function init() {
     workingDeck = [];
     showDeckSubview("list");
   });
-  $("btn-delete-deck")?.addEventListener("click", () => {
+  $("btn-delete-deck")?.addEventListener("click", async () => {
     if (!editingDeckId || editingDeckId === "new") return;
     const deck = profile.decks.find((d) => d.id === editingDeckId);
-    if (!deck || !confirm(`Delete deck "${deck.name}"?`)) return;
+    if (!deck) return;
+    if (
+      !(await mobileConfirm(`Delete "${deck.name}"? This cannot be undone.`, {
+        title: "Delete deck?",
+        confirmLabel: "Delete",
+        cancelLabel: "Keep",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     deleteDeck(profile, deck.id);
     editingDeckId = null;
     workingDeck = [];
