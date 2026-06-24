@@ -99,11 +99,16 @@ const COSMETICS_STEPS = [
   {
     id: "profile-btn",
     title: "Open Profile",
-    body: "Tap your portrait in the header to open Profile and equip your new cosmetics.",
-    hint: "Tap your avatar in the top corner.",
+    body: "Tap your portrait in the header, then choose Profile to equip your new cosmetics.",
+    hint: "Tap your avatar, then tap Profile.",
     highlight: "#header-profile-btn",
-    allowed: ["#header-profile-btn", "#header-profile-btn *"],
-    actionSelector: "#header-profile-btn",
+    allowed: [
+      "#header-profile-btn",
+      "#header-profile-btn *",
+      "#header-profile-dropdown",
+      "#header-profile-dropdown *",
+    ],
+    actionSelector: '[data-profile-menu-action="profile"]',
   },
   {
     id: "equip-cosmetic",
