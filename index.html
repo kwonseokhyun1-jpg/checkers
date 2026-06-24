@@ -40,6 +40,18 @@
   <div class="ambient-bg" aria-hidden="true"></div>
   <div class="app game-shell">
     <header class="game-header">
+      <div class="game-header__start">
+        <div id="header-profile-menu" class="header-profile-menu hidden" hidden>
+          <button type="button" id="header-profile-btn" class="header-profile-btn" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="header-profile-dropdown">
+            <span id="header-profile-avatar" class="header-profile-btn__avatar" aria-hidden="true"></span>
+          </button>
+          <div id="header-profile-dropdown" class="header-profile-dropdown hidden" role="menu" hidden>
+            <button type="button" class="header-profile-dropdown__item" role="menuitem" data-profile-menu-action="profile">Profile</button>
+            <button type="button" class="header-profile-dropdown__item" role="menuitem" data-profile-menu-action="settings">Settings</button>
+          </div>
+        </div>
+        <button type="button" id="auth-header-btn" class="btn-secondary btn-sm auth-header-btn">Sign in</button>
+      </div>
       <div class="game-header__actions">
         <div class="hud-currency">
           <div class="hud-gems" title="Gems">
@@ -53,16 +65,6 @@
             <span class="hud-stars__label">stars</span>
           </div>
         </div>
-        <div id="header-profile-menu" class="header-profile-menu hidden" hidden>
-          <button type="button" id="header-profile-btn" class="header-profile-btn" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="header-profile-dropdown">
-            <span id="header-profile-avatar" class="header-profile-btn__avatar" aria-hidden="true"></span>
-          </button>
-          <div id="header-profile-dropdown" class="header-profile-dropdown hidden" role="menu" hidden>
-            <button type="button" class="header-profile-dropdown__item" role="menuitem" data-profile-menu-action="profile">Profile</button>
-            <button type="button" class="header-profile-dropdown__item" role="menuitem" data-profile-menu-action="settings">Settings</button>
-          </div>
-        </div>
-        <button type="button" id="auth-header-btn" class="btn-secondary btn-sm auth-header-btn">Sign in</button>
       </div>
     </header>
 
