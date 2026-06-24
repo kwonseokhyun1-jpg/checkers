@@ -321,7 +321,7 @@ async function showTab(tab) {
   activeTab = tab;
   syncMainTabShellState();
   if (MAIN_TABS.has(tab)) {
-    window.scrollTo(0, 0);
+    scrollMainTabToTop();
   }
   document.querySelectorAll(".tab-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === tab);
@@ -511,6 +511,7 @@ function syncCollectionFilterControls() {
 }
 
 const DECK_EDIT_MOBILE_MQ = "(max-width: 899px)";
+const MAIN_TAB_INNER_SCROLL_MQ = "(max-width: 768px)";
 /** @type {number|null} */
 let deckListScrollYBeforeEdit = null;
 
@@ -518,10 +519,47 @@ function usesMobileDeckEditorScrollLock() {
   return window.matchMedia(DECK_EDIT_MOBILE_MQ).matches;
 }
 
+function usesMainTabInnerScroll() {
+  return (
+    document.body.classList.contains("main-tab-active") &&
+    !document.body.classList.contains("match-active") &&
+    !document.body.classList.contains("deck-editing") &&
+    window.matchMedia(MAIN_TAB_INNER_SCROLL_MQ).matches
+  );
+}
+
+function getMainTabScrollEl() {
+  return document.querySelector(".game-main");
+}
+
+function getMainTabScrollY() {
+  const main = getMainTabScrollEl();
+  if (usesMainTabInnerScroll() && main) return main.scrollTop;
+  return window.scrollY || document.documentElement.scrollTop || 0;
+}
+
+function setMainTabScrollY(y) {
+  const main = getMainTabScrollEl();
+  if (usesMainTabInnerScroll() && main) {
+    main.scrollTop = y;
+    return;
+  }
+  window.scrollTo(0, y);
+}
+
+function scrollMainTabToTop() {
+  const main = getMainTabScrollEl();
+  if (usesMainTabInnerScroll() && main) {
+    main.scrollTop = 0;
+    return;
+  }
+  window.scrollTo(0, 0);
+}
+
 /** iOS keeps window scroll when body overflow is hidden; lock body at y=0 for mobile edit. */
 function lockBodyScrollForDeckEdit() {
   if (!usesMobileDeckEditorScrollLock()) return;
-  deckListScrollYBeforeEdit = window.scrollY || document.documentElement.scrollTop || 0;
+  deckListScrollYBeforeEdit = getMainTabScrollY();
   document.body.style.position = "fixed";
   document.body.style.top = "0";
   document.body.style.left = "0";
@@ -538,15 +576,15 @@ function unlockBodyScrollForDeckEdit() {
   document.body.style.left = "";
   document.body.style.right = "";
   document.body.style.width = "";
-  window.scrollTo(0, restoreY);
+  setMainTabScrollY(restoreY);
 }
 
 function scrollDeckEditViewToTop() {
-  window.scrollTo(0, 0);
+  scrollMainTabToTop();
   document.documentElement.scrollTop = 0;
   document.body.scrollTop = 0;
   document.querySelector(".game-shell")?.scrollTo?.(0, 0);
-  document.querySelector(".game-main")?.scrollTo?.(0, 0);
+  getMainTabScrollEl()?.scrollTo?.(0, 0);
   document.querySelector("#view-deck")?.scrollTo?.(0, 0);
   document
     .querySelectorAll(

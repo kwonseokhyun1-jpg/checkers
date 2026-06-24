@@ -156,12 +156,35 @@ body.match-active .game-main {
   justify-content: space-between;
 }
 
-/* Chess.com-style sticky top HUD on the five main tab screens */
+/* Chess.com-style shell: pinned top HUD, only main content scrolls (no pull past top) */
 @media (max-width: 768px) {
+  html:has(body.main-tab-active:not(.match-active):not(.deck-editing)) {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  body.main-tab-active:not(.match-active):not(.deck-editing) {
+    overflow: hidden;
+    height: 100dvh;
+    height: -webkit-fill-available;
+  }
+
+  body.main-tab-active:not(.match-active):not(.deck-editing) .game-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    height: -webkit-fill-available;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+    padding-bottom: 0;
+  }
+
   body.main-tab-active:not(.match-active):not(.deck-editing) .game-header {
-    position: sticky;
-    top: 0;
+    flex-shrink: 0;
+    position: relative;
     z-index: 150;
+    margin-bottom: 0.65rem;
     margin-left: calc(-1 * max(0.75rem, env(safe-area-inset-left)));
     margin-right: calc(-1 * max(0.75rem, env(safe-area-inset-right)));
     padding-left: max(0.85rem, calc(0.7rem + env(safe-area-inset-left)));
@@ -171,6 +194,19 @@ body.match-active .game-main {
     box-shadow:
       0 4px 20px rgba(0, 0, 0, 0.5),
       inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  body.main-tab-active:not(.match-active):not(.deck-editing) .game-main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
+  }
+
+  body.install-banner-visible.main-tab-active:not(.match-active):not(.deck-editing) .game-main {
+    padding-bottom: calc(var(--nav-height) + 4.75rem + var(--game-safe-bottom));
   }
 }
 
