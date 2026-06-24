@@ -109,6 +109,14 @@ export function enhanceSelect(selectEl) {
   patchProperty("selectedIndex");
   patchProperty("disabled");
 
+  function selectOption(opt) {
+    if (selectEl.disabled) return;
+    selectEl.value = opt.value;
+    selectEl.dispatchEvent(new Event("change", { bubbles: true }));
+    syncTrigger();
+    close();
+  }
+
   function rebuild() {
     list.innerHTML = "";
     for (const opt of options()) {
@@ -118,14 +126,9 @@ export function enhanceSelect(selectEl) {
       item.setAttribute("role", "option");
       item.dataset.value = opt.value;
       item.textContent = opt.textContent?.trim() || opt.value;
-      item.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
+      item.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (selectEl.disabled) return;
-        selectEl.value = opt.value;
-        selectEl.dispatchEvent(new Event("change", { bubbles: true }));
-        syncTrigger();
-        close();
+        selectOption(opt);
       });
       list.appendChild(item);
     }
@@ -142,6 +145,17 @@ export function enhanceSelect(selectEl) {
     items[activeIndex]?.scrollIntoView({ block: "nearest" });
   }
 
+  function positionList() {
+    list.classList.remove("custom-select__list--above");
+    const rect = trigger.getBoundingClientRect();
+    const listMaxHeight = Math.min(256, window.innerHeight * 0.5);
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    if (spaceBelow < listMaxHeight * 0.65 && spaceAbove > spaceBelow) {
+      list.classList.add("custom-select__list--above");
+    }
+  }
+
   function openList() {
     if (open || selectEl.disabled) return;
     closeAllExcept(api);
@@ -150,6 +164,7 @@ export function enhanceSelect(selectEl) {
     list.classList.remove("hidden");
     wrapper.classList.add("custom-select--open");
     trigger.setAttribute("aria-expanded", "true");
+    positionList();
     const selectedIndex = Math.max(0, selectEl.selectedIndex);
     setActiveIndex(selectedIndex);
     document.addEventListener("click", onDocPointer);
