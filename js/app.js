@@ -1143,6 +1143,31 @@ function openDeckEdit(deckId) {
   notifyMetaTutorial("deck-edit-opened", { deckId });
 }
 
+function getDeckCategoryBreakdown(cardIds) {
+  const counts = Object.fromEntries(CARD_CATEGORY_ORDER.map((c) => [c, 0]));
+  for (const id of cardIds) {
+    const def = getCardDef(id);
+    if (!def) continue;
+    counts[getCardCategory(def)] += 1;
+  }
+  return counts;
+}
+
+function renderDeckCategoryDots(cardIds) {
+  const counts = getDeckCategoryBreakdown(cardIds);
+  const parts = [];
+  for (const cat of CARD_CATEGORY_ORDER) {
+    const n = counts[cat];
+    if (n <= 0) continue;
+    const label = CARD_CATEGORY_LABELS[cat];
+    parts.push(
+      `<span class="deck-row__cat" title="${escapeHtml(label)}: ${n}"><span class="deck-row__cat-dot deck-row__cat-dot--${cat}" aria-hidden="true"></span><span class="deck-row__cat-n">${n}</span></span>`
+    );
+  }
+  if (!parts.length) return "";
+  return `<div class="deck-row__cats">${parts.join("")}</div>`;
+}
+
 function renderDeckList() {
   if (repairProfile(profile)) saveProfile(profile);
   updateCurrencyHeader();
@@ -1150,29 +1175,56 @@ function renderDeckList() {
   if (!list) return;
   list.innerHTML = "";
 
+  const countEl = $("deck-list-count");
+  if (countEl) {
+    const n = profile.decks.length;
+    countEl.textContent = n ? `${n} deck${n === 1 ? "" : "s"}` : "";
+  }
+
   if (!profile.decks.length) {
     if (repairProfile(profile)) saveProfile(profile);
     if (profile.decks.length) {
       renderDeckList();
       return;
     }
-    list.innerHTML = `<p class="empty-msg">No decks yet. Tap <strong>+ New deck</strong> to create one.</p>`;
+    list.innerHTML = `
+      <div class="deck-list-empty">
+        <span class="deck-list-empty__icon" aria-hidden="true">▣</span>
+        <p class="deck-list-empty__title">No decks yet</p>
+        <p class="deck-list-empty__desc">Tap <strong>New deck</strong> above to build your first 30-card list.</p>
+      </div>`;
     return;
   }
 
   for (const deck of profile.decks) {
     const val = validateDeck(deck.cardIds, profile);
-    const statusClass = val.valid ? "ok" : "warn";
+    const ready = val.valid;
+    const pct = Math.min(100, Math.round((deck.cardIds.length / DECK_SIZE) * 100));
     const row = document.createElement("button");
     row.type = "button";
-    row.className = "deck-row deck-row--open";
+    row.className = `deck-row deck-row--open${ready ? " deck-row--ready" : ""}`;
     row.innerHTML = `
-      <div class="deck-row-info">
-        <h3 class="deck-row-name">${deck.name}</h3>
-        <p class="deck-status ${statusClass}">${deck.cardIds.length}/${DECK_SIZE}${val.valid ? " · Ready" : " · Incomplete"}</p>
-        <p class="deck-row-hint">Tap to edit</p>
+      <span class="deck-row__aura" aria-hidden="true"></span>
+      <div class="deck-row__top">
+        <span class="deck-row__sigil" aria-hidden="true">
+          <span class="deck-row__sigil-card"></span>
+          <span class="deck-row__sigil-card"></span>
+          <span class="deck-row__sigil-card"></span>
+        </span>
+        <span class="deck-row__badge ${ready ? "deck-row__badge--ready" : "deck-row__badge--warn"}">${ready ? "Ready" : "Incomplete"}</span>
       </div>
-      <span class="deck-row-chevron" aria-hidden="true">›</span>
+      <h3 class="deck-row-name">${escapeHtml(deck.name)}</h3>
+      <div class="deck-row__progress">
+        <div class="deck-progress-bar deck-row__progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${DECK_SIZE}" aria-valuenow="${deck.cardIds.length}" aria-label="${escapeHtml(deck.name)} progress">
+          <div class="deck-progress-fill deck-row__progress-fill${ready ? " deck-row__progress-fill--ready" : ""}" style="width:${pct}%"></div>
+        </div>
+        <span class="deck-row__count">${deck.cardIds.length}/${DECK_SIZE}</span>
+      </div>
+      ${renderDeckCategoryDots(deck.cardIds)}
+      <div class="deck-row__footer">
+        <span class="deck-row-hint">Tap to edit</span>
+        <span class="deck-row-chevron" aria-hidden="true">›</span>
+      </div>
     `;
     row.addEventListener("click", () => openDeckEdit(deck.id));
     list.appendChild(row);
