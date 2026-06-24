@@ -2940,6 +2940,15 @@ body.adventure-stage-open .card-preview-modal {
   max-width: none;
   margin: 0;
 }
+.adventure-prebattle .panel-head,
+.adventure-prebattle .prebattle-rewards,
+.adventure-prebattle .prebattle-section-title,
+.adventure-prebattle .label-sm,
+.adventure-prebattle .select-input,
+.adventure-prebattle #adventure-deck-select,
+.adventure-prebattle #btn-start-adventure {
+  flex-shrink: 0;
+}
 .prebattle-opponent {
   color: var(--text-muted);
   margin: 0.25rem 0 0.75rem;
@@ -2976,6 +2985,12 @@ body.adventure-stage-open .card-preview-modal {
   margin: 0.5rem 0 1rem;
   padding: 0.15rem;
   -webkit-overflow-scrolling: touch;
+}
+.adventure-prebattle .enemy-deck-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overscroll-behavior: contain;
 }
 
 .enemy-deck-spell-btn {
@@ -6522,7 +6537,9 @@ body.adventure-stage-open {
   z-index: 1;
   width: min(100%, 520px);
   max-height: min(92vh, 720px);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   margin: 0;
   animation: view-in 0.25s ease;
 }

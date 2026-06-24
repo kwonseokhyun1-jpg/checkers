@@ -1676,12 +1676,6 @@ function openAdventurePrebattle(levelId) {
   }
   profile.selectedDeckId = preferredId;
   $("btn-start-adventure").disabled = false;
-  const startBtn = $("btn-start-adventure");
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      startBtn?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  });
 }
 
 

@@ -1377,8 +1377,8 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   .adventure-prebattle .enemy-deck-list {
-    max-height: min(28dvh, 12rem);
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .adventure-map-back {
