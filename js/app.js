@@ -137,6 +137,7 @@ const TAB_LABELS = {
   profile: "Profile",
   settings: "Settings",
 };
+const MAIN_TABS = new Set(Object.keys(TAB_LABELS));
 /** @type {'cards'|'cosmetics'|'star'} */
 let activeVaultTab = "cards";
 /** @type {'list'|'edit'|'view'} */
@@ -254,6 +255,10 @@ function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
   if (hint) hint.textContent = message;
 }
 
+function syncMainTabShellState() {
+  document.body.classList.toggle("main-tab-active", MAIN_TABS.has(activeTab));
+}
+
 function syncNavUnlockState() {
   const unlocked = isQuestsAndPvpUnlocked(profile);
   for (const tab of ["quests", "pvp"]) {
@@ -313,6 +318,10 @@ async function showTab(tab) {
     document.body.classList.remove("deck-editing");
   }
   activeTab = tab;
+  syncMainTabShellState();
+  if (MAIN_TABS.has(tab)) {
+    window.scrollTo(0, 0);
+  }
   document.querySelectorAll(".tab-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === tab);
   });
@@ -1794,6 +1803,7 @@ function openAdventureStage(levelId) {
 }
 
 function init() {
+  syncMainTabShellState();
   initSettings();
   initNavIcons();
   initNetworkBanner();
