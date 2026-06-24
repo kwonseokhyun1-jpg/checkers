@@ -1238,21 +1238,21 @@ body.install-banner-visible.deck-editing .game-shell {
     min-width: 4.5rem;
   }
 
-  /* Profile account settings — username editor, sign out */
-  #profile-section-account .profile-username-change,
-  #profile-section-account .profile-username-cancel,
-  #profile-section-account .profile-username-save,
-  #profile-section-account .profile-sign-out {
+  /* Settings account — username editor, sign out */
+  #view-settings .profile-username-change,
+  #view-settings .profile-username-cancel,
+  #view-settings .profile-username-save,
+  #view-settings .profile-sign-out {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
   }
 
-  #profile-section-account .profile-username-row .input-text {
+  #view-settings .profile-username-row .input-text {
     min-height: 44px;
   }
 
-  #profile-section-account .profile-sign-out {
+  #view-settings .profile-sign-out {
     width: 100%;
     justify-content: center;
     margin-top: 0.5rem;

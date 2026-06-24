@@ -1,7 +1,7 @@
-/* Settings panel (Profile tab) */
+/* Settings page */
 
-.settings-panel {
-  padding: 0.25rem 0 1rem;
+.settings-page-panel .settings-panel {
+  padding: 0;
 }
 
 .settings-panel__heading {
@@ -105,9 +105,4 @@
 
 .settings-sign-out {
   width: 100%;
-}
-
-.profile-section-tab--settings .tab-btn__icon,
-.profile-section-tab[data-profile-section="settings"] {
-  /* marker class */
 }
