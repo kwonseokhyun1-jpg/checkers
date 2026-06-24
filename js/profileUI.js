@@ -43,6 +43,7 @@ import {
 } from "./auth.js";
 import { saveProfile } from "./storage.js";
 import { getProfileStats } from "./profileStats.js";
+import { settingsSectionHtml, bindSettingsPanel } from "./settingsUI.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -365,6 +366,7 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
       <div class="profile-section-tabs" role="tablist" aria-label="Profile sections">
         <button type="button" class="profile-section-tab active" role="tab" data-profile-section="cosmetics">Cosmetics</button>
         <button type="button" class="profile-section-tab" role="tab" data-profile-section="titles">Titles</button>
+        <button type="button" class="profile-section-tab" role="tab" data-profile-section="settings">Settings</button>
       </div>
       <div id="profile-section-cosmetics" class="profile-section-panel">
         <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
@@ -378,8 +380,11 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
         <p class="muted profile-titles-hint">Unlock titles by completing quests, then tap to equip.</p>
         <div id="profile-title-grid" class="profile-title-grid"></div>
       </div>
-      <div id="profile-section-account" class="profile-section-panel hidden" hidden>
-        ${accountSectionHtml({ signedIn, username: "", email: user?.email || "" })}
+      <div id="profile-section-settings" class="profile-section-panel hidden" hidden>
+        ${settingsSectionHtml()}
+        <div class="settings-account-extra">
+          ${accountSectionHtml({ signedIn, username: "", email: user?.email || "" })}
+        </div>
       </div>
     </section>
   `;
@@ -511,8 +516,8 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
     });
     const gearBtn = root.querySelector("#profile-account-gear");
     if (gearBtn) {
-      gearBtn.classList.toggle("active", section === "account");
-      gearBtn.setAttribute("aria-expanded", section === "account" ? "true" : "false");
+      gearBtn.classList.toggle("active", section === "settings");
+      gearBtn.setAttribute("aria-expanded", section === "settings" ? "true" : "false");
     }
     const cosPanel = root.querySelector("#profile-section-cosmetics");
     if (cosPanel) {
@@ -524,10 +529,10 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
       titlePanel.classList.toggle("hidden", section !== "titles");
       titlePanel.hidden = section !== "titles";
     }
-    const accountPanel = root.querySelector("#profile-section-account");
-    if (accountPanel) {
-      accountPanel.classList.toggle("hidden", section !== "account");
-      accountPanel.hidden = section !== "account";
+    const settingsPanel = root.querySelector("#profile-section-settings");
+    if (settingsPanel) {
+      settingsPanel.classList.toggle("hidden", section !== "settings");
+      settingsPanel.hidden = section !== "settings";
     }
     if (section === "titles") renderTitles();
   };
@@ -535,7 +540,12 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   for (const tab of root.querySelectorAll(".profile-section-tab")) {
     tab.addEventListener("click", () => setProfileSection(tab.dataset.profileSection));
   }
-  root.querySelector("#profile-account-gear")?.addEventListener("click", () => setProfileSection("account"));
+  root.querySelector("#profile-account-gear")?.addEventListener("click", () => setProfileSection("settings"));
+  bindSettingsPanel(root, {
+    onSignOut: () => {
+      window.location.reload();
+    },
+  });
   renderTitles();
   if (initialSection && initialSection !== "cosmetics") setProfileSection(initialSection);
 

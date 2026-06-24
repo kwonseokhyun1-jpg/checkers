@@ -61,7 +61,7 @@ if (await page.locator("#btn-start-adventure").isDisabled()) {
 }
 
 await page.locator("#btn-start-adventure").click();
-await page.waitForTimeout(2500);
+await page.waitForTimeout(4500);
 const squares = await page.locator(".square, .board-square").count();
 if (squares < 64) {
   console.error("Expected 64 board squares, found", squares);

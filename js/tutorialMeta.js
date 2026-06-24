@@ -3,6 +3,7 @@
  */
 import { dismissMetaTutorial } from "./tutorial.js";
 import { DECK_SIZE } from "./cardCatalog.js";
+import { showConfirm } from "./confirmModal.js";
 
 /** @typedef {{ id: string, title: string, body: string, hint?: string, autoAdvance?: boolean, highlight?: string, allowed?: string[], actionSelector?: string, onEnter?: () => void }} MetaStep */
 
@@ -333,8 +334,13 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     onComplete?.();
   }
 
-  function askSkip() {
-    if (window.confirm("Skip the collection and deck tutorial? You can explore the Shop and Decks anytime.")) {
+  async function askSkip() {
+    if (await showConfirm({
+      title: "Skip tutorial?",
+      message: "Skip the collection and deck tutorial? You can explore the Shop and Decks anytime.",
+      confirmLabel: "Skip",
+      cancelLabel: "Continue",
+    })) {
       finishTutorial();
     }
   }

@@ -1,0 +1,149 @@
+/* Match loading screen extensions */
+
+.match-loading__rotate-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 0.35rem 0 0.65rem;
+  font-size: 0.82rem;
+  color: var(--accent-gem);
+  text-align: center;
+}
+
+.match-loading__rotate-icon {
+  display: inline-flex;
+  font-size: 1.1rem;
+  animation: rotate-hint-spin 2.4s ease-in-out infinite;
+}
+
+.match-loading__card--ai {
+  text-align: center;
+}
+
+.match-loading__ai-emblem {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 0.75rem;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--card-border);
+}
+
+.match-loading__ai-piece {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+.match-loading__ai-piece--red {
+  top: 18px;
+  left: 14px;
+  background: radial-gradient(circle at 35% 30%, #ff8a8a, #c53030 55%, #742a2a);
+}
+
+.match-loading__ai-piece--black {
+  bottom: 14px;
+  right: 12px;
+  background: radial-gradient(circle at 35% 30%, #718096, #2d3748 55%, #1a202c);
+}
+
+.match-loading__ai-spark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--accent-gold);
+  font-size: 1.1rem;
+}
+
+.match-loading__subtitle {
+  font-size: 0.82rem;
+  margin: 0.2rem 0 0;
+}
+
+@keyframes rotate-hint-spin {
+  0%, 100% { transform: rotate(0deg); }
+  40% { transform: rotate(90deg); }
+  60% { transform: rotate(90deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .match-loading__rotate-icon { animation: none; }
+}
+
+/* Nav SVG icons */
+
+.nav-icon-svg {
+  width: var(--nav-icon-size);
+  height: var(--nav-icon-size);
+  display: block;
+  color: var(--nav-icon-idle);
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.tab-btn.active .nav-icon-svg,
+.game-nav__btn.active .nav-icon-svg {
+  color: var(--nav-icon-active);
+}
+
+.game-nav .tab-btn__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+/* Meta screen polish */
+.panel-head__title {
+  letter-spacing: 0.02em;
+}
+
+.meta-skeleton {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.meta-skeleton__row {
+  height: 3.5rem;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.04) 100%);
+  background-size: 200% 100%;
+  animation: meta-skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes meta-skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.vault-section-title,
+.adventure-world-hint {
+  font-family: var(--font-heading);
+}
+
+.deck-list-item,
+.adventure-stage-row,
+.chest-card {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.deck-list-item:active,
+.adventure-stage-row:active,
+.chest-card:active {
+  transform: scale(0.985);
+}
+
+.settings-account-extra {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.game-nav__btn--play .nav-icon-svg {
+  filter: drop-shadow(0 0 6px rgba(232, 197, 71, 0.35));
+}
+

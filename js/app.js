@@ -106,8 +106,20 @@ import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardP
 import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
 import { playChestOpenAnimation } from "./chestOpenAnimation.js";
 import { getBuyCost, tryBuyCardCopy } from "./cardShop.js";
+import { showConfirm } from "./confirmModal.js";
+import { initNavIcons } from "./navIcons.js";
+import { showBootSplash } from "./splash.js";
+import { initSettings } from "./settings.js";
+import { initAudio, setAudioMode, AudioSfx } from "./audio.js";
+import { initOrientation, lockPortrait, unlockForMatch } from "./orientation.js";
+import { initNetworkBanner } from "./networkBanner.js";
+import { initCapacitor } from "./capacitorInit.js";
+import { showMatchLoading } from "./matchLoadingScreen.js";
+import { hapticLight } from "./haptics.js";
 
+let hideBootSplashFn = null;
 let profile;
+
 try {
   profile = loadProfile();
 } catch (err) {
@@ -260,7 +272,7 @@ function syncNavUnlockState() {
   }
 }
 
-function showTab(tab) {
+async function showTab(tab) {
   const matchView = document.getElementById("view-match");
   if (tutorialRunning && matchView && !matchView.classList.contains("hidden")) {
     return;
@@ -280,7 +292,13 @@ function showTab(tab) {
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
     const label = TAB_LABELS[tab] || tab;
-    if (!window.confirm(`Leave your current match to open ${label}?`)) return;
+    if (!(await showConfirm({
+      title: "Leave match?",
+      message: `Leave your current match to open ${label}?`,
+      confirmLabel: "Leave match",
+      cancelLabel: "Stay",
+      danger: true,
+    }))) return;
     setPendingNavigationTab(tab);
     armLeaveConfirmSkip();
     document.querySelector("#btn-leave-match")?.click();
@@ -312,6 +330,10 @@ function showTab(tab) {
   if (tab === "quests") renderQuests();
   if (tab === "play") showAdventureMap();
   if (tab === "pvp") pvpController?.render({ resume: true });
+  if (!isMatchActive()) {
+    setAudioMode(tab === "play" || tab === "pvp" ? "hub" : "hub");
+    await lockPortrait();
+  }
 }
 
 let headerDisplayUsername = "";
@@ -1536,7 +1558,7 @@ function openAdventurePrebattle(levelId) {
 }
 
 
-function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = null, winRewarded = false) {
+async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = null, winRewarded = false) {
   const opponentName = level.opponent;
   closeAdventurePrebattle();
   pendingEnemyDeck = null;
@@ -1545,6 +1567,18 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
   $("view-match")?.classList.remove("hidden");
   const root = $("view-match");
   if (!root) return;
+
+  const username = await resolveDisplayUsername(profile);
+  const cosmetics = getEquippedCosmetics(profile);
+  if (!resumeState) {
+    await showMatchLoading(root, {
+      mode: "ai",
+      local: { username, cosmetics },
+      opponent: { username: opponentName },
+      stageLabel: level.name || `Stage ${levelId}`,
+    });
+  }
+
   root.innerHTML = getMatchHtml(opponentName);
 
   const sessionOpts = {
@@ -1564,6 +1598,8 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
       () => {
         matchSession = null;
         exitMatchMode();
+        void lockPortrait();
+        setAudioMode("hub");
         root.innerHTML = "";
         $("view-match")?.classList.add("hidden");
         showTab(consumePendingNavigationTab() || "play");
@@ -1612,13 +1648,15 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
     opponentName,
     levelId,
   });
+  await unlockForMatch();
+  setAudioMode("match");
   if (winRewarded) matchSession.winRewarded = true;
   saveMatchCheckpoint(matchSession);
   matchSession.setMessage("Drag a spell onto the board or tap a card, then pick highlighted squares.");
   matchSession.render();
 }
 
-function tryResumeSavedMatch() {
+async function tryResumeSavedMatch() {
   const cp = readMatchCheckpoint();
   if (!cp) return false;
   const deck =
@@ -1629,12 +1667,17 @@ function tryResumeSavedMatch() {
     clearMatchCheckpoint();
     return false;
   }
-  if (!window.confirm("Resume your adventure match where you left off?")) {
+  if (!(await showConfirm({
+    title: "Resume match?",
+    message: "Resume your adventure match where you left off?",
+    confirmLabel: "Resume",
+    cancelLabel: "Discard",
+  }))) {
     clearMatchCheckpoint();
     return false;
   }
   selectedAdventureLevel = cp.levelId;
-  launchAdventureMatch(deck, level, cp.aiDeckIds, cp.levelId, cp.state, cp.winRewarded);
+  await launchAdventureMatch(deck, level, cp.aiDeckIds, cp.levelId, cp.state, cp.winRewarded);
   matchSession?.setMessage("Match resumed — pick up where you left off.");
   return true;
 }
@@ -1659,7 +1702,7 @@ function startAdventureMatch() {
     return;
   }
 
-  launchAdventureMatch(deck, level, enemyDeck, levelId);
+  void launchAdventureMatch(deck, level, enemyDeck, levelId);
 }
 
 
@@ -1692,6 +1735,13 @@ function openAdventureStage(levelId) {
 }
 
 function init() {
+  hideBootSplashFn = showBootSplash();
+  initSettings();
+  initNavIcons();
+  initNetworkBanner();
+  initAudio();
+  void initOrientation();
+  void initCapacitor();
   bindCardPreviewModal();
   bindAdventureMapCapture();
   ensureStageModalOnBody();
@@ -1699,7 +1749,11 @@ function init() {
     if (e.key === "Escape") closeAdventurePrebattle();
   });
   document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => showTab(btn.dataset.tab));
+    btn.addEventListener("click", () => {
+      void hapticLight();
+      AudioSfx.tap();
+      void showTab(btn.dataset.tab);
+    });
   });
 
   document.querySelectorAll(".vault-tab").forEach((btn) => {
@@ -1715,10 +1769,17 @@ function init() {
     workingDeck = [];
     showDeckSubview("list");
   });
-  $("btn-delete-deck")?.addEventListener("click", () => {
+  $("btn-delete-deck")?.addEventListener("click", async () => {
     if (!editingDeckId || editingDeckId === "new") return;
     const deck = profile.decks.find((d) => d.id === editingDeckId);
-    if (!deck || !confirm(`Delete deck "${deck.name}"?`)) return;
+    if (!deck) return;
+    if (!(await showConfirm({
+      title: "Delete deck?",
+      message: `Delete deck "${deck.name}"? This cannot be undone.`,
+      confirmLabel: "Delete",
+      cancelLabel: "Cancel",
+      danger: true,
+    }))) return;
     deleteDeck(profile, deck.id);
     editingDeckId = null;
     workingDeck = [];
@@ -2054,17 +2115,35 @@ async function bootstrapAfterAuth() {
 
   if (requiresAuthGate()) {
     authGate?.show();
+    if (hideBootSplashFn) await hideBootSplashFn();
     return;
   }
   authGate?.hide();
 
-  if (maybeStartInteractiveTutorial()) return;
-  if (maybeStartMetaTutorial()) return;
-  if (maybeStartPostStage1Tutorials()) return;
-  if (maybeStartPostStage5CosmeticsTutorial()) return;
-  if (tutorialRunning) return;
-  if (!tryResumeSavedMatch()) showTab("deck");
+  if (maybeStartInteractiveTutorial()) {
+    if (hideBootSplashFn) await hideBootSplashFn();
+    return;
+  }
+  if (maybeStartMetaTutorial()) {
+    if (hideBootSplashFn) await hideBootSplashFn();
+    return;
+  }
+  if (maybeStartPostStage1Tutorials()) {
+    if (hideBootSplashFn) await hideBootSplashFn();
+    return;
+  }
+  if (maybeStartPostStage5CosmeticsTutorial()) {
+    if (hideBootSplashFn) await hideBootSplashFn();
+    return;
+  }
+  if (tutorialRunning) {
+    if (hideBootSplashFn) await hideBootSplashFn();
+    return;
+  }
+  if (!(await tryResumeSavedMatch())) await showTab("deck");
   reconcileMatchShellState();
+  setAudioMode("hub");
+  if (hideBootSplashFn) await hideBootSplashFn();
 }
 
 init();

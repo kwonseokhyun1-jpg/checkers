@@ -1,0 +1,62 @@
+/**
+ * Arcane Checkers — unified design tokens (single source of truth).
+ * Load before all other stylesheets.
+ */
+:root {
+  /* Surfaces */
+  --bg-deep: #080a12;
+  --bg-panel: #121a28;
+  --bg-panel-elevated: #1a2438;
+  --bg-board-light: #c4a574;
+  --bg-board-dark: #6b4423;
+
+  /* Accents */
+  --accent-primary: #e8c547;
+  --accent-primary-hover: #ffe566;
+  --accent-gold: #e8c547;
+  --accent-gem: #5ce1e6;
+  --accent-violet: #9f7aea;
+  --accent-red: #e85d5d;
+  --accent-black: #2d3748;
+
+  /* Text */
+  --text: #eef2f8;
+  --text-muted: #8b9cb3;
+
+  /* Cards & frames */
+  --card-bg: #1e2a3d;
+  --card-border: #3d5270;
+  --frame-gold: #c9a227;
+  --frame-inner: rgba(255, 255, 255, 0.06);
+
+  /* Elevation */
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 0 48px rgba(92, 225, 230, 0.12);
+
+  /* Radius */
+  --radius: 14px;
+  --radius-sm: 10px;
+
+  /* Typography */
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-heading: "Sora", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+
+  /* Mobile shell */
+  --game-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --game-safe-top: env(safe-area-inset-top, 0px);
+  --nav-height: 4.25rem;
+  --btn-game-shadow: 0 4px 0 #8a6910, 0 8px 20px rgba(0, 0, 0, 0.45);
+  --panel-game-border: linear-gradient(135deg, rgba(255, 220, 120, 0.45), rgba(92, 225, 230, 0.2));
+
+  /* Nav */
+  --nav-icon-size: 1.35rem;
+  --nav-icon-active: var(--accent-gold);
+  --nav-icon-idle: #8b9cb3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-safe: 0;
+  }
+}

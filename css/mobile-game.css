@@ -1,12 +1,6 @@
 /* Mobile-first game shell — typical F2P / casual mobile game feel */
 
-:root {
-  --game-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --game-safe-top: env(safe-area-inset-top, 0px);
-  --nav-height: 4.25rem;
-  --btn-game-shadow: 0 4px 0 #8a6910, 0 8px 20px rgba(0, 0, 0, 0.45);
-  --panel-game-border: linear-gradient(135deg, rgba(255, 220, 120, 0.45), rgba(92, 225, 230, 0.2));
-}
+/* Mobile shell tokens: css/tokens.css */
 
 html {
   -webkit-tap-highlight-color: transparent;
