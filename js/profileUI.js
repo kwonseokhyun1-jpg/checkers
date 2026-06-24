@@ -31,19 +31,12 @@ import {
 } from "./cosmeticArt.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import {
-  canChangeUsername,
   fetchProfileRow,
   getCurrentUser,
   isAuthAvailable,
-  isUsernameAvailableForUser,
-  signOut,
-  suggestAvailableUsername,
-  updateUsername,
-  validateUsernameFormat,
 } from "./auth.js";
 import { saveProfile } from "./storage.js";
 import { getProfileStats } from "./profileStats.js";
-import { settingsSectionHtml, bindSettingsPanel } from "./settingsUI.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -212,45 +205,6 @@ export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOp
   }
 }
 
-function accountSectionHtml({ signedIn, username, email }) {
-  if (!signedIn) {
-    return `
-      <div class="profile-account profile-account--guest">
-        <p class="muted">Sign in from the header to save progress and set a username.</p>
-      </div>`;
-  }
-  return `
-    <div class="profile-account">
-      <p class="profile-account__email muted">${escapeHtml(email)}</p>
-      <div class="profile-username-summary">
-        <span class="label-sm">Username</span>
-        <p id="profile-username-display" class="profile-username-display">${escapeHtml(username) || "—"}</p>
-        <button type="button" class="btn-text profile-username-change" id="profile-username-change">Change username</button>
-      </div>
-      <div id="profile-username-editor" class="profile-username-editor hidden" hidden>
-        <label class="label-sm" for="profile-username">New username</label>
-        <div class="profile-username-row">
-          <input
-            type="text"
-            id="profile-username"
-            class="input-text"
-            autocomplete="username"
-            minlength="3"
-            maxlength="24"
-            pattern="[A-Za-z0-9_]{3,24}"
-            value="${escapeHtml(username)}"
-            placeholder="Your in-game name"
-          />
-          <button type="button" class="btn-primary" id="profile-username-save">Save</button>
-        </div>
-        <button type="button" class="btn-text profile-username-cancel" id="profile-username-cancel">Cancel</button>
-        <p id="profile-username-hint" class="auth-username-hint" aria-live="polite"></p>
-        <p id="profile-username-status" class="profile-username-status" role="status"></p>
-      </div>
-      <button type="button" class="btn-text profile-sign-out" id="profile-sign-out">Sign out</button>
-    </div>`;
-}
-
 /** @param {HTMLElement} grid */
 function bindAchievementsGrid(profile, grid, { onTitleChanged } = {}) {
   if (!grid) return;
@@ -349,7 +303,7 @@ export async function resolveDisplayUsername(user) {
   }
 }
 
-export function renderProfileTab(profile, root, { onGemsChange, onUsernameChanged, onTitleChanged, initialSection } = {}) {
+export function renderProfileTab(profile, root, { onGemsChange, onTitleChanged } = {}) {
   if (!root) return;
   const cos = getEquippedCosmetics(profile);
   const user = getCurrentUser();
@@ -361,7 +315,6 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
       <div class="profile-section-tabs" role="tablist" aria-label="Profile sections">
         <button type="button" class="profile-section-tab active" role="tab" data-profile-section="cosmetics">Cosmetics</button>
         <button type="button" class="profile-section-tab" role="tab" data-profile-section="titles">Titles</button>
-        <button type="button" class="profile-section-tab" role="tab" data-profile-section="settings">Settings</button>
       </div>
       <div id="profile-section-cosmetics" class="profile-section-panel">
         <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
@@ -375,19 +328,11 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
         <p class="muted profile-titles-hint">Unlock titles by completing quests, then tap to equip.</p>
         <div id="profile-title-grid" class="profile-title-grid"></div>
       </div>
-      <div id="profile-section-settings" class="profile-section-panel hidden" hidden>
-        ${settingsSectionHtml()}
-        <div class="settings-account-extra">
-          ${accountSectionHtml({ signedIn, username: "", email: user?.email || "" })}
-        </div>
-      </div>
     </section>
   `;
 
   const grid = root.querySelector("#profile-cosmetic-grid");
   let filter = "avatar";
-  let profileSection = "cosmetics";
-
   let savedUsername = "";
 
   const refreshShowcase = () => {
@@ -504,7 +449,6 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   };
 
   const setProfileSection = (section) => {
-    profileSection = section;
     root.querySelectorAll(".profile-section-tab").forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.profileSection === section);
     });
@@ -518,159 +462,23 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
       titlePanel.classList.toggle("hidden", section !== "titles");
       titlePanel.hidden = section !== "titles";
     }
-    const settingsPanel = root.querySelector("#profile-section-settings");
-    if (settingsPanel) {
-      settingsPanel.classList.toggle("hidden", section !== "settings");
-      settingsPanel.hidden = section !== "settings";
-    }
     if (section === "titles") renderTitles();
   };
 
   for (const tab of root.querySelectorAll(".profile-section-tab")) {
     tab.addEventListener("click", () => setProfileSection(tab.dataset.profileSection));
   }
-  bindSettingsPanel(root, {
-    onSignOut: () => {
-      window.location.reload();
-    },
-  });
   renderTitles();
-  if (initialSection && initialSection !== "cosmetics") setProfileSection(initialSection);
 
   if (!signedIn) return;
 
-  const usernameDisplay = root.querySelector("#profile-username-display");
-  const usernameEditor = root.querySelector("#profile-username-editor");
-  const changeBtn = root.querySelector("#profile-username-change");
-  const cancelBtn = root.querySelector("#profile-username-cancel");
-  const usernameInput = root.querySelector("#profile-username");
-  const usernameHint = root.querySelector("#profile-username-hint");
-  const usernameStatus = root.querySelector("#profile-username-status");
-  const saveBtn = root.querySelector("#profile-username-save");
-  let usernameCheckTimer = null;
-
-  const setUsernameDisplay = (name) => {
-    if (usernameDisplay) usernameDisplay.textContent = name || "—";
-  };
-
-  const setHint = (msg, state = "") => {
-    if (!usernameHint) return;
-    usernameHint.textContent = msg || "";
-    usernameHint.classList.remove("auth-username-hint--ok", "auth-username-hint--bad");
-    if (state === "ok") usernameHint.classList.add("auth-username-hint--ok");
-    if (state === "bad") usernameHint.classList.add("auth-username-hint--bad");
-  };
-
-  const setStatus = (msg, isError = false) => {
-    if (!usernameStatus) return;
-    usernameStatus.textContent = msg || "";
-    usernameStatus.classList.toggle("profile-username-status--error", isError);
-  };
-
-  const scheduleUsernameCheck = () => {
-    clearTimeout(usernameCheckTimer);
-    usernameCheckTimer = setTimeout(async () => {
-      const name = usernameInput?.value?.trim() || "";
-      if (!name) {
-        setHint("");
-        return;
-      }
-      const formatErr = validateUsernameFormat(name);
-      if (formatErr) {
-        setHint(formatErr, "bad");
-        return;
-      }
-      if (name.toLowerCase() === savedUsername.toLowerCase()) {
-        setHint("Current username", "ok");
-        return;
-      }
-      setHint("Checking…");
-      try {
-        const available = await isUsernameAvailableForUser(name, user.id);
-        if (!available) {
-          const alt = await suggestAvailableUsername(name);
-          setHint(alt ? `Taken — try "${alt}"` : "That username is taken", "bad");
-          if (alt && usernameHint) usernameHint.dataset.suggestion = alt;
-          return;
-        }
-        if (usernameHint) delete usernameHint.dataset.suggestion;
-        setHint("Available", "ok");
-      } catch {
-        setHint("");
-      }
-    }, 350);
-  };
-
-  const showUsernameEditor = (show) => {
-    usernameEditor?.classList.toggle("hidden", !show);
-    if (usernameEditor) usernameEditor.hidden = !show;
-    changeBtn?.classList.toggle("hidden", show);
-    if (show) {
-      if (usernameInput) {
-        usernameInput.value = savedUsername;
-        usernameInput.focus();
-        usernameInput.select();
-      }
-      setStatus("");
-      scheduleUsernameCheck();
-    } else if (usernameInput) {
-      usernameInput.value = savedUsername;
-      setHint("");
-      setStatus("");
-    }
-  };
-
-  usernameHint?.addEventListener("click", () => {
-    const alt = usernameHint?.dataset?.suggestion;
-    if (!alt || !usernameInput) return;
-    usernameInput.value = alt;
-    delete usernameHint.dataset.suggestion;
-    scheduleUsernameCheck();
-  });
-
-  usernameInput?.addEventListener("input", scheduleUsernameCheck);
-
-  changeBtn?.addEventListener("click", () => showUsernameEditor(true));
-  cancelBtn?.addEventListener("click", () => showUsernameEditor(false));
-
-  root.querySelector("#profile-sign-out")?.addEventListener("click", () => {
-    void signOut();
-  });
-
-  let profileRow = null;
-
   void (async () => {
     try {
-      profileRow = await fetchProfileRow(user.id);
+      const profileRow = await fetchProfileRow(user.id);
       savedUsername = profileRow?.username || user.user_metadata?.display_name || "";
-      setUsernameDisplay(savedUsername);
       refreshShowcase();
-      onUsernameChanged?.(savedUsername);
-      if (usernameInput && savedUsername) usernameInput.value = savedUsername;
-      const cooldown = canChangeUsername(profileRow);
-      if (!cooldown.ok) setHint(cooldown.message, "bad");
     } catch (e) {
       console.warn("Could not load profile username", e);
     }
   })();
-
-  saveBtn?.addEventListener("click", async () => {
-    const name = usernameInput?.value?.trim() || "";
-    setStatus("");
-    saveBtn.disabled = true;
-    try {
-      const cooldown = canChangeUsername(profileRow);
-      if (!cooldown.ok) throw new Error(cooldown.message);
-      const updated = await updateUsername(name);
-      profileRow = await fetchProfileRow(user.id);
-      savedUsername = updated;
-      setUsernameDisplay(savedUsername);
-      showUsernameEditor(false);
-      onUsernameChanged?.(updated);
-    } catch (e) {
-      setStatus(e.message || "Could not save username", true);
-    } finally {
-      saveBtn.disabled = false;
-    }
-  });
 }

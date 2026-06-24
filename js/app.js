@@ -109,6 +109,7 @@ import { playChestOpenAnimation } from "./chestOpenAnimation.js";
 import { getBuyCost, tryBuyCardCopy } from "./cardShop.js";
 import { initNavIcons } from "./navIcons.js";
 import { initSettings } from "./settings.js";
+import { renderSettingsTab } from "./settingsUI.js";
 import { initAudio, setAudioMode, AudioSfx } from "./audio.js";
 import { initOrientation, lockPortrait } from "./orientation.js";
 import { initNetworkBanner } from "./networkBanner.js";
@@ -133,6 +134,8 @@ const TAB_LABELS = {
   play: "Play",
   pvp: "PvP",
   quests: "Quests",
+  profile: "Profile",
+  settings: "Settings",
 };
 /** @type {'cards'|'cosmetics'|'star'} */
 let activeVaultTab = "cards";
@@ -328,6 +331,7 @@ async function showTab(tab) {
     showDeckSubview("list");
   }
   if (tab === "profile") renderProfile();
+  if (tab === "settings") renderSettings();
   if (tab === "quests") renderQuests();
   if (tab === "play") showAdventureMap();
   if (tab === "pvp") pvpController?.render({ resume: true });
@@ -392,7 +396,7 @@ function initHeaderProfileMenu() {
     item.addEventListener("click", () => {
       const action = item.dataset.profileMenuAction;
       closeHeaderProfileMenu();
-      if (action === "settings") openProfileTab("settings");
+      if (action === "settings") showTab("settings");
       else openProfileTab();
     });
   });
@@ -419,23 +423,27 @@ async function refreshHeaderIdentity() {
   updateHeaderProfileBtn();
 }
 
-function openProfileTab(section) {
+function openProfileTab() {
   closeHeaderProfileMenu();
   showTab("profile");
-  notifyUnlockTutorial("profile-opened", { section });
-  if (section) renderProfile({ initialSection: section });
+  notifyUnlockTutorial("profile-opened");
 }
 
-function renderProfile(options = {}) {
+function renderProfile() {
   const root = $("view-profile");
   renderProfileTab(profile, root, {
     onGemsChange: updateGemHeader,
+    onTitleChanged: () => updateHeaderProfileBtn(),
+  });
+}
+
+function renderSettings() {
+  const root = $("view-settings");
+  renderSettingsTab(root, {
     onUsernameChanged: (name) => {
       headerDisplayUsername = name;
       updateHeaderProfileBtn(name);
     },
-    onTitleChanged: () => updateHeaderProfileBtn(),
-    initialSection: options.initialSection,
   });
 }
 
