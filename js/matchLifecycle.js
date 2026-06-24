@@ -13,9 +13,18 @@ function usesMatchScrollLock() {
   return window.matchMedia(MATCH_SCROLL_LOCK_MQ).matches;
 }
 
+function resetScrollBeforeMatchLock() {
+  const main = document.querySelector(".game-main");
+  if (main) main.scrollTop = 0;
+  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
+
 function lockBodyScrollForMatch() {
   if (!usesMatchScrollLock()) return;
-  matchScrollYBeforeLock = window.scrollY || document.documentElement.scrollTop || 0;
+  resetScrollBeforeMatchLock();
+  matchScrollYBeforeLock = 0;
   document.body.style.position = "fixed";
   document.body.style.top = "0";
   document.body.style.left = "0";

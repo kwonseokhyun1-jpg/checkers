@@ -1452,8 +1452,10 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   .adventure-prebattle .enemy-deck-list {
-    max-height: none;
-    overflow: visible;
+    max-height: min(32vh, 200px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .adventure-map-back {

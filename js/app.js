@@ -99,7 +99,7 @@ import {
   saveMatchCheckpoint,
 } from "./matchLifecycle.js";
 import { mobileConfirm } from "./mobileConfirm.js";
-import { enhanceAllSelectInputs, enhanceSelect, resolveNativeSelect } from "./customSelect.js";
+import { enhanceAllSelectInputs, resolveNativeSelect } from "./customSelect.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
@@ -1678,8 +1678,6 @@ function openAdventurePrebattle(levelId) {
     sel.appendChild(opt);
     sel.disabled = true;
     $("btn-start-adventure").disabled = true;
-    if (sel._customSelectApi) sel._customSelectApi.rebuild();
-    else enhanceSelect(sel);
     return;
   }
   sel.disabled = false;
@@ -1696,8 +1694,6 @@ function openAdventurePrebattle(levelId) {
   }
   profile.selectedDeckId = preferredId;
   $("btn-start-adventure").disabled = false;
-  if (sel._customSelectApi) sel._customSelectApi.rebuild();
-  else enhanceSelect(sel);
 }
 
 
