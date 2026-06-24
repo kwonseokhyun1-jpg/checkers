@@ -341,6 +341,7 @@ let headerDisplayUsername = "";
 
 function updateHeaderProfileBtn(username = headerDisplayUsername) {
   if (username) headerDisplayUsername = username;
+  const profileMenu = document.getElementById("header-profile-menu");
   const profileBtn = document.getElementById("header-profile-btn");
   const authBtn = document.getElementById("auth-header-btn");
   const user = getCurrentUser();
@@ -350,14 +351,61 @@ function updateHeaderProfileBtn(username = headerDisplayUsername) {
     authBtn.classList.toggle("hidden", signedIn);
     authBtn.hidden = signedIn;
   }
-  if (profileBtn) {
-    profileBtn.classList.toggle("hidden", !signedIn);
-    profileBtn.hidden = !signedIn;
-    if (signedIn) {
-      profileBtn.innerHTML = headerProfileAvatarHtml(profile, headerDisplayUsername);
-      profileBtn.title = headerDisplayUsername ? `Profile — ${headerDisplayUsername}` : "Profile";
-    }
+  if (profileMenu) {
+    profileMenu.classList.toggle("hidden", !signedIn);
+    profileMenu.hidden = !signedIn;
   }
+  if (profileBtn && signedIn) {
+    profileBtn.innerHTML = headerProfileAvatarHtml(profile, headerDisplayUsername);
+    profileBtn.title = headerDisplayUsername ? `Account — ${headerDisplayUsername}` : "Account menu";
+  }
+}
+
+function closeHeaderProfileMenu() {
+  const profileBtn = document.getElementById("header-profile-btn");
+  const dropdown = document.getElementById("header-profile-dropdown");
+  if (!profileBtn || !dropdown) return;
+  dropdown.classList.add("hidden");
+  dropdown.hidden = true;
+  profileBtn.setAttribute("aria-expanded", "false");
+}
+
+function initHeaderProfileMenu() {
+  const menuRoot = document.getElementById("header-profile-menu");
+  const profileBtn = document.getElementById("header-profile-btn");
+  const dropdown = document.getElementById("header-profile-dropdown");
+  if (!menuRoot || !profileBtn || !dropdown) return;
+
+  const setOpen = (open) => {
+    dropdown.classList.toggle("hidden", !open);
+    dropdown.hidden = !open;
+    profileBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
+  profileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !dropdown.hidden;
+    setOpen(!isOpen);
+  });
+
+  dropdown.querySelectorAll("[data-profile-menu-action]").forEach((item) => {
+    item.addEventListener("click", () => {
+      const action = item.dataset.profileMenuAction;
+      closeHeaderProfileMenu();
+      if (action === "settings") openProfileTab("settings");
+      else openProfileTab();
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    if (dropdown.hidden) return;
+    if (menuRoot.contains(e.target)) return;
+    closeHeaderProfileMenu();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !dropdown.hidden) closeHeaderProfileMenu();
+  });
 }
 
 async function refreshHeaderIdentity() {
@@ -372,6 +420,7 @@ async function refreshHeaderIdentity() {
 }
 
 function openProfileTab(section) {
+  closeHeaderProfileMenu();
   showTab("profile");
   notifyUnlockTutorial("profile-opened", { section });
   if (section) renderProfile({ initialSection: section });
@@ -1858,9 +1907,7 @@ function init() {
 
   const authModal = document.getElementById("auth-modal");
   const authBtn = document.getElementById("auth-header-btn");
-  const profileBtn = document.getElementById("header-profile-btn");
-
-  profileBtn?.addEventListener("click", () => openProfileTab());
+  initHeaderProfileMenu();
 
   authGate = initAuthGate({
     onSignIn: () => authUI?.open("signin", { forced: true }),
@@ -1896,6 +1943,7 @@ function init() {
       }
     },
     onSignedOut: () => {
+      closeHeaderProfileMenu();
       headerDisplayUsername = "";
       updateHeaderProfileBtn();
       pvpController?.dispose?.();

@@ -73,10 +73,6 @@ function profileTitleBadgeHtml(profile) {
   return titleId ? titleTagHtml(titleId) : "";
 }
 
-const PROFILE_ACCOUNT_GEAR_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.5"/>
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`;
 
 const PROFILE_STAT_ICONS = {
   pvp: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -139,7 +135,6 @@ function profileHeroCardHtml(cos, profile, { username, email }) {
             <div class="profile-hero-card__name-row">
               <h2 id="profile-hero-username" class="profile-hero-card__username">${escapeHtml(displayName)}</h2>
               ${titleBadge ? `<span class="profile-hero-card__title-badge">${titleBadge}</span>` : ""}
-              <button type="button" class="profile-account-gear" id="profile-account-gear" aria-label="Account settings" aria-expanded="false">${PROFILE_ACCOUNT_GEAR_ICON}</button>
             </div>
             ${email ? `<p class="profile-hero-card__email muted">${escapeHtml(email)}</p>` : ""}
           </div>
@@ -414,12 +409,11 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
         badgeEl.innerHTML = badge;
       } else {
         const nameRow = root.querySelector(".profile-hero-card__name-row");
-        const gearBtn = root.querySelector("#profile-account-gear");
-        if (nameRow && gearBtn) {
+        if (nameRow) {
           const span = document.createElement("span");
           span.className = "profile-hero-card__title-badge";
           span.innerHTML = badge;
-          nameRow.insertBefore(span, gearBtn);
+          nameRow.appendChild(span);
         }
       }
     } else if (badgeEl) {
@@ -514,11 +508,6 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
     root.querySelectorAll(".profile-section-tab").forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.profileSection === section);
     });
-    const gearBtn = root.querySelector("#profile-account-gear");
-    if (gearBtn) {
-      gearBtn.classList.toggle("active", section === "settings");
-      gearBtn.setAttribute("aria-expanded", section === "settings" ? "true" : "false");
-    }
     const cosPanel = root.querySelector("#profile-section-cosmetics");
     if (cosPanel) {
       cosPanel.classList.toggle("hidden", section !== "cosmetics");
@@ -540,7 +529,6 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   for (const tab of root.querySelectorAll(".profile-section-tab")) {
     tab.addEventListener("click", () => setProfileSection(tab.dataset.profileSection));
   }
-  root.querySelector("#profile-account-gear")?.addEventListener("click", () => setProfileSection("settings"));
   bindSettingsPanel(root, {
     onSignOut: () => {
       window.location.reload();
