@@ -59,3 +59,7 @@ Then visit http://localhost:8080
 ## Online accounts & PvP
 
 See **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)** for Supabase auth, cloud saves, and 1v1 PvP.
+
+## Mobile & App Store
+
+The UI is optimized for phones (bottom navigation, safe areas, touch targets). See **[MOBILE.md](MOBILE.md)** for wrapping the game with Capacitor and submitting to the Apple App Store and Google Play.
