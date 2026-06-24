@@ -1611,6 +1611,15 @@ body.install-banner-visible.deck-editing .game-shell {
     gap: 0.35rem;
   }
 
+  .game-header__start {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .game-header__username {
+    font-size: 0.95rem;
+  }
+
   .hud-gems,
   .hud-stars {
     min-height: 44px;

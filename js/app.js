@@ -356,6 +356,7 @@ function updateHeaderProfileBtn(username = headerDisplayUsername) {
   if (username) headerDisplayUsername = username;
   const profileMenu = document.getElementById("header-profile-menu");
   const profileBtn = document.getElementById("header-profile-btn");
+  const usernameEl = document.getElementById("header-username");
   const authBtn = document.getElementById("auth-header-btn");
   const user = getCurrentUser();
   const signedIn = Boolean(user);
@@ -367,6 +368,12 @@ function updateHeaderProfileBtn(username = headerDisplayUsername) {
   if (profileMenu) {
     profileMenu.classList.toggle("hidden", !signedIn);
     profileMenu.hidden = !signedIn;
+  }
+  if (usernameEl) {
+    const showUsername = signedIn && headerDisplayUsername;
+    usernameEl.textContent = showUsername ? headerDisplayUsername : "";
+    usernameEl.classList.toggle("hidden", !showUsername);
+    usernameEl.hidden = !showUsername;
   }
   if (profileBtn && signedIn) {
     profileBtn.innerHTML = headerProfileAvatarHtml(profile, headerDisplayUsername);
