@@ -539,3 +539,132 @@ body.match-active .game-main {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* ── Agent #3: immersive match, bottom sheets, PvP loading ── */
+
+@media (max-width: 768px) {
+  /* Hide header during matches — board + hand get full viewport */
+  body.match-active .game-header {
+    display: none;
+  }
+
+  body.match-active .game-shell {
+    padding-top: calc(0.35rem + var(--game-safe-top));
+  }
+
+  body.match-active .match-scene {
+    padding-top: 0;
+  }
+
+  body.match-active .match-scene #btn-leave-match {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin: 0 0 0.35rem;
+    padding: 0.35rem 0.5rem;
+    font-weight: 600;
+  }
+
+  body.match-active .panel-opponent,
+  body.match-active .panel-player {
+    padding: 0.55rem 0.7rem;
+  }
+
+  body.match-active .panel-opponent .player-badge,
+  body.match-active .panel-player .player-badge {
+    margin-bottom: 0.35rem;
+    font-size: 0.9rem;
+  }
+
+  body.match-active .hand-count-label {
+    margin: 0 0 0.35rem;
+    font-size: 0.75rem;
+  }
+
+  body.match-active #btn-end-cards {
+    min-height: 44px;
+    margin-top: 0.35rem;
+  }
+
+  body.match-active .turn-banner {
+    font-size: 0.85rem;
+    padding: 0.4rem 0.65rem;
+  }
+
+  /* Adventure prebattle — bottom sheet like auth modal */
+  .adventure-stage-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .adventure-stage-modal__dialog {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(92dvh, 720px);
+    border-radius: 24px 24px 0 0;
+    border-bottom: none;
+    padding-bottom: calc(1rem + var(--game-safe-bottom));
+    animation: sheet-up 0.28s ease;
+  }
+
+  @keyframes sheet-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Game over — slide up from bottom on phones */
+  .game-over-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .game-over-card {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    padding: 1.35rem 1.25rem calc(1.35rem + var(--game-safe-bottom));
+    animation: sheet-up 0.3s ease;
+  }
+
+  /* PvP match loading — full viewport with safe areas */
+  .pvp-loading {
+    min-height: calc(100dvh - var(--nav-height) - 2rem);
+    padding:
+      calc(0.75rem + var(--game-safe-top))
+      max(0.75rem, env(safe-area-inset-right))
+      calc(1.25rem + var(--game-safe-bottom))
+      max(0.75rem, env(safe-area-inset-left));
+  }
+
+  body.match-active .pvp-loading {
+    min-height: calc(100dvh - 1rem - var(--game-safe-top) - var(--game-safe-bottom));
+  }
+}
+
+/* Standalone / home-screen launch — tighter shell, no browser chrome assumptions */
+@media (display-mode: standalone) {
+  .game-shell {
+    padding-top: calc(0.5rem + var(--game-safe-top));
+  }
+
+  body.match-active .game-shell {
+    padding-top: calc(0.25rem + var(--game-safe-top));
+  }
+
+  .game-nav.tabs {
+    bottom: calc(0.35rem + var(--game-safe-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .adventure-stage-modal__dialog,
+  .game-over-card {
+    animation: none;
+  }
+}
