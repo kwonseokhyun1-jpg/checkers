@@ -1344,3 +1344,224 @@ body.install-banner-visible.deck-editing .game-shell {
     flex: 0 0 auto;
   }
 }
+
+/* ── Agent #7: spell cast HUD, card preview actions, deck strips, adventure scroll, shop pulls, game over ── */
+
+@media (max-width: 768px) {
+  /* In-match spell casting — stack preview + hint; chunky cancel */
+  body.match-active .spell-cast-bar {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: 100%;
+    gap: 0.5rem;
+    padding: 0.65rem 0.75rem;
+    margin-bottom: 0.45rem;
+  }
+
+  body.match-active .spell-cast-preview {
+    display: flex;
+    justify-content: center;
+  }
+
+  body.match-active .spell-cast-preview .spell-card {
+    max-width: 148px;
+  }
+
+  body.match-active .spell-cast-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  body.match-active .spell-cast-hint {
+    font-size: 0.88rem;
+    line-height: 1.4;
+    text-align: center;
+  }
+
+  body.match-active #btn-cancel-card {
+    min-height: 44px;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    font-weight: 600;
+  }
+
+  /* Enemy spell announcement — readable on narrow boards */
+  body.match-active .ai-spell-banner {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.7rem 0.85rem;
+    margin-bottom: 0.45rem;
+  }
+
+  body.match-active .ai-spell-banner__title {
+    font-size: 1rem;
+  }
+
+  body.match-active .ai-spell-banner__desc {
+    font-size: 0.82rem;
+  }
+
+  body.match-active .turn-banner.casting,
+  body.match-active .turn-banner--enemy-spell {
+    font-size: 0.82rem;
+    padding: 0.45rem 0.65rem;
+  }
+
+  body.match-active .spell-coin-stage {
+    transform: scale(0.92);
+    transform-origin: center top;
+  }
+
+  /* Card preview sheet — sticky action row with safe area */
+  .card-preview-dialog {
+    display: flex;
+    flex-direction: column;
+    max-height: 88dvh;
+  }
+
+  .card-preview-mount {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .card-preview-actions {
+    flex-shrink: 0;
+    margin-top: auto;
+    padding-top: 0.65rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .card-preview-actions-row .btn-primary,
+  .card-preview-actions-row .btn-secondary {
+    min-height: 44px;
+  }
+
+  .card-preview-meta {
+    font-size: 0.85rem;
+    margin-bottom: 0.35rem;
+  }
+
+  /* Deck editor — always-visible remove chips + horizontal slot strip */
+  body.deck-editing .deck-editor__strip {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.15rem;
+  }
+
+  body.deck-editing .deck-slot-wrap--strip {
+    scroll-snap-align: start;
+  }
+
+  body.deck-editing .deck-slot-remove,
+  body.deck-editing .deck-slot-wrap--strip .deck-slot-remove.deck-slot-remove--visible {
+    opacity: 1;
+    width: 1.65rem;
+    height: 1.65rem;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    top: -0.15rem;
+    right: -0.15rem;
+    font-size: 1.1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+
+  /* Adventure — stage list clears bottom nav */
+  #view-play .adventure-panel {
+    padding-bottom: 0.25rem;
+  }
+
+  .adventure-stage-list {
+    max-height: min(46dvh, 22rem);
+    margin-bottom: 0.35rem;
+    padding-bottom: 0.35rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .adventure-stage-row {
+    min-height: 3.5rem;
+    padding: 0.7rem 0.85rem;
+  }
+
+  .adventure-stage-row__title {
+    font-size: 0.92rem;
+  }
+
+  .adventure-world-shields {
+    flex-shrink: 0;
+    padding-bottom: 0.15rem;
+  }
+
+  /* Shop — cosmetic grid + inline chest pulls */
+  .cosmetic-box-list {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .cosmetic-box-card {
+    padding: 1rem 0.85rem;
+  }
+
+  .chest-pulls {
+    padding: 1rem 0.85rem;
+    margin-top: 1rem;
+  }
+
+  .chest-pulls__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+    max-height: min(42dvh, 18rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.15rem;
+  }
+
+  .chest-pulls__grid .spell-card {
+    max-width: 100%;
+  }
+
+  .chest-log {
+    font-size: 0.88rem;
+    margin-top: 0.75rem;
+  }
+
+  /* Game over sheet — victory CTAs and star readout */
+  .game-over-card #btn-restart-match {
+    min-height: 48px;
+    width: 100%;
+    margin-top: 0.65rem;
+  }
+
+  .game-over-star-gain {
+    font-size: 1.05rem;
+    margin: 0.35rem 0 0.15rem;
+  }
+
+  .game-over-card #game-over-text {
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0.35rem 0 0;
+  }
+
+  .game-over-card #game-over-title {
+    font-size: 1.55rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.match-active .ai-spell-banner {
+    animation: none;
+  }
+}
