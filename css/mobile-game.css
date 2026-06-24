@@ -1444,20 +1444,13 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   body.deck-editing .deck-editor__filter-row {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding-bottom: 0.15rem;
+    grid-template-columns: 1fr 1fr;
+    overflow: visible;
   }
 
-  body.deck-editing .deck-editor__filter-row::-webkit-scrollbar {
-    display: none;
-  }
-
-  body.deck-editing .deck-editor__filter-row .deck-editor__select,
+  body.deck-editing .deck-editor__filter-row .deck-editor__filter-field,
   body.deck-editing .deck-editor__filter-row .deck-editor__owned {
-    flex: 0 0 auto;
+    min-width: 0;
   }
 }
 

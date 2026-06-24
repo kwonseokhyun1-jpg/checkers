@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="css/mobile-game.css" />
   <link rel="stylesheet" href="css/spell-visuals.css" />
   <link rel="stylesheet" href="css/chess-theme.css" />
-  <link rel="stylesheet" href="css/deck-editor.css?v=13" />
+  <link rel="stylesheet" href="css/deck-editor.css?v=14" />
   <link rel="stylesheet" href="css/custom-select.css" />
   <link rel="stylesheet" href="css/settings.css" />
   <link rel="stylesheet" href="css/polish.css" />
@@ -178,29 +178,30 @@
               <div class="deck-editor__filters">
                 <input type="search" id="collection-search" class="input-text deck-editor__search" placeholder="Search…" aria-label="Search spells" />
                 <div class="deck-editor__filter-row">
-                  <select id="collection-category" class="select-input deck-editor__select" aria-label="Category">
-                    <option value="all">All types</option>
-                    <option value="attack">Attack</option>
-                    <option value="control">Control</option>
-                    <option value="defense">Defense</option>
-                    <option value="movement">Movement</option>
-                    <option value="trap">Trap</option>
-                    <option value="special">Special</option>
-                  </select>
-                  <select id="collection-rarity" class="select-input deck-editor__select" aria-label="Rarity">
-                    <option value="all">All rarities</option>
-                    <option value="common">Common</option>
-                    <option value="uncommon">Uncommon</option>
-                    <option value="rare">Rare</option>
-                    <option value="epic">Epic</option>
-                    <option value="legendary">Legendary</option>
-                  </select>
-                  <select id="collection-sort" class="select-input deck-editor__select" aria-label="Sort">
-                    <option value="rarity-desc">Rarity ↓</option>
-                    <option value="rarity-asc">Rarity ↑</option>
-                  </select>
+                  <div class="deck-editor__filter-field">
+                    <label class="deck-editor__filter-label" for="collection-category">Type</label>
+                    <select id="collection-category" class="select-input deck-editor__select" aria-label="Type">
+                      <option value="all">All types</option>
+                      <option value="attack">Attack</option>
+                      <option value="control">Control</option>
+                      <option value="defense">Defense</option>
+                      <option value="movement">Movement</option>
+                      <option value="trap">Trap</option>
+                      <option value="special">Special</option>
+                    </select>
+                  </div>
+                  <div class="deck-editor__filter-field">
+                    <label class="deck-editor__filter-label" for="collection-rarity">Rarity</label>
+                    <select id="collection-rarity" class="select-input deck-editor__select" aria-label="Rarity">
+                      <option value="all">All rarities</option>
+                      <option value="common">Common</option>
+                      <option value="uncommon">Uncommon</option>
+                      <option value="rare">Rare</option>
+                      <option value="epic">Epic</option>
+                      <option value="legendary">Legendary</option>
+                    </select>
+                  </div>
                   <label class="filter-check deck-editor__owned"><input type="checkbox" class="collection-owned-only-toggle" checked /> Owned only</label>
-                  <label class="filter-check deck-editor__owned"><input type="checkbox" class="collection-new-only-toggle" /> New only</label>
                 </div>
               </div>
               <p id="deck-collection-hint" class="deck-editor__hint" hidden>Tap <strong>+ Add to deck</strong> for copies you own. When all owned copies are in the deck, tap <strong>Add for X gems</strong> to buy another.</p>

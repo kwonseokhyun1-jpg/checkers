@@ -119,11 +119,17 @@
   cursor: not-allowed;
 }
 
-/* Deck editor filter row — compact triggers */
+/* Deck editor filter row — full-width triggers in 2-column grid */
 .deck-editor__filter-row .custom-select__trigger {
   min-height: 2rem;
   padding: 0.3rem 0.5rem;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
+}
+
+.deck-editor__filter-row .custom-select__label {
+  overflow: visible;
+  text-overflow: unset;
+  white-space: nowrap;
 }
 
 .deck-editor__filter-row .custom-select__list {
