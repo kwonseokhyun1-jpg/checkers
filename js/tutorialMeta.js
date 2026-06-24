@@ -1,7 +1,7 @@
 /**
  * Guided meta tutorial — open chests and build a deck after the practice match.
  */
-import { dismissMetaTutorial } from "./tutorial.js";
+import { dismissMetaTutorial, isTutorialPassthroughTarget } from "./tutorial.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { mobileConfirm } from "./mobileConfirm.js";
 
@@ -299,8 +299,7 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     if (!controller?.active) return;
     const target = e.target;
     if (!(target instanceof Element)) return;
-    if (target.closest("#tutorial-meta-overlay")) return;
-    if (target.closest(".card-preview-modal")) return;
+    if (isTutorialPassthroughTarget(target)) return;
 
     if (isAllowedTarget(target)) {
       if (e.type === "click" && proxyActionClick(target)) {

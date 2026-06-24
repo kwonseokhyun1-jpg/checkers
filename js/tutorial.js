@@ -230,6 +230,14 @@ export function shouldShowCosmeticsTutorial(profile) {
   }
 }
 
+/** Clicks that must not be blocked by tutorial spotlight capture handlers. */
+export function isTutorialPassthroughTarget(target) {
+  if (!(target instanceof Element)) return false;
+  return !!target.closest(
+    "#mobile-confirm, #tutorial-meta-overlay, #tutorial-match-overlay, .card-preview-modal"
+  );
+}
+
 /** @deprecated Legacy modal tutorial — replaced by interactive practice match. */
 export function shouldShowTutorial(profile) {
   return false;

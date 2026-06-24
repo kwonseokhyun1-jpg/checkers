@@ -12,7 +12,7 @@ import { getMatchHtml } from "./matchView.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { mobileConfirm } from "./mobileConfirm.js";
-import { dismissInteractiveTutorial, shouldShowInteractiveTutorial } from "./tutorial.js";
+import { dismissInteractiveTutorial } from "./tutorial.js";
 
 const TUTORIAL_DECK = buildStarterDeckCardIds();
 
@@ -359,6 +359,15 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
     const hooks = {
       skipOpponentTurn: !!step.skipOpponentTurn,
       onLeaveRequest: askSkip,
+      spellPhaseBlockMessage: step.hint || "Play the spell shown in the lesson first.",
+      canMovePieces() {
+        if (step.validateSpell) return false;
+        return true;
+      },
+      canEndSpellPhase() {
+        if (step.validateSpell) return false;
+        return true;
+      },
       onHumanMove(move) {
         lastMove = move;
       },
@@ -369,7 +378,10 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
         }
       },
       beforeEndHumanTurn(session) {
-        if (step.validateSpell) return "continue";
+        if (step.validateSpell) {
+          session.setMessage(step.hint || "Play Snowball on the black piece first.");
+          return "block";
+        }
         const verdict = step.validateTurnEnd?.(session, lastMove, { promoted: kingStepPromoted });
         if (verdict === true) {
           setTimeout(() => advanceStep(), 400);
