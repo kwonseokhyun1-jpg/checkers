@@ -696,6 +696,9 @@ body.match-active .game-main {
     margin-top: 0.75rem;
     padding-top: 0.75rem;
     padding-bottom: calc(0.25rem + var(--game-safe-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
     background: linear-gradient(
       180deg,
       rgba(18, 22, 36, 0) 0%,
@@ -1404,7 +1407,7 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   .adventure-prebattle .prebattle-deck-field {
-    margin-top: 0.5rem;
+    margin-top: 0;
   }
 
   .adventure-prebattle #btn-start-adventure {

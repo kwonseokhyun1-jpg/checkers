@@ -2932,13 +2932,13 @@ body.adventure-stage-open .card-preview-modal {
   min-height: 0;
 }
 .prebattle-deck-field {
-  margin: 0.75rem 0 0.25rem;
+  margin: 0;
   position: relative;
   z-index: 12;
 }
 .prebattle-deck-field .label-sm {
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0;
 }
 .adventure-prebattle__footer {
   flex-shrink: 0;
@@ -2946,6 +2946,9 @@ body.adventure-stage-open .card-preview-modal {
   padding-top: 0.75rem;
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 .adventure-prebattle .custom-select--open {
   z-index: 20;
