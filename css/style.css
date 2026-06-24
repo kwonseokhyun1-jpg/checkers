@@ -267,7 +267,8 @@ body {
 }
 
 .btn-secondary,
-.btn-primary {
+.btn-primary,
+.btn-danger {
   font-family: inherit;
   font-size: 0.9rem;
   font-weight: 600;
@@ -1228,7 +1229,15 @@ body {
 .deck-view-header h2 { margin: 0 0 0.25rem; }
 .deck-view-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 .deck-row-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-.btn-danger { border-color: #c92a2a55; color: #ff8787; }
+.btn-danger {
+  background: rgba(232, 93, 93, 0.2);
+  color: #ffb4b4;
+  border: 1px solid rgba(201, 42, 42, 0.5);
+}
+
+.btn-danger:hover {
+  background: rgba(232, 93, 93, 0.3);
+}
 .empty-msg { color: var(--text-muted); text-align: center; padding: 2rem; }
 .deck-subview.hidden { display: none; }
 .hand.spell-hand {

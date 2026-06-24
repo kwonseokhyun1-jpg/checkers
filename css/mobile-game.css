@@ -50,6 +50,32 @@ body {
   font-weight: 600;
 }
 
+.btn-danger {
+  min-height: 3rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.95rem;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 140, 140, 0.4);
+  background: linear-gradient(180deg, #f06b6b 0%, #d94545 45%, #b82e2e 100%);
+  color: #fff5f5;
+  box-shadow: 0 4px 0 #7a1a1a, 0 8px 20px rgba(0, 0, 0, 0.45);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.15s;
+}
+
+.btn-danger:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 #5a1010, 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.btn-danger:disabled {
+  opacity: 0.65;
+  filter: grayscale(0.3);
+}
+
 .input-text {
   min-height: 3rem;
   font-size: 1rem;
@@ -790,6 +816,7 @@ body.match-active .game-main {
   .mobile-confirm__btn {
     flex: 1;
     min-height: 44px;
+    margin-top: 0;
   }
 
   /* PvP lobby — touch-friendly room list */
