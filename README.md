@@ -76,4 +76,4 @@ See **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)** for Supabase auth, cloud saves, a
 
 ## Mobile & App Store
 
-Red/black app icon, animated splash, and Capacitor wrap — see **[MOBILE.md](MOBILE.md)**.
+The UI is optimized for phones (bottom navigation, safe areas, touch targets). Red/black app icon, animated splash, and Capacitor wrap — see **[MOBILE.md](MOBILE.md)** for PWA install and App Store / Google Play submission.
