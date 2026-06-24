@@ -2,6 +2,7 @@
  * Post–stage unlock tutorials for Quests, PvP, and Cosmetics.
  */
 import { dismissQuestsTutorial, dismissPvpTutorial, dismissCosmeticsTutorial } from "./tutorial.js";
+import { mobileConfirm } from "./mobileConfirm.js";
 
 /** @typedef {{ id: string, title: string, body: string, hint?: string, autoAdvance?: boolean, highlight?: string, allowed?: string[], actionSelector?: string }} UnlockStep */
 
@@ -366,10 +367,14 @@ function startSpotlightTutorial({ steps, skipMessage, dismiss, profile, saveProf
     onComplete?.();
   }
 
-  function askSkip() {
-    if (window.confirm(skipMessage)) {
-      finishTutorial();
-    }
+  async function askSkip() {
+    const ok = await mobileConfirm(skipMessage, {
+      title: "Skip tutorial?",
+      confirmLabel: "Skip",
+      cancelLabel: "Keep going",
+      destructive: true,
+    });
+    if (ok) finishTutorial();
   }
 
   function advanceStep() {

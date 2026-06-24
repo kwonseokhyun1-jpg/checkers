@@ -981,3 +981,195 @@ body.install-banner-visible.deck-editing .game-shell {
     animation: none;
   }
 }
+
+/* ── Agent #5: chest reveals, deck editor, profile/quests, auth gate, tutorial overlays ── */
+
+@media (max-width: 768px) {
+  /* Chest / cosmetic open — compact cinematic with safe areas */
+  .chest-open-overlay,
+  .cosmetic-open-overlay {
+    align-items: flex-end;
+    padding:
+      var(--game-safe-top)
+      env(safe-area-inset-right, 0px)
+      var(--game-safe-bottom)
+      env(safe-area-inset-left, 0px);
+  }
+
+  .chest-open-scene {
+    width: 100%;
+    max-width: 100%;
+    padding: 0.75rem 0.85rem 1rem;
+    align-items: stretch;
+  }
+
+  .chest-open-stage-wrap {
+    width: 180px;
+    height: 165px;
+    margin: 0 auto 0.35rem;
+  }
+
+  .chest-open-stage {
+    width: 165px;
+  }
+
+  .chest-open-label {
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  .chest-open-status {
+    font-size: 0.9rem;
+  }
+
+  .chest-open-cards__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    max-height: min(38dvh, 16rem);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cosmetic-open-reveals__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    max-height: min(38dvh, 16rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .chest-open-collect {
+    width: 100%;
+    min-height: 44px;
+    margin-top: 0.25rem;
+  }
+
+  /* Deck editor — toolbar and filter touch targets */
+  body.deck-editing .deck-editor__back {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  body.deck-editing .deck-editor__save {
+    min-height: 44px;
+    min-width: 4.5rem;
+    padding: 0.45rem 0.85rem;
+  }
+
+  body.deck-editing .deck-editor__search,
+  body.deck-editing .deck-editor__select {
+    min-height: 44px;
+  }
+
+  body.deck-editing .deck-editor__owned {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.35rem;
+  }
+
+  body.deck-editing .deck-editor-tile__action {
+    min-height: 44px;
+    font-size: 0.75rem;
+  }
+
+  /* Profile + quests */
+  .profile-section-tab {
+    min-height: 44px;
+    padding: 0.45rem 1rem;
+  }
+
+  .profile-cosmetic-card {
+    min-height: 8.5rem;
+  }
+
+  .profile-cosmetic-card__action {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 0.25rem;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    font-weight: 700;
+  }
+
+  .profile-cosmetic-card--equipped .profile-cosmetic-card__action {
+    background: rgba(92, 225, 230, 0.15);
+    color: var(--accent-gem);
+  }
+
+  .profile-title-card {
+    min-height: 5.5rem;
+  }
+
+  .profile-achievement-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-achievement-card__claim {
+    min-height: 44px;
+  }
+
+  /* Auth gate — full-screen launch with chunky CTAs */
+  .auth-gate__inner {
+    max-width: 100%;
+    padding: 0 0.5rem;
+  }
+
+  .auth-gate__brand .logo-mark {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto;
+  }
+
+  .auth-gate__title {
+    font-size: 1.85rem;
+  }
+
+  .auth-gate__btn {
+    min-height: 48px;
+  }
+
+  /* Tutorial overlays — bottom cards with touch-sized actions */
+  .tutorial-meta-card,
+  .tutorial-match-card {
+    max-width: 100%;
+    border-radius: 20px 20px 0 0;
+    padding: 1rem 1.1rem calc(1rem + var(--game-safe-bottom));
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .tutorial-meta-overlay {
+    padding: 0;
+    padding-bottom: max(calc(var(--nav-height, 4.25rem) + 0.25rem), env(safe-area-inset-bottom));
+  }
+
+  .tutorial-meta-overlay--card-top {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+    padding-bottom: 0.5rem;
+  }
+
+  .tutorial-meta-actions .btn-primary,
+  .tutorial-meta-actions .btn-secondary,
+  .tutorial-skip-btn,
+  .tutorial-match-actions .btn-primary,
+  .tutorial-match-actions .btn-secondary {
+    min-height: 44px;
+  }
+
+  .tutorial-match-overlay {
+    padding: 0;
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-meta-card,
+  .tutorial-match-card {
+    animation: none;
+  }
+}
