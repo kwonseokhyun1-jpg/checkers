@@ -98,6 +98,7 @@ import {
   readMatchCheckpoint,
   saveMatchCheckpoint,
 } from "./matchLifecycle.js";
+import { mobileConfirm } from "./mobileConfirm.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
@@ -260,7 +261,7 @@ function syncNavUnlockState() {
   }
 }
 
-function showTab(tab) {
+async function showTab(tab) {
   const matchView = document.getElementById("view-match");
   if (tutorialRunning && matchView && !matchView.classList.contains("hidden")) {
     return;
@@ -280,7 +281,16 @@ function showTab(tab) {
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
     const label = TAB_LABELS[tab] || tab;
-    if (!window.confirm(`Leave your current match to open ${label}?`)) return;
+    if (
+      !(await mobileConfirm(`Leave your current match to open ${label}?`, {
+        title: "Leave match?",
+        confirmLabel: "Leave",
+        cancelLabel: "Stay",
+        destructive: true,
+      }))
+    ) {
+      return;
+    }
     setPendingNavigationTab(tab);
     armLeaveConfirmSkip();
     document.querySelector("#btn-leave-match")?.click();
@@ -1618,7 +1628,7 @@ function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = nul
   matchSession.render();
 }
 
-function tryResumeSavedMatch() {
+async function tryResumeSavedMatch() {
   const cp = readMatchCheckpoint();
   if (!cp) return false;
   const deck =
@@ -1629,7 +1639,13 @@ function tryResumeSavedMatch() {
     clearMatchCheckpoint();
     return false;
   }
-  if (!window.confirm("Resume your adventure match where you left off?")) {
+  if (
+    !(await mobileConfirm("Resume your adventure match where you left off?", {
+      title: "Resume match?",
+      confirmLabel: "Resume",
+      cancelLabel: "Discard",
+    }))
+  ) {
     clearMatchCheckpoint();
     return false;
   }
@@ -2063,7 +2079,7 @@ async function bootstrapAfterAuth() {
   if (maybeStartPostStage1Tutorials()) return;
   if (maybeStartPostStage5CosmeticsTutorial()) return;
   if (tutorialRunning) return;
-  if (!tryResumeSavedMatch()) showTab("deck");
+  if (!(await tryResumeSavedMatch())) showTab("deck");
   reconcileMatchShellState();
 }
 

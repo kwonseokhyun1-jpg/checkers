@@ -289,6 +289,36 @@
     </div>
   </div>
 
+  <div id="mobile-confirm" class="mobile-confirm hidden" role="alertdialog" aria-modal="true" aria-labelledby="mobile-confirm-title" aria-describedby="mobile-confirm-body">
+    <button type="button" class="mobile-confirm__backdrop" data-mobile-confirm-backdrop aria-label="Cancel"></button>
+    <div class="mobile-confirm__dialog panel game-panel">
+      <h2 id="mobile-confirm-title" class="panel-head__title mobile-confirm__title">Confirm</h2>
+      <p id="mobile-confirm-body" class="mobile-confirm__body"></p>
+      <div class="mobile-confirm__actions">
+        <button type="button" id="mobile-confirm-cancel" class="btn-secondary mobile-confirm__btn">Cancel</button>
+        <button type="button" id="mobile-confirm-ok" class="btn-primary mobile-confirm__btn">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="install-banner" class="install-banner hidden" role="region" aria-label="Install app">
+    <div class="install-banner__inner">
+      <div class="install-banner__icon" aria-hidden="true">
+        <span class="logo-mark__piece logo-mark__piece--red"></span>
+        <span class="logo-mark__piece logo-mark__piece--black"></span>
+      </div>
+      <div class="install-banner__copy">
+        <p class="install-banner__title">Install Arcane Checkers</p>
+        <p id="install-banner-ios-hint" class="install-banner__hint hidden">Tap Share, then <strong>Add to Home Screen</strong></p>
+        <p class="install-banner__hint install-banner__hint--default">Play fullscreen from your home screen</p>
+      </div>
+      <div class="install-banner__actions">
+        <button type="button" id="install-banner-btn" class="btn-primary btn-sm install-banner__install">Install</button>
+        <button type="button" id="install-banner-dismiss" class="install-banner__dismiss" aria-label="Dismiss">×</button>
+      </div>
+    </div>
+  </div>
+
   <div id="auth-modal" class="auth-modal hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
     <div class="auth-modal-backdrop"></div>
     <div class="auth-modal-dialog panel game-panel">
