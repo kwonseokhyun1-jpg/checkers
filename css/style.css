@@ -2956,8 +2956,8 @@ body.adventure-stage-open .card-preview-modal {
 .adventure-prebattle .custom-select--open .custom-select__list {
   z-index: 21;
 }
-.adventure-prebattle .select-input,
-#adventure-deck-select {
+.adventure-prebattle .custom-select__trigger,
+.adventure-prebattle #adventure-deck-select {
   display: block;
   width: 100%;
   max-width: 100%;
@@ -6538,6 +6538,48 @@ body.public-profile-modal-open {
 }
 body.adventure-stage-open {
   overflow: hidden;
+}
+body.adventure-active {
+  overscroll-behavior: none;
+}
+body.adventure-active:not(.adventure-stage-open):not(.match-active) .game-shell {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+body.adventure-active:not(.adventure-stage-open):not(.match-active) .game-main {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+body.adventure-active:not(.adventure-stage-open) #view-play {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body.adventure-active:not(.adventure-stage-open) .adventure-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body.adventure-active:not(.adventure-stage-open) .adventure-stage-list {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+body.adventure-active:not(.adventure-stage-open) .adventure-world-shields,
+body.adventure-active:not(.adventure-stage-open) .panel-head--compact,
+body.adventure-active:not(.adventure-stage-open) .adventure-world-hint {
+  flex-shrink: 0;
 }
 .adventure-stage-modal__backdrop {
   position: absolute;
