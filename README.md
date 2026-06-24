@@ -32,6 +32,20 @@ python3 -m http.server 8080
 
 Then visit http://localhost:8080
 
+## Screenshots
+
+Mobile presentation (390×844):
+
+| Decks | Shop | Adventure | Match |
+|-------|------|-----------|-------|
+| ![Decks](screenshots/decks-mobile.png) | ![Shop](screenshots/shop-mobile.png) | ![Adventure](screenshots/adventure-mobile.png) | ![Match](screenshots/match-mobile.png) |
+
+Cold-start splash:
+
+![Splash](screenshots/splash-mobile.png)
+
+Regenerate after UI changes: `python3 -m http.server 8765 &` then `npm run screenshots`. See **[MOBILE.md](MOBILE.md)** for PWA install, animated splash, and Capacitor / App Store setup.
+
 ## Cards
 
 | Card | Effect |
@@ -59,3 +73,7 @@ Then visit http://localhost:8080
 ## Online accounts & PvP
 
 See **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)** for Supabase auth, cloud saves, and 1v1 PvP.
+
+## Mobile & App Store
+
+Red/black app icon, animated splash, and Capacitor wrap — see **[MOBILE.md](MOBILE.md)**.
