@@ -3351,6 +3351,15 @@ ${starLine}`;
         banner.className = "turn-banner opponent-turn";
       }
     }
+    const msgEl = this.$("message");
+    if (msgEl && banner) {
+      const bannerText = (banner.textContent || "").toLowerCase();
+      const msgText = (msgEl.textContent || "").toLowerCase();
+      const redundant =
+        msgText.includes("select a piece") &&
+        (bannerText.includes("select a piece") || bannerText.includes("cast a spell"));
+      msgEl.classList.toggle("match-message--redundant", redundant);
+    }
     const endBtn = this.root.querySelector("#btn-end-cards");
     if (endBtn) {
       endBtn.disabled =

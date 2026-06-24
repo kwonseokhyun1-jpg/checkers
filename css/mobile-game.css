@@ -103,7 +103,7 @@ body {
   padding-top: 0;
   padding-left: max(0.75rem, env(safe-area-inset-left));
   padding-right: max(0.75rem, env(safe-area-inset-right));
-  padding-bottom: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
+  padding-bottom: 0;
 }
 
 .game-shell--in-match,
@@ -138,9 +138,9 @@ body.match-active .game-main {
 
 /* Game shell — phone frame (continued) */
 .game-shell::before {
-  inset: 0 0.35rem 0.35rem 0.35rem;
+  inset: 0 0.35rem 0 0.35rem;
   border-width: 2px;
-  border-radius: 24px;
+  border-radius: 24px 24px 0 0;
   border-color: rgba(201, 162, 39, 0.35);
   box-shadow:
     inset 0 0 80px rgba(0, 0, 0, 0.5),
@@ -158,6 +158,21 @@ body.match-active .game-main {
 
 /* Chess.com-style shell: pinned top HUD, only main content scrolls (no pull past top) */
 @media (max-width: 768px) {
+  body:not(.match-active):not(.deck-editing) .game-shell {
+    height: 100dvh;
+    height: -webkit-fill-available;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  body:not(.match-active):not(.deck-editing) .game-main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   html:has(body.main-tab-active:not(.match-active):not(.deck-editing)) {
     overflow: hidden;
     height: 100%;
@@ -197,16 +212,49 @@ body.match-active .game-main {
   }
 
   body.main-tab-active:not(.match-active):not(.deck-editing) .game-main {
+    order: 1;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
+    padding-bottom: 0.75rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.main-tab-active:not(.match-active):not(.deck-editing) .game-main > .view-panel:not(.hidden) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  body.main-tab-active:not(.match-active):not(.deck-editing) .game-nav.tabs {
+    order: 2;
+    flex-shrink: 0;
+    position: relative;
+    left: auto;
+    transform: none;
+    width: auto;
+    margin-top: auto;
+    margin-bottom: 0;
+    margin-left: calc(-1 * max(0.75rem, env(safe-area-inset-left)));
+    margin-right: calc(-1 * max(0.75rem, env(safe-area-inset-right)));
+    padding:
+      0.4rem
+      max(0.85rem, calc(0.7rem + env(safe-area-inset-right)))
+      calc(0.4rem + var(--game-safe-bottom))
+      max(0.85rem, calc(0.7rem + env(safe-area-inset-left)));
+    border-radius: 16px 16px 0 0;
+    border-bottom: none;
+    box-shadow:
+      0 -4px 20px rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 
   body.install-banner-visible.main-tab-active:not(.match-active):not(.deck-editing) .game-main {
-    padding-bottom: calc(var(--nav-height) + 4.75rem + var(--game-safe-bottom));
+    padding-bottom: 4.25rem;
   }
 }
 
@@ -243,24 +291,33 @@ body.match-active .game-main {
   font-weight: 700;
 }
 
-/* Bottom dock navigation (mobile game pattern) */
+/* Bottom dock navigation — in-flow flex child (pinned via shell column on mobile) */
 .game-nav.tabs {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: var(--game-safe-bottom);
+  order: 2;
+  flex-shrink: 0;
+  position: relative;
   z-index: 200;
-  width: min(100% - 1.25rem, 460px);
+  width: auto;
   margin: 0;
-  padding: 0.4rem 0.35rem;
+  margin-left: calc(-1 * max(0.75rem, env(safe-area-inset-left)));
+  margin-right: calc(-1 * max(0.75rem, env(safe-area-inset-right)));
+  padding:
+    0.4rem
+    max(0.85rem, calc(0.7rem + env(safe-area-inset-right)))
+    calc(0.4rem + var(--game-safe-bottom))
+    max(0.85rem, calc(0.7rem + env(safe-area-inset-left)));
   background: linear-gradient(180deg, rgba(30, 40, 58, 0.98), rgba(12, 16, 24, 0.98));
   border: 2px solid rgba(201, 162, 39, 0.35);
-  border-radius: 20px;
+  border-bottom: none;
+  border-radius: 16px 16px 0 0;
   box-shadow:
-    0 -4px 24px rgba(0, 0, 0, 0.5),
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    0 -4px 20px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(12px);
+}
+
+.game-main {
+  order: 1;
 }
 
 .game-nav .tab-btn,
@@ -401,6 +458,10 @@ body.match-active .game-main {
   border: none;
   box-shadow: none;
   padding: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 #deck-subview-list.game-panel::before,
@@ -420,6 +481,8 @@ body.match-active .game-main {
 
 .deck-list {
   max-width: 100%;
+  flex: 1;
+  align-content: start;
 }
 
 .deck-row {
@@ -463,18 +526,31 @@ body.match-active .game-main {
 
   .game-shell::before {
     inset: 0.5rem;
+    border-radius: 20px;
   }
 
   .game-header {
     padding-top: 0.85rem;
   }
 
+  .game-main {
+    order: unset;
+  }
+
   .game-nav.tabs {
+    order: unset;
     position: static;
     transform: none;
     width: auto;
     max-width: 520px;
     margin: 0 auto 1.35rem;
+    padding: 0.4rem 0.35rem;
+    border-radius: 20px;
+    border-bottom: 2px solid rgba(201, 162, 39, 0.35);
+    box-shadow:
+      0 -4px 24px rgba(0, 0, 0, 0.5),
+      0 8px 32px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   .game-nav .tab-btn,
@@ -788,10 +864,6 @@ body.match-active .game-main {
   body.match-active .game-shell {
     padding-top: calc(0.25rem + var(--game-safe-top));
   }
-
-  .game-nav.tabs {
-    bottom: var(--game-safe-bottom);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1085,10 +1157,6 @@ body.match-active .install-banner,
 body.deck-editing .install-banner,
 body.mobile-confirm-open .install-banner {
   display: none;
-}
-
-body.install-banner-visible .game-shell {
-  padding-bottom: calc(var(--nav-height) + 4.75rem + var(--game-safe-bottom));
 }
 
 body.install-banner-visible.match-active .game-shell,
@@ -1452,8 +1520,10 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   .adventure-prebattle .enemy-deck-list {
-    max-height: none;
-    overflow: visible;
+    max-height: min(32vh, 200px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .adventure-map-back {

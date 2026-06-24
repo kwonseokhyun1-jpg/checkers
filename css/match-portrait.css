@@ -122,6 +122,8 @@
     overflow: hidden;
     width: 100%;
     max-width: 100%;
+    container-type: size;
+    container-name: match-board;
   }
 
   body.match-active .match-wrap .board-section > .turn-banner,
@@ -149,15 +151,19 @@
     max-width: 100%;
     max-height: 100%;
     height: auto;
-    aspect-ratio: 1;
     margin: 0 auto;
     align-self: center;
     padding: 4px;
+    align-content: center;
   }
 
   body.match-active .match-wrap .board-frame .board {
-    width: 100%;
+    width: min(100%, 100cqh);
+    max-width: 100%;
     aspect-ratio: 1;
+    height: auto;
+    justify-self: center;
+    align-self: center;
   }
 
   body.match-active .match-wrap .pvp-move-history {
@@ -186,6 +192,10 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  body.match-active .match-wrap .match-message.match-message--redundant {
+    display: none;
   }
 
   body.match-active .match-wrap .piece-info {

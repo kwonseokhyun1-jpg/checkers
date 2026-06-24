@@ -68,6 +68,7 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: 0.35rem;
   border: 1px solid rgba(212, 168, 83, 0.35);
   border-radius: 12px;
@@ -77,6 +78,11 @@
 
 .custom-select__list.hidden {
   display: none !important;
+}
+
+.custom-select__list--above {
+  top: auto;
+  bottom: calc(100% + 0.35rem);
 }
 
 .custom-select__option {
