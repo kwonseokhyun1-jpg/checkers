@@ -779,23 +779,14 @@ function renderChests(options = {}) {
     const card = document.createElement("article");
     card.className = `chest-card chest-card--${chest.id}${canAfford ? "" : " chest-card--locked"}`;
 
-    const rarityHint =
-      chest.id === "gold"
-        ? "Epic & rare focus"
-        : chest.id === "silver"
-          ? "Balanced card mix"
-          : "Mostly common cards";
-
     card.innerHTML = `
       <div class="chest-card__aura" aria-hidden="true"></div>
       <div class="chest-card__visual">${chestSvgMarkup(chest.id)}</div>
       <div class="chest-card__body">
-        <span class="chest-card__tier">${tier.label}</span>
         <h3 class="chest-card__name">${chest.name}</h3>
         <p class="chest-card__tagline">${tier.tagline}</p>
         <ul class="chest-card__stats">
           <li><strong>${chest.cards}</strong> spells</li>
-          <li>${rarityHint}</li>
         </ul>
         <p class="chest-card__cost">
           <span class="chest-card__gem" aria-hidden="true">◆</span>
