@@ -668,3 +668,316 @@ body.match-active .game-main {
     animation: none;
   }
 }
+
+/* ── Agent #4: confirm sheet, install banner, tutorial/profile sheets, PvP/shop ── */
+
+@media (max-width: 768px) {
+  /* Tutorial intro — bottom sheet */
+  .tutorial-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .tutorial-modal-dialog {
+    max-width: 100%;
+    width: 100%;
+    border-radius: 24px 24px 0 0;
+    border-bottom: none;
+    padding: 1.25rem 1.25rem calc(1.25rem + var(--game-safe-bottom));
+    animation: sheet-up 0.28s ease;
+  }
+
+  .tutorial-actions .btn-primary,
+  .tutorial-skip-btn {
+    min-height: 44px;
+  }
+
+  /* Public profile — bottom sheet */
+  .public-profile-modal {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .public-profile-modal__dialog {
+    max-width: 100%;
+    width: 100%;
+    max-height: min(92dvh, 720px);
+    overflow-y: auto;
+    border-radius: 24px 24px 0 0;
+    border-bottom: none;
+    padding: 1rem 1rem calc(1.25rem + var(--game-safe-bottom));
+    animation: sheet-up 0.28s ease;
+  }
+
+  .public-profile-modal__close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Mobile confirm sheet */
+  .mobile-confirm {
+    position: fixed;
+    inset: 0;
+    z-index: 560;
+    display: flex;
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .mobile-confirm.hidden {
+    display: none;
+  }
+
+  body.mobile-confirm-open {
+    overflow: hidden;
+  }
+
+  .mobile-confirm__backdrop {
+    position: absolute;
+    inset: 0;
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: rgba(4, 6, 12, 0.82);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+  }
+
+  .mobile-confirm__dialog {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    border-radius: 24px 24px 0 0;
+    border-bottom: none;
+    padding: 1.25rem 1.25rem calc(1.25rem + var(--game-safe-bottom));
+    animation: sheet-up 0.28s ease;
+  }
+
+  .mobile-confirm__title {
+    font-size: 1.35rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .mobile-confirm__body {
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0 0 1rem;
+  }
+
+  .mobile-confirm__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .mobile-confirm__btn {
+    flex: 1;
+    min-height: 44px;
+  }
+
+  /* PvP lobby — touch-friendly room list */
+  .pvp-actions .btn-primary,
+  .pvp-actions .btn-secondary {
+    min-height: 44px;
+  }
+
+  .pvp-join-row .btn-primary {
+    min-height: 44px;
+    min-width: 44px;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .pvp-open-list {
+    max-height: min(42dvh, 18rem);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .pvp-open-item {
+    padding: 0.55rem 0.65rem;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .pvp-open-item .btn-primary {
+    min-height: 44px;
+    min-width: 4.5rem;
+  }
+
+  .pvp-room-host-profile {
+    min-height: 44px;
+  }
+
+  .pvp-waiting .btn-secondary {
+    min-height: 44px;
+  }
+
+  /* Shop vault tabs — horizontal scroll on narrow screens */
+  .vault-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.35rem;
+    padding-bottom: 0.15rem;
+  }
+
+  .vault-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .vault-tab {
+    flex: 0 0 auto;
+    min-height: 44px;
+    min-width: 5.25rem;
+    padding-left: 0.85rem;
+    padding-right: 0.85rem;
+  }
+
+  .chest-card__btn,
+  .vault-offer__btn,
+  .cosmetic-box-card__btn {
+    min-height: 44px;
+  }
+}
+
+/* Install banner — above bottom nav */
+.install-banner {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--nav-height) + 0.55rem + var(--game-safe-bottom));
+  z-index: 190;
+  width: min(100% - 1.25rem, 460px);
+  animation: install-banner-in 0.35s ease;
+}
+
+.install-banner.hidden {
+  display: none;
+}
+
+.install-banner__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 16px;
+  border: 2px solid rgba(201, 162, 39, 0.4);
+  background: linear-gradient(180deg, rgba(36, 48, 72, 0.98), rgba(12, 16, 24, 0.98));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+}
+
+.install-banner__icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #121a28;
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  overflow: hidden;
+}
+
+.install-banner__icon .logo-mark__piece--red {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff8a8a, #c92a2a 70%);
+  top: 6px;
+  left: 5px;
+}
+
+.install-banner__icon .logo-mark__piece--black {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #6b7280, #1a1a1a 70%);
+  bottom: 5px;
+  right: 5px;
+}
+
+.install-banner__copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.install-banner__title {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.install-banner__hint {
+  margin: 0.15rem 0 0;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.install-banner__hint.hidden {
+  display: none;
+}
+
+.install-banner__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.install-banner__install {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.78rem;
+}
+
+.install-banner__dismiss {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+body.match-active .install-banner,
+body.deck-editing .install-banner,
+body.mobile-confirm-open .install-banner {
+  display: none;
+}
+
+body.install-banner-visible .game-shell {
+  padding-bottom: calc(var(--nav-height) + 4.75rem + var(--game-safe-bottom));
+}
+
+body.install-banner-visible.match-active .game-shell,
+body.install-banner-visible.deck-editing .game-shell {
+  padding-bottom: calc(0.75rem + var(--game-safe-bottom));
+}
+
+@keyframes install-banner-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-modal-dialog,
+  .public-profile-modal__dialog,
+  .mobile-confirm__dialog,
+  .install-banner {
+    animation: none;
+  }
+}
