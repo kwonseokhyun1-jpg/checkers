@@ -151,7 +151,6 @@ let collectionRarity = "all";
 let collectionSort = "rarity-desc";
 let collectionCategory = "all";
 let collectionOwnedOnly = true;
-let collectionNewOnly = false;
 
 const RARITY_RANK = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
 
@@ -489,9 +488,6 @@ function syncCollectionFilterControls() {
   document.querySelectorAll(".collection-owned-only-toggle").forEach((el) => {
     el.checked = collectionOwnedOnly;
   });
-  document.querySelectorAll(".collection-new-only-toggle").forEach((el) => {
-    el.checked = collectionNewOnly;
-  });
   const searchIds = ["collection-search"];
   for (const id of searchIds) {
     const el = $(id);
@@ -499,15 +495,10 @@ function syncCollectionFilterControls() {
   }
   const rarityIds = ["collection-rarity"];
   for (const id of rarityIds) {
-    const el = $(id);
+    const el = resolveNativeSelect(id);
     if (el) el.value = collectionRarity;
   }
-  const sortIds = ["collection-sort"];
-  for (const id of sortIds) {
-    const el = $(id);
-    if (el) el.value = collectionSort;
-  }
-  const categoryEl = $("collection-category");
+  const categoryEl = resolveNativeSelect("collection-category");
   if (categoryEl) categoryEl.value = collectionCategory;
 }
 
@@ -612,7 +603,6 @@ function showDeckSubview(sub) {
     collectionFilter = "";
     collectionCategory = "all";
     collectionOwnedOnly = true;
-    collectionNewOnly = false;
     syncCollectionFilterControls();
   }
 
@@ -904,7 +894,6 @@ function getFilteredCollection() {
       if (!c.name.toLowerCase().includes(q) && !c.desc.toLowerCase().includes(q)) return false;
     }
     if (collectionOwnedOnly && collectionCount(profile, c.id) <= 0) return false;
-    if (collectionNewOnly && !isCardNew(profile, c.id)) return false;
     return true;
   });
   return sortCollectionCards(filtered);
@@ -1101,7 +1090,7 @@ function renderInventoryGrid(container, opts = {}) {
     const empty = document.createElement("p");
     empty.className = "collection-grid-empty muted";
     empty.textContent = deckEdit
-      ? "No spells match your filters. Try “All categories”, clear search, or uncheck Owned only."
+      ? "No spells match your filters. Try “All types”, clear search, or uncheck Owned only."
       : "No cards match your filters. Open chests in the Shop to get more spells.";
     container.appendChild(empty);
     return;
@@ -1957,21 +1946,12 @@ function init() {
     });
   });
 
-  document.querySelectorAll(".collection-new-only-toggle").forEach((el) => {
-    el.addEventListener("change", (e) => {
-      collectionNewOnly = e.target.checked;
-      syncCollectionFilterControls();
-      syncCollectionFilter();
-    });
-  });
-
   document.querySelectorAll(".btn-reset-collection-filters").forEach((btn) => {
     btn.addEventListener("click", () => {
       collectionRarity = "all";
       collectionFilter = "";
       collectionCategory = "all";
       collectionOwnedOnly = true;
-      collectionNewOnly = false;
       syncCollectionFilterControls();
       syncCollectionFilter();
     });
@@ -1984,16 +1964,12 @@ function init() {
     collectionFilter = e.target.value;
     syncCollectionFilter();
   });
-  $("collection-category")?.addEventListener("change", (e) => {
+  resolveNativeSelect("collection-category")?.addEventListener("change", (e) => {
     collectionCategory = e.target.value;
     syncCollectionFilter();
   });
-  $("collection-rarity")?.addEventListener("change", (e) => {
+  resolveNativeSelect("collection-rarity")?.addEventListener("change", (e) => {
     collectionRarity = e.target.value;
-    syncCollectionFilter();
-  });
-  $("collection-sort")?.addEventListener("change", (e) => {
-    collectionSort = e.target.value;
     syncCollectionFilter();
   });
 
