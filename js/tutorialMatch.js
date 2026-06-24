@@ -96,9 +96,9 @@ const STEPS = [
     hint: "Select your piece and jump over the black piece.",
     buildState() {
       const board = emptyBoard();
-      place(board, 5, 0, COLORS.RED);
-      place(board, 4, 1, COLORS.BLACK);
-      place(board, 1, 6, COLORS.BLACK);
+      place(board, 5, 6, COLORS.RED);
+      place(board, 4, 5, COLORS.BLACK);
+      place(board, 1, 0, COLORS.BLACK);
       return baseTutorialState({ board, phase: PHASE.MOVE, spellPlayedRed: true });
     },
     validateTurnEnd(session) {
