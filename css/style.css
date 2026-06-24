@@ -2924,21 +2924,46 @@ body.adventure-stage-open .card-preview-modal {
   font-size: 0.9rem;
 }
 
+.adventure-prebattle {
+  max-width: none;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.prebattle-deck-field {
+  margin: 0.75rem 0 0.25rem;
+  position: relative;
+  z-index: 12;
+}
+.prebattle-deck-field .label-sm {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+.adventure-prebattle__footer {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 0.75rem;
+  position: relative;
+  z-index: 1;
+}
+.adventure-prebattle .custom-select--open {
+  z-index: 20;
+}
+.adventure-prebattle .custom-select--open .custom-select__list {
+  z-index: 21;
+}
 .adventure-prebattle .select-input,
 #adventure-deck-select {
   display: block;
   width: 100%;
   max-width: 100%;
   min-height: 2.75rem;
-  margin: 0.35rem 0 0.75rem;
+  margin: 0;
   box-sizing: border-box;
   cursor: pointer;
   position: relative;
   z-index: 3;
-}
-.adventure-prebattle {
-  max-width: none;
-  margin: 0;
 }
 .prebattle-opponent {
   color: var(--text-muted);
@@ -2956,7 +2981,7 @@ body.adventure-stage-open .card-preview-modal {
 .prebattle-section-title {
   font-family: var(--font-heading); font-weight: 600;
   font-size: 1rem;
-  margin: 1.25rem 0 0.5rem;
+  margin: 1rem 0 0.5rem;
 }
 .spell-card-grid--compact {
   grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -6522,9 +6547,20 @@ body.adventure-stage-open {
   z-index: 1;
   width: min(100%, 520px);
   max-height: min(92vh, 720px);
-  overflow-y: auto;
+  overflow: hidden;
   margin: 0;
   animation: view-in 0.25s ease;
+  display: flex;
+  flex-direction: column;
+}
+.adventure-stage-modal__dialog.adventure-prebattle.game-panel {
+  overflow: hidden;
+}
+.adventure-prebattle__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .adventure-stage-modal__close {
   position: absolute;
