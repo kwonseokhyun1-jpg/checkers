@@ -136,6 +136,21 @@ export function cleansePiece(piece) {
   piece.retreatTurns = 0;
 }
 
+export function pieceHasDebuffs(piece) {
+  if (!piece) return false;
+  return CURSE_RULES.some((rule) => lineForRule(piece, rule) !== null);
+}
+
+export function friendlyHasDebuffs(board, color) {
+  for (let r = 0; r < board.length; r++) {
+    for (let c = 0; c < board[r].length; c++) {
+      const p = board[r][c];
+      if (p && p.color === color && pieceHasDebuffs(p)) return true;
+    }
+  }
+  return false;
+}
+
 export function cleanseFriendlyDebuffs(board, color) {
   for (let r = 0; r < board.length; r++) {
     for (let c = 0; c < board[r].length; c++) {

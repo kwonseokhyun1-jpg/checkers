@@ -12,7 +12,7 @@ import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMet
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
-import { cleanseFriendlyDebuffs } from "./pieceStatus.js";
+import { cleanseFriendlyDebuffs, pieceHasDebuffs } from "./pieceStatus.js";
 import { isSquareCollapsed, setCollapsedSquare, ensureConstitutionTurns, getDarknessZoneCellsAround, isInDarknessZone } from "./gameMeta.js";
 
 const opp = (c) => (c === COLORS.RED ? COLORS.BLACK : COLORS.RED);
@@ -780,6 +780,7 @@ const EFFECTS = {
     return ok("Trickster scrambles six random pieces!");
   },
   purify(state, color, picks) {
+    if (!fri(state, color).some((p) => pieceHasDebuffs(p))) return fail("No debuffs to remove.");
     cleanseFriendlyDebuffs(state.board, color);
     return ok("Purify — all debuffs removed from your pieces.");
   },
