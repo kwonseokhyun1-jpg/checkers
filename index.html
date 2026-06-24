@@ -158,6 +158,11 @@
                 <span id="deck-count-badge" class="deck-editor__count" aria-live="polite">0/30</span>
               </div>
               <button type="button" id="btn-save-deck" class="deck-editor__save btn-primary">Save</button>
+              <div class="deck-editor__deck-tools deck-editor__toolbar-tools">
+                <button type="button" id="btn-auto-finish-deck" class="btn-text deck-editor__tool" title="Fill with your rarest owned cards">Auto fill</button>
+                <button type="button" id="btn-clear-deck" class="btn-text deck-editor__tool deck-editor__tool--danger">Clear</button>
+                <button type="button" id="btn-delete-deck" class="btn-text deck-editor__tool deck-editor__tool--danger" hidden>Delete deck</button>
+              </div>
             </header>
             <p id="deck-status" class="deck-editor__error deck-status warn" role="status"></p>
             <div id="deck-progress-bar" class="deck-progress-bar deck-editor__progress" role="progressbar" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" hidden>
@@ -165,14 +170,7 @@
             </div>
             <div class="deck-editor__body">
             <div class="deck-editor__deck-zone">
-              <div class="deck-editor__deck-head">
-                <h2 id="edit-deck-heading" class="visually-hidden">Edit deck</h2>
-                <div class="deck-editor__deck-tools">
-                  <button type="button" id="btn-auto-finish-deck" class="btn-text deck-editor__tool" title="Fill with your rarest owned cards">Auto fill</button>
-                  <button type="button" id="btn-clear-deck" class="btn-text deck-editor__tool deck-editor__tool--danger">Clear</button>
-                  <button type="button" id="btn-delete-deck" class="btn-text deck-editor__tool deck-editor__tool--danger" hidden>Delete deck</button>
-                </div>
-              </div>
+              <h2 id="edit-deck-heading" class="visually-hidden">Edit deck</h2>
               <div id="deck-slots" class="deck-editor__strip" tabindex="0" aria-label="Cards in deck"></div>
             </div>
 
