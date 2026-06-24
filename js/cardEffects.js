@@ -5,6 +5,7 @@ import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAd
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
+import { friendlyHasDebuffs } from "./pieceStatus.js";
 
 export { applyCard, applyEffect };
 export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS } from "./cullAnimation.js";
@@ -24,6 +25,12 @@ export function getInstantCastBlockReason(state, color, card) {
   }
   if (card.effect === "constitution" && !piecesOfColor(state.board, color).some((p) => p.king)) {
     return "Constitution requires at least one king.";
+  }
+  if (card.effect === "last_king" && piecesOfColor(state.board, color).length !== 1) {
+    return "Last King requires exactly one piece on the board.";
+  }
+  if (card.effect === "purify" && !friendlyHasDebuffs(state.board, color)) {
+    return "Purify requires at least one debuffed friendly piece.";
   }
   return null;
 }
