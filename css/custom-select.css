@@ -1,0 +1,142 @@
+/* Themed dropdown — replaces native OS select menus */
+
+.custom-select {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.custom-select__native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  pointer-events: none;
+}
+
+.custom-select__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  line-height: 1.3;
+}
+
+.custom-select__trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.custom-select__label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.custom-select__chevron {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--accent-gold, #d4a853);
+  transition: transform 0.15s ease;
+}
+
+.custom-select--open .custom-select__chevron {
+  transform: rotate(180deg);
+}
+
+.custom-select__list {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 80;
+  max-height: min(16rem, 50dvh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0.35rem;
+  border: 1px solid rgba(212, 168, 83, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(28, 34, 52, 0.98), rgba(18, 22, 36, 0.98));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+.custom-select__list.hidden {
+  display: none !important;
+}
+
+.custom-select__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #e8ecf4;
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.custom-select__option:hover,
+.custom-select__option:focus-visible,
+.custom-select__option--active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  outline: none;
+}
+
+.custom-select__option--selected::after {
+  content: "✓";
+  flex-shrink: 0;
+  color: var(--accent-gold, #d4a853);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.custom-select--disabled .custom-select__trigger {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Deck editor filter row — compact triggers */
+.deck-editor__filter-row .custom-select__trigger {
+  min-height: 2rem;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.68rem;
+}
+
+.deck-editor__filter-row .custom-select__list {
+  min-width: 8.5rem;
+}
+
+.deck-editor__filter-row .custom-select__option {
+  padding: 0.5rem 0.65rem;
+  font-size: 0.82rem;
+}
+
+/* PvP / adventure — touch-friendly */
+.pvp-setup-field .custom-select__trigger,
+.adventure-prebattle .custom-select__trigger {
+  min-height: 2.75rem;
+}

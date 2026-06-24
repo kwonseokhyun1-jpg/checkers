@@ -99,6 +99,7 @@ import {
   saveMatchCheckpoint,
 } from "./matchLifecycle.js";
 import { mobileConfirm } from "./mobileConfirm.js";
+import { enhanceAllSelectInputs } from "./customSelect.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
@@ -1898,6 +1899,7 @@ function init() {
   });
 
   syncCollectionFilterControls();
+  enhanceAllSelectInputs();
 
   $("collection-search")?.addEventListener("input", (e) => {
     collectionFilter = e.target.value;
