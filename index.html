@@ -134,10 +134,16 @@
         <section id="deck-subview-list" class="deck-subview panel game-panel">
           <div class="deck-list-header">
             <header class="panel-head panel-head--inline">
-              <h2 class="panel-head__title">Your decks</h2>
-              <p class="panel-head__desc">Tap a deck to view and edit it. Build 30-card lists (max 3 copies per spell in deck and collection) for adventure battles.</p>
+              <div class="deck-list-title-row">
+                <h2 class="panel-head__title">Your decks</h2>
+                <span id="deck-list-count" class="deck-list-count" aria-live="polite"></span>
+              </div>
+              <p class="panel-head__desc">Build 30-card lists for adventure battles. Max 3 copies per spell.</p>
             </header>
-            <button type="button" id="btn-new-deck" class="btn-primary">+ New deck</button>
+            <button type="button" id="btn-new-deck" class="btn-primary btn-new-deck">
+              <span class="btn-new-deck__icon" aria-hidden="true">+</span>
+              <span>New deck</span>
+            </button>
           </div>
           <div id="deck-list" class="deck-list"></div>
         </section>

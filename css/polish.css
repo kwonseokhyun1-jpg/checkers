@@ -126,12 +126,14 @@
 }
 
 .deck-list-item,
+.deck-row,
 .adventure-stage-row,
 .chest-card {
   transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .deck-list-item:active,
+.deck-row:active,
 .adventure-stage-row:active,
 .chest-card:active {
   transform: scale(0.985);
