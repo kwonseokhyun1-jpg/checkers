@@ -236,9 +236,23 @@ export function enhanceSelect(selectEl) {
   return api;
 }
 
+/** Native `<select>` whether or not it was wrapped by enhanceSelect (id may live on the trigger). */
+export function resolveNativeSelect(idOrEl) {
+  if (!idOrEl) return null;
+  const el = typeof idOrEl === "string" ? document.getElementById(idOrEl) : idOrEl;
+  if (!el) return null;
+  if (el.tagName === "SELECT") return el;
+  const wrapper = el.closest(".custom-select");
+  return wrapper?.querySelector("select.custom-select__native") ?? null;
+}
+
 /** Enhance every themed select on the page. */
 export function enhanceAllSelectInputs(root = document) {
-  root.querySelectorAll("select.select-input:not([data-custom-select-enhanced])").forEach((el) => {
-    enhanceSelect(el);
-  });
+  root
+    .querySelectorAll(
+      "select.select-input:not([data-custom-select-enhanced]):not([data-no-custom-select])",
+    )
+    .forEach((el) => {
+      enhanceSelect(el);
+    });
 }

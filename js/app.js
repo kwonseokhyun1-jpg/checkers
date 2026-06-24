@@ -99,7 +99,7 @@ import {
   saveMatchCheckpoint,
 } from "./matchLifecycle.js";
 import { mobileConfirm } from "./mobileConfirm.js";
-import { enhanceAllSelectInputs } from "./customSelect.js";
+import { enhanceAllSelectInputs, enhanceSelect, resolveNativeSelect } from "./customSelect.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
@@ -1597,7 +1597,7 @@ function openAdventurePrebattle(levelId) {
     return;
   }
 
-  if (opponent) opponent.textContent = "Choose your grimoire, then review the enemy spell deck below.";
+  if (opponent) opponent.textContent = "Review the enemy spell deck, then choose your grimoire below.";
   const gemHint = $("prebattle-gem-hint");
   if (gemHint) {
     const gems = gemsForLevelClear(profile.adventure, levelId);
@@ -1643,7 +1643,7 @@ function openAdventurePrebattle(levelId) {
 
   if (repairProfile(profile)) saveProfile(profile);
 
-  const sel = $("adventure-deck-select");
+  const sel = resolveNativeSelect("adventure-deck-select");
   if (!sel) {
     if (opponent) opponent.textContent = "Deck selector missing — hard refresh the page.";
     return;
@@ -1657,6 +1657,8 @@ function openAdventurePrebattle(levelId) {
     sel.appendChild(opt);
     sel.disabled = true;
     $("btn-start-adventure").disabled = true;
+    if (sel._customSelectApi) sel._customSelectApi.rebuild();
+    else enhanceSelect(sel);
     return;
   }
   sel.disabled = false;
@@ -1673,6 +1675,8 @@ function openAdventurePrebattle(levelId) {
   }
   profile.selectedDeckId = preferredId;
   $("btn-start-adventure").disabled = false;
+  if (sel._customSelectApi) sel._customSelectApi.rebuild();
+  else enhanceSelect(sel);
 }
 
 
@@ -1803,7 +1807,7 @@ async function tryResumeSavedMatch() {
 
 
 function startAdventureMatch() {
-  const deckId = $("adventure-deck-select")?.value;
+  const deckId = resolveNativeSelect("adventure-deck-select")?.value;
   const deck = profile.decks.find((d) => d.id === deckId);
   const levelId = selectedAdventureLevel;
   const level = levelId ? getLevel(levelId) : null;
@@ -1970,7 +1974,7 @@ function init() {
   $("btn-back-adventure")?.addEventListener("click", closeAdventurePrebattle);
   $("adventure-stage-backdrop")?.addEventListener("click", closeAdventurePrebattle);
   $("btn-start-adventure")?.addEventListener("click", startAdventureMatch);
-  $("adventure-deck-select")?.addEventListener("change", (e) => {
+  resolveNativeSelect("adventure-deck-select")?.addEventListener("change", (e) => {
     profile.selectedDeckId = e.target.value;
     saveProfile(profile);
   });
