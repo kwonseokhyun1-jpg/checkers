@@ -110,7 +110,7 @@ import { getBuyCost, tryBuyCardCopy } from "./cardShop.js";
 import { initNavIcons } from "./navIcons.js";
 import { initSettings } from "./settings.js";
 import { initAudio, setAudioMode, AudioSfx } from "./audio.js";
-import { initOrientation, lockPortrait, unlockForMatch } from "./orientation.js";
+import { initOrientation, lockPortrait } from "./orientation.js";
 import { initNetworkBanner } from "./networkBanner.js";
 import { initCapacitor } from "./capacitorInit.js";
 import { showMatchLoading } from "./matchLoadingScreen.js";
@@ -1649,7 +1649,7 @@ async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState
     opponentName,
     levelId,
   });
-  await unlockForMatch();
+  await lockPortrait();
   setAudioMode("match");
   if (winRewarded) matchSession.winRewarded = true;
   saveMatchCheckpoint(matchSession);

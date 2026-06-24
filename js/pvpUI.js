@@ -33,7 +33,7 @@ import {
   shouldApplyPvpRow,
 } from "./pvp.js";
 import { showMatchLoading } from "./matchLoadingScreen.js";
-import { unlockForMatch, lockPortrait } from "./orientation.js";
+import { lockPortrait } from "./orientation.js";
 import { setAudioMode } from "./audio.js";
 import { syncChampion } from "./achievements.js";
 import { recordPvpWin } from "./profileStats.js";
@@ -722,7 +722,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     }
 
     enterMatchMode({ kind: "pvp" });
-    await unlockForMatch();
+    await lockPortrait();
     setAudioMode("match");
 
     matchSession.setMessage(

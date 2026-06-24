@@ -4,7 +4,37 @@ const CHECKPOINT_KEY = "cc_match_checkpoint";
 /** Discard checkpoints older than 24 hours. */
 const CHECKPOINT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
-let checkpointMeta = null;
+/** @type {number|null} */
+let matchScrollYBeforeLock = null;
+
+const MATCH_SCROLL_LOCK_MQ = "(max-width: 768px)";
+
+function usesMatchScrollLock() {
+  return window.matchMedia(MATCH_SCROLL_LOCK_MQ).matches;
+}
+
+function lockBodyScrollForMatch() {
+  if (!usesMatchScrollLock()) return;
+  matchScrollYBeforeLock = window.scrollY || document.documentElement.scrollTop || 0;
+  document.body.style.position = "fixed";
+  document.body.style.top = "0";
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.width = "100%";
+}
+
+function unlockBodyScrollForMatch() {
+  if (matchScrollYBeforeLock == null) return;
+  const restoreY = matchScrollYBeforeLock;
+  matchScrollYBeforeLock = null;
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  window.scrollTo(0, restoreY);
+}
+
 let pendingNavigationTab = null;
 let skipNextLeaveConfirm = false;
 
@@ -87,6 +117,7 @@ export function enterMatchMode(meta) {
   checkpointMeta = meta;
   document.body.classList.add("match-active");
   syncMatchShellPresentation(true);
+  lockBodyScrollForMatch();
 }
 
 export function clearMatchCheckpoint() {
@@ -102,6 +133,7 @@ export function exitMatchMode(options = {}) {
   checkpointMeta = null;
   document.body.classList.remove("match-active");
   syncMatchShellPresentation(false);
+  unlockBodyScrollForMatch();
   if (options.clearCheckpoint) clearMatchCheckpoint();
 }
 

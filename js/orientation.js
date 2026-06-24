@@ -1,5 +1,5 @@
 /**
- * Screen orientation — portrait on menus, unlock during match (Capacitor).
+ * Screen orientation — portrait always (Capacitor + body class).
  */
 
 let screenOrientation = null;
@@ -33,16 +33,9 @@ export async function lockPortrait() {
   }
 }
 
+/** @deprecated Landscape matches disabled — keeps portrait lock. */
 export async function unlockForMatch() {
-  document.body.classList.remove("orientation-portrait");
-  document.body.classList.add("orientation-match");
-  const plugin = await ensurePlugin();
-  if (!plugin) return;
-  try {
-    await plugin.unlock();
-  } catch {
-    /* ignore */
-  }
+  await lockPortrait();
 }
 
 export function isNativeApp() {

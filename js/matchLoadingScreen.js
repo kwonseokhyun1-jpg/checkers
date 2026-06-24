@@ -78,10 +78,6 @@ export function showMatchLoading(root, config) {
     <div class="match-loading pvp-loading" role="dialog" aria-modal="true" aria-labelledby="match-loading-status">
       <header class="match-loading__header pvp-loading__header">
         <p id="match-loading-status" class="match-loading__status pvp-loading__status">Match starting</p>
-        <p class="match-loading__rotate-hint">
-          <span class="match-loading__rotate-icon" aria-hidden="true">↻</span>
-          Rotate your phone for landscape play
-        </p>
         <div class="match-loading__progress pvp-loading__progress" aria-hidden="true">
           <span class="match-loading__progress-bar pvp-loading__progress-bar"></span>
         </div>
