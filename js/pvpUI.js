@@ -42,6 +42,7 @@ import {
   bindPublicProfileViewButtons,
   buildRoomHostAvatarHtml,
 } from "./userProfileModal.js";
+import { enhanceSelect } from "./customSelect.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -201,6 +202,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       </section>`;
 
     root.querySelector("#pvp-host")?.addEventListener("click", () => void hostRoom());
+    enhanceSelect(root.querySelector("#pvp-deck-select"));
+    enhanceSelect(root.querySelector("#pvp-mode-select"));
     root.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
     syncModeUi();
     startOpenRoomsSync();
