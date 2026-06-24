@@ -12,7 +12,7 @@ import { getMatchHtml } from "./matchView.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { mobileConfirm } from "./mobileConfirm.js";
-import { dismissInteractiveTutorial, shouldShowInteractiveTutorial } from "./tutorial.js";
+import { dismissInteractiveTutorial } from "./tutorial.js";
 
 const TUTORIAL_DECK = buildStarterDeckCardIds();
 
@@ -96,9 +96,9 @@ const STEPS = [
     hint: "Select your piece and jump over the black piece.",
     buildState() {
       const board = emptyBoard();
-      place(board, 5, 0, COLORS.RED);
-      place(board, 4, 1, COLORS.BLACK);
-      place(board, 1, 6, COLORS.BLACK);
+      place(board, 5, 6, COLORS.RED);
+      place(board, 4, 5, COLORS.BLACK);
+      place(board, 1, 0, COLORS.BLACK);
       return baseTutorialState({ board, phase: PHASE.MOVE, spellPlayedRed: true });
     },
     validateTurnEnd(session) {
@@ -275,6 +275,16 @@ function syncMatchTutorialInset() {
   document.documentElement.style.setProperty("--tutorial-match-inset", `${Math.ceil(inset)}px`);
 }
 
+/** Start a lesson turn — move-phase steps skip the spell phase. */
+function beginTutorialStepTurn(session, state, step) {
+  if (state.phase === PHASE.MOVE && state.spellPlayed?.[COLORS.RED]) {
+    session.beginMovePhase({ spellMessage: step.hint || "Choose destination." });
+    return;
+  }
+  session.beginPlayerTurn();
+  if (step.hint) session.setMessage(step.hint);
+}
+
 /**
  * @param {{ profile: object, saveProfile: (p: object) => void, onComplete: () => void }} opts
  */
@@ -359,6 +369,16 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
     const hooks = {
       skipOpponentTurn: !!step.skipOpponentTurn,
       onLeaveRequest: askSkip,
+      spellPhaseBlockMessage: step.hint || "Play the spell shown in the lesson first.",
+      canMovePieces() {
+        if (spellValidated) return false;
+        if (step.validateSpell) return false;
+        return true;
+      },
+      canEndSpellPhase() {
+        if (step.validateSpell) return false;
+        return true;
+      },
       onHumanMove(move) {
         lastMove = move;
       },
@@ -369,7 +389,10 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
         }
       },
       beforeEndHumanTurn(session) {
-        if (step.validateSpell) return "continue";
+        if (step.validateSpell) {
+          session.setMessage(step.hint || "Play Snowball on the black piece first.");
+          return "block";
+        }
         const verdict = step.validateTurnEnd?.(session, lastMove, { promoted: kingStepPromoted });
         if (verdict === true) {
           setTimeout(() => advanceStep(), 400);
@@ -393,8 +416,7 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
       matchSession.validMoves = [];
       matchSession.validTargets = [];
       matchSession.actionBusy = false;
-      matchSession.beginPlayerTurn();
-      if (step.hint) matchSession.setMessage(step.hint);
+      beginTutorialStepTurn(matchSession, state, step);
       matchSession.render();
       return;
     }
@@ -421,7 +443,12 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
       opponentName: "Training dummy",
     });
 
-    if (step.hint) matchSession.setMessage(step.hint);
+    if (state.phase === PHASE.MOVE && state.spellPlayed?.[COLORS.RED]) {
+      matchSession.state = state;
+      beginTutorialStepTurn(matchSession, state, step);
+    } else if (step.hint) {
+      matchSession.setMessage(step.hint);
+    }
     matchSession.render();
   }
 

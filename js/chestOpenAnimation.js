@@ -5,6 +5,7 @@ import { CHEST_TIERS, chestStageSvg } from "./chestArt.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { showCardPreview } from "./cardPreview.js";
 import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
+import { lockBodyScroll, unlockBodyScroll } from "./scrollLock.js";
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -65,6 +66,7 @@ export function playChestOpenAnimation({ tier, tierLabel, pulls }) {
 
     document.body.appendChild(overlay);
     document.body.classList.add("chest-open-active");
+    lockBodyScroll();
 
     const stage = overlay.querySelector(".chest-open-stage");
     const status = overlay.querySelector(".chest-open-status");
@@ -77,6 +79,7 @@ export function playChestOpenAnimation({ tier, tierLabel, pulls }) {
     const finish = () => {
       overlay.classList.add("chest-open-overlay--out");
       document.body.classList.remove("chest-open-active");
+      unlockBodyScroll();
       setTimeout(() => {
         overlay.remove();
         resolve();

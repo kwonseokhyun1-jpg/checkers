@@ -1,7 +1,7 @@
 /**
  * Guided meta tutorial — open chests and build a deck after the practice match.
  */
-import { dismissMetaTutorial } from "./tutorial.js";
+import { dismissMetaTutorial, isTutorialPassthroughTarget } from "./tutorial.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { mobileConfirm } from "./mobileConfirm.js";
 
@@ -27,16 +27,16 @@ const STEPS = [
   {
     id: "open-chest",
     title: "Open a spell chest",
-    body: "Spend gems on a Bronze Chest — you will get three new spells for your collection.",
-    hint: "Tap Open on the Bronze Chest.",
-    highlight: '#chest-list .chest-card--bronze .chest-open[data-id="bronze"]',
+    body: "Spend gems on a Gold Chest — you will get eight new spells for your collection.",
+    hint: "Tap Open on the Gold Chest.",
+    highlight: '#chest-list .chest-card--gold .chest-open[data-id="gold"]',
     allowed: [
-      '#chest-list .chest-card--bronze',
-      '#chest-list .chest-card--bronze *',
+      '#chest-list .chest-card--gold',
+      '#chest-list .chest-card--gold *',
       ".chest-open-overlay",
       ".chest-open-overlay *",
     ],
-    actionSelector: '#chest-list .chest-card--bronze .chest-open[data-id="bronze"]',
+    actionSelector: '#chest-list .chest-card--gold .chest-open[data-id="gold"]',
   },
   {
     id: "deck-tab",
@@ -299,8 +299,7 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     if (!controller?.active) return;
     const target = e.target;
     if (!(target instanceof Element)) return;
-    if (target.closest("#tutorial-meta-overlay")) return;
-    if (target.closest(".card-preview-modal")) return;
+    if (isTutorialPassthroughTarget(target)) return;
 
     if (isAllowedTarget(target)) {
       if (e.type === "click" && proxyActionClick(target)) {
@@ -396,7 +395,7 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
 
     if (step.id === "shop-tab" && event === "tab-changed" && data?.tab === "chests") {
       window.setTimeout(advanceStep, 300);
-    } else if (step.id === "open-chest" && event === "chest-opened") {
+    } else if (step.id === "open-chest" && event === "chest-opened" && data?.chestId === "gold") {
       window.setTimeout(advanceStep, 500);
     } else if (step.id === "deck-tab" && event === "tab-changed" && data?.tab === "deck") {
       window.setTimeout(advanceStep, 300);

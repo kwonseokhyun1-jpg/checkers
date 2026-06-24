@@ -499,6 +499,7 @@ export class MatchSession {
     const s = this.state;
     if (!s || s.gameOver || this.isViewingHistory() || s.turn !== this.localColor || this.actionBusy) return;
     if (s.phase === PHASE.CARDS) {
+      if (!this.canEndSpellPhase()) return;
       e.preventDefault();
       this.beginMovePhase();
     }
@@ -506,14 +507,32 @@ export class MatchSession {
 
   canMovePieces() {
     const s = this.state;
-    return (
-      !this.isViewingHistory() &&
-      s.turn === this.localColor &&
-      !s.gameOver &&
-      !this.actionBusy &&
-      !this.cardPlay &&
-      !isConfused(s.meta, this.localColor)
-    );
+    if (
+      !(
+        !this.isViewingHistory() &&
+        s.turn === this.localColor &&
+        s.phase === PHASE.MOVE &&
+        !s.gameOver &&
+        !this.actionBusy &&
+        !this.cardPlay &&
+        !isConfused(s.meta, this.localColor)
+      )
+    ) {
+      return false;
+    }
+    if (this.tutorialHooks?.canMovePieces === false) return false;
+    if (typeof this.tutorialHooks?.canMovePieces === "function") {
+      return this.tutorialHooks.canMovePieces(this);
+    }
+    return true;
+  }
+
+  canEndSpellPhase() {
+    if (this.tutorialHooks?.canEndSpellPhase === false) return false;
+    if (typeof this.tutorialHooks?.canEndSpellPhase === "function") {
+      return this.tutorialHooks.canEndSpellPhase(this);
+    }
+    return true;
   }
 
   canPlaySpells() {
@@ -1022,7 +1041,9 @@ export class MatchSession {
         return;
       }
       const moveMsg = msg ? `${msg} Select a piece to move.` : undefined;
-      this.beginMovePhase({ afterSpell: true, spellMessage: moveMsg });
+      if (this.canMovePieces()) {
+        this.beginMovePhase({ afterSpell: true, spellMessage: moveMsg });
+      }
     }
   }
 
@@ -2613,6 +2634,10 @@ ${starLine}`;
   async beginMovePhase({ afterSpell = false, spellMessage = null } = {}) {
     const s = this.state;
     if (s.gameOver || s.turn !== this.localColor) return;
+    if (!afterSpell && s.phase === PHASE.CARDS && !this.canEndSpellPhase()) {
+      this.setMessage(this.tutorialHooks?.spellPhaseBlockMessage || "Cast the spell first.");
+      return;
+    }
     this.cancelCardPlay();
     s.phase = PHASE.MOVE;
     if (isConfused(s.meta, this.localColor)) {
@@ -3332,7 +3357,8 @@ ${starLine}`;
         this.isViewingHistory() ||
         live.turn !== this.localColor ||
         live.phase !== PHASE.CARDS ||
-        !!live.gameOver;
+        !!live.gameOver ||
+        !this.canEndSpellPhase();
     }
     this.updateSpellCastUI();
     this.updateColumnPickUI();

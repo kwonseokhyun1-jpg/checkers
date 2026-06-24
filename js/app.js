@@ -99,6 +99,7 @@ import {
   saveMatchCheckpoint,
 } from "./matchLifecycle.js";
 import { mobileConfirm } from "./mobileConfirm.js";
+import { enhanceAllSelectInputs, enhanceSelect, resolveNativeSelect } from "./customSelect.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
@@ -109,8 +110,9 @@ import { playChestOpenAnimation } from "./chestOpenAnimation.js";
 import { getBuyCost, tryBuyCardCopy } from "./cardShop.js";
 import { initNavIcons } from "./navIcons.js";
 import { initSettings } from "./settings.js";
+import { renderSettingsTab } from "./settingsUI.js";
 import { initAudio, setAudioMode, AudioSfx } from "./audio.js";
-import { initOrientation, lockPortrait, unlockForMatch } from "./orientation.js";
+import { initOrientation, lockPortrait } from "./orientation.js";
 import { initNetworkBanner } from "./networkBanner.js";
 import { initCapacitor } from "./capacitorInit.js";
 import { showMatchLoading } from "./matchLoadingScreen.js";
@@ -133,7 +135,10 @@ const TAB_LABELS = {
   play: "Play",
   pvp: "PvP",
   quests: "Quests",
+  profile: "Profile",
+  settings: "Settings",
 };
+const MAIN_TABS = new Set(Object.keys(TAB_LABELS));
 /** @type {'cards'|'cosmetics'|'star'} */
 let activeVaultTab = "cards";
 /** @type {'list'|'edit'|'view'} */
@@ -251,6 +256,10 @@ function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
   if (hint) hint.textContent = message;
 }
 
+function syncMainTabShellState() {
+  document.body.classList.toggle("main-tab-active", MAIN_TABS.has(activeTab));
+}
+
 function syncNavUnlockState() {
   const unlocked = isQuestsAndPvpUnlocked(profile);
   for (const tab of ["quests", "pvp"]) {
@@ -310,6 +319,10 @@ async function showTab(tab) {
     document.body.classList.remove("deck-editing");
   }
   activeTab = tab;
+  syncMainTabShellState();
+  if (MAIN_TABS.has(tab)) {
+    scrollMainTabToTop();
+  }
   document.querySelectorAll(".tab-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.tab === tab);
   });
@@ -328,6 +341,7 @@ async function showTab(tab) {
     showDeckSubview("list");
   }
   if (tab === "profile") renderProfile();
+  if (tab === "settings") renderSettings();
   if (tab === "quests") renderQuests();
   if (tab === "play") showAdventureMap();
   if (tab === "pvp") pvpController?.render({ resume: true });
@@ -341,7 +355,9 @@ let headerDisplayUsername = "";
 
 function updateHeaderProfileBtn(username = headerDisplayUsername) {
   if (username) headerDisplayUsername = username;
+  const profileMenu = document.getElementById("header-profile-menu");
   const profileBtn = document.getElementById("header-profile-btn");
+  const usernameEl = document.getElementById("header-username");
   const authBtn = document.getElementById("auth-header-btn");
   const user = getCurrentUser();
   const signedIn = Boolean(user);
@@ -350,14 +366,67 @@ function updateHeaderProfileBtn(username = headerDisplayUsername) {
     authBtn.classList.toggle("hidden", signedIn);
     authBtn.hidden = signedIn;
   }
-  if (profileBtn) {
-    profileBtn.classList.toggle("hidden", !signedIn);
-    profileBtn.hidden = !signedIn;
-    if (signedIn) {
-      profileBtn.innerHTML = headerProfileAvatarHtml(profile, headerDisplayUsername);
-      profileBtn.title = headerDisplayUsername ? `Profile — ${headerDisplayUsername}` : "Profile";
-    }
+  if (profileMenu) {
+    profileMenu.classList.toggle("hidden", !signedIn);
+    profileMenu.hidden = !signedIn;
   }
+  if (usernameEl) {
+    const showUsername = signedIn && headerDisplayUsername;
+    usernameEl.textContent = showUsername ? headerDisplayUsername : "";
+    usernameEl.classList.toggle("hidden", !showUsername);
+    usernameEl.hidden = !showUsername;
+  }
+  if (profileBtn && signedIn) {
+    profileBtn.innerHTML = headerProfileAvatarHtml(profile, headerDisplayUsername);
+    profileBtn.title = headerDisplayUsername ? `Account — ${headerDisplayUsername}` : "Account menu";
+  }
+}
+
+function closeHeaderProfileMenu() {
+  const profileBtn = document.getElementById("header-profile-btn");
+  const dropdown = document.getElementById("header-profile-dropdown");
+  if (!profileBtn || !dropdown) return;
+  dropdown.classList.add("hidden");
+  dropdown.hidden = true;
+  profileBtn.setAttribute("aria-expanded", "false");
+}
+
+function initHeaderProfileMenu() {
+  const menuRoot = document.getElementById("header-profile-menu");
+  const profileBtn = document.getElementById("header-profile-btn");
+  const dropdown = document.getElementById("header-profile-dropdown");
+  if (!menuRoot || !profileBtn || !dropdown) return;
+
+  const setOpen = (open) => {
+    dropdown.classList.toggle("hidden", !open);
+    dropdown.hidden = !open;
+    profileBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
+  profileBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = !dropdown.hidden;
+    setOpen(!isOpen);
+  });
+
+  dropdown.querySelectorAll("[data-profile-menu-action]").forEach((item) => {
+    item.addEventListener("click", () => {
+      const action = item.dataset.profileMenuAction;
+      closeHeaderProfileMenu();
+      if (action === "settings") showTab("settings");
+      else openProfileTab();
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    if (dropdown.hidden) return;
+    if (menuRoot.contains(e.target)) return;
+    closeHeaderProfileMenu();
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !dropdown.hidden) closeHeaderProfileMenu();
+  });
 }
 
 async function refreshHeaderIdentity() {
@@ -371,22 +440,27 @@ async function refreshHeaderIdentity() {
   updateHeaderProfileBtn();
 }
 
-function openProfileTab(section) {
+function openProfileTab() {
+  closeHeaderProfileMenu();
   showTab("profile");
-  notifyUnlockTutorial("profile-opened", { section });
-  if (section) renderProfile({ initialSection: section });
+  notifyUnlockTutorial("profile-opened");
 }
 
-function renderProfile(options = {}) {
+function renderProfile() {
   const root = $("view-profile");
   renderProfileTab(profile, root, {
     onGemsChange: updateGemHeader,
+    onTitleChanged: () => updateHeaderProfileBtn(),
+  });
+}
+
+function renderSettings() {
+  const root = $("view-settings");
+  renderSettingsTab(root, {
     onUsernameChanged: (name) => {
       headerDisplayUsername = name;
       updateHeaderProfileBtn(name);
     },
-    onTitleChanged: () => updateHeaderProfileBtn(),
-    initialSection: options.initialSection,
   });
 }
 
@@ -437,6 +511,7 @@ function syncCollectionFilterControls() {
 }
 
 const DECK_EDIT_MOBILE_MQ = "(max-width: 899px)";
+const MAIN_TAB_INNER_SCROLL_MQ = "(max-width: 768px)";
 /** @type {number|null} */
 let deckListScrollYBeforeEdit = null;
 
@@ -444,10 +519,47 @@ function usesMobileDeckEditorScrollLock() {
   return window.matchMedia(DECK_EDIT_MOBILE_MQ).matches;
 }
 
+function usesMainTabInnerScroll() {
+  return (
+    document.body.classList.contains("main-tab-active") &&
+    !document.body.classList.contains("match-active") &&
+    !document.body.classList.contains("deck-editing") &&
+    window.matchMedia(MAIN_TAB_INNER_SCROLL_MQ).matches
+  );
+}
+
+function getMainTabScrollEl() {
+  return document.querySelector(".game-main");
+}
+
+function getMainTabScrollY() {
+  const main = getMainTabScrollEl();
+  if (usesMainTabInnerScroll() && main) return main.scrollTop;
+  return window.scrollY || document.documentElement.scrollTop || 0;
+}
+
+function setMainTabScrollY(y) {
+  const main = getMainTabScrollEl();
+  if (usesMainTabInnerScroll() && main) {
+    main.scrollTop = y;
+    return;
+  }
+  window.scrollTo(0, y);
+}
+
+function scrollMainTabToTop() {
+  const main = getMainTabScrollEl();
+  if (usesMainTabInnerScroll() && main) {
+    main.scrollTop = 0;
+    return;
+  }
+  window.scrollTo(0, 0);
+}
+
 /** iOS keeps window scroll when body overflow is hidden; lock body at y=0 for mobile edit. */
 function lockBodyScrollForDeckEdit() {
   if (!usesMobileDeckEditorScrollLock()) return;
-  deckListScrollYBeforeEdit = window.scrollY || document.documentElement.scrollTop || 0;
+  deckListScrollYBeforeEdit = getMainTabScrollY();
   document.body.style.position = "fixed";
   document.body.style.top = "0";
   document.body.style.left = "0";
@@ -464,15 +576,15 @@ function unlockBodyScrollForDeckEdit() {
   document.body.style.left = "";
   document.body.style.right = "";
   document.body.style.width = "";
-  window.scrollTo(0, restoreY);
+  setMainTabScrollY(restoreY);
 }
 
 function scrollDeckEditViewToTop() {
-  window.scrollTo(0, 0);
+  scrollMainTabToTop();
   document.documentElement.scrollTop = 0;
   document.body.scrollTop = 0;
   document.querySelector(".game-shell")?.scrollTo?.(0, 0);
-  document.querySelector(".game-main")?.scrollTo?.(0, 0);
+  getMainTabScrollEl()?.scrollTo?.(0, 0);
   document.querySelector("#view-deck")?.scrollTo?.(0, 0);
   document
     .querySelectorAll(
@@ -705,23 +817,14 @@ function renderChests(options = {}) {
     const card = document.createElement("article");
     card.className = `chest-card chest-card--${chest.id}${canAfford ? "" : " chest-card--locked"}`;
 
-    const rarityHint =
-      chest.id === "gold"
-        ? "Epic & rare focus"
-        : chest.id === "silver"
-          ? "Balanced card mix"
-          : "Mostly common cards";
-
     card.innerHTML = `
       <div class="chest-card__aura" aria-hidden="true"></div>
       <div class="chest-card__visual">${chestSvgMarkup(chest.id)}</div>
       <div class="chest-card__body">
-        <span class="chest-card__tier">${tier.label}</span>
         <h3 class="chest-card__name">${chest.name}</h3>
         <p class="chest-card__tagline">${tier.tagline}</p>
         <ul class="chest-card__stats">
           <li><strong>${chest.cards}</strong> spells</li>
-          <li>${rarityHint}</li>
         </ul>
         <p class="chest-card__cost">
           <span class="chest-card__gem" aria-hidden="true">◆</span>
@@ -1070,6 +1173,31 @@ function openDeckEdit(deckId) {
   notifyMetaTutorial("deck-edit-opened", { deckId });
 }
 
+function getDeckCategoryBreakdown(cardIds) {
+  const counts = Object.fromEntries(CARD_CATEGORY_ORDER.map((c) => [c, 0]));
+  for (const id of cardIds) {
+    const def = getCardDef(id);
+    if (!def) continue;
+    counts[getCardCategory(def)] += 1;
+  }
+  return counts;
+}
+
+function renderDeckCategoryDots(cardIds) {
+  const counts = getDeckCategoryBreakdown(cardIds);
+  const parts = [];
+  for (const cat of CARD_CATEGORY_ORDER) {
+    const n = counts[cat];
+    if (n <= 0) continue;
+    const label = CARD_CATEGORY_LABELS[cat];
+    parts.push(
+      `<span class="deck-row__cat" title="${escapeHtml(label)}: ${n}"><span class="deck-row__cat-dot deck-row__cat-dot--${cat}" aria-hidden="true"></span><span class="deck-row__cat-n">${n}</span></span>`
+    );
+  }
+  if (!parts.length) return "";
+  return `<div class="deck-row__cats">${parts.join("")}</div>`;
+}
+
 function renderDeckList() {
   if (repairProfile(profile)) saveProfile(profile);
   updateCurrencyHeader();
@@ -1077,29 +1205,56 @@ function renderDeckList() {
   if (!list) return;
   list.innerHTML = "";
 
+  const countEl = $("deck-list-count");
+  if (countEl) {
+    const n = profile.decks.length;
+    countEl.textContent = n ? `${n} deck${n === 1 ? "" : "s"}` : "";
+  }
+
   if (!profile.decks.length) {
     if (repairProfile(profile)) saveProfile(profile);
     if (profile.decks.length) {
       renderDeckList();
       return;
     }
-    list.innerHTML = `<p class="empty-msg">No decks yet. Tap <strong>+ New deck</strong> to create one.</p>`;
+    list.innerHTML = `
+      <div class="deck-list-empty">
+        <span class="deck-list-empty__icon" aria-hidden="true">▣</span>
+        <p class="deck-list-empty__title">No decks yet</p>
+        <p class="deck-list-empty__desc">Tap <strong>New deck</strong> above to build your first 30-card list.</p>
+      </div>`;
     return;
   }
 
   for (const deck of profile.decks) {
     const val = validateDeck(deck.cardIds, profile);
-    const statusClass = val.valid ? "ok" : "warn";
+    const ready = val.valid;
+    const pct = Math.min(100, Math.round((deck.cardIds.length / DECK_SIZE) * 100));
     const row = document.createElement("button");
     row.type = "button";
-    row.className = "deck-row deck-row--open";
+    row.className = `deck-row deck-row--open${ready ? " deck-row--ready" : ""}`;
     row.innerHTML = `
-      <div class="deck-row-info">
-        <h3 class="deck-row-name">${deck.name}</h3>
-        <p class="deck-status ${statusClass}">${deck.cardIds.length}/${DECK_SIZE}${val.valid ? " · Ready" : " · Incomplete"}</p>
-        <p class="deck-row-hint">Tap to edit</p>
+      <span class="deck-row__aura" aria-hidden="true"></span>
+      <div class="deck-row__top">
+        <span class="deck-row__sigil" aria-hidden="true">
+          <span class="deck-row__sigil-card"></span>
+          <span class="deck-row__sigil-card"></span>
+          <span class="deck-row__sigil-card"></span>
+        </span>
+        <span class="deck-row__badge ${ready ? "deck-row__badge--ready" : "deck-row__badge--warn"}">${ready ? "Ready" : "Incomplete"}</span>
       </div>
-      <span class="deck-row-chevron" aria-hidden="true">›</span>
+      <h3 class="deck-row-name">${escapeHtml(deck.name)}</h3>
+      <div class="deck-row__progress">
+        <div class="deck-progress-bar deck-row__progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="${DECK_SIZE}" aria-valuenow="${deck.cardIds.length}" aria-label="${escapeHtml(deck.name)} progress">
+          <div class="deck-progress-fill deck-row__progress-fill${ready ? " deck-row__progress-fill--ready" : ""}" style="width:${pct}%"></div>
+        </div>
+        <span class="deck-row__count">${deck.cardIds.length}/${DECK_SIZE}</span>
+      </div>
+      ${renderDeckCategoryDots(deck.cardIds)}
+      <div class="deck-row__footer">
+        <span class="deck-row-hint">Tap to edit</span>
+        <span class="deck-row-chevron" aria-hidden="true">›</span>
+      </div>
     `;
     row.addEventListener("click", () => openDeckEdit(deck.id));
     list.appendChild(row);
@@ -1136,9 +1291,11 @@ function renderDeckEditor() {
   const pct = Math.min(100, (workingDeck.length / DECK_SIZE) * 100);
   if (progressFill) progressFill.style.width = `${pct}%`;
   if (progressBar) {
-    progressBar.hidden = false;
-    progressBar.setAttribute("aria-valuenow", String(workingDeck.length));
-    progressBar.setAttribute("aria-valuemax", String(DECK_SIZE));
+    progressBar.hidden = val.valid;
+    if (!val.valid) {
+      progressBar.setAttribute("aria-valuenow", String(workingDeck.length));
+      progressBar.setAttribute("aria-valuemax", String(DECK_SIZE));
+    }
   }
   if (status) {
     if (val.valid) {
@@ -1471,7 +1628,7 @@ function openAdventurePrebattle(levelId) {
     return;
   }
 
-  if (opponent) opponent.textContent = "Review the enemy spell deck below, then choose your grimoire.";
+  if (opponent) opponent.textContent = "Review the enemy spell deck, then choose your grimoire below.";
   const gemHint = $("prebattle-gem-hint");
   if (gemHint) {
     const gems = gemsForLevelClear(profile.adventure, levelId);
@@ -1517,7 +1674,7 @@ function openAdventurePrebattle(levelId) {
 
   if (repairProfile(profile)) saveProfile(profile);
 
-  const sel = $("adventure-deck-select");
+  const sel = resolveNativeSelect("adventure-deck-select");
   if (!sel) {
     if (opponent) opponent.textContent = "Deck selector missing — hard refresh the page.";
     return;
@@ -1531,9 +1688,8 @@ function openAdventurePrebattle(levelId) {
     sel.appendChild(opt);
     sel.disabled = true;
     $("btn-start-adventure").disabled = true;
-    requestAnimationFrame(() => {
-      $("btn-start-adventure")?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
+    if (sel._customSelectApi) sel._customSelectApi.rebuild();
+    else enhanceSelect(sel);
     return;
   }
   sel.disabled = false;
@@ -1550,12 +1706,8 @@ function openAdventurePrebattle(levelId) {
   }
   profile.selectedDeckId = preferredId;
   $("btn-start-adventure").disabled = false;
-  const startBtn = $("btn-start-adventure");
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      startBtn?.scrollIntoView({ behavior: "smooth", block: "center" });
-    });
-  });
+  if (sel._customSelectApi) sel._customSelectApi.rebuild();
+  else enhanceSelect(sel);
 }
 
 
@@ -1649,7 +1801,7 @@ async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState
     opponentName,
     levelId,
   });
-  await unlockForMatch();
+  await lockPortrait();
   setAudioMode("match");
   if (winRewarded) matchSession.winRewarded = true;
   saveMatchCheckpoint(matchSession);
@@ -1686,7 +1838,7 @@ async function tryResumeSavedMatch() {
 
 
 function startAdventureMatch() {
-  const deckId = $("adventure-deck-select")?.value;
+  const deckId = resolveNativeSelect("adventure-deck-select")?.value;
   const deck = profile.decks.find((d) => d.id === deckId);
   const levelId = selectedAdventureLevel;
   const level = levelId ? getLevel(levelId) : null;
@@ -1737,6 +1889,7 @@ function openAdventureStage(levelId) {
 }
 
 function init() {
+  syncMainTabShellState();
   initSettings();
   initNavIcons();
   initNetworkBanner();
@@ -1824,6 +1977,7 @@ function init() {
   });
 
   syncCollectionFilterControls();
+  enhanceAllSelectInputs();
 
   $("collection-search")?.addEventListener("input", (e) => {
     collectionFilter = e.target.value;
@@ -1851,16 +2005,14 @@ function init() {
   $("btn-back-adventure")?.addEventListener("click", closeAdventurePrebattle);
   $("adventure-stage-backdrop")?.addEventListener("click", closeAdventurePrebattle);
   $("btn-start-adventure")?.addEventListener("click", startAdventureMatch);
-  $("adventure-deck-select")?.addEventListener("change", (e) => {
+  resolveNativeSelect("adventure-deck-select")?.addEventListener("change", (e) => {
     profile.selectedDeckId = e.target.value;
     saveProfile(profile);
   });
 
   const authModal = document.getElementById("auth-modal");
   const authBtn = document.getElementById("auth-header-btn");
-  const profileBtn = document.getElementById("header-profile-btn");
-
-  profileBtn?.addEventListener("click", () => openProfileTab());
+  initHeaderProfileMenu();
 
   authGate = initAuthGate({
     onSignIn: () => authUI?.open("signin", { forced: true }),
@@ -1896,6 +2048,7 @@ function init() {
       }
     },
     onSignedOut: () => {
+      closeHeaderProfileMenu();
       headerDisplayUsername = "";
       updateHeaderProfileBtn();
       pvpController?.dispose?.();

@@ -1,7 +1,12 @@
 /**
  * Post–stage unlock tutorials for Quests, PvP, and Cosmetics.
  */
-import { dismissQuestsTutorial, dismissPvpTutorial, dismissCosmeticsTutorial } from "./tutorial.js";
+import {
+  dismissQuestsTutorial,
+  dismissPvpTutorial,
+  dismissCosmeticsTutorial,
+  isTutorialPassthroughTarget,
+} from "./tutorial.js";
 import { mobileConfirm } from "./mobileConfirm.js";
 
 /** @typedef {{ id: string, title: string, body: string, hint?: string, autoAdvance?: boolean, highlight?: string, allowed?: string[], actionSelector?: string }} UnlockStep */
@@ -99,11 +104,16 @@ const COSMETICS_STEPS = [
   {
     id: "profile-btn",
     title: "Open Profile",
-    body: "Tap your portrait in the header to open Profile and equip your new cosmetics.",
-    hint: "Tap your avatar in the top corner.",
+    body: "Tap your portrait in the header, then choose Profile to equip your new cosmetics.",
+    hint: "Tap your avatar, then tap Profile.",
     highlight: "#header-profile-btn",
-    allowed: ["#header-profile-btn", "#header-profile-btn *"],
-    actionSelector: "#header-profile-btn",
+    allowed: [
+      "#header-profile-btn",
+      "#header-profile-btn *",
+      "#header-profile-dropdown",
+      "#header-profile-dropdown *",
+    ],
+    actionSelector: '[data-profile-menu-action="profile"]',
   },
   {
     id: "equip-cosmetic",
@@ -332,8 +342,7 @@ function startSpotlightTutorial({ steps, skipMessage, dismiss, profile, saveProf
     if (!controller?.active) return;
     const target = e.target;
     if (!(target instanceof Element)) return;
-    if (target.closest("#tutorial-meta-overlay")) return;
-    if (target.closest(".card-preview-modal")) return;
+    if (isTutorialPassthroughTarget(target)) return;
 
     if (isAllowedTarget(target)) {
       if (e.type === "click" && proxyActionClick(target)) {

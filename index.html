@@ -22,9 +22,11 @@
   <link rel="stylesheet" href="css/mobile-game.css" />
   <link rel="stylesheet" href="css/spell-visuals.css" />
   <link rel="stylesheet" href="css/chess-theme.css" />
-  <link rel="stylesheet" href="css/deck-editor.css?v=12" />
+  <link rel="stylesheet" href="css/deck-editor.css?v=13" />
+  <link rel="stylesheet" href="css/custom-select.css" />
   <link rel="stylesheet" href="css/settings.css" />
   <link rel="stylesheet" href="css/polish.css" />
+  <link rel="stylesheet" href="css/match-portrait.css" />
   <link rel="stylesheet" href="css/match-landscape.css" />
 </head>
 <body>
@@ -39,16 +41,18 @@
   <div class="ambient-bg" aria-hidden="true"></div>
   <div class="app game-shell">
     <header class="game-header">
-      <div class="game-header__brand">
-        <div class="logo-mark" aria-hidden="true">
-          <span class="logo-mark__piece logo-mark__piece--red"></span>
-          <span class="logo-mark__piece logo-mark__piece--black"></span>
-          <span class="logo-mark__spark">✦</span>
+      <div class="game-header__start">
+        <div id="header-profile-menu" class="header-profile-menu hidden" hidden>
+          <button type="button" id="header-profile-btn" class="header-profile-btn" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="header-profile-dropdown">
+            <span id="header-profile-avatar" class="header-profile-btn__avatar" aria-hidden="true"></span>
+          </button>
+          <div id="header-profile-dropdown" class="header-profile-dropdown hidden" role="menu" hidden>
+            <button type="button" class="header-profile-dropdown__item" role="menuitem" data-profile-menu-action="profile">Profile</button>
+            <button type="button" class="header-profile-dropdown__item" role="menuitem" data-profile-menu-action="settings">Settings</button>
+          </div>
         </div>
-        <div class="game-header__titles">
-          <h1 class="game-header__title">Arcane Checkers</h1>
-          <p class="game-header__eyebrow">Spells on the checker board</p>
-        </div>
+        <span id="header-username" class="game-header__username hidden" hidden></span>
+        <button type="button" id="auth-header-btn" class="btn-secondary btn-sm auth-header-btn">Sign in</button>
       </div>
       <div class="game-header__actions">
         <div class="hud-currency">
@@ -63,10 +67,6 @@
             <span class="hud-stars__label">stars</span>
           </div>
         </div>
-        <button type="button" id="header-profile-btn" class="header-profile-btn hidden" hidden aria-label="Open profile">
-          <span id="header-profile-avatar" class="header-profile-btn__avatar" aria-hidden="true"></span>
-        </button>
-        <button type="button" id="auth-header-btn" class="btn-secondary btn-sm auth-header-btn">Sign in</button>
       </div>
     </header>
 
@@ -95,6 +95,7 @@
 
     <main class="game-main">
       <div id="view-profile" class="view view-panel hidden"></div>
+      <div id="view-settings" class="view view-panel hidden"></div>
       <div id="view-quests" class="view view-panel hidden"></div>
 
       <div id="view-chests" class="view view-panel hidden">
@@ -133,10 +134,16 @@
         <section id="deck-subview-list" class="deck-subview panel game-panel">
           <div class="deck-list-header">
             <header class="panel-head panel-head--inline">
-              <h2 class="panel-head__title">Your decks</h2>
-              <p class="panel-head__desc">Tap a deck to view and edit it. Build 30-card lists (max 3 copies per spell in deck and collection) for adventure battles.</p>
+              <div class="deck-list-title-row">
+                <h2 class="panel-head__title">Your decks</h2>
+                <span id="deck-list-count" class="deck-list-count" aria-live="polite"></span>
+              </div>
+              <p class="panel-head__desc">Build 30-card lists for adventure battles. Max 3 copies per spell.</p>
             </header>
-            <button type="button" id="btn-new-deck" class="btn-primary">+ New deck</button>
+            <button type="button" id="btn-new-deck" class="btn-primary btn-new-deck">
+              <span class="btn-new-deck__icon" aria-hidden="true">+</span>
+              <span>New deck</span>
+            </button>
           </div>
           <div id="deck-list" class="deck-list"></div>
         </section>
@@ -151,6 +158,11 @@
                 <span id="deck-count-badge" class="deck-editor__count" aria-live="polite">0/30</span>
               </div>
               <button type="button" id="btn-save-deck" class="deck-editor__save btn-primary">Save</button>
+              <div class="deck-editor__deck-tools deck-editor__toolbar-tools">
+                <button type="button" id="btn-auto-finish-deck" class="btn-text deck-editor__tool" title="Fill with your rarest owned cards">Auto fill</button>
+                <button type="button" id="btn-clear-deck" class="btn-text deck-editor__tool deck-editor__tool--danger">Clear</button>
+                <button type="button" id="btn-delete-deck" class="btn-text deck-editor__tool deck-editor__tool--danger" hidden>Delete deck</button>
+              </div>
             </header>
             <p id="deck-status" class="deck-editor__error deck-status warn" role="status"></p>
             <div id="deck-progress-bar" class="deck-progress-bar deck-editor__progress" role="progressbar" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" hidden>
@@ -158,14 +170,7 @@
             </div>
             <div class="deck-editor__body">
             <div class="deck-editor__deck-zone">
-              <div class="deck-editor__deck-head">
-                <h2 id="edit-deck-heading" class="visually-hidden">Edit deck</h2>
-                <div class="deck-editor__deck-tools">
-                  <button type="button" id="btn-auto-finish-deck" class="btn-text deck-editor__tool" title="Fill with your rarest owned cards">Auto fill</button>
-                  <button type="button" id="btn-clear-deck" class="btn-text deck-editor__tool deck-editor__tool--danger">Clear</button>
-                  <button type="button" id="btn-delete-deck" class="btn-text deck-editor__tool deck-editor__tool--danger" hidden>Delete deck</button>
-                </div>
-              </div>
+              <h2 id="edit-deck-heading" class="visually-hidden">Edit deck</h2>
               <div id="deck-slots" class="deck-editor__strip" tabindex="0" aria-label="Cards in deck"></div>
             </div>
 
@@ -241,11 +246,17 @@
           <div class="prebattle-rewards">
             <span id="prebattle-gem-hint" class="prebattle-gem-hint"></span>
           </div>
-          <h3 class="prebattle-section-title">Enemy spell deck</h3>
-          <div id="enemy-deck-preview" class="enemy-deck-list"></div>
-          <label class="label-sm" for="adventure-deck-select">Your deck</label>
-          <select id="adventure-deck-select" class="select-input"></select>
-          <button type="button" id="btn-start-adventure" class="btn-primary btn-lg btn-battle">Start battle</button>
+          <div class="adventure-prebattle__scroll">
+            <h3 class="prebattle-section-title">Enemy spell deck</h3>
+            <div id="enemy-deck-preview" class="enemy-deck-list"></div>
+          </div>
+          <div class="adventure-prebattle__footer">
+            <div class="pvp-setup-field prebattle-deck-field">
+              <label class="label-sm" for="adventure-deck-select">Your deck</label>
+              <select id="adventure-deck-select" class="select-input" data-no-custom-select></select>
+            </div>
+            <button type="button" id="btn-start-adventure" class="btn-primary btn-lg btn-battle">Start battle</button>
+          </div>
         </div>
       </div>
     <div id="card-preview-modal" class="card-preview-modal hidden" role="dialog" aria-modal="true" aria-labelledby="card-preview-title">

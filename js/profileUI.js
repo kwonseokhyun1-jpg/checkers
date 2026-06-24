@@ -31,19 +31,12 @@ import {
 } from "./cosmeticArt.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import {
-  canChangeUsername,
   fetchProfileRow,
   getCurrentUser,
   isAuthAvailable,
-  isUsernameAvailableForUser,
-  signOut,
-  suggestAvailableUsername,
-  updateUsername,
-  validateUsernameFormat,
 } from "./auth.js";
 import { saveProfile } from "./storage.js";
 import { getProfileStats } from "./profileStats.js";
-import { settingsSectionHtml, bindSettingsPanel } from "./settingsUI.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -73,10 +66,6 @@ function profileTitleBadgeHtml(profile) {
   return titleId ? titleTagHtml(titleId) : "";
 }
 
-const PROFILE_ACCOUNT_GEAR_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" stroke="currentColor" stroke-width="1.5"/>
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>`;
 
 const PROFILE_STAT_ICONS = {
   pvp: `<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -123,7 +112,7 @@ function profileHeroStatsHtml(profile) {
     </div>`;
 }
 
-function profileHeroCardHtml(cos, profile, { username, email }) {
+function profileHeroCardHtml(cos, profile, { username }) {
   const titleBadge = profileTitleBadgeHtml(profile);
   const displayName = username || "Player";
   const initial = displayName.charAt(0).toUpperCase() || "?";
@@ -139,9 +128,7 @@ function profileHeroCardHtml(cos, profile, { username, email }) {
             <div class="profile-hero-card__name-row">
               <h2 id="profile-hero-username" class="profile-hero-card__username">${escapeHtml(displayName)}</h2>
               ${titleBadge ? `<span class="profile-hero-card__title-badge">${titleBadge}</span>` : ""}
-              <button type="button" class="profile-account-gear" id="profile-account-gear" aria-label="Account settings" aria-expanded="false">${PROFILE_ACCOUNT_GEAR_ICON}</button>
             </div>
-            ${email ? `<p class="profile-hero-card__email muted">${escapeHtml(email)}</p>` : ""}
           </div>
         </div>
       </div>
@@ -215,45 +202,6 @@ export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOp
     });
     listEl.appendChild(el);
   }
-}
-
-function accountSectionHtml({ signedIn, username, email }) {
-  if (!signedIn) {
-    return `
-      <div class="profile-account profile-account--guest">
-        <p class="muted">Sign in from the header to save progress and set a username.</p>
-      </div>`;
-  }
-  return `
-    <div class="profile-account">
-      <p class="profile-account__email muted">${escapeHtml(email)}</p>
-      <div class="profile-username-summary">
-        <span class="label-sm">Username</span>
-        <p id="profile-username-display" class="profile-username-display">${escapeHtml(username) || "—"}</p>
-        <button type="button" class="btn-text profile-username-change" id="profile-username-change">Change username</button>
-      </div>
-      <div id="profile-username-editor" class="profile-username-editor hidden" hidden>
-        <label class="label-sm" for="profile-username">New username</label>
-        <div class="profile-username-row">
-          <input
-            type="text"
-            id="profile-username"
-            class="input-text"
-            autocomplete="username"
-            minlength="3"
-            maxlength="24"
-            pattern="[A-Za-z0-9_]{3,24}"
-            value="${escapeHtml(username)}"
-            placeholder="Your in-game name"
-          />
-          <button type="button" class="btn-primary" id="profile-username-save">Save</button>
-        </div>
-        <button type="button" class="btn-text profile-username-cancel" id="profile-username-cancel">Cancel</button>
-        <p id="profile-username-hint" class="auth-username-hint" aria-live="polite"></p>
-        <p id="profile-username-status" class="profile-username-status" role="status"></p>
-      </div>
-      <button type="button" class="btn-text profile-sign-out" id="profile-sign-out">Sign out</button>
-    </div>`;
 }
 
 /** @param {HTMLElement} grid */
@@ -354,7 +302,7 @@ export async function resolveDisplayUsername(user) {
   }
 }
 
-export function renderProfileTab(profile, root, { onGemsChange, onUsernameChanged, onTitleChanged, initialSection } = {}) {
+export function renderProfileTab(profile, root, { onGemsChange, onTitleChanged } = {}) {
   if (!root) return;
   const cos = getEquippedCosmetics(profile);
   const user = getCurrentUser();
@@ -362,11 +310,10 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
 
   root.innerHTML = `
     <section class="panel game-panel profile-panel">
-      ${profileHeroCardHtml(cos, profile, { username: "", email: signedIn ? user?.email || "" : "" })}
+      ${profileHeroCardHtml(cos, profile, { username: "" })}
       <div class="profile-section-tabs" role="tablist" aria-label="Profile sections">
         <button type="button" class="profile-section-tab active" role="tab" data-profile-section="cosmetics">Cosmetics</button>
         <button type="button" class="profile-section-tab" role="tab" data-profile-section="titles">Titles</button>
-        <button type="button" class="profile-section-tab" role="tab" data-profile-section="settings">Settings</button>
       </div>
       <div id="profile-section-cosmetics" class="profile-section-panel">
         <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
@@ -380,19 +327,11 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
         <p class="muted profile-titles-hint">Unlock titles by completing quests, then tap to equip.</p>
         <div id="profile-title-grid" class="profile-title-grid"></div>
       </div>
-      <div id="profile-section-settings" class="profile-section-panel hidden" hidden>
-        ${settingsSectionHtml()}
-        <div class="settings-account-extra">
-          ${accountSectionHtml({ signedIn, username: "", email: user?.email || "" })}
-        </div>
-      </div>
     </section>
   `;
 
   const grid = root.querySelector("#profile-cosmetic-grid");
   let filter = "avatar";
-  let profileSection = "cosmetics";
-
   let savedUsername = "";
 
   const refreshShowcase = () => {
@@ -414,12 +353,11 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
         badgeEl.innerHTML = badge;
       } else {
         const nameRow = root.querySelector(".profile-hero-card__name-row");
-        const gearBtn = root.querySelector("#profile-account-gear");
-        if (nameRow && gearBtn) {
+        if (nameRow) {
           const span = document.createElement("span");
           span.className = "profile-hero-card__title-badge";
           span.innerHTML = badge;
-          nameRow.insertBefore(span, gearBtn);
+          nameRow.appendChild(span);
         }
       }
     } else if (badgeEl) {
@@ -510,15 +448,9 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
   };
 
   const setProfileSection = (section) => {
-    profileSection = section;
     root.querySelectorAll(".profile-section-tab").forEach((tab) => {
       tab.classList.toggle("active", tab.dataset.profileSection === section);
     });
-    const gearBtn = root.querySelector("#profile-account-gear");
-    if (gearBtn) {
-      gearBtn.classList.toggle("active", section === "settings");
-      gearBtn.setAttribute("aria-expanded", section === "settings" ? "true" : "false");
-    }
     const cosPanel = root.querySelector("#profile-section-cosmetics");
     if (cosPanel) {
       cosPanel.classList.toggle("hidden", section !== "cosmetics");
@@ -529,160 +461,23 @@ export function renderProfileTab(profile, root, { onGemsChange, onUsernameChange
       titlePanel.classList.toggle("hidden", section !== "titles");
       titlePanel.hidden = section !== "titles";
     }
-    const settingsPanel = root.querySelector("#profile-section-settings");
-    if (settingsPanel) {
-      settingsPanel.classList.toggle("hidden", section !== "settings");
-      settingsPanel.hidden = section !== "settings";
-    }
     if (section === "titles") renderTitles();
   };
 
   for (const tab of root.querySelectorAll(".profile-section-tab")) {
     tab.addEventListener("click", () => setProfileSection(tab.dataset.profileSection));
   }
-  root.querySelector("#profile-account-gear")?.addEventListener("click", () => setProfileSection("settings"));
-  bindSettingsPanel(root, {
-    onSignOut: () => {
-      window.location.reload();
-    },
-  });
   renderTitles();
-  if (initialSection && initialSection !== "cosmetics") setProfileSection(initialSection);
 
   if (!signedIn) return;
 
-  const usernameDisplay = root.querySelector("#profile-username-display");
-  const usernameEditor = root.querySelector("#profile-username-editor");
-  const changeBtn = root.querySelector("#profile-username-change");
-  const cancelBtn = root.querySelector("#profile-username-cancel");
-  const usernameInput = root.querySelector("#profile-username");
-  const usernameHint = root.querySelector("#profile-username-hint");
-  const usernameStatus = root.querySelector("#profile-username-status");
-  const saveBtn = root.querySelector("#profile-username-save");
-  let usernameCheckTimer = null;
-
-  const setUsernameDisplay = (name) => {
-    if (usernameDisplay) usernameDisplay.textContent = name || "—";
-  };
-
-  const setHint = (msg, state = "") => {
-    if (!usernameHint) return;
-    usernameHint.textContent = msg || "";
-    usernameHint.classList.remove("auth-username-hint--ok", "auth-username-hint--bad");
-    if (state === "ok") usernameHint.classList.add("auth-username-hint--ok");
-    if (state === "bad") usernameHint.classList.add("auth-username-hint--bad");
-  };
-
-  const setStatus = (msg, isError = false) => {
-    if (!usernameStatus) return;
-    usernameStatus.textContent = msg || "";
-    usernameStatus.classList.toggle("profile-username-status--error", isError);
-  };
-
-  const scheduleUsernameCheck = () => {
-    clearTimeout(usernameCheckTimer);
-    usernameCheckTimer = setTimeout(async () => {
-      const name = usernameInput?.value?.trim() || "";
-      if (!name) {
-        setHint("");
-        return;
-      }
-      const formatErr = validateUsernameFormat(name);
-      if (formatErr) {
-        setHint(formatErr, "bad");
-        return;
-      }
-      if (name.toLowerCase() === savedUsername.toLowerCase()) {
-        setHint("Current username", "ok");
-        return;
-      }
-      setHint("Checking…");
-      try {
-        const available = await isUsernameAvailableForUser(name, user.id);
-        if (!available) {
-          const alt = await suggestAvailableUsername(name);
-          setHint(alt ? `Taken — try "${alt}"` : "That username is taken", "bad");
-          if (alt && usernameHint) usernameHint.dataset.suggestion = alt;
-          return;
-        }
-        if (usernameHint) delete usernameHint.dataset.suggestion;
-        setHint("Available", "ok");
-      } catch {
-        setHint("");
-      }
-    }, 350);
-  };
-
-  const showUsernameEditor = (show) => {
-    usernameEditor?.classList.toggle("hidden", !show);
-    if (usernameEditor) usernameEditor.hidden = !show;
-    changeBtn?.classList.toggle("hidden", show);
-    if (show) {
-      if (usernameInput) {
-        usernameInput.value = savedUsername;
-        usernameInput.focus();
-        usernameInput.select();
-      }
-      setStatus("");
-      scheduleUsernameCheck();
-    } else if (usernameInput) {
-      usernameInput.value = savedUsername;
-      setHint("");
-      setStatus("");
-    }
-  };
-
-  usernameHint?.addEventListener("click", () => {
-    const alt = usernameHint?.dataset?.suggestion;
-    if (!alt || !usernameInput) return;
-    usernameInput.value = alt;
-    delete usernameHint.dataset.suggestion;
-    scheduleUsernameCheck();
-  });
-
-  usernameInput?.addEventListener("input", scheduleUsernameCheck);
-
-  changeBtn?.addEventListener("click", () => showUsernameEditor(true));
-  cancelBtn?.addEventListener("click", () => showUsernameEditor(false));
-
-  root.querySelector("#profile-sign-out")?.addEventListener("click", () => {
-    void signOut();
-  });
-
-  let profileRow = null;
-
   void (async () => {
     try {
-      profileRow = await fetchProfileRow(user.id);
+      const profileRow = await fetchProfileRow(user.id);
       savedUsername = profileRow?.username || user.user_metadata?.display_name || "";
-      setUsernameDisplay(savedUsername);
       refreshShowcase();
-      onUsernameChanged?.(savedUsername);
-      if (usernameInput && savedUsername) usernameInput.value = savedUsername;
-      const cooldown = canChangeUsername(profileRow);
-      if (!cooldown.ok) setHint(cooldown.message, "bad");
     } catch (e) {
       console.warn("Could not load profile username", e);
     }
   })();
-
-  saveBtn?.addEventListener("click", async () => {
-    const name = usernameInput?.value?.trim() || "";
-    setStatus("");
-    saveBtn.disabled = true;
-    try {
-      const cooldown = canChangeUsername(profileRow);
-      if (!cooldown.ok) throw new Error(cooldown.message);
-      const updated = await updateUsername(name);
-      profileRow = await fetchProfileRow(user.id);
-      savedUsername = updated;
-      setUsernameDisplay(savedUsername);
-      showUsernameEditor(false);
-      onUsernameChanged?.(updated);
-    } catch (e) {
-      setStatus(e.message || "Could not save username", true);
-    } finally {
-      saveBtn.disabled = false;
-    }
-  });
 }

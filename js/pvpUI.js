@@ -33,7 +33,7 @@ import {
   shouldApplyPvpRow,
 } from "./pvp.js";
 import { showMatchLoading } from "./matchLoadingScreen.js";
-import { unlockForMatch, lockPortrait } from "./orientation.js";
+import { lockPortrait } from "./orientation.js";
 import { setAudioMode } from "./audio.js";
 import { syncChampion } from "./achievements.js";
 import { recordPvpWin } from "./profileStats.js";
@@ -42,6 +42,7 @@ import {
   bindPublicProfileViewButtons,
   buildRoomHostAvatarHtml,
 } from "./userProfileModal.js";
+import { enhanceSelect } from "./customSelect.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -201,6 +202,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       </section>`;
 
     root.querySelector("#pvp-host")?.addEventListener("click", () => void hostRoom());
+    enhanceSelect(root.querySelector("#pvp-deck-select"));
+    enhanceSelect(root.querySelector("#pvp-mode-select"));
     root.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
     syncModeUi();
     startOpenRoomsSync();
@@ -722,7 +725,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     }
 
     enterMatchMode({ kind: "pvp" });
-    await unlockForMatch();
+    await lockPortrait();
     setAudioMode("match");
 
     matchSession.setMessage(
