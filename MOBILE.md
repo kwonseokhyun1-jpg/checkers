@@ -6,7 +6,7 @@ This game is a **mobile-first web app** (HTML/CSS/JS). Ship it via **PWA** (Add 
 
 | Item | Purpose |
 |------|---------|
-| `css/mobile-game.css` | Bottom tab bar, safe areas, touch targets, match UI polish, install banner, chest reveals, deck editor, profile/quests, mystery box, PvP history, account settings, prebattle |
+| `css/mobile-game.css` | Bottom tab bar, safe areas, touch targets, match UI polish, install banner, chest reveals, deck editor, profile/quests, mystery box, PvP history, account settings, prebattle, spell cast HUD, card preview actions, adventure scroll, shop pulls |
 | `js/mobileConfirm.js` | Bottom-sheet confirm on phones (leave match, resume, tutorial skip) |
 | `js/installPrompt.js` | Add-to-home-screen install banner (Chrome + iOS hint) |
 | `icons/icon.svg` | Source app icon — red + black checker pieces, arcane spark |
