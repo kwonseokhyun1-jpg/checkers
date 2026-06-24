@@ -258,6 +258,7 @@ function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
 
 function syncMainTabShellState() {
   document.body.classList.toggle("main-tab-active", MAIN_TABS.has(activeTab));
+  document.body.classList.toggle("adventure-active", activeTab === "play");
 }
 
 function syncNavUnlockState() {
