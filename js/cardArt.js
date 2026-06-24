@@ -176,6 +176,48 @@ function buildEffectListHtml(def) {
   return `<ul class="spell-card__effects">${tags.map((t) => `<li>${escapeHtml(t)}</li>`).join("")}</ul>`;
 }
 
+const titleFitObservers = new WeakMap();
+
+/** Shrink long card titles so they stay on one line within the title bar. */
+export function fitSpellCardName(cardEl) {
+  const nameEl = cardEl?.querySelector?.(".spell-card__name");
+  const frameEl = cardEl?.querySelector?.(".spell-card__title-frame");
+  if (!nameEl || !frameEl) return;
+
+  const applyFit = () => {
+    nameEl.classList.add("spell-card__name--fit");
+    nameEl.style.fontSize = "";
+    nameEl.style.textOverflow = "";
+    nameEl.style.overflow = "";
+
+    const frameWidth = frameEl.clientWidth;
+    if (frameWidth <= 0) return;
+
+    let size = parseFloat(getComputedStyle(nameEl).fontSize);
+    if (!size) return;
+
+    const minSize = size * 0.55;
+    while (nameEl.scrollWidth > frameWidth && size > minSize) {
+      size -= 0.5;
+      nameEl.style.fontSize = `${size}px`;
+    }
+
+    if (nameEl.scrollWidth > frameWidth) {
+      nameEl.style.overflow = "hidden";
+      nameEl.style.textOverflow = "ellipsis";
+    }
+  };
+
+  applyFit();
+  requestAnimationFrame(applyFit);
+
+  if (!titleFitObservers.has(cardEl) && typeof ResizeObserver !== "undefined") {
+    const ro = new ResizeObserver(() => applyFit());
+    ro.observe(frameEl);
+    titleFitObservers.set(cardEl, ro);
+  }
+}
+
 /**
  * @param {object} def — { id, name, desc, rarity }
  * @param {object} [opts]
@@ -265,6 +307,8 @@ export function renderSpellCardEl(def, opts = {}) {
       if (!opts.disabled) opts.onClick(e, def);
     });
   }
+
+  fitSpellCardName(el);
   return el;
 }
 

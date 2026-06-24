@@ -928,6 +928,12 @@ body {
   line-height: 1.2;
   color: var(--text);
 }
+.spell-card__name--fit {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  margin: 0;
+}
 
 /* Type line (rarity + meta) */
 .spell-card__type-frame {
@@ -1569,10 +1575,6 @@ body {
 .hand.spell-hand .spell-card__name {
   font-size: 0.52rem;
   line-height: 1.1;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
   margin: 0;
 }
 
