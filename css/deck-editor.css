@@ -17,7 +17,7 @@ body.deck-editing .game-shell {
   height: 100dvh;
   max-height: 100dvh;
   overflow: hidden;
-  padding-top: calc(0.35rem + var(--game-safe-top, 0px));
+  padding-top: 0;
   padding-bottom: 0;
   max-width: none;
 }
@@ -95,12 +95,13 @@ body.deck-editing .game-nav.tabs {
   }
 
   body.deck-editing .deck-editor {
-    padding-top: calc(var(--game-safe-top, 0px) + 4.5rem);
+    /* Match fixed 2-row toolbar (title row + Auto fill/Clear row); safe area counted once here. */
+    padding-top: calc(var(--game-safe-top, 0px) + 5.05rem);
   }
 
   body.deck-editing .deck-editor__error:not([hidden]),
   body.deck-editing .deck-editor__progress:not([hidden]) {
-    margin-top: 0.15rem;
+    margin: 0;
   }
 }
 
@@ -180,7 +181,7 @@ body.deck-editing .game-nav.tabs {
 
 .deck-editor__progress {
   height: 3px;
-  margin: 0.15rem 0 0;
+  margin: 0;
 }
 
 .deck-editor__error,
@@ -200,7 +201,7 @@ body.deck-editing .game-nav.tabs {
 /* ── Deck strip (compact) ── */
 .deck-editor__deck-zone {
   flex-shrink: 0;
-  padding: 0.15rem 0.5rem 0;
+  padding: 0 0.5rem;
   border-bottom: 1px solid rgba(74, 72, 69, 0.65);
 }
 

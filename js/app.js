@@ -1253,9 +1253,11 @@ function renderDeckEditor() {
   const pct = Math.min(100, (workingDeck.length / DECK_SIZE) * 100);
   if (progressFill) progressFill.style.width = `${pct}%`;
   if (progressBar) {
-    progressBar.hidden = false;
-    progressBar.setAttribute("aria-valuenow", String(workingDeck.length));
-    progressBar.setAttribute("aria-valuemax", String(DECK_SIZE));
+    progressBar.hidden = val.valid;
+    if (!val.valid) {
+      progressBar.setAttribute("aria-valuenow", String(workingDeck.length));
+      progressBar.setAttribute("aria-valuemax", String(DECK_SIZE));
+    }
   }
   if (status) {
     if (val.valid) {
