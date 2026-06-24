@@ -140,3 +140,17 @@
 .adventure-prebattle .custom-select__trigger {
   min-height: 2.75rem;
 }
+
+/* Adventure prebattle — dropdown must sit above enemy list + footer */
+.adventure-prebattle .prebattle-deck-field {
+  position: relative;
+  z-index: 12;
+}
+
+.adventure-prebattle .custom-select--open {
+  z-index: 20;
+}
+
+.adventure-prebattle .custom-select--open .custom-select__list {
+  z-index: 21;
+}

@@ -246,11 +246,17 @@
           <div class="prebattle-rewards">
             <span id="prebattle-gem-hint" class="prebattle-gem-hint"></span>
           </div>
-          <h3 class="prebattle-section-title">Enemy spell deck</h3>
-          <div id="enemy-deck-preview" class="enemy-deck-list"></div>
-          <label class="label-sm" for="adventure-deck-select">Your deck</label>
-          <select id="adventure-deck-select" class="select-input"></select>
-          <button type="button" id="btn-start-adventure" class="btn-primary btn-lg btn-battle">Start battle</button>
+          <div class="prebattle-deck-field">
+            <label class="label-sm" for="adventure-deck-select">Your deck</label>
+            <select id="adventure-deck-select" class="select-input"></select>
+          </div>
+          <div class="adventure-prebattle__scroll">
+            <h3 class="prebattle-section-title">Enemy spell deck</h3>
+            <div id="enemy-deck-preview" class="enemy-deck-list"></div>
+          </div>
+          <div class="adventure-prebattle__footer">
+            <button type="button" id="btn-start-adventure" class="btn-primary btn-lg btn-battle">Start battle</button>
+          </div>
         </div>
       </div>
     <div id="card-preview-modal" class="card-preview-modal hidden" role="dialog" aria-modal="true" aria-labelledby="card-preview-title">

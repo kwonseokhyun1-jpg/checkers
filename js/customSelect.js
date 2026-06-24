@@ -118,7 +118,8 @@ export function enhanceSelect(selectEl) {
       item.setAttribute("role", "option");
       item.dataset.value = opt.value;
       item.textContent = opt.textContent?.trim() || opt.value;
-      item.addEventListener("click", (e) => {
+      item.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
         e.stopPropagation();
         if (selectEl.disabled) return;
         selectEl.value = opt.value;
@@ -151,7 +152,7 @@ export function enhanceSelect(selectEl) {
     trigger.setAttribute("aria-expanded", "true");
     const selectedIndex = Math.max(0, selectEl.selectedIndex);
     setActiveIndex(selectedIndex);
-    document.addEventListener("pointerdown", onDocPointer);
+    document.addEventListener("click", onDocPointer);
     document.addEventListener("keydown", onDocKey);
   }
 
@@ -166,7 +167,7 @@ export function enhanceSelect(selectEl) {
     list.querySelectorAll(".custom-select__option--active").forEach((el) => {
       el.classList.remove("custom-select__option--active");
     });
-    document.removeEventListener("pointerdown", onDocPointer);
+    document.removeEventListener("click", onDocPointer);
     document.removeEventListener("keydown", onDocKey);
   }
 
