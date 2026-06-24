@@ -2807,8 +2807,16 @@ body.adventure-stage-open .card-preview-modal {
 }
 
 /* ── Chest opening cinematic ── */
-body.chest-open-active {
+body.chest-open-active,
+body.cosmetic-open-active {
   overflow: hidden;
+  overscroll-behavior: none;
+}
+
+html:has(body.chest-open-active),
+html:has(body.cosmetic-open-active) {
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .chest-open-overlay {
@@ -2821,6 +2829,8 @@ body.chest-open-active {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .chest-open-overlay--in {
@@ -2846,7 +2856,10 @@ body.chest-open-active {
   flex-direction: column;
   align-items: center;
   width: min(96vw, 780px);
+  max-width: 100%;
+  min-width: 0;
   padding: 1.5rem 1rem 2rem;
+  overflow-x: hidden;
 }
 
 .chest-open-label {
@@ -2904,6 +2917,7 @@ body.chest-open-active {
   align-items: center;
   justify-content: center;
   margin-bottom: 0.5rem;
+  overflow: hidden;
 }
 
 .chest-open-stage {
@@ -3002,10 +3016,12 @@ body.chest-open-active {
 
 .chest-open-cards {
   width: 100%;
+  min-width: 0;
   margin-bottom: 1rem;
   opacity: 0;
   transform: translateY(16px);
   transition: opacity 0.45s ease, transform 0.45s ease;
+  overflow-x: hidden;
 }
 
 .chest-open-cards--in {
@@ -3026,8 +3042,12 @@ body.chest-open-active {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
   width: 100%;
+  min-width: 0;
   max-height: 42vh;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
   padding: 0.25rem;
 }
 
@@ -3040,6 +3060,7 @@ body.chest-open-active {
 .chest-open-cards__grid .spell-card {
   width: 100%;
   max-width: none;
+  min-width: 0;
 }
 
 .chest-open-cards__grid .spell-card--gallery,

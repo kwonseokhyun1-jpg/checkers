@@ -1018,8 +1018,10 @@ body.install-banner-visible.deck-editing .game-shell {
   .chest-open-scene {
     width: 100%;
     max-width: 100%;
+    min-width: 0;
     padding: 0.75rem 0.85rem 1rem;
     align-items: stretch;
+    overflow-x: hidden;
   }
 
   .chest-open-stage-wrap {
@@ -1045,6 +1047,9 @@ body.install-banner-visible.deck-editing .game-shell {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
     max-height: min(38dvh, 16rem);
+    overflow-x: hidden;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -1052,7 +1057,10 @@ body.install-banner-visible.deck-editing .game-shell {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0.5rem;
     max-height: min(38dvh, 16rem);
+    overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
   }
 
