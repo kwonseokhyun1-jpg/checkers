@@ -687,6 +687,7 @@ body.match-active .game-main {
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
   }
 
   .adventure-prebattle__footer {
@@ -1413,8 +1414,7 @@ body.install-banner-visible.deck-editing .game-shell {
 
   .adventure-prebattle .enemy-deck-list {
     max-height: none;
-    flex: 1 1 auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: visible;
   }
 
   .adventure-map-back {

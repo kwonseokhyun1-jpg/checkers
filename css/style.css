@@ -3002,6 +3002,10 @@ body.adventure-stage-open .card-preview-modal {
   padding: 0.15rem;
   -webkit-overflow-scrolling: touch;
 }
+.adventure-prebattle .enemy-deck-list {
+  max-height: none;
+  overflow: visible;
+}
 
 .enemy-deck-spell-btn {
   display: flex;
@@ -6561,6 +6565,7 @@ body.adventure-stage-open {
   min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .adventure-stage-modal__close {
   position: absolute;
