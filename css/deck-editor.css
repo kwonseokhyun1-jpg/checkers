@@ -345,30 +345,44 @@ body.deck-editing .game-nav.tabs {
 }
 
 .deck-editor__filter-row {
-  display: flex;
-  gap: 0.25rem;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 0.1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35rem 0.5rem;
+  align-items: end;
+  overflow: visible;
 }
 
-.deck-editor__filter-row::-webkit-scrollbar {
-  display: none;
+.deck-editor__filter-field {
+  min-width: 0;
+}
+
+.deck-editor__filter-field .custom-select {
+  width: 100%;
+}
+
+.deck-editor__filter-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.55);
+  margin-bottom: 0.15rem;
 }
 
 .deck-editor__select {
-  flex: 0 0 auto;
-  min-width: 5rem;
+  width: 100%;
+  min-width: 0;
   padding: 0.3rem 0.4rem;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   min-height: 2rem;
 }
 
 .deck-editor__owned {
-  flex: 0 0 auto;
+  grid-column: 1 / -1;
   font-size: 0.68rem;
   white-space: nowrap;
-  align-self: center;
+  justify-self: start;
 }
 
 /* Kill global collection-grid caps inside deck editor */
@@ -728,7 +742,7 @@ body.deck-editing .game-nav.tabs {
   }
 
   .deck-editor__filter-row {
-    flex-wrap: wrap;
+    grid-template-columns: 1fr 1fr;
     overflow: visible;
   }
 
