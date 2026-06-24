@@ -6,8 +6,8 @@ This game is a **mobile-first web app** (HTML/CSS/JS). Ship it via **PWA** (Add 
 
 | Item | Purpose |
 |------|---------|
-| `css/mobile-game.css` | Bottom tab bar, safe areas, touch targets, match UI polish, install banner |
-| `js/mobileConfirm.js` | Bottom-sheet confirm on phones (leave match, resume) |
+| `css/mobile-game.css` | Bottom tab bar, safe areas, touch targets, match UI polish, install banner, chest reveals, deck editor, profile/quests |
+| `js/mobileConfirm.js` | Bottom-sheet confirm on phones (leave match, resume, tutorial skip) |
 | `js/installPrompt.js` | Add-to-home-screen install banner (Chrome + iOS hint) |
 | `icons/icon.svg` | Source app icon — red + black checker pieces, arcane spark |
 | `icons/icon-192.png`, `icons/icon-512.png` | PWA / home-screen / store icon sizes |
