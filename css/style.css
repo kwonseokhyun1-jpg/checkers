@@ -7197,6 +7197,12 @@ body.tutorial-match-active.card-preview-open .tutorial-match-card {
   -webkit-overflow-scrolling: touch;
   max-height: calc(100dvh - var(--nav-height, 4.25rem) - 5.5rem - var(--game-safe-top, 0px));
 }
+
+@media (max-width: 768px) {
+  body.main-tab-active.tutorial-meta-active .game-main {
+    max-height: none;
+  }
+}
 .tutorial-meta-overlay {
   position: fixed;
   inset: 0;
