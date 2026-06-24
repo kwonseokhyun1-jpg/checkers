@@ -930,14 +930,15 @@ body.match-active .game-main {
 }
 
 .install-banner__install {
-  min-height: 2.25rem;
+  min-height: 44px;
+  min-width: 44px;
   padding: 0.35rem 0.75rem;
   font-size: 0.78rem;
 }
 
 .install-banner__dismiss {
-  width: 2rem;
-  height: 2rem;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.08);
@@ -1563,5 +1564,366 @@ body.install-banner-visible.deck-editing .game-shell {
 @media (prefers-reduced-motion: reduce) {
   body.match-active .ai-spell-banner {
     animation: none;
+  }
+}
+
+/* ── Agent #8: shell HUD, shop chests, profile/quests, board picks, PvP lobby, splash safe areas ── */
+
+@media (max-width: 768px) {
+  /* Compact header row — override style.css column stack on narrow phones */
+  .game-header {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    text-align: left;
+    gap: 0.5rem;
+    padding: 0.55rem 0.7rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .game-header__brand {
+    flex-direction: row;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 0.55rem;
+  }
+
+  .game-header__titles {
+    min-width: 0;
+  }
+
+  .game-header__title {
+    font-size: 1.05rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .game-header__eyebrow {
+    display: none;
+  }
+
+  .game-header__actions {
+    flex-shrink: 0;
+    gap: 0.35rem;
+  }
+
+  .hud-gems,
+  .hud-stars {
+    min-height: 44px;
+    padding: 0.3rem 0.5rem;
+    gap: 0.2rem;
+  }
+
+  .hud-gems__label,
+  .hud-stars__label {
+    display: none;
+  }
+
+  .auth-header-btn {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.4rem 0.65rem;
+  }
+
+  .auth-modal-close {
+    width: 44px;
+    height: 44px;
+    top: max(0.5rem, var(--game-safe-top));
+    right: max(0.5rem, env(safe-area-inset-right));
+  }
+
+  /* Shop vault — horizontal chest cards, compact intro */
+  #view-chests .vault-panel {
+    padding-bottom: 0.35rem;
+  }
+
+  #view-chests .panel-head__desc,
+  .vault-section-desc {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .chest-list {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+
+  .chest-card {
+    flex-direction: row;
+    align-items: stretch;
+    padding: 0.85rem;
+    text-align: left;
+  }
+
+  .chest-card:hover:not(.chest-card--locked) {
+    transform: none;
+  }
+
+  .chest-card__visual {
+    width: 5.5rem;
+    height: 4.75rem;
+    margin-bottom: 0;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .chest-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .chest-card__tagline {
+    font-size: 0.74rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .chest-card__stats {
+    font-size: 0.74rem;
+    margin-bottom: 0.35rem;
+  }
+
+  .chest-card__cost {
+    font-size: 1rem;
+    margin-top: auto;
+  }
+
+  .chest-card__btn {
+    margin-top: 0.5rem;
+  }
+
+  /* Profile + quests — scrollable section tabs, denser titles */
+  .profile-section-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.15rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .profile-section-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .profile-section-tab {
+    flex: 0 0 auto;
+  }
+
+  .profile-hero-card__username {
+    font-size: 1.2rem;
+  }
+
+  .profile-hero-stats {
+    gap: 0.45rem;
+    padding: 0 0.65rem 0.75rem;
+  }
+
+  .profile-stat-card {
+    min-height: 5.75rem;
+    padding: 0.55rem 0.35rem 0.5rem;
+  }
+
+  .profile-stat-card__value {
+    font-size: 1.35rem;
+  }
+
+  .profile-title-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .profile-title-card {
+    min-height: 5.75rem;
+    padding: 0.75rem 0.45rem;
+  }
+
+  .quests-panel .profile-achievement-card,
+  #quests-grid .profile-achievement-card {
+    padding: 0.85rem;
+  }
+
+  .profile-achievement-card__title {
+    font-size: 0.95rem;
+  }
+
+  .profile-achievement-card__desc {
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  /* In-match board — row/column pick targets + piece info */
+  .board-frame.row-pick .board-ranks,
+  .board-frame.column-pick .board-files {
+    pointer-events: auto;
+  }
+
+  .board-file-btn:not(:disabled),
+  .board-rank-btn:not(:disabled) {
+    pointer-events: auto;
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .board-rank-btn:not(:disabled) {
+    width: auto;
+    min-width: 44px;
+    padding: 0 0.35rem;
+  }
+
+  body.match-active .piece-info {
+    max-width: 100%;
+    margin: 0.35rem 0 0;
+    padding: 0.5rem 0.65rem;
+    font-size: 0.78rem;
+    border-radius: 10px;
+  }
+
+  body.match-active .match-message {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    text-align: center;
+    margin: 0.25rem 0 0;
+    padding: 0 0.35rem;
+    color: var(--text-muted);
+  }
+
+  body.match-active .spell-meta-stage {
+    transform: scale(0.88);
+    transform-origin: center top;
+  }
+
+  body.match-active .spell-meta-burst {
+    font-size: 2.75rem;
+  }
+
+  /* Adventure prebattle — taller enemy spell rows */
+  .adventure-prebattle .enemy-deck-spell-btn {
+    min-height: 44px;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+  }
+
+  .adventure-prebattle .enemy-deck-spell-btn__name {
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.3;
+  }
+
+  .adventure-prebattle .prebattle-opponent {
+    font-size: 0.88rem;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  /* PvP lobby — join cards and waiting room */
+  .pvp-open-join {
+    min-height: 44px;
+    padding: 0.65rem 0.85rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.2rem 0.5rem;
+  }
+
+  .pvp-open-join__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .pvp-open-join__skin {
+    flex: 1 1 100%;
+    font-size: 0.75rem;
+  }
+
+  .pvp-open-join__action {
+    flex-shrink: 0;
+    margin-left: auto;
+    font-size: 0.82rem;
+  }
+
+  .pvp-open-item--blocked {
+    padding: 0.65rem 0.85rem;
+  }
+
+  .pvp-open-item--blocked .pvp-open-join {
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .pvp-open-item--blocked .pvp-open-join__action {
+    margin-left: 0;
+    font-size: 0.8rem;
+  }
+
+  .pvp-waiting {
+    text-align: left;
+    padding: 0.85rem;
+    margin-top: 0.75rem;
+  }
+
+  .pvp-room-code {
+    font-size: 1.1rem;
+    word-break: break-all;
+  }
+
+  .pvp-wait-hint {
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  /* Deck editor — filter checkbox touch rows on short phones */
+  body.deck-editing .deck-editor__filters .filter-check {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.25rem 0.5rem 0.25rem 0;
+  }
+
+  body.deck-editing .deck-editor__deck-zone {
+    max-height: min(38dvh, 16rem);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Splash — notch / home-indicator safe areas (cold start) */
+.app-splash {
+  min-height: 100dvh;
+  padding:
+    calc(1rem + var(--game-safe-top))
+    max(1rem, env(safe-area-inset-right))
+    calc(1rem + var(--game-safe-bottom))
+    max(1rem, env(safe-area-inset-left));
+}
+
+@media (max-height: 600px) {
+  .app-splash__logo {
+    width: 88px;
+    height: 88px;
+    border-radius: 20px;
+  }
+
+  .app-splash__piece {
+    width: 28px;
+    height: 28px;
+  }
+
+  .app-splash__title {
+    font-size: 1.15rem;
   }
 }
