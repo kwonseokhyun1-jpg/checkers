@@ -1,4 +1,10 @@
-import { fetchProfileRow, getCurrentUser, isAuthAvailable } from "./auth.js";
+import {
+  fetchProfileRow,
+  getCurrentUser,
+  initAuth,
+  isAuthAvailable,
+  onAuthChange,
+} from "./auth.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { COLORS } from "./board.js";
 import { MatchSession, isPvpTerminalBoard, isMutualElimination } from "./match.js";
@@ -975,12 +981,25 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   };
   window.addEventListener("cc-match-shell-reconciled", onShellReconciled);
 
-  renderLobby();
+  let lastAuthUserId = null;
+  const unsubAuth = onAuthChange((user) => {
+    if (matchSession || matchLaunching) return;
+    const nextId = user?.id ?? null;
+    if (nextId === lastAuthUserId) return;
+    lastAuthUserId = nextId;
+    renderPvpSurface({ resume: !!nextId });
+  });
+
+  void initAuth().then((user) => {
+    lastAuthUserId = user?.id ?? null;
+    renderPvpSurface({ resume: !!user });
+  });
 
   return {
     render: renderPvpSurface,
     tryResume: tryResumePvpMatch,
     dispose() {
+      unsubAuth();
       window.removeEventListener("cc-match-shell-reconciled", onShellReconciled);
       stopOpenRoomsSync();
       matchSession = null;
