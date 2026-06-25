@@ -113,7 +113,7 @@ body {
   max-width: 480px;
   min-height: var(--app-height);
   min-height: -webkit-fill-available;
-  padding-top: 0;
+  padding-top: 0.5rem;
   padding-left: max(0.75rem, env(safe-area-inset-left));
   padding-right: max(0.75rem, env(safe-area-inset-right));
   padding-bottom: var(--nav-clearance);
@@ -681,18 +681,18 @@ body.match-active .game-main {
   }
 
   body.match-active .game-shell {
-    padding-top: calc(0.35rem + var(--game-safe-top));
+    padding-top: calc(0.85rem + var(--game-safe-top));
   }
 
   body.match-active .match-scene {
-    padding-top: 0;
+    padding-top: 0.5rem;
   }
 
   body.match-active .match-scene #btn-leave-match {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    margin: 0 0 0.35rem;
+    margin: 0.25rem 0 0.5rem;
     padding: 0.35rem 0.5rem;
     font-weight: 600;
   }
@@ -736,6 +736,7 @@ body.match-active .game-main {
     min-height: min(72dvh, 560px);
     border-radius: 24px 24px 0 0;
     border-bottom: none;
+    padding-top: 0.75rem;
     padding-bottom: calc(1rem + var(--game-safe-bottom));
     animation: sheet-up 0.28s ease;
     overflow: hidden;
@@ -817,7 +818,7 @@ body.match-active .game-main {
 /* Standalone / home-screen launch — tighter shell, no browser chrome assumptions */
 @media (display-mode: standalone) {
   body.match-active .game-shell {
-    padding-top: calc(0.25rem + var(--game-safe-top));
+    padding-top: calc(0.75rem + var(--game-safe-top));
   }
 }
 
