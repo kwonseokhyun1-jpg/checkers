@@ -611,7 +611,7 @@ body.match-active {
   }
 
   .panel-opponent,
-  .panel-player {
+  .hand-tray {
     max-width: 100%;
   }
 
@@ -746,18 +746,18 @@ body.match-active {
   }
 
   body.match-active .panel-opponent,
-  body.match-active .panel-player {
+  body.match-active .hand-tray {
     padding: 0.55rem 0.7rem;
   }
 
   body.match-active .panel-opponent .player-badge,
-  body.match-active .panel-player .player-badge {
-    margin-bottom: 0.35rem;
+  body.match-active .hand-tray .player-badge {
+    margin-bottom: 0;
     font-size: 0.9rem;
   }
 
-  body.match-active .hand-count-label {
-    margin: 0 0 0.35rem;
+  body.match-active .hand-tray__header .hand-count-label {
+    margin: 0;
     font-size: 0.75rem;
   }
 
@@ -909,7 +909,7 @@ body.match-active {
   }
 
   body.match-active .panel-opponent,
-  body.match-active .panel-player,
+  body.match-active .hand-tray,
   body.match-active .match-log,
   body.match-active .match-history-footer {
     flex-shrink: 0;
@@ -955,8 +955,13 @@ body.match-active {
     height: auto;
   }
 
-  /* Fixed-height hand row — new cards scroll sideways, never grow the panel */
-  body.match-active .hand.spell-hand {
+  /* Fixed-height hand row — new cards scroll sideways inside the tray border */
+  body.match-active .hand-tray__body {
+    min-height: 7.5rem;
+    flex-shrink: 0;
+  }
+
+  body.match-active .hand-tray__body .hand.spell-hand {
     height: 7.5rem;
     min-height: 7.5rem;
     max-height: 7.5rem;
@@ -964,7 +969,7 @@ body.match-active {
     align-items: stretch;
   }
 
-  body.match-active .hand.spell-hand .spell-card {
+  body.match-active .hand-tray__body .hand.spell-hand .spell-card {
     flex: 0 0 88px;
     width: 88px;
     max-width: 88px;
@@ -972,7 +977,7 @@ body.match-active {
     max-height: 100%;
   }
 
-  body.match-active .hand.spell-hand.spell-hand--crowded .spell-card {
+  body.match-active .hand-tray__body .hand.spell-hand.spell-hand--crowded .spell-card {
     flex: 0 0 76px;
     width: 76px;
     max-width: 76px;
@@ -1737,6 +1742,11 @@ body.install-banner-visible.deck-editing .game-shell {
     max-width: 100%;
     margin-top: 0.25rem;
     padding-bottom: 0.25rem;
+    min-height: 2.75rem;
+  }
+
+  body.match-active .match-message:empty {
+    display: block;
   }
 
   body.match-active .match-message {

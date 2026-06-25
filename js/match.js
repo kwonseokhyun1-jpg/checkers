@@ -464,21 +464,61 @@ export class MatchSession {
     const handEl = this.$("hand-red");
     if (!handEl || this._handScrollBound) return;
     this._handScrollBound = true;
-    handEl.addEventListener(
-      "scroll",
-      () => {
-        this._suppressClick = true;
-        clearTimeout(this._suppressScrollClickTimer);
-        this._suppressScrollClickTimer = setTimeout(() => {
-          this._suppressClick = false;
-        }, 280);
-      },
-      { passive: true }
-    );
+    const onHandScroll = () => {
+      this._suppressClick = true;
+      clearTimeout(this._suppressScrollClickTimer);
+      this._suppressScrollClickTimer = setTimeout(() => {
+        this._suppressClick = false;
+      }, 280);
+      this.updateHandScrollAffordance();
+    };
+    handEl.addEventListener("scroll", onHandScroll, { passive: true });
+
+    const bodyEl = handEl.closest(".hand-tray__body");
+    const chevLeft = bodyEl?.querySelector(".hand-tray__chev--left");
+    const chevRight = bodyEl?.querySelector(".hand-tray__chev--right");
+    chevLeft?.addEventListener("click", () => {
+      handEl.scrollBy({ left: -Math.max(88, handEl.clientWidth * 0.6), behavior: "smooth" });
+    });
+    chevRight?.addEventListener("click", () => {
+      handEl.scrollBy({ left: Math.max(88, handEl.clientWidth * 0.6), behavior: "smooth" });
+    });
+
+    if (typeof ResizeObserver !== "undefined") {
+      this._handResizeObserver?.disconnect();
+      this._handResizeObserver = new ResizeObserver(() => this.updateHandScrollAffordance());
+      this._handResizeObserver.observe(handEl);
+    }
+  }
+
+  updateHandScrollAffordance() {
+    const handEl = this.$("hand-red");
+    const bodyEl = handEl?.closest(".hand-tray__body");
+    if (!handEl || !bodyEl) return;
+
+    const canScroll = handEl.scrollWidth > handEl.clientWidth + 2;
+    const atStart = handEl.scrollLeft <= 2;
+    const atEnd = handEl.scrollLeft + handEl.clientWidth >= handEl.scrollWidth - 2;
+
+    bodyEl.classList.toggle("hand-tray__body--overflow", canScroll);
+    bodyEl.classList.toggle("hand-tray__body--at-start", atStart);
+    bodyEl.classList.toggle("hand-tray__body--at-end", atEnd);
+
+    const chevLeft = bodyEl.querySelector(".hand-tray__chev--left");
+    const chevRight = bodyEl.querySelector(".hand-tray__chev--right");
+    if (chevLeft) {
+      chevLeft.hidden = !canScroll || atStart;
+      chevLeft.tabIndex = chevLeft.hidden ? -1 : 0;
+    }
+    if (chevRight) {
+      chevRight.hidden = !canScroll || atEnd;
+      chevRight.tabIndex = chevRight.hidden ? -1 : 0;
+    }
   }
 
   dispose() {
     this.achievementTracker?.dispose();
+    this._handResizeObserver?.disconnect();
     clearTimeout(this._suppressScrollClickTimer);
     document.removeEventListener("keydown", this._onKeyDown);
     document.removeEventListener("pointermove", this._onDocPointerMove);
@@ -2743,6 +2783,8 @@ ${starLine}`;
     handEl.classList.toggle("spell-hand--locked", !canPlay);
     handEl.classList.toggle("spell-hand--crowded", n >= 5);
     this.bindHandScroll();
+    this.updateHandScrollAffordance();
+    requestAnimationFrame(() => this.updateHandScrollAffordance());
 
     for (const card of s.hands[this.localColor]) {
       const playable =
@@ -3402,7 +3444,7 @@ ${starLine}`;
   updatePlayerPanels() {
     const youSkin = this.isPvp ? pieceSkinCssSuffix(this.cosmetics?.equipped?.pieceSkin) : "";
     const oppSkin = this.isPvp ? pieceSkinCssSuffix(this.opponentCosmetics?.equipped?.pieceSkin) : "";
-    const youIcon = this.root.querySelector(".panel-player .piece-icon");
+    const youIcon = this.root.querySelector(".hand-tray .piece-icon");
     if (youIcon) youIcon.className = `piece-icon ${this.localColor}${youSkin}`;
     const oppIcon = this.root.querySelector(".panel-opponent .piece-icon");
     if (oppIcon) oppIcon.className = `piece-icon ${this.opponentColor}${oppSkin}`;
