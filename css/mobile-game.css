@@ -8,10 +8,23 @@ html {
 }
 
 body {
-  min-height: 100dvh;
+  min-height: var(--app-height);
   min-height: -webkit-fill-available;
   overscroll-behavior-y: none;
   touch-action: manipulation;
+}
+
+@media (max-width: 768px) {
+  body.splash-active,
+  body.main-tab-active:not(.match-active):not(.deck-editing),
+  body.match-active,
+  body.adventure-active:not(.adventure-stage-open),
+  body.deck-editing {
+    height: var(--app-height);
+    min-height: var(--app-height);
+    max-height: var(--app-height);
+    overflow: hidden;
+  }
 }
 
 /* 3D primary buttons (game CTA) */
@@ -98,7 +111,7 @@ body {
   display: flex;
   flex-direction: column;
   max-width: 480px;
-  min-height: 100dvh;
+  min-height: var(--app-height);
   min-height: -webkit-fill-available;
   padding-top: 0;
   padding-left: max(0.75rem, env(safe-area-inset-left));
@@ -165,16 +178,16 @@ body.match-active .game-main {
 
   body.main-tab-active:not(.match-active):not(.deck-editing) {
     overflow: hidden;
-    height: 100dvh;
+    height: var(--app-height);
     height: -webkit-fill-available;
   }
 
   body.main-tab-active:not(.match-active):not(.deck-editing) .game-shell {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-height);
     height: -webkit-fill-available;
-    max-height: 100dvh;
+    max-height: var(--app-height);
     min-height: 0;
     overflow: hidden;
     padding-bottom: 0;
@@ -197,17 +210,17 @@ body.match-active .game-main {
   }
 
   body.main-tab-active:not(.match-active):not(.deck-editing) .game-main {
-    flex: 0 1 auto;
+    flex: 1 1 0;
     min-height: 0;
-    max-height: calc(100dvh - 5.5rem - var(--nav-clearance));
+    max-height: none;
     overflow-y: auto;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 0.5rem;
+    padding-bottom: var(--nav-clearance);
   }
 
   body.main-tab-active:not(.match-active):not(.deck-editing) .game-main > .view:not(.hidden) {
-    min-height: calc(100dvh - 5.5rem - var(--nav-clearance) - 1.5rem);
+    min-height: 0;
   }
 
   /* Adventure — stage list scrolls inside the panel, not the whole shell */
@@ -228,29 +241,8 @@ body.match-active .game-main {
     padding-bottom: var(--nav-clearance);
   }
 
-  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .game-footer {
-    display: none;
-  }
-
   body.install-banner-visible.main-tab-active:not(.match-active):not(.deck-editing) .game-main {
-    max-height: calc(100dvh - 5.5rem - var(--nav-clearance) - 3.25rem);
-  }
-
-  body.main-tab-active:not(.match-active):not(.deck-editing) .game-footer {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    flex-shrink: 0;
-    margin-top: auto;
-    margin-bottom: 0;
-    padding: 0.35rem 0.75rem var(--nav-clearance);
-    font-size: 0.68rem;
-    color: var(--text-muted);
-    letter-spacing: 0.03em;
-    opacity: 0.8;
-    text-align: center;
+    padding-bottom: calc(var(--nav-clearance) + 3.25rem);
   }
 }
 
@@ -299,14 +291,13 @@ body.match-active .game-main {
   max-width: none;
   margin: 0;
   padding: 0.4rem 0.35rem calc(0.4rem + var(--game-safe-bottom));
-  background: linear-gradient(180deg, rgba(30, 40, 58, 0.98), rgba(12, 16, 24, 0.98));
+  background: linear-gradient(180deg, #1e283a 0%, #0c1018 100%);
   border: 2px solid rgba(201, 162, 39, 0.35);
   border-bottom: none;
   border-radius: 16px 16px 0 0;
   box-shadow:
     0 -4px 24px rgba(0, 0, 0, 0.5),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
 }
 
 .game-nav .tab-btn,
@@ -2080,7 +2071,7 @@ body.install-banner-visible.deck-editing .game-shell {
 
 /* Splash — notch / home-indicator safe areas (cold start) */
 .app-splash {
-  min-height: 100dvh;
+  min-height: var(--app-height);
   padding:
     calc(1rem + var(--game-safe-top))
     max(1rem, env(safe-area-inset-right))
