@@ -611,7 +611,7 @@ body.match-active {
   }
 
   .panel-opponent,
-  .hand-tray {
+  .panel-player {
     max-width: 100%;
   }
 
@@ -621,7 +621,13 @@ body.match-active {
     margin-inline: auto;
   }
 
-  /* Board size comes from flex space in .board-section (see match flex shell below) */
+  body.match-active .board-wrap {
+    width: min(
+      100%,
+      var(--board-fit-width),
+      calc(var(--app-height) - var(--board-v-chrome))
+    );
+  }
 
   .hand.spell-hand {
     overflow-x: auto;
@@ -746,18 +752,18 @@ body.match-active {
   }
 
   body.match-active .panel-opponent,
-  body.match-active .hand-tray {
+  body.match-active .panel-player {
     padding: 0.55rem 0.7rem;
   }
 
   body.match-active .panel-opponent .player-badge,
-  body.match-active .hand-tray .player-badge {
-    margin-bottom: 0;
+  body.match-active .panel-player .player-badge {
+    margin-bottom: 0.35rem;
     font-size: 0.9rem;
   }
 
-  body.match-active .hand-tray__header .hand-count-label {
-    margin: 0;
+  body.match-active .hand-count-label {
+    margin: 0 0 0.35rem;
     font-size: 0.75rem;
   }
 
@@ -855,160 +861,6 @@ body.match-active {
 
   body.match-active .pvp-loading {
     min-height: calc(100dvh - 1rem - var(--game-safe-top) - var(--game-safe-bottom));
-  }
-
-  /*
-   * Match flex shell — pin board to the viewport; hand grows horizontally only.
-   * Prevents the hand panel from pushing/scrolling the board when cards are drawn.
-   */
-  body.match-active .game-main {
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  body.match-active #view-match:not(.hidden),
-  body.match-active #view-pvp:not(.hidden) {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  body.match-active #pvp-match-root {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    width: 100%;
-  }
-
-  body.match-active .match-wrap {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  body.match-active .match-scene #btn-leave-match {
-    flex-shrink: 0;
-  }
-
-  body.match-active .game-layout {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    gap: 0.5rem;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  /* Red zone — board + hand (~48% viewport) */
-  body.match-active .match-play-area {
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 var(--match-play-height);
-    min-height: 0;
-    max-height: var(--match-play-height);
-    overflow: hidden;
-    width: 100%;
-    max-width: 100%;
-    gap: 0.35rem;
-  }
-
-  body.match-active .panel-opponent,
-  body.match-active .match-log,
-  body.match-active .match-history-footer {
-    flex-shrink: 0;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  body.match-active .match-play-area .board-section {
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    gap: 0.35rem;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  body.match-active .match-play-area .hand-tray {
-    flex: 0 0 42%;
-    min-height: 0;
-    max-height: 42%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  body.match-active #turn-banner,
-  body.match-active #spell-cast-bar,
-  body.match-active #ai-spell-banner,
-  body.match-active #piece-info {
-    flex-shrink: 0;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  body.match-active .board-wrap {
-    flex: 1 1 0;
-    min-height: 0;
-    min-width: 0;
-    width: 100%;
-    max-width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    container-type: size;
-    container-name: match-board;
-  }
-
-  body.match-active .board-wrap .board-frame {
-    width: min(100cqw, var(--board-fit-width), 100cqh);
-    max-width: 100%;
-    max-height: 100%;
-    height: auto;
-  }
-
-  /* Hand row scales inside the play-area cap; cards scroll sideways */
-  body.match-active .match-play-area .hand-tray__header {
-    flex-shrink: 0;
-  }
-
-  body.match-active .match-play-area .hand-tray__body {
-    flex: 1 1 0;
-    min-height: 0;
-    max-height: 100%;
-  }
-
-  body.match-active .match-play-area .hand-tray__body .hand.spell-hand {
-    height: 100%;
-    min-height: 0;
-    max-height: 100%;
-    flex-shrink: 0;
-    align-items: stretch;
-  }
-
-  body.match-active .match-play-area .hand-tray__body .hand.spell-hand .spell-card {
-    flex: 0 0 88px;
-    width: 88px;
-    max-width: 88px;
-    height: 100%;
-    max-height: 100%;
-  }
-
-  body.match-active .match-play-area .hand-tray__body .hand.spell-hand.spell-hand--crowded .spell-card {
-    flex: 0 0 76px;
-    width: 76px;
-    max-width: 76px;
   }
 }
 
@@ -1557,7 +1409,7 @@ body.install-banner-visible.deck-editing .game-shell {
     height: 100px;
   }
 
-  /* PvP move history scrubber — bottom of match screen (green zone ~6% viewport) */
+  /* PvP move history scrubber — bottom of match screen */
   .match-history-footer {
     width: 100%;
     max-width: 100%;
@@ -1565,28 +1417,10 @@ body.install-banner-visible.deck-editing .game-shell {
     padding-bottom: calc(0.15rem + var(--game-safe-bottom, 0px));
   }
 
-  body.match-active .match-history-footer {
-    flex: 0 0 var(--match-history-height);
-    min-height: var(--match-history-height);
-    max-height: var(--match-history-height);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  .match-history-footer .pvp-move-history {
+    width: 100%;
+    padding: 0.35rem 0.4rem;
     margin-top: 0;
-    overflow: hidden;
-  }
-
-  body.match-active .match-history-footer .pvp-move-history {
-    flex: 1 1 auto;
-    min-height: 0;
-    max-height: 100%;
-    padding: 0.25rem 0.4rem;
-    margin-top: 0;
-  }
-
-  body.match-active .match-history-footer .pvp-move-history__arrow {
-    width: 36px;
-    height: 36px;
   }
 
   .pvp-move-history {
@@ -1784,30 +1618,13 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   body.match-active .match-log {
-    flex: 0 0 var(--match-log-height);
-    min-height: var(--match-log-height);
     width: 100%;
     max-width: 100%;
     margin-top: 0.25rem;
     padding-bottom: 0.25rem;
-    display: flex;
-    align-items: center;
-  }
-
-  body.match-active .match-message:empty {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: 100%;
   }
 
   body.match-active .match-message {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100%;
     font-size: 0.8rem;
     padding: 0.5rem 0.65rem;
   }
@@ -2033,15 +1850,8 @@ body.install-banner-visible.deck-editing .game-shell {
   .hud-gems,
   .hud-stars {
     min-height: 44px;
-    padding: 0.25rem 0.55rem 0.25rem 0.3rem;
-    gap: 0.35rem;
-  }
-
-  .hud-gems__icon,
-  .hud-stars__icon {
-    width: 1.85rem;
-    height: 1.85rem;
-    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
+    gap: 0.2rem;
   }
 
   .hud-gems__label,
