@@ -155,20 +155,24 @@
     margin: 0 auto;
     align-self: stretch;
     padding: 4px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+    display: grid;
+    grid-template-columns: 1.15rem minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: 2px 4px;
+  }
+
+  body.match-active .match-wrap .board-frame .board-slot {
     container-type: size;
     container-name: match-board;
   }
 
   body.match-active .match-wrap .board-frame .board {
-    width: min(100cqw, 100cqh, 100%);
+    width: min(100cqw, 100cqh);
     max-width: 100%;
+    max-height: 100%;
     aspect-ratio: 1;
     height: auto;
-    margin: 0 auto;
-    align-self: center;
+    margin: 0;
   }
 
   body.match-active .match-wrap .pvp-move-history {
