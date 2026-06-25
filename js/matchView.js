@@ -42,7 +42,6 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
           <div class="player-badge you"><span class="piece-icon red"></span> You</div>
           <p id="hand-count-label" class="hand-count-label">0 cards in hand</p>
           <div id="hand-red" class="hand spell-hand"></div>
-          <button type="button" id="btn-end-cards" class="btn-secondary">End spell phase</button>
         </aside>
         <footer class="match-log">
           <p id="message" class="match-message" role="log" aria-live="polite"></p>

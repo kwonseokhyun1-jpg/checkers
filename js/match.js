@@ -412,7 +412,6 @@ export class MatchSession {
 
   bindEls() {
     this.bindBoardFrame();
-    this.root.querySelector("#btn-end-cards")?.addEventListener("click", () => this.beginMovePhase());
     this.root.querySelector("#btn-cancel-card")?.addEventListener("click", () => this.cancelCardPlay());
     this.root.querySelector("#btn-leave-match")?.addEventListener("click", async () => {
       if (this.tutorialHooks?.onLeaveRequest) {
@@ -511,7 +510,7 @@ export class MatchSession {
       !(
         !this.isViewingHistory() &&
         s.turn === this.localColor &&
-        s.phase === PHASE.MOVE &&
+        (s.phase === PHASE.MOVE || s.phase === PHASE.CARDS) &&
         !s.gameOver &&
         !this.actionBusy &&
         !this.cardPlay &&
@@ -1390,6 +1389,8 @@ export class MatchSession {
       this.onCardTargetClick(row, col);
       return;
     }
+
+    if (s.phase === PHASE.CARDS && !this.enterMovePhaseFromBoard(row, col)) return;
 
     if (!this.canMovePieces()) return;
 
@@ -2626,6 +2627,40 @@ ${starLine}`;
     await this.finishOpponentTurn(capBefore);
   }
 
+  enterMovePhaseFromBoard(row, col) {
+    const s = this.state;
+    if (s.gameOver || s.turn !== this.localColor || s.phase !== PHASE.CARDS) return true;
+    if (!this.canEndSpellPhase()) {
+      this.setMessage(this.tutorialHooks?.spellPhaseBlockMessage || "Cast the spell first.");
+      return false;
+    }
+    if (this.cardPlay) this.cancelCardPlay();
+    s.phase = PHASE.MOVE;
+
+    const panicked = findPanicPiece(s.board, this.localColor);
+    if (panicked) {
+      const panicMoves = getBackwardStepMoves(s.board, panicked, s);
+      if (panicMoves.length) {
+        if (row !== panicked.row || col !== panicked.col) {
+          this.selectedSquare = [panicked.row, panicked.col];
+          this.validMoves = panicMoves;
+          this.setMessage("Panic — step backward!");
+          this.render();
+          return false;
+        }
+        return true;
+      }
+    }
+
+    const moves = getAllMovesForColor(s.board, this.localColor, s);
+    if (!moves.length) {
+      this.setMessage("No moves — turn passes.");
+      this.endHumanTurn();
+      return false;
+    }
+    return true;
+  }
+
   async beginMovePhase({ afterSpell = false, spellMessage = null } = {}) {
     const s = this.state;
     if (s.gameOver || s.turn !== this.localColor) return;
@@ -3354,15 +3389,6 @@ ${starLine}`;
         msgText.includes("select a piece") &&
         (bannerText.includes("select a piece") || bannerText.includes("cast a spell"));
       msgEl.classList.toggle("match-message--redundant", redundant);
-    }
-    const endBtn = this.root.querySelector("#btn-end-cards");
-    if (endBtn) {
-      endBtn.disabled =
-        this.isViewingHistory() ||
-        live.turn !== this.localColor ||
-        live.phase !== PHASE.CARDS ||
-        !!live.gameOver ||
-        !this.canEndSpellPhase();
     }
     this.updateSpellCastUI();
     this.updateColumnPickUI();
