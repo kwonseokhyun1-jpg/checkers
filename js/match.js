@@ -984,12 +984,7 @@ export class MatchSession {
 
     if (!active) return;
     const { card, picks } = this.cardPlay;
-    const preview = this.$("spell-cast-preview");
     const hint = this.$("spell-cast-hint");
-    if (preview) {
-      preview.innerHTML = "";
-      preview.appendChild(renderSpellCardEl(card, { static: true, compact: true, fullDesc: true }));
-    }
     const need = picksRequired(card, picks, this.state, this.localColor);
     const step = picks.length + 1;
     const base = getCardHint(card);
@@ -3324,25 +3319,25 @@ ${starLine}`;
         banner.className = "turn-banner history-review";
       } else if (s.gameOver) banner.textContent = "Game over";
       else if (s.turn === this.localColor) {
-        const spellNote = s.meta.shatterSilenced?.[this.localColor]
-          ? "No spells (backlash) · "
-          : s.meta.blinded?.[this.localColor]
-            ? "No spells (Blinded) · "
-            : isConfused(s.meta, this.localColor)
-              ? "No spells (Confusion) · "
-            : s.spellPlayed[this.localColor]
-            ? "Spell used · "
-            : "1 spell available · ";
         if (this.cardPlay) {
           const axisMsg = axisPickMessage(this.cardPlay.card);
           banner.textContent = axisMsg
             ? `Casting ${axisMsg}`
-            : `Casting ${this.cardPlay.card.name} — drop on board or tap highlights`;
+            : `Casting ${this.cardPlay.card.name} — tap highlights on the board`;
           banner.className = "turn-banner casting";
+        } else if (s.meta.shatterSilenced?.[this.localColor]) {
+          banner.textContent = "No spells (backlash) — select a piece to move";
+          banner.className = "turn-banner";
+        } else if (s.meta.blinded?.[this.localColor]) {
+          banner.textContent = "Blinded — select a piece to move";
+          banner.className = "turn-banner";
+        } else if (isConfused(s.meta, this.localColor)) {
+          banner.textContent = "Confused — select a piece to move";
+          banner.className = "turn-banner";
         } else {
           banner.textContent =
             s.phase === PHASE.CARDS
-              ? `${spellNote}cast a spell or select a piece to move`
+              ? "Cast a spell or select a piece to move"
               : "Select a piece to move";
           banner.className = "turn-banner";
         }
