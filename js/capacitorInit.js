@@ -5,6 +5,7 @@ export async function initCapacitor() {
     if (!Capacitor.isNativePlatform()) return;
 
     const { StatusBar, Style } = await import("@capacitor/status-bar");
+    await StatusBar.setOverlaysWebView({ overlay: true });
     await StatusBar.setStyle({ style: Style.Dark });
     await StatusBar.setBackgroundColor({ color: "#080a12" });
 
