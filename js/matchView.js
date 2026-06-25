@@ -32,10 +32,16 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
           <div class="board-wrap">${boardFrameHtml()}</div>
           <div id="piece-info" class="piece-info hidden"></div>
         </section>
-        <aside class="panel panel-player">
-          <div class="player-badge you"><span class="piece-icon red"></span> You</div>
-          <p id="hand-count-label" class="hand-count-label">0 cards in hand</p>
-          <div id="hand-red" class="hand spell-hand"></div>
+        <aside class="hand-tray panel">
+          <header class="hand-tray__header">
+            <div class="player-badge you"><span class="piece-icon red"></span> You</div>
+            <p id="hand-count-label" class="hand-count-label">0 cards in hand</p>
+          </header>
+          <div class="hand-tray__body">
+            <button type="button" class="hand-tray__chev hand-tray__chev--left" aria-label="Scroll cards left" tabindex="-1" hidden>‹</button>
+            <div id="hand-red" class="hand spell-hand"></div>
+            <button type="button" class="hand-tray__chev hand-tray__chev--right" aria-label="Scroll cards right" tabindex="-1" hidden>›</button>
+          </div>
         </aside>
         <footer class="match-log">
           <p id="message" class="match-message" role="log" aria-live="polite"></p>
