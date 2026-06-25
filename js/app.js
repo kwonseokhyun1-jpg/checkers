@@ -520,23 +520,8 @@ function usesMainTabInnerScroll() {
   );
 }
 
-function getDeckListScrollEl() {
-  const deckList = document.getElementById("deck-list");
-  const listSubview = document.getElementById("deck-subview-list");
-  if (
-    activeTab === "deck" &&
-    usesMainTabInnerScroll() &&
-    deckList &&
-    listSubview &&
-    !listSubview.classList.contains("hidden")
-  ) {
-    return deckList;
-  }
-  return null;
-}
-
 function getMainTabScrollEl() {
-  return getDeckListScrollEl() || document.querySelector(".game-main");
+  return document.querySelector(".game-main");
 }
 
 function getMainTabScrollY() {
