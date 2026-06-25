@@ -82,6 +82,7 @@ import { startInteractiveTutorial } from "./tutorialMatch.js";
 import { startMetaTutorial, notifyMetaTutorial } from "./tutorialMeta.js";
 import { startQuestsTutorial, startPvpTutorial, startCosmeticsTutorial, notifyUnlockTutorial } from "./tutorialUnlocks.js";
 import { initPvpUI } from "./pvpUI.js";
+import { initPanelHelp } from "./panelHelp.js";
 import { clearAllWaitingRoomsOnce } from "./pvp.js";
 import { getMatchHtml } from "./matchView.js";
 import {
@@ -436,31 +437,6 @@ function initHeaderProfileMenu() {
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !dropdown.hidden) closeHeaderProfileMenu();
-  });
-}
-
-function initPanelHelp(btnId, descId) {
-  const btn = $(btnId);
-  const desc = $(descId);
-  if (!btn || !desc) return;
-
-  const setOpen = (open) => {
-    desc.hidden = !open;
-    btn.setAttribute("aria-expanded", open ? "true" : "false");
-    btn.classList.toggle("panel-help-btn--active", open);
-  };
-
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    setOpen(desc.hidden);
-  });
-
-  document.addEventListener("click", () => {
-    if (!desc.hidden) setOpen(false);
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !desc.hidden) setOpen(false);
   });
 }
 

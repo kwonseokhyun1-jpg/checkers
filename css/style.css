@@ -1815,9 +1815,9 @@ body.tutorial-match-active .spell-drag-ghost {
 .hud-stars {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.75rem;
-  min-height: 2.25rem;
+  gap: 0.45rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.35rem;
+  min-height: 2.4rem;
   box-sizing: border-box;
   background: rgba(0, 0, 0, 0.35);
   border-radius: 999px;
@@ -1845,19 +1845,29 @@ body.tutorial-match-active .spell-drag-ghost {
 
 .hud-gems__icon,
 .hud-stars__icon {
-  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 50%;
+  font-size: 0.82rem;
   line-height: 1;
   flex-shrink: 0;
 }
 
 .hud-gems__icon {
   color: var(--accent-gem);
-  filter: drop-shadow(0 0 6px var(--accent-gem));
+  background: rgba(92, 225, 230, 0.14);
+  border: 1px solid rgba(92, 225, 230, 0.35);
+  filter: drop-shadow(0 0 6px rgba(92, 225, 230, 0.35));
 }
 
 .hud-stars__icon {
   color: var(--accent-gold);
-  filter: drop-shadow(0 0 6px rgba(255, 200, 80, 0.5));
+  background: rgba(255, 200, 80, 0.14);
+  border: 1px solid rgba(255, 200, 80, 0.4);
+  filter: drop-shadow(0 0 6px rgba(255, 200, 80, 0.35));
 }
 
 .hud-gems__value,
