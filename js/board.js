@@ -36,9 +36,7 @@ export function boardFrameHtml() {
     <div class="board-frame" id="board-frame">
       <div class="board-files board-files--top" aria-hidden="true">${fileLabelsTop}</div>
       <div class="board-ranks" id="board-ranks-left">${rankLabels}</div>
-      <div class="board-slot">
-        <div id="board" class="board" role="grid" aria-label="Checker board"></div>
-      </div>
+      <div id="board" class="board" role="grid" aria-label="Checker board"></div>
       <div class="board-files board-files--bottom" id="board-files-bottom">${fileLabelsBottom}</div>
     </div>`;
 }
