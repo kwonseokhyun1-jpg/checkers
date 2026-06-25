@@ -908,8 +908,20 @@ body.match-active {
     max-width: 100%;
   }
 
+  /* Red zone — board + hand (~48% viewport) */
+  body.match-active .match-play-area {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 var(--match-play-height);
+    min-height: 0;
+    max-height: var(--match-play-height);
+    overflow: hidden;
+    width: 100%;
+    max-width: 100%;
+    gap: 0.35rem;
+  }
+
   body.match-active .panel-opponent,
-  body.match-active .hand-tray,
   body.match-active .match-log,
   body.match-active .match-history-footer {
     flex-shrink: 0;
@@ -917,11 +929,22 @@ body.match-active {
     max-width: 100%;
   }
 
-  body.match-active .board-section {
+  body.match-active .match-play-area .board-section {
     flex: 1 1 0;
     min-height: 0;
     overflow: hidden;
     gap: 0.35rem;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.match-active .match-play-area .hand-tray {
+    flex: 0 0 42%;
+    min-height: 0;
+    max-height: 42%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
     width: 100%;
     max-width: 100%;
   }
@@ -955,21 +978,26 @@ body.match-active {
     height: auto;
   }
 
-  /* Fixed-height hand row — new cards scroll sideways inside the tray border */
-  body.match-active .hand-tray__body {
-    min-height: 7.5rem;
+  /* Hand row scales inside the play-area cap; cards scroll sideways */
+  body.match-active .match-play-area .hand-tray__header {
     flex-shrink: 0;
   }
 
-  body.match-active .hand-tray__body .hand.spell-hand {
-    height: 7.5rem;
-    min-height: 7.5rem;
-    max-height: 7.5rem;
+  body.match-active .match-play-area .hand-tray__body {
+    flex: 1 1 0;
+    min-height: 0;
+    max-height: 100%;
+  }
+
+  body.match-active .match-play-area .hand-tray__body .hand.spell-hand {
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
     flex-shrink: 0;
     align-items: stretch;
   }
 
-  body.match-active .hand-tray__body .hand.spell-hand .spell-card {
+  body.match-active .match-play-area .hand-tray__body .hand.spell-hand .spell-card {
     flex: 0 0 88px;
     width: 88px;
     max-width: 88px;
@@ -977,7 +1005,7 @@ body.match-active {
     max-height: 100%;
   }
 
-  body.match-active .hand-tray__body .hand.spell-hand.spell-hand--crowded .spell-card {
+  body.match-active .match-play-area .hand-tray__body .hand.spell-hand.spell-hand--crowded .spell-card {
     flex: 0 0 76px;
     width: 76px;
     max-width: 76px;
@@ -1529,7 +1557,7 @@ body.install-banner-visible.deck-editing .game-shell {
     height: 100px;
   }
 
-  /* PvP move history scrubber — bottom of match screen */
+  /* PvP move history scrubber — bottom of match screen (green zone ~6% viewport) */
   .match-history-footer {
     width: 100%;
     max-width: 100%;
@@ -1537,10 +1565,28 @@ body.install-banner-visible.deck-editing .game-shell {
     padding-bottom: calc(0.15rem + var(--game-safe-bottom, 0px));
   }
 
-  .match-history-footer .pvp-move-history {
-    width: 100%;
-    padding: 0.35rem 0.4rem;
+  body.match-active .match-history-footer {
+    flex: 0 0 var(--match-history-height);
+    min-height: var(--match-history-height);
+    max-height: var(--match-history-height);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     margin-top: 0;
+    overflow: hidden;
+  }
+
+  body.match-active .match-history-footer .pvp-move-history {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+    padding: 0.25rem 0.4rem;
+    margin-top: 0;
+  }
+
+  body.match-active .match-history-footer .pvp-move-history__arrow {
+    width: 36px;
+    height: 36px;
   }
 
   .pvp-move-history {
@@ -1738,18 +1784,30 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   body.match-active .match-log {
+    flex: 0 0 var(--match-log-height);
+    min-height: var(--match-log-height);
     width: 100%;
     max-width: 100%;
     margin-top: 0.25rem;
     padding-bottom: 0.25rem;
-    min-height: 2.75rem;
+    display: flex;
+    align-items: center;
   }
 
   body.match-active .match-message:empty {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100%;
   }
 
   body.match-active .match-message {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
     font-size: 0.8rem;
     padding: 0.5rem 0.65rem;
   }

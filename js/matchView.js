@@ -11,38 +11,40 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
           <div class="player-badge opponent"><span class="piece-icon black"></span> ${safe}</div>
           <p id="enemy-hand-count-label" class="hand-count-label">0 cards in hand</p>
         </aside>
-        <section class="board-section">
-          <div id="turn-banner" class="turn-banner match-banner">Your turn</div>
-          <div id="spell-cast-bar" class="spell-cast-bar hidden">
-            <div class="spell-cast-copy">
-              <p id="spell-cast-hint" class="spell-cast-hint">Select targets on the board</p>
-              <button type="button" id="btn-cancel-card" class="btn-text">Cancel spell</button>
-            </div>
-          </div>
-          <div id="ai-spell-banner" class="ai-spell-banner hidden" role="status" aria-live="assertive">
-            <div class="ai-spell-banner__inner">
-              <span class="ai-spell-banner__icon" aria-hidden="true">✦</span>
-              <div class="ai-spell-banner__copy">
-                <p class="ai-spell-banner__label">Enemy spell</p>
-                <p id="ai-spell-banner-title" class="ai-spell-banner__title"></p>
-                <p id="ai-spell-banner-desc" class="ai-spell-banner__desc"></p>
+        <div class="match-play-area">
+          <section class="board-section">
+            <div id="turn-banner" class="turn-banner match-banner">Your turn</div>
+            <div id="spell-cast-bar" class="spell-cast-bar hidden">
+              <div class="spell-cast-copy">
+                <p id="spell-cast-hint" class="spell-cast-hint">Select targets on the board</p>
+                <button type="button" id="btn-cancel-card" class="btn-text">Cancel spell</button>
               </div>
             </div>
-          </div>
-          <div class="board-wrap">${boardFrameHtml()}</div>
-          <div id="piece-info" class="piece-info hidden"></div>
-        </section>
-        <aside class="hand-tray panel">
-          <header class="hand-tray__header">
-            <div class="player-badge you"><span class="piece-icon red"></span> You</div>
-            <p id="hand-count-label" class="hand-count-label">0 cards in hand</p>
-          </header>
-          <div class="hand-tray__body">
-            <button type="button" class="hand-tray__chev hand-tray__chev--left" aria-label="Scroll cards left" tabindex="-1" hidden>‹</button>
-            <div id="hand-red" class="hand spell-hand"></div>
-            <button type="button" class="hand-tray__chev hand-tray__chev--right" aria-label="Scroll cards right" tabindex="-1" hidden>›</button>
-          </div>
-        </aside>
+            <div id="ai-spell-banner" class="ai-spell-banner hidden" role="status" aria-live="assertive">
+              <div class="ai-spell-banner__inner">
+                <span class="ai-spell-banner__icon" aria-hidden="true">✦</span>
+                <div class="ai-spell-banner__copy">
+                  <p class="ai-spell-banner__label">Enemy spell</p>
+                  <p id="ai-spell-banner-title" class="ai-spell-banner__title"></p>
+                  <p id="ai-spell-banner-desc" class="ai-spell-banner__desc"></p>
+                </div>
+              </div>
+            </div>
+            <div class="board-wrap">${boardFrameHtml()}</div>
+            <div id="piece-info" class="piece-info hidden"></div>
+          </section>
+          <aside class="hand-tray panel">
+            <header class="hand-tray__header">
+              <div class="player-badge you"><span class="piece-icon red"></span> You</div>
+              <p id="hand-count-label" class="hand-count-label">0 cards in hand</p>
+            </header>
+            <div class="hand-tray__body">
+              <button type="button" class="hand-tray__chev hand-tray__chev--left" aria-label="Scroll cards left" tabindex="-1" hidden>‹</button>
+              <div id="hand-red" class="hand spell-hand"></div>
+              <button type="button" class="hand-tray__chev hand-tray__chev--right" aria-label="Scroll cards right" tabindex="-1" hidden>›</button>
+            </div>
+          </aside>
+        </div>
         <footer class="match-log">
           <p id="message" class="match-message" role="log" aria-live="polite"></p>
         </footer>
