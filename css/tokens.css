@@ -43,8 +43,12 @@
   --font-body: "DM Sans", system-ui, sans-serif;
 
   /* Mobile shell */
-  --game-safe-bottom: env(safe-area-inset-bottom, 0px);
-  --game-safe-top: env(safe-area-inset-top, 0px);
+  --viewport-inset-bottom: 0px;
+  --viewport-inset-top: 0px;
+  --game-safe-bottom: max(env(safe-area-inset-bottom, 0px), var(--viewport-inset-bottom));
+  --game-safe-top: max(env(safe-area-inset-top, 0px), var(--viewport-inset-top));
+  --app-height: 100vh;
+  --app-height: 100svh;
   --nav-height: 4.25rem;
   /* Clearance for fixed bottom nav (nav chrome + home indicator) */
   --nav-clearance: calc(var(--nav-height) + var(--game-safe-bottom));
