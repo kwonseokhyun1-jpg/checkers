@@ -115,7 +115,6 @@ import { initAudio, setAudioMode, AudioSfx } from "./audio.js";
 import { initOrientation, lockPortrait } from "./orientation.js";
 import { initNetworkBanner } from "./networkBanner.js";
 import { initCapacitor } from "./capacitorInit.js";
-import { showMatchLoading } from "./matchLoadingScreen.js";
 import { hapticLight } from "./haptics.js";
 
 let profile;
@@ -1706,17 +1705,6 @@ async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState
   $("view-match")?.classList.remove("hidden");
   const root = $("view-match");
   if (!root) return;
-
-  const username = await resolveDisplayUsername(profile);
-  const cosmetics = getEquippedCosmetics(profile);
-  if (!resumeState) {
-    await showMatchLoading(root, {
-      mode: "ai",
-      local: { username, cosmetics },
-      opponent: { username: opponentName },
-      stageLabel: level.name || `Stage ${levelId}`,
-    });
-  }
 
   root.innerHTML = getMatchHtml(opponentName);
 
