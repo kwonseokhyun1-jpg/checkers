@@ -1957,6 +1957,50 @@ body.tutorial-match-active .spell-drag-ghost {
   margin: 0 0 0.35rem;
 }
 
+.panel-head-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.25rem;
+}
+
+.panel-head-title-row .panel-head__title {
+  margin-bottom: 0;
+}
+
+.panel-help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.panel-help-btn:hover,
+.panel-help-btn:focus-visible {
+  color: var(--accent-gold, #e8c547);
+  border-color: rgba(232, 197, 71, 0.45);
+  background: rgba(232, 197, 71, 0.1);
+}
+
+.panel-help-btn--active {
+  color: var(--accent-gold, #e8c547);
+  border-color: rgba(232, 197, 71, 0.55);
+  background: rgba(232, 197, 71, 0.14);
+}
+
 .panel-head__desc,
 .meta-desc {
   color: var(--text-muted);
