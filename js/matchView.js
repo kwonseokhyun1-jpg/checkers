@@ -29,7 +29,7 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
               </div>
             </div>
           </div>
-          ${boardFrameHtml()}
+          <div class="board-wrap">${boardFrameHtml()}</div>
           <div id="piece-info" class="piece-info hidden"></div>
         </section>
         <aside class="panel panel-player">
