@@ -121,7 +121,7 @@ body {
 
 .game-shell--in-match,
 body.match-active .game-shell {
-  padding-bottom: var(--game-safe-bottom);
+  padding-bottom: calc(0.75rem + var(--game-safe-bottom));
 }
 
 .game-shell--in-match .game-nav.tabs,
@@ -135,7 +135,7 @@ body.match-active #view-match:not(.hidden) {
 }
 
 body.match-active .game-main {
-  padding-bottom: var(--game-safe-bottom, 0px);
+  padding-bottom: calc(0.75rem + var(--game-safe-bottom, 0px));
 }
 
 /* Spell hand — allow horizontal scroll without starting a cast */
@@ -1951,32 +1951,6 @@ body.install-banner-visible.deck-editing .game-shell {
     width: auto;
     min-width: 44px;
     padding: 0 0.35rem;
-  }
-
-  body.match-active .piece-info {
-    max-width: 100%;
-    margin: 0.35rem 0 0;
-    padding: 0.5rem 0.65rem;
-    font-size: 0.78rem;
-    border-radius: 10px;
-  }
-
-  body.match-active .match-message {
-    font-size: 0.82rem;
-    line-height: 1.4;
-    text-align: center;
-    margin: 0.25rem 0 0;
-    padding: 0 0.35rem;
-    color: var(--text-muted);
-  }
-
-  body.match-active .spell-meta-stage {
-    transform: scale(0.88);
-    transform-origin: center top;
-  }
-
-  body.match-active .spell-meta-burst {
-    font-size: 2.75rem;
   }
 
   /* Adventure prebattle — taller enemy spell rows */

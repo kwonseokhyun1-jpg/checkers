@@ -1,5 +1,201 @@
-/* Board gameplay, PvP perspective, and status indicators.
- * Shell / nav / typography: css/tokens.css + style.css + mobile-game.css */
+/* Chess.com-inspired theme — clean dark shell, green CTAs, flat cards */
+
+:root {
+  --bg-deep: #262421;
+  --bg-panel: #302e2b;
+  --bg-panel-elevated: #3a3835;
+  --bg-board-light: #ebecd0;
+  --bg-board-dark: #7a9ec8;
+  --accent-primary: #81b64c;
+  --accent-primary-hover: #9bc964;
+  --accent-gold: #e8c547;
+  --accent-gem: #81b64c;
+  --accent-violet: #a78bfa;
+  --text: #ffffff;
+  --text-muted: #a8a6a3;
+  --card-bg: #3a3835;
+  --card-border: #4a4845;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-glow: none;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --font-display: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-heading: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background: var(--bg-deep);
+}
+
+.ambient-bg {
+  background: var(--bg-deep);
+}
+
+.game-shell {
+  max-width: 480px;
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+.game-shell::before {
+  display: none;
+}
+
+.game-header {
+  background: var(--bg-panel);
+  border: none;
+  border-radius: var(--radius);
+  box-shadow: none;
+  padding: 0.75rem 1rem;
+}
+
+.game-header__title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.game-header__eyebrow {
+  display: none;
+}
+
+.logo-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #262421;
+  border: 1px solid #4a4845;
+  box-shadow: none;
+}
+
+.logo-mark__spark {
+  color: var(--accent-primary);
+  text-shadow: none;
+}
+
+.hud-gems,
+.hud-stars {
+  background: #262421;
+  border: 1px solid #4a4845;
+  box-shadow: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+}
+
+.hud-gems {
+  border-color: #4a4845;
+}
+
+.hud-stars {
+  border-color: #4a4845;
+}
+
+.hud-gems__icon {
+  color: var(--accent-primary);
+  filter: none;
+}
+
+.hud-stars__icon {
+  color: #f0c040;
+  filter: none;
+}
+
+.game-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  border-top: 1px solid #4a4845;
+  background: #262421;
+  padding: 0.35rem max(0.5rem, env(safe-area-inset-left)) calc(0.35rem + env(safe-area-inset-bottom, 0px)) max(0.5rem, env(safe-area-inset-right));
+}
+
+.game-nav__btn {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 0.45rem 0.25rem;
+}
+
+.game-nav__btn.active,
+.tab-btn.active {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.game-nav__btn--play.active {
+  color: var(--accent-primary);
+}
+
+.game-panel {
+  background: var(--bg-panel);
+  border: 1px solid #4a4845;
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+}
+
+.game-panel::before,
+.game-panel::after {
+  display: none;
+}
+
+.panel-head__title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.panel-head__desc {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.btn-primary,
+.btn-primary.btn-lg {
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  text-shadow: none;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-primary-hover);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: #3a3835;
+  border: 1px solid #4a4845;
+  color: var(--text);
+  box-shadow: none;
+}
+
+.btn-text {
+  color: var(--text-muted);
+}
+
+.input-text,
+.select-input {
+  background: #262421;
+  border: 1px solid #4a4845;
+  border-radius: 6px;
+}
 
 /* PvP: guest (black) sees the board from their side — your pieces advance toward you */
 .board-frame--local-flipped {
@@ -771,6 +967,10 @@
 
 .tab-btn.active {
   box-shadow: none;
+}
+
+.tab-btn__icon {
+  display: none;
 }
 
 .game-nav__btn {

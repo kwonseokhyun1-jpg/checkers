@@ -32,7 +32,7 @@ import {
   matchRowFingerprint,
   shouldApplyPvpRow,
 } from "./pvp.js";
-import { showMatchLoading } from "./matchLoadingScreen.js";
+import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 import { lockPortrait } from "./orientation.js";
 import { setAudioMode } from "./audio.js";
 import { syncChampion } from "./achievements.js";
@@ -630,8 +630,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     const opponentCosmetics = cosmeticsWithPieceSkin(opponentCosmeticsBase, opponentMatchSkin);
 
     if (!resume) {
-      await showMatchLoading(root, {
-        mode: "pvp",
+      await showPvpMatchLoading(root, {
         local: { username: localName, cosmetics: localCosmetics },
         opponent: { username: opponentName, cosmetics: opponentCosmetics },
       });
