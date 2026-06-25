@@ -67,14 +67,33 @@ if (squares < 64) {
   console.error("Expected 64 board squares, found", squares);
   process.exit(1);
 }
-const boardSize = await page.evaluate(() => {
+const boardMetrics = await page.evaluate(() => {
   const board = document.querySelector("#board");
-  if (!board) return 0;
+  const ranks = document.querySelector(".board-ranks");
+  const frame = document.querySelector("#board-frame");
+  if (!board) return { size: 0, square: false, ranksBesideBoard: false };
   const r = board.getBoundingClientRect();
-  return Math.min(r.width, r.height);
+  const ranksRect = ranks?.getBoundingClientRect();
+  const frameStyle = frame ? getComputedStyle(frame).display : "";
+  return {
+    size: Math.min(r.width, r.height),
+    square: Math.abs(r.width - r.height) < 2,
+    ranksBesideBoard: Boolean(
+      ranksRect && ranksRect.width < r.width * 0.35 && ranksRect.height > r.height * 0.5
+    ),
+    frameDisplay: frameStyle,
+  };
 });
-if (boardSize < 120) {
-  console.error("Board too small to play —", boardSize, "px (expected at least 120px)");
+if (boardMetrics.size < 120) {
+  console.error("Board too small to play —", boardMetrics.size, "px (expected at least 120px)");
+  process.exit(1);
+}
+if (!boardMetrics.square) {
+  console.error("Board is not square —", boardMetrics);
+  process.exit(1);
+}
+if (!boardMetrics.ranksBesideBoard || boardMetrics.frameDisplay !== "grid") {
+  console.error("Board coordinate layout broken on mobile —", boardMetrics);
   process.exit(1);
 }
 
