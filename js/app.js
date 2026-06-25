@@ -1779,7 +1779,7 @@ async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState
   setAudioMode("match");
   if (winRewarded) matchSession.winRewarded = true;
   saveMatchCheckpoint(matchSession);
-  matchSession.setMessage("Drag a spell onto the board or tap a card, then pick highlighted squares.");
+  matchSession.setMessage("");
   matchSession.render();
 }
 
