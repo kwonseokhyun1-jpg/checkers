@@ -279,8 +279,16 @@ body.match-active {
 
 .hud-gems,
 .hud-stars {
-  padding: 0.35rem 0.55rem;
-  min-height: 2rem;
+  padding: 0.25rem 0.6rem 0.25rem 0.3rem;
+  min-height: 2.15rem;
+  gap: 0.4rem;
+}
+
+.hud-gems__icon,
+.hud-stars__icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  font-size: 0.78rem;
 }
 
 .hud-gems__value,
@@ -1840,8 +1848,15 @@ body.install-banner-visible.deck-editing .game-shell {
   .hud-gems,
   .hud-stars {
     min-height: 44px;
-    padding: 0.3rem 0.5rem;
-    gap: 0.2rem;
+    padding: 0.25rem 0.55rem 0.25rem 0.3rem;
+    gap: 0.35rem;
+  }
+
+  .hud-gems__icon,
+  .hud-stars__icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    font-size: 0.8rem;
   }
 
   .hud-gems__label,

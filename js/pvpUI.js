@@ -43,6 +43,7 @@ import {
   buildRoomHostAvatarHtml,
 } from "./userProfileModal.js";
 import { enhanceSelect } from "./customSelect.js";
+import { initPanelHelp } from "./panelHelp.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -58,6 +59,21 @@ function mysteryModeBadge() {
 
 function roomModeLabel(room) {
   return isMysteryMode(room) ? mysteryModeBadge() : "";
+}
+
+function pvpPanelHead(descHtml) {
+  return `
+    <header class="panel-head panel-head--compact">
+      <div class="panel-head-title-row">
+        <h2 class="panel-head__title">PvP Arena</h2>
+        <button type="button" id="pvp-help-btn" class="panel-help-btn" aria-label="How PvP Arena works" aria-expanded="false" aria-controls="pvp-help-desc">?</button>
+      </div>
+      <p id="pvp-help-desc" class="panel-head__desc" hidden>${descHtml}</p>
+    </header>`;
+}
+
+function bindPvpPanelHelp() {
+  initPanelHelp(root.querySelector("#pvp-help-btn"), root.querySelector("#pvp-help-desc"));
 }
 
 /**
@@ -127,34 +143,27 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     if (!isAuthAvailable()) {
       root.innerHTML = `
         <section class="panel game-panel pvp-panel">
-          <header class="panel-head">
-            <h2 class="panel-head__title">PvP Arena</h2>
-            <p class="panel-head__desc">Add your Supabase <strong>anon</strong> key to <code>js/supabaseConfig.js</code> from
-              <a href="https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/api" target="_blank" rel="noopener">API settings</a>, run <code>supabase/schema.sql</code>, then reload.</p>
-          </header>
+          ${pvpPanelHead(`Add your Supabase <strong>anon</strong> key to <code>js/supabaseConfig.js</code> from
+              <a href="https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/api" target="_blank" rel="noopener">API settings</a>, run <code>supabase/schema.sql</code>, then reload.`)}
         </section>`;
+      bindPvpPanelHelp();
       return;
     }
 
     if (!user) {
       root.innerHTML = `
         <section class="panel game-panel pvp-panel">
-          <header class="panel-head">
-            <h2 class="panel-head__title">PvP Arena</h2>
-            <p class="panel-head__desc">Sign in to challenge other players in real-time 1v1 matches.</p>
-          </header>
+          ${pvpPanelHead("Sign in to challenge other players in real-time 1v1 matches.")}
           <button type="button" class="btn-primary btn-lg" id="pvp-sign-in">Sign in / Sign up</button>
         </section>`;
       root.querySelector("#pvp-sign-in")?.addEventListener("click", openAuthModal);
+      bindPvpPanelHelp();
       return;
     }
 
     root.innerHTML = `
       <section class="panel game-panel pvp-panel">
-        <header class="panel-head">
-          <h2 class="panel-head__title">PvP Arena</h2>
-          <p class="panel-head__desc">Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.</p>
-        </header>
+        ${pvpPanelHead("Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.")}
         <div class="pvp-setup-row">
           <div class="pvp-setup-field">
             <label class="label-sm" for="pvp-deck-select">Your deck</label>
@@ -206,6 +215,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     enhanceSelect(root.querySelector("#pvp-mode-select"));
     root.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
     syncModeUi();
+    bindPvpPanelHelp();
     startOpenRoomsSync();
 
     void probePvpBackend().then((probe) => {
