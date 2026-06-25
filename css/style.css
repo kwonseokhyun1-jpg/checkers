@@ -328,6 +328,13 @@ body {
   margin: 0 auto;
 }
 
+.match-history-footer {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: min(100%, 480px);
+  margin: 0.35rem auto 0;
+}
+
 .match-message {
   margin: 0;
   padding: 0.55rem 0.75rem;
@@ -6276,7 +6283,10 @@ body.public-profile-modal-open {
   border: 1px solid rgba(180, 140, 255, 0.45);
 }
 
-/* PvP move history scrubber (below board) */
+/* PvP move history scrubber (bottom of match screen) */
+.match-history-footer .pvp-move-history {
+  margin-top: 0;
+}
 .pvp-move-history {
   display: flex;
   align-items: center;
@@ -6346,7 +6356,7 @@ body.public-profile-modal-open {
   color: #e8e6f0;
 }
 .pvp-history-status {
-  margin: 0.35rem auto 0;
+  margin: 0 auto 0.35rem;
   max-width: min(92vw, 480px);
   font-size: 0.78rem;
   text-align: center;

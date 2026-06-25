@@ -30,12 +30,6 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
             </div>
           </div>
           ${boardFrameHtml()}
-          <div id="pvp-move-history" class="pvp-move-history" aria-label="Move history">
-            <button type="button" id="pvp-history-prev" class="pvp-move-history__arrow" aria-label="Previous move" disabled>‹</button>
-            <div id="pvp-history-track" class="pvp-move-history__track" role="list"></div>
-            <button type="button" id="pvp-history-next" class="pvp-move-history__arrow" aria-label="Next move" disabled>›</button>
-          </div>
-          <p id="pvp-history-status" class="pvp-history-status hidden" role="status">Reviewing earlier position</p>
           <div id="piece-info" class="piece-info hidden"></div>
         </section>
         <aside class="panel panel-player">
@@ -46,6 +40,14 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
         <footer class="match-log">
           <p id="message" class="match-message" role="log" aria-live="polite"></p>
         </footer>
+        <div class="match-history-footer">
+          <p id="pvp-history-status" class="pvp-history-status hidden" role="status">Reviewing earlier position</p>
+          <div id="pvp-move-history" class="pvp-move-history" aria-label="Move history">
+            <button type="button" id="pvp-history-prev" class="pvp-move-history__arrow" aria-label="Previous move" disabled>‹</button>
+            <div id="pvp-history-track" class="pvp-move-history__track" role="list"></div>
+            <button type="button" id="pvp-history-next" class="pvp-move-history__arrow" aria-label="Next move" disabled>›</button>
+          </div>
+        </div>
       </div>
       <div id="game-over" class="game-over-overlay hidden">
         <div class="game-over-card">

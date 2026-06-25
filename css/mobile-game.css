@@ -1384,7 +1384,20 @@ body.install-banner-visible.deck-editing .game-shell {
     height: 100px;
   }
 
-  /* PvP move history scrubber — 44px arrows and chips */
+  /* PvP move history scrubber — bottom of match screen */
+  .match-history-footer {
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0.5rem;
+    padding-bottom: calc(0.15rem + var(--game-safe-bottom, 0px));
+  }
+
+  .match-history-footer .pvp-move-history {
+    width: 100%;
+    padding: 0.35rem 0.4rem;
+    margin-top: 0;
+  }
+
   .pvp-move-history {
     width: 100%;
     padding: 0.35rem 0.4rem;
