@@ -406,18 +406,6 @@ body.match-active .game-main {
 }
 
 /* Deck list — compact tile grid (mobile-first) */
-#deck-subview-list.game-panel {
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  padding: 0;
-}
-
-#deck-subview-list.game-panel::before,
-#deck-subview-list.game-panel::after {
-  display: none;
-}
-
 .deck-list-header {
   margin-bottom: 1rem;
 }
