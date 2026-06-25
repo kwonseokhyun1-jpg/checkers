@@ -256,11 +256,11 @@ body.match-active .game-main {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: var(--game-safe-bottom);
+  bottom: 0;
   z-index: 200;
   width: min(100% - 1.25rem, 460px);
   margin: 0;
-  padding: 0.4rem 0.35rem;
+  padding: 0.4rem 0.35rem calc(0.4rem + var(--game-safe-bottom));
   background: linear-gradient(180deg, rgba(30, 40, 58, 0.98), rgba(12, 16, 24, 0.98));
   border: 2px solid rgba(201, 162, 39, 0.35);
   border-radius: 20px;
