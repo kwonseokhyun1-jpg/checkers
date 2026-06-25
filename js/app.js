@@ -1529,6 +1529,8 @@ function renderAdventureMap() {
     }
   }
 
+  const worldMeta = WORLDS.find((w) => w.id === selectedAdventureWorldId);
+
   const map = $("adventure-map");
   if (!map) return;
   const theme = worldMeta?.theme || "verdant";
