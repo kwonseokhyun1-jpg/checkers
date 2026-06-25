@@ -79,6 +79,7 @@
     overflow: hidden;
     width: 100%;
     max-width: 100%;
+    align-items: stretch;
     justify-items: stretch;
     padding-top: 1.35rem;
   }
@@ -114,7 +115,9 @@
 
   body.match-active .match-wrap .board-section {
     grid-row: 2;
+    align-self: stretch;
     min-height: 0;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: stretch;
