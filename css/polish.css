@@ -70,8 +70,7 @@
   100% { background-position: -100% 0; }
 }
 
-.vault-section-title,
-.adventure-world-hint {
+.vault-section-title {
   font-family: var(--font-heading);
 }
 

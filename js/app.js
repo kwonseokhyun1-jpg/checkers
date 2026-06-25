@@ -250,8 +250,19 @@ function hideStageModal() {
 }
 
 function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
-  const hint = $("adventure-world-hint");
-  if (hint) hint.textContent = message;
+  const desc = $("adventure-help-desc");
+  const btn = $("adventure-help-btn");
+  if (!desc || !btn) return;
+  desc.textContent = message;
+  desc.hidden = false;
+  btn.setAttribute("aria-expanded", "true");
+  clearTimeout(showUnlockHint._timer);
+  showUnlockHint._timer = setTimeout(() => {
+    desc.hidden = true;
+    btn.setAttribute("aria-expanded", "false");
+    desc.innerHTML =
+      "Tap a stage below to battle. Earn <strong>★ stars</strong> on victory (more pieces left = more stars). Clear <strong>stage 30</strong> to unlock hidden worlds.";
+  }, 4500);
 }
 
 function syncMainTabShellState() {
@@ -1518,9 +1529,7 @@ function renderAdventureMap() {
     }
   }
 
-  const hint = $("adventure-world-hint");
   const worldMeta = WORLDS.find((w) => w.id === selectedAdventureWorldId);
-  if (hint && worldMeta) hint.textContent = `${worldMeta.name} — ${worldMeta.tagline}`;
 
   const map = $("adventure-map");
   if (!map) return;
@@ -1879,8 +1888,7 @@ function openAdventureStage(levelId) {
   const live = repairAdventureProgress(profile.adventure);
   profile.adventure = live;
   if (!isLevelUnlocked(live, levelId)) {
-    const hintEl = $("adventure-world-hint");
-    if (hintEl) hintEl.textContent = `Locked — beat global stage ${levelId - 1} first, then return here.`;
+    showUnlockHint(`Locked — beat global stage ${levelId - 1} first, then return here.`);
     return;
   }
   saveProfile(profile);
