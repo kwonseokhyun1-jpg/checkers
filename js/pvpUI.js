@@ -82,7 +82,7 @@ function bindPvpPanelHelp() {
  * @param {() => object} opts.getProfile
  * @param {() => void} opts.openAuthModal
  */
-export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
+export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPvpViewShown }) {
   if (!root) return { render: () => {}, dispose: () => {} };
 
   let pvpService = null;
@@ -623,6 +623,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       return;
     }
 
+    showPvpView();
+
     const localColor = pvpService.localColor;
     const opponentName = opponentNameFromRow(row);
     const localName = localNameFromRow(row);
@@ -854,6 +856,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     document.querySelectorAll(".view").forEach((v) => {
       v.classList.toggle("hidden", v.id !== "view-pvp");
     });
+    onPvpViewShown?.();
   }
 
   async function tryResumePvpMatch() {
