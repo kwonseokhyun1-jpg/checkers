@@ -1,78 +1,28 @@
-/* Match loading screen extensions */
+/* Network status banner */
 
-.match-loading__rotate-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  margin: 0.35rem 0 0.65rem;
-  font-size: 0.82rem;
-  color: var(--accent-gem);
-  text-align: center;
-}
-
-.match-loading__rotate-icon {
-  display: inline-flex;
-  font-size: 1.1rem;
-  animation: rotate-hint-spin 2.4s ease-in-out infinite;
-}
-
-.match-loading__card--ai {
-  text-align: center;
-}
-
-.match-loading__ai-emblem {
-  position: relative;
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 0.75rem;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid var(--card-border);
-}
-
-.match-loading__ai-piece {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
-}
-
-.match-loading__ai-piece--red {
-  top: 18px;
-  left: 14px;
-  background: radial-gradient(circle at 35% 30%, #ff8a8a, #c53030 55%, #742a2a);
-}
-
-.match-loading__ai-piece--black {
-  bottom: 14px;
-  right: 12px;
-  background: radial-gradient(circle at 35% 30%, #718096, #2d3748 55%, #1a202c);
-}
-
-.match-loading__ai-spark {
-  position: absolute;
-  top: 50%;
+.network-banner {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 0.35rem);
   left: 50%;
-  transform: translate(-50%, -50%);
-  color: var(--accent-gold);
-  font-size: 1.1rem;
+  transform: translateX(-50%);
+  z-index: 11000;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(180, 40, 40, 0.92);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  animation: network-banner-in 0.25s ease;
 }
 
-.match-loading__subtitle {
-  font-size: 0.82rem;
-  margin: 0.2rem 0 0;
+.network-banner.hidden {
+  display: none;
 }
 
-@keyframes rotate-hint-spin {
-  0%, 100% { transform: rotate(0deg); }
-  40% { transform: rotate(90deg); }
-  60% { transform: rotate(90deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .match-loading__rotate-icon { animation: none; }
+@keyframes network-banner-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
 /* Nav SVG icons */
