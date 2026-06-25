@@ -6664,8 +6664,7 @@ body.adventure-active:not(.adventure-stage-open) .adventure-stage-list {
   -webkit-overflow-scrolling: touch;
 }
 body.adventure-active:not(.adventure-stage-open) .adventure-world-shields,
-body.adventure-active:not(.adventure-stage-open) .panel-head--compact,
-body.adventure-active:not(.adventure-stage-open) .adventure-world-hint {
+body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   flex-shrink: 0;
 }
 .adventure-stage-modal__backdrop {
@@ -7034,8 +7033,8 @@ body.adventure-active:not(.adventure-stage-open) .adventure-world-hint {
   gap: 0.35rem;
   justify-content: center;
   flex-wrap: nowrap;
-  padding: 0.5rem 0 0.25rem;
-  margin-top: 0.25rem;
+  padding: 0;
+  margin: 0 0 0.75rem;
   position: relative;
   z-index: 2;
 }
