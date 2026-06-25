@@ -2013,8 +2013,9 @@ function init() {
       void refreshHeaderIdentity().then(() => {
         if (activeTab === "profile") renderProfile();
         if (activeTab === "quests") renderQuests();
+        if (activeTab === "pvp") pvpController?.render({ resume: true });
       });
-      pvpController?.render();
+      pvpController?.render({ resume: true });
       maybeStartInteractiveTutorial();
       maybeStartMetaTutorial();
       maybeStartPostStage1Tutorials();
