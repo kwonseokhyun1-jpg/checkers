@@ -51,6 +51,11 @@ body {
   min-width: 0;
 }
 
+/* Transparent on desktop — children stay in the 3-column grid */
+.match-play-area {
+  display: contents;
+}
+
 @media (max-width: 900px) {
   .game-layout {
     grid-template-columns: 1fr;
