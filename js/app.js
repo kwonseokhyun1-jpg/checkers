@@ -428,6 +428,31 @@ function initHeaderProfileMenu() {
   });
 }
 
+function initAdventureHelp() {
+  const btn = $("adventure-help-btn");
+  const desc = $("adventure-help-desc");
+  if (!btn || !desc) return;
+
+  const setOpen = (open) => {
+    desc.hidden = !open;
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    btn.classList.toggle("panel-help-btn--active", open);
+  };
+
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setOpen(desc.hidden);
+  });
+
+  document.addEventListener("click", () => {
+    if (!desc.hidden) setOpen(false);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !desc.hidden) setOpen(false);
+  });
+}
+
 async function refreshHeaderIdentity() {
   const user = getCurrentUser();
   if (!user) {
@@ -1974,6 +1999,7 @@ function init() {
   const authModal = document.getElementById("auth-modal");
   const authBtn = document.getElementById("auth-header-btn");
   initHeaderProfileMenu();
+  initAdventureHelp();
 
   authGate = initAuthGate({
     onSignIn: () => authUI?.open("signin", { forced: true }),

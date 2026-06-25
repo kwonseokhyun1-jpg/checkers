@@ -216,8 +216,11 @@
         <section id="adventure-map-view" class="panel game-panel adventure-panel">
           <header class="panel-head panel-head--compact">
             <button type="button" id="adventure-map-back" class="btn-text adventure-map-back hidden" aria-label="Back">← Map</button>
-            <h2 class="panel-head__title">Adventure</h2>
-            <p class="panel-head__desc">Tap a stage below to battle. Earn <strong>★ stars</strong> on victory (more pieces left = more stars). Clear <strong>stage 30</strong> to unlock hidden worlds.</p>
+            <div class="panel-head-title-row">
+              <h2 class="panel-head__title">Adventure</h2>
+              <button type="button" id="adventure-help-btn" class="panel-help-btn" aria-label="How Adventure works" aria-expanded="false" aria-controls="adventure-help-desc">?</button>
+            </div>
+            <p id="adventure-help-desc" class="panel-head__desc" hidden>Tap a stage below to battle. Earn <strong>★ stars</strong> on victory (more pieces left = more stars). Clear <strong>stage 30</strong> to unlock hidden worlds.</p>
           </header>
           <p id="adventure-world-hint" class="adventure-world-hint"></p>
           <div class="adventure-map-scene adventure-map-scene--decorative" aria-hidden="true">
