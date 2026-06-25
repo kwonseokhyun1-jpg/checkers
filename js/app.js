@@ -439,9 +439,9 @@ function initHeaderProfileMenu() {
   });
 }
 
-function initAdventureHelp() {
-  const btn = $("adventure-help-btn");
-  const desc = $("adventure-help-desc");
+function initPanelHelp(btnId, descId) {
+  const btn = $(btnId);
+  const desc = $(descId);
   if (!btn || !desc) return;
 
   const setOpen = (open) => {
@@ -2007,7 +2007,9 @@ function init() {
   const authModal = document.getElementById("auth-modal");
   const authBtn = document.getElementById("auth-header-btn");
   initHeaderProfileMenu();
-  initAdventureHelp();
+  initPanelHelp("adventure-help-btn", "adventure-help-desc");
+  initPanelHelp("shop-help-btn", "shop-help-desc");
+  initPanelHelp("deck-help-btn", "deck-help-desc");
 
   authGate = initAuthGate({
     onSignIn: () => authUI?.open("signin", { forced: true }),

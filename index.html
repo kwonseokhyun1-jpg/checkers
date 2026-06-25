@@ -98,9 +98,12 @@
 
       <div id="view-chests" class="view view-panel hidden">
         <section class="panel game-panel vault-panel">
-          <header class="panel-head">
-            <h2 class="panel-head__title">Shop</h2>
-            <p class="panel-head__desc">Spend gems on spell chests and cosmetic boxes (unlocked at Adventure stage 5), or stars on mystery boxes. Equip cosmetics in Profile.</p>
+          <header class="panel-head panel-head--compact">
+            <div class="panel-head-title-row">
+              <h2 class="panel-head__title">Shop</h2>
+              <button type="button" id="shop-help-btn" class="panel-help-btn" aria-label="How Shop works" aria-expanded="false" aria-controls="shop-help-desc">?</button>
+            </div>
+            <p id="shop-help-desc" class="panel-head__desc" hidden>Spend gems on spell chests and cosmetic boxes (unlocked at Adventure stage 5), or stars on mystery boxes. Equip cosmetics in Profile.</p>
           </header>
           <nav class="vault-tabs" role="tablist" aria-label="Shop categories">
             <button type="button" class="vault-tab active" data-vault-tab="cards" role="tab" aria-selected="true" aria-controls="vault-tab-cards">Cards</button>
@@ -134,9 +137,10 @@
             <header class="panel-head panel-head--inline">
               <div class="deck-list-title-row">
                 <h2 class="panel-head__title">Your decks</h2>
+                <button type="button" id="deck-help-btn" class="panel-help-btn" aria-label="How deck building works" aria-expanded="false" aria-controls="deck-help-desc">?</button>
                 <span id="deck-list-count" class="deck-list-count" aria-live="polite"></span>
               </div>
-              <p class="panel-head__desc">Build 30-card lists for adventure battles. Max 3 copies per spell.</p>
+              <p id="deck-help-desc" class="panel-head__desc" hidden>Build 30-card lists for adventure battles. Max 3 copies per spell.</p>
             </header>
             <button type="button" id="btn-new-deck" class="btn-primary btn-new-deck">
               <span class="btn-new-deck__icon" aria-hidden="true">+</span>
