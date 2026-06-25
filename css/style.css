@@ -66,6 +66,8 @@ body {
   .panel-player {
     width: 100%;
     max-width: 420px;
+    min-width: 0;
+    overflow: hidden;
   }
 }
 
@@ -1538,6 +1540,8 @@ body {
   flex-direction: row;
   flex-wrap: nowrap;
   gap: 0.45rem;
+  width: 100%;
+  min-width: 0;
   max-height: none;
   overflow-x: auto;
   overflow-y: hidden;
@@ -1659,6 +1663,7 @@ body {
   .match-wrap .panel-player {
     min-width: 0;
     max-width: 188px;
+    overflow: hidden;
   }
 
   .match-wrap .panel-opponent {

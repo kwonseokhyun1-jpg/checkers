@@ -613,6 +613,8 @@ body.match-active {
   .panel-opponent,
   .panel-player {
     max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .board-wrap {
@@ -630,7 +632,10 @@ body.match-active {
   }
 
   .hand.spell-hand {
+    width: 100%;
+    min-width: 0;
     overflow-x: auto;
+    overflow-y: hidden;
     flex-wrap: nowrap;
     padding-bottom: 0.25rem;
     scrollbar-width: none;
@@ -753,7 +758,20 @@ body.match-active {
 
   body.match-active .panel-opponent,
   body.match-active .panel-player {
+    width: min(100%, var(--board-fit-width));
+    max-width: min(100%, var(--board-fit-width));
+    min-width: 0;
+    overflow: hidden;
     padding: 0.55rem 0.7rem;
+  }
+
+  body.match-active .hand.spell-hand {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
   }
 
   body.match-active .panel-opponent .player-badge,
