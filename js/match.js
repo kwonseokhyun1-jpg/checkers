@@ -2269,9 +2269,12 @@ ${starLine}`;
     banner?.classList.remove("hidden");
     this.$("ai-action-panel")?.classList.add("ai-action-panel--casting");
     this.$("board")?.closest(".board-frame")?.classList.add("board-frame--ai-spell");
-    this.$("turn-banner")?.classList.add("turn-banner--enemy-spell");
-    if (this.$("turn-banner")) {
-      this.$("turn-banner").textContent = `${this.opponentName} casts ${cardName}!`;
+    const turnBanner = this.$("turn-banner");
+    if (this.isPvp) {
+      turnBanner?.classList.add("turn-banner--enemy-spell");
+      if (turnBanner) turnBanner.textContent = `${this.opponentName} casts ${cardName}!`;
+    } else {
+      turnBanner?.classList.add("hidden");
     }
   }
 
@@ -2279,7 +2282,9 @@ ${starLine}`;
     this.resetTrapSpellBanner();
     this.$("ai-action-panel")?.classList.remove("ai-action-panel--casting");
     this.$("board")?.closest(".board-frame")?.classList.remove("board-frame--ai-spell");
-    this.$("turn-banner")?.classList.remove("turn-banner--enemy-spell");
+    const turnBanner = this.$("turn-banner");
+    turnBanner?.classList.remove("turn-banner--enemy-spell");
+    if (this.isPvp) turnBanner?.classList.remove("hidden");
   }
 
   buildAiSpellAnimExtra(entry) {
@@ -3346,9 +3351,12 @@ ${starLine}`;
               : "Select a piece to move";
           banner.className = "turn-banner";
         }
-      } else {
+      } else if (this.isPvp) {
         banner.textContent = `${this.opponentName} is thinking…`;
         banner.className = "turn-banner opponent-turn";
+      } else {
+        banner.textContent = "";
+        banner.className = "turn-banner opponent-turn hidden";
       }
     }
     const msgEl = this.$("message");
