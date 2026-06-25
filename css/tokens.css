@@ -49,7 +49,7 @@
   --game-safe-top: max(env(safe-area-inset-top, 0px), var(--viewport-inset-top));
   --app-height: 100vh;
   --app-height: 100svh;
-  --nav-height: 3.5rem;
+  --nav-height: 4.25rem;
   /* Clearance for bottom tab bar (nav chrome + home indicator) */
   --nav-clearance: calc(var(--nav-height) + var(--game-safe-bottom));
   /* Board — fit inside shell + safe areas without clipping labels */
@@ -64,7 +64,7 @@
   --panel-game-border: linear-gradient(135deg, rgba(255, 220, 120, 0.45), rgba(92, 225, 230, 0.2));
 
   /* Nav */
-  --nav-icon-size: 1.2rem;
+  --nav-icon-size: 1.35rem;
   --nav-icon-active: var(--accent-gold);
   --nav-icon-idle: #8b9cb3;
 }
