@@ -137,10 +137,15 @@ body.match-active #view-match:not(.hidden) {
 body.match-active .game-main {
   flex: 1 1 0;
   min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(0.75rem + var(--game-safe-bottom, 0px));
+}
+
+body.match-active {
+  overflow-x: hidden;
 }
 
 /* Spell hand — allow horizontal scroll without starting a cast */
@@ -581,6 +586,13 @@ body.match-active .game-main {
   .game-layout {
     grid-template-columns: 1fr;
     gap: 0.65rem;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .match-scene {
+    padding: 0;
+    overflow-x: hidden;
   }
 
   .panel-opponent,
@@ -589,7 +601,8 @@ body.match-active .game-main {
   }
 
   .board-wrap {
-    max-width: min(100vw - 1.5rem, 420px);
+    max-width: min(calc(100vw - 1.25rem), 420px);
+    width: 100%;
     margin: 0 auto;
   }
 
@@ -729,11 +742,6 @@ body.match-active .game-main {
   body.match-active .hand-count-label {
     margin: 0 0 0.35rem;
     font-size: 0.75rem;
-  }
-
-  body.match-active #btn-end-cards {
-    min-height: 44px;
-    margin-top: 0.35rem;
   }
 
   body.match-active .turn-banner {
