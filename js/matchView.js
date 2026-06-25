@@ -14,7 +14,6 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
         <section class="board-section">
           <div id="turn-banner" class="turn-banner match-banner">Your turn</div>
           <div id="spell-cast-bar" class="spell-cast-bar hidden">
-            <div id="spell-cast-preview" class="spell-cast-preview"></div>
             <div class="spell-cast-copy">
               <p id="spell-cast-hint" class="spell-cast-hint">Select targets on the board</p>
               <button type="button" id="btn-cancel-card" class="btn-text">Cancel spell</button>
@@ -37,7 +36,6 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
             <button type="button" id="pvp-history-next" class="pvp-move-history__arrow" aria-label="Next move" disabled>›</button>
           </div>
           <p id="pvp-history-status" class="pvp-history-status hidden" role="status">Reviewing earlier position</p>
-          <p id="message" class="match-message"></p>
           <div id="piece-info" class="piece-info hidden"></div>
         </section>
         <aside class="panel panel-player">
@@ -46,6 +44,9 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
           <div id="hand-red" class="hand spell-hand"></div>
           <button type="button" id="btn-end-cards" class="btn-secondary">End spell phase</button>
         </aside>
+        <footer class="match-log">
+          <p id="message" class="match-message" role="log" aria-live="polite"></p>
+        </footer>
       </div>
       <div id="game-over" class="game-over-overlay hidden">
         <div class="game-over-card">

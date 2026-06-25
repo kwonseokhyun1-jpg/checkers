@@ -316,6 +316,34 @@ body {
   gap: 0.75rem;
 }
 
+.match-log {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.match-message {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-align: center;
+  background: rgba(12, 18, 32, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-sm);
+  min-height: 2.25rem;
+}
+
+.match-message:empty {
+  display: none;
+}
+
+.match-message--redundant {
+  display: none;
+}
+
 .turn-banner {
   font-weight: 600;
   font-size: 0.95rem;
@@ -1526,17 +1554,10 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
 .spell-cast-bar.hidden { display: none; }
-.spell-cast-preview { flex-shrink: 0; }
-.spell-cast-preview .spell-card { pointer-events: none; }
-
-/* Full description — casting preview only */
-.spell-card--full-desc .spell-card__desc,
-.spell-cast-preview .spell-card .spell-card__desc {
-  display: block;
-  overflow: visible;
-  -webkit-line-clamp: unset;
-  line-clamp: unset;
-  white-space: normal;
+.spell-cast-copy {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
 }
 
 .hand.spell-hand .spell-card {
@@ -1597,12 +1618,6 @@ body {
 
 .spell-cast-bar {
   align-items: flex-start;
-}
-
-.spell-cast-preview .spell-card {
-  max-width: 176px;
-  width: 100%;
-  flex-shrink: 0;
 }
 
 .spell-cast-copy {
