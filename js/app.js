@@ -309,21 +309,24 @@ async function showTab(tab) {
   reconcileMatchShellState();
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
-    const label = TAB_LABELS[tab] || tab;
-    if (
-      !(await mobileConfirm(`Leave your current match to open ${label}?`, {
-        title: "Leave match?",
-        confirmLabel: "Leave",
-        cancelLabel: "Stay",
-        destructive: true,
-      }))
-    ) {
+    const switchingToActivePvpMatch = tab === "pvp" && document.getElementById("pvp-match-root");
+    if (!switchingToActivePvpMatch) {
+      const label = TAB_LABELS[tab] || tab;
+      if (
+        !(await mobileConfirm(`Leave your current match to open ${label}?`, {
+          title: "Leave match?",
+          confirmLabel: "Leave",
+          cancelLabel: "Stay",
+          destructive: true,
+        }))
+      ) {
+        return;
+      }
+      setPendingNavigationTab(tab);
+      armLeaveConfirmSkip();
+      document.querySelector("#btn-leave-match")?.click();
       return;
     }
-    setPendingNavigationTab(tab);
-    armLeaveConfirmSkip();
-    document.querySelector("#btn-leave-match")?.click();
-    return;
   }
   if (tab !== "deck" && deckSubview === "edit") {
     unlockBodyScrollForDeckEdit();
@@ -2040,6 +2043,10 @@ function init() {
     getProfile: () => profile,
     openAuthModal: () => authUI?.open("signin", { forced: true }),
     onNavigateTab: showTab,
+    onPvpViewShown: () => {
+      activeTab = "pvp";
+      syncMainTabShellState();
+    },
   });
 
   bindMatchVisibilityHandlers(() => matchSession);
