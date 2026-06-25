@@ -50,8 +50,8 @@
   --app-height: 100vh;
   --app-height: 100svh;
   --nav-height: 4.25rem;
-  /* Clearance for floating bottom nav (nav chrome + gap + home indicator) */
-  --nav-clearance: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
+  /* Clearance for bottom tab bar (nav chrome + home indicator) */
+  --nav-clearance: calc(var(--nav-height) + var(--game-safe-bottom));
   --btn-game-shadow: 0 4px 0 #8a6910, 0 8px 20px rgba(0, 0, 0, 0.45);
   --panel-game-border: linear-gradient(135deg, rgba(255, 220, 120, 0.45), rgba(92, 225, 230, 0.2));
 
