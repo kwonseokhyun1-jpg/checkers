@@ -344,6 +344,7 @@ body {
   width: 100%;
   max-width: min(100%, 480px);
   margin: 0.35rem auto 0;
+  flex-shrink: 0;
 }
 
 .match-message {
@@ -6318,6 +6319,7 @@ body.public-profile-modal-open {
   max-width: 100%;
   margin: 0.55rem auto 0;
   padding: 0.45rem 0.5rem;
+  min-height: 2.9rem;
   background: rgba(0, 0, 0, 0.42);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
@@ -6348,12 +6350,24 @@ body.public-profile-modal-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
+  min-height: 2rem;
+  overflow: hidden;
 }
-.pvp-move-history__track::-webkit-scrollbar { display: none; }
+.pvp-move-history__label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+}
+.pvp-move-history__label--review {
+  color: var(--accent-violet, #9f7aea);
+}
 .pvp-move-history__chip {
   flex: 0 0 auto;
   padding: 0.35rem 0.65rem;

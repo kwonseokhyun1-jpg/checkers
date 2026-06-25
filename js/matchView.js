@@ -44,7 +44,7 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
           <p id="pvp-history-status" class="pvp-history-status hidden" role="status">Reviewing earlier position</p>
           <div id="pvp-move-history" class="pvp-move-history" aria-label="Move history">
             <button type="button" id="pvp-history-prev" class="pvp-move-history__arrow" aria-label="Previous move" disabled>‹</button>
-            <div id="pvp-history-track" class="pvp-move-history__track" role="list"></div>
+            <div id="pvp-history-track" class="pvp-move-history__track" role="status"></div>
             <button type="button" id="pvp-history-next" class="pvp-move-history__arrow" aria-label="Next move" disabled>›</button>
           </div>
         </div>

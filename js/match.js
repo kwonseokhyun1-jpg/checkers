@@ -336,34 +336,33 @@ export class MatchSession {
     if (prevBtn) prevBtn.disabled = viewIdx <= 0;
     if (nextBtn) nextBtn.disabled = viewIdx >= max;
 
-    if (status) {
-      const reviewing = this.isViewingHistory();
-      status.classList.toggle("hidden", !reviewing);
-      if (reviewing) {
-        const entry = history[viewIdx];
-        status.textContent = entry
-          ? `Reviewing: ${formatHistoryChipLabel(entry, viewIdx)} — tap › for live`
-          : "Reviewing earlier position";
-      }
-    }
+    if (status) status.classList.add("hidden");
 
     if (!track) return;
-    track.innerHTML = "";
-    const start = Math.max(1, viewIdx - 2);
-    const end = Math.min(max, viewIdx + 2);
-    for (let i = start; i <= end; i++) {
-      const entry = history[i];
-      if (!entry || entry.type === "start") continue;
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "pvp-move-history__chip";
-      chip.setAttribute("role", "listitem");
-      if (i === viewIdx) chip.classList.add("pvp-move-history__chip--active");
-      else if (i < viewIdx) chip.classList.add("pvp-move-history__chip--past");
-      chip.textContent = formatHistoryChipLabel(entry, i);
-      chip.addEventListener("click", () => this.setHistoryViewIndex(i));
-      track.appendChild(chip);
+    const entry = history[viewIdx];
+    const reviewing = this.isViewingHistory();
+    let label = "Start";
+    if (entry) {
+      label =
+        entry.type === "start"
+          ? entry.label || "Start"
+          : formatHistoryChipLabel(entry, viewIdx);
+      if (reviewing) label = `Reviewing: ${label}`;
+    } else if (reviewing) {
+      label = "Reviewing earlier position";
     }
+
+    let labelEl = track.querySelector(".pvp-move-history__label");
+    if (!labelEl) {
+      track.innerHTML = "";
+      labelEl = document.createElement("span");
+      labelEl.className = "pvp-move-history__label";
+      labelEl.setAttribute("aria-live", "polite");
+      track.appendChild(labelEl);
+    }
+    labelEl.textContent = label;
+    labelEl.classList.toggle("pvp-move-history__label--review", reviewing);
+    track.setAttribute("aria-label", `Move ${viewIdx} of ${max}`);
   }
 
   recordHistoryFromReplayEntry(entry) {
