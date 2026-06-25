@@ -612,13 +612,7 @@ body.match-active {
     margin-inline: auto;
   }
 
-  body.match-active .board-wrap {
-    width: min(
-      100%,
-      var(--board-fit-width),
-      calc(var(--app-height) - var(--board-v-chrome))
-    );
-  }
+  /* Board size comes from flex space in .board-section (see match flex shell below) */
 
   .hand.spell-hand {
     overflow-x: auto;
@@ -852,6 +846,117 @@ body.match-active {
 
   body.match-active .pvp-loading {
     min-height: calc(100dvh - 1rem - var(--game-safe-top) - var(--game-safe-bottom));
+  }
+
+  /*
+   * Match flex shell — pin board to the viewport; hand grows horizontally only.
+   * Prevents the hand panel from pushing/scrolling the board when cards are drawn.
+   */
+  body.match-active .game-main {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.match-active #view-match:not(.hidden) {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  body.match-active .match-wrap {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  body.match-active .match-scene #btn-leave-match {
+    flex-shrink: 0;
+  }
+
+  body.match-active .game-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    gap: 0.5rem;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.match-active .panel-opponent,
+  body.match-active .panel-player,
+  body.match-active .match-log,
+  body.match-active .match-history-footer {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.match-active .board-section {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow: hidden;
+    gap: 0.35rem;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.match-active #turn-banner,
+  body.match-active #spell-cast-bar,
+  body.match-active #ai-spell-banner,
+  body.match-active #piece-info {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.match-active .board-wrap {
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    container-type: size;
+    container-name: match-board;
+  }
+
+  body.match-active .board-wrap .board-frame {
+    width: min(100cqw, var(--board-fit-width), 100cqh);
+    max-width: 100%;
+    max-height: 100%;
+    height: auto;
+  }
+
+  /* Fixed-height hand row — new cards scroll sideways, never grow the panel */
+  body.match-active .hand.spell-hand {
+    height: 7.5rem;
+    min-height: 7.5rem;
+    max-height: 7.5rem;
+    flex-shrink: 0;
+    align-items: stretch;
+  }
+
+  body.match-active .hand.spell-hand .spell-card {
+    flex: 0 0 88px;
+    width: 88px;
+    max-width: 88px;
+    height: 100%;
+    max-height: 100%;
+  }
+
+  body.match-active .hand.spell-hand.spell-hand--crowded .spell-card {
+    flex: 0 0 76px;
+    width: 76px;
+    max-width: 76px;
   }
 }
 
