@@ -103,12 +103,12 @@ body {
   padding-top: 0;
   padding-left: max(0.75rem, env(safe-area-inset-left));
   padding-right: max(0.75rem, env(safe-area-inset-right));
-  padding-bottom: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
+  padding-bottom: var(--nav-clearance);
 }
 
 .game-shell--in-match,
 body.match-active .game-shell {
-  padding-bottom: calc(0.75rem + var(--game-safe-bottom));
+  padding-bottom: var(--game-safe-bottom);
 }
 
 .game-shell--in-match .game-nav.tabs,
@@ -122,7 +122,7 @@ body.match-active #view-match:not(.hidden) {
 }
 
 body.match-active .game-main {
-  padding-bottom: calc(0.75rem + var(--game-safe-bottom, 0px));
+  padding-bottom: var(--game-safe-bottom, 0px);
 }
 
 /* Spell hand — allow horizontal scroll without starting a cast */
@@ -197,12 +197,17 @@ body.match-active .game-main {
   }
 
   body.main-tab-active:not(.match-active):not(.deck-editing) .game-main {
-    flex: 1;
+    flex: 0 1 auto;
     min-height: 0;
+    max-height: calc(100dvh - 5.5rem - var(--nav-clearance));
     overflow-y: auto;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
+    padding-bottom: 0.5rem;
+  }
+
+  body.main-tab-active:not(.match-active):not(.deck-editing) .game-main > .view:not(.hidden) {
+    min-height: calc(100dvh - 5.5rem - var(--nav-clearance) - 1.5rem);
   }
 
   /* Adventure — stage list scrolls inside the panel, not the whole shell */
@@ -210,11 +215,42 @@ body.match-active .game-main {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    padding-bottom: calc(var(--nav-height) + 1.5rem + var(--game-safe-bottom));
+    flex: 1 1 0;
+    max-height: none;
+    padding-bottom: 0;
+  }
+
+  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .game-main > .view:not(.hidden) {
+    min-height: 0;
+  }
+
+  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .adventure-panel {
+    padding-bottom: var(--nav-clearance);
+  }
+
+  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .game-footer {
+    display: none;
   }
 
   body.install-banner-visible.main-tab-active:not(.match-active):not(.deck-editing) .game-main {
-    padding-bottom: calc(var(--nav-height) + 4.75rem + var(--game-safe-bottom));
+    max-height: calc(100dvh - 5.5rem - var(--nav-clearance) - 3.25rem);
+  }
+
+  body.main-tab-active:not(.match-active):not(.deck-editing) .game-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    margin-top: auto;
+    margin-bottom: 0;
+    padding: 0.35rem 0.75rem var(--nav-clearance);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    opacity: 0.8;
+    text-align: center;
   }
 }
 
