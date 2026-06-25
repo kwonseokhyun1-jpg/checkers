@@ -91,12 +91,12 @@ body.deck-editing .game-nav.tabs {
     transform: translateX(-50%);
     width: min(100%, 480px);
     z-index: 50;
-    padding-top: calc(var(--game-safe-top, 0px) + 0.35rem);
+    padding-top: calc(var(--game-safe-top, 0px) + 0.65rem);
   }
 
   body.deck-editing .deck-editor {
     /* Match fixed 2-row toolbar (title row + Auto fill/Clear row); safe area counted once here. */
-    padding-top: calc(var(--game-safe-top, 0px) + 5.05rem);
+    padding-top: calc(var(--game-safe-top, 0px) + 5.35rem);
   }
 
   body.deck-editing .deck-editor__error:not([hidden]),

@@ -46,7 +46,7 @@ body {
   border: none;
   border-radius: var(--radius);
   box-shadow: none;
-  padding: 0.75rem 1rem;
+  padding: calc(0.75rem + var(--game-safe-top, 0px)) 1rem 0.75rem;
 }
 
 .game-header__title {
