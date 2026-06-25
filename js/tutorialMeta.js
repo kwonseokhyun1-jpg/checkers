@@ -223,7 +223,7 @@ export function startMetaTutorial({ profile, saveProfile, onComplete }) {
     const viewHeight = window.innerHeight;
     const rootStyle = getComputedStyle(document.documentElement);
     const navPx =
-      (parseFloat(rootStyle.getPropertyValue("--nav-height")) || 4.25) *
+      (parseFloat(rootStyle.getPropertyValue("--nav-height")) || 3.5) *
       (parseFloat(rootStyle.fontSize) || 16);
     const bottomChrome = navPx + 16;
     const spaceBelow = viewHeight - highlightRect.bottom - bottomChrome;
