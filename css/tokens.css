@@ -52,6 +52,14 @@
   --nav-height: 3.5rem;
   /* Clearance for bottom tab bar (nav chrome + home indicator) */
   --nav-clearance: calc(var(--nav-height) + var(--game-safe-bottom));
+  /* Board — fit inside shell + safe areas without clipping labels */
+  --board-max-size: 440px;
+  --board-h-gutter: max(0.75rem, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  --board-fit-width: min(
+    var(--board-max-size),
+    calc(100dvw - var(--board-h-gutter) * 2 - 1rem)
+  );
+  --board-v-chrome: 280px;
   --btn-game-shadow: 0 4px 0 #8a6910, 0 8px 20px rgba(0, 0, 0, 0.45);
   --panel-game-border: linear-gradient(135deg, rgba(255, 220, 120, 0.45), rgba(92, 225, 230, 0.2));
 
