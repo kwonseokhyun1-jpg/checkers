@@ -59,10 +59,6 @@
     var(--board-max-size),
     calc(100dvw - var(--board-h-gutter) * 2 - 1rem)
   );
-  /* Match layout zones (mobile) — red / orange / green guideline proportions */
-  --match-play-height: 48dvh;
-  --match-log-height: 11dvh;
-  --match-history-height: 6dvh;
   --board-v-chrome: 280px;
   --btn-game-shadow: 0 4px 0 #8a6910, 0 8px 20px rgba(0, 0, 0, 0.45);
   --panel-game-border: linear-gradient(135deg, rgba(255, 220, 120, 0.45), rgba(92, 225, 230, 0.2));
