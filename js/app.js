@@ -2248,6 +2248,7 @@ async function bootstrapAfterAuth() {
   }
   syncTutorialStorageWithProfile(profile);
   await refreshHeaderIdentity();
+  pvpController?.render();
   reconcileMatchShellState();
 
   if (requiresAuthGate()) {
