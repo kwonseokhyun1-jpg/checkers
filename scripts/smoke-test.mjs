@@ -67,6 +67,16 @@ if (squares < 64) {
   console.error("Expected 64 board squares, found", squares);
   process.exit(1);
 }
+const boardSize = await page.evaluate(() => {
+  const board = document.querySelector("#board");
+  if (!board) return 0;
+  const r = board.getBoundingClientRect();
+  return Math.min(r.width, r.height);
+});
+if (boardSize < 120) {
+  console.error("Board too small to play —", boardSize, "px (expected at least 120px)");
+  process.exit(1);
+}
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.waitForTimeout(1000);
