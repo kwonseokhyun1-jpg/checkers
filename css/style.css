@@ -321,6 +321,17 @@ body {
   min-width: 0;
 }
 
+.board-wrap {
+  width: min(100%, var(--board-max-size));
+  max-width: 100%;
+  margin-inline: auto;
+}
+
+.board-wrap .board-frame {
+  width: 100%;
+  max-width: 100%;
+}
+
 .match-log {
   grid-column: 1 / -1;
   width: 100%;
@@ -3449,9 +3460,9 @@ html:has(body.cosmetic-open-active) {
 .board-frame {
   position: relative;
   display: grid;
-  grid-template-columns: 1.15rem 1fr;
+  grid-template-columns: minmax(1.15rem, auto) minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
-  width: min(100%, 440px);
+  width: min(100%, var(--board-max-size));
   max-width: 100%;
   gap: 2px 4px;
   padding: 6px;
@@ -3465,10 +3476,11 @@ html:has(body.cosmetic-open-active) {
 .board-files {
   grid-column: 2;
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   text-align: center;
   pointer-events: none;
   user-select: none;
+  min-width: 0;
 }
 
 .board-files--top {
@@ -3487,6 +3499,7 @@ html:has(body.cosmetic-open-active) {
   align-items: center;
   justify-items: center;
   user-select: none;
+  min-width: 0;
 }
 
 .board-frame .board {
