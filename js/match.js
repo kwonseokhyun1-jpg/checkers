@@ -1389,8 +1389,6 @@ export class MatchSession {
       return;
     }
 
-    if (s.phase === PHASE.CARDS && !this.enterMovePhaseFromBoard(row, col)) return;
-
     if (!this.canMovePieces()) return;
 
     const clicked = this.validMoves.find((m) => m.to[0] === row && m.to[1] === col);
@@ -1556,6 +1554,10 @@ export class MatchSession {
 
   executeHumanMove(move) {
     const s = this.state;
+    if (s.phase === PHASE.CARDS && !this.canEndSpellPhase()) {
+      this.setMessage(this.tutorialHooks?.spellPhaseBlockMessage || "Cast the spell first.");
+      return;
+    }
     const preMoveSnap = this.tutorialHooks ? cloneMatchState(s) : null;
     this._pendingHistoryMove = move;
     this._pendingHistoryLabel = formatPieceMoveLabel(s.board, move);
@@ -2624,40 +2626,6 @@ ${starLine}`;
     }
 
     await this.finishOpponentTurn(capBefore);
-  }
-
-  enterMovePhaseFromBoard(row, col) {
-    const s = this.state;
-    if (s.gameOver || s.turn !== this.localColor || s.phase !== PHASE.CARDS) return true;
-    if (!this.canEndSpellPhase()) {
-      this.setMessage(this.tutorialHooks?.spellPhaseBlockMessage || "Cast the spell first.");
-      return false;
-    }
-    if (this.cardPlay) this.cancelCardPlay();
-    s.phase = PHASE.MOVE;
-
-    const panicked = findPanicPiece(s.board, this.localColor);
-    if (panicked) {
-      const panicMoves = getBackwardStepMoves(s.board, panicked, s);
-      if (panicMoves.length) {
-        if (row !== panicked.row || col !== panicked.col) {
-          this.selectedSquare = [panicked.row, panicked.col];
-          this.validMoves = panicMoves;
-          this.setMessage("Panic — step backward!");
-          this.render();
-          return false;
-        }
-        return true;
-      }
-    }
-
-    const moves = getAllMovesForColor(s.board, this.localColor, s);
-    if (!moves.length) {
-      this.setMessage("No moves — turn passes.");
-      this.endHumanTurn();
-      return false;
-    }
-    return true;
   }
 
   async beginMovePhase({ afterSpell = false, spellMessage = null } = {}) {
