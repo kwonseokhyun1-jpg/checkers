@@ -7375,7 +7375,7 @@ body.tutorial-match-active.card-preview-open .tutorial-match-card {
 .tutorial-meta-active .game-main {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  max-height: calc(100dvh - var(--nav-height, 3.25rem) - 5.5rem - var(--game-safe-top, 0px));
+  max-height: calc(100dvh - var(--nav-height, 2.75rem) - 5.5rem - var(--game-safe-top, 0px));
 }
 
 @media (max-width: 768px) {
@@ -7392,7 +7392,7 @@ body.tutorial-match-active.card-preview-open .tutorial-match-card {
   flex-direction: column;
   justify-content: flex-end;
   padding: 0.75rem;
-  padding-bottom: max(calc(var(--nav-height, 3.25rem) + 0.5rem), env(safe-area-inset-bottom));
+  padding-bottom: max(calc(var(--nav-height, 2.75rem) + 0.5rem), env(safe-area-inset-bottom));
 }
 .tutorial-meta-shield {
   position: fixed;
