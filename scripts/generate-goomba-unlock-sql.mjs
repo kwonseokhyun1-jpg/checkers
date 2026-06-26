@@ -100,7 +100,10 @@ end $$;
 select
   username,
   profile_json->'gems' as gems,
-  jsonb_object_length(coalesce(profile_json->'collection', '{}')) as spell_types_owned,
+  (
+    select count(*)::int
+    from jsonb_each(coalesce(profile_json->'collection', '{}'))
+  ) as spell_types_owned,
   profile_json->'adventure'->'highestUnlocked' as highest_stage,
   (
     select count(*)::int
