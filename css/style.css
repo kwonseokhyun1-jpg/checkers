@@ -6714,6 +6714,8 @@ body.adventure-active:not(.adventure-stage-open) .adventure-stage-list {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  padding-bottom: var(--nav-clearance);
+  scroll-padding-bottom: var(--nav-clearance);
 }
 body.adventure-active:not(.adventure-stage-open) .adventure-world-shields,
 body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
