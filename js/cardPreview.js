@@ -75,10 +75,7 @@ export function showCardPreview(def, opts = {}) {
       add.textContent = "Add to deck";
       add.disabled = !!opts.addDisabled;
       add.addEventListener("click", () => {
-        if (!opts.addDisabled) {
-          opts.onAdd();
-          closeCardPreview();
-        }
+        if (!opts.addDisabled) opts.onAdd();
       });
       row.appendChild(add);
     }
