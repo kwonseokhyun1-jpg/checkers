@@ -1610,6 +1610,11 @@ function renderAdventureMap() {
 
   const nextPin = map.querySelector(".adventure-map-pin--next");
   if (nextPin) requestAnimationFrame(() => nextPin.scrollIntoView({ behavior: "smooth", block: "center" }));
+
+  const nextRow = stageList?.querySelector(".adventure-stage-row--next");
+  if (nextRow) {
+    requestAnimationFrame(() => nextRow.scrollIntoView({ behavior: "smooth", block: "end" }));
+  }
 }
 
 
