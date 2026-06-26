@@ -305,6 +305,12 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
   root.innerHTML = getMatchHtml("Training dummy", { exitLabel: "Skip tutorial" });
   document.body.insertAdjacentHTML("beforeend", overlayHtml());
   document.body.classList.add("tutorial-match-active");
+  enterMatchMode({
+    kind: "tutorial",
+    deckId: "deck-starter",
+    deckCardIds: TUTORIAL_DECK,
+    opponentName: "Training dummy",
+  });
 
   const skipBtn = document.getElementById("tutorial-match-skip");
   const continueBtn = document.getElementById("tutorial-match-continue");
@@ -348,25 +354,15 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
 
   continueBtn?.addEventListener("click", () => advanceStep());
 
-  async function applyStep(index) {
-    const step = STEPS[index];
-    if (!step) {
-      finishTutorial();
-      return;
-    }
+  const previewHooks = {
+    skipOpponentTurn: true,
+    onLeaveRequest: askSkip,
+    canMovePieces: () => false,
+    canEndSpellPhase: () => false,
+  };
 
-    spellValidated = false;
-    lastMove = null;
-    kingStepPromoted = false;
-    renderOverlay(index, step);
-
-    if (step.autoAdvance) {
-      renderOverlay(index, step, { showContinue: true });
-      return;
-    }
-
-    const state = await Promise.resolve(step.buildState());
-    const hooks = {
+  function buildStepHooks(step) {
+    return {
       skipOpponentTurn: !!step.skipOpponentTurn,
       onLeaveRequest: askSkip,
       spellPhaseBlockMessage: step.hint || "Play the spell shown in the lesson first.",
@@ -407,16 +403,26 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
         return "block";
       },
     };
+  }
 
+  function resetTutorialSessionState(session, state) {
+    session.state = state;
+    session.cardPlay = null;
+    session.selectedSquare = null;
+    session.validMoves = [];
+    session.validTargets = [];
+    session.actionBusy = false;
+  }
+
+  function mountTutorialBoard(state, hooks, step) {
     if (matchSession) {
       matchSession.tutorialHooks = hooks;
-      matchSession.state = state;
-      matchSession.cardPlay = null;
-      matchSession.selectedSquare = null;
-      matchSession.validMoves = [];
-      matchSession.validTargets = [];
-      matchSession.actionBusy = false;
-      beginTutorialStepTurn(matchSession, state, step);
+      resetTutorialSessionState(matchSession, state);
+      if (step.autoAdvance) {
+        matchSession.setMessage("");
+      } else {
+        beginTutorialStepTurn(matchSession, state, step);
+      }
       matchSession.render();
       return;
     }
@@ -436,20 +442,32 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
       }
     );
 
-    enterMatchMode({
-      kind: "tutorial",
-      deckId: "deck-starter",
-      deckCardIds: TUTORIAL_DECK,
-      opponentName: "Training dummy",
-    });
-
-    if (state.phase === PHASE.MOVE && state.spellPlayed?.[COLORS.RED]) {
+    if (step.autoAdvance) {
+      matchSession.setMessage("");
+    } else if (state.phase === PHASE.MOVE && state.spellPlayed?.[COLORS.RED]) {
       matchSession.state = state;
       beginTutorialStepTurn(matchSession, state, step);
     } else if (step.hint) {
       matchSession.setMessage(step.hint);
     }
     matchSession.render();
+  }
+
+  async function applyStep(index) {
+    const step = STEPS[index];
+    if (!step) {
+      finishTutorial();
+      return;
+    }
+
+    spellValidated = false;
+    lastMove = null;
+    kingStepPromoted = false;
+    renderOverlay(index, step, { showContinue: !!step.autoAdvance });
+
+    const state = await Promise.resolve(step.buildState());
+    const hooks = step.autoAdvance ? previewHooks : buildStepHooks(step);
+    mountTutorialBoard(state, hooks, step);
   }
 
   function advanceStep() {
