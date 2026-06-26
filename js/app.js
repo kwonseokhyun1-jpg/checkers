@@ -986,20 +986,26 @@ function appendCollectionCard(parent, def, opts = {}) {
   const buyOne = () => buyCardFromInventory(def.id, statusEl);
 
   const openInspect = () => {
+    const ownedNow = collectionCount(profile, def.id);
+    const inDeckNow = deckEdit ? countById(workingDeck)[def.id] || 0 : 0;
+    const atMaxCopiesNow = ownedNow >= cap;
+    const canAffordNow = profile.gems >= cost && !atMaxCopiesNow;
+    const addCheckNow = deckEdit ? canAddCardToDeck(workingDeck, def.id, profile) : { ok: false };
+
     showCardPreview(def, {
       meta: deckEdit
-        ? `Owned ${owned}/${cap} · In deck ${inDeck}/${cap} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
-        : `Owned ${owned}/${cap}${atMaxCopies ? " · max copies" : ` · ${cost} gems per copy`}`,
-      buyLabel: atMaxCopies ? "Max copies owned" : `Buy copy (${cost} gems)`,
-      buyDisabled: !canAfford || atMaxCopies || owned < 1,
+        ? `Owned ${ownedNow}/${cap} · In deck ${inDeckNow}/${cap} · ${atMaxCopiesNow ? "max copies" : `${cost} gems per copy`}`
+        : `Owned ${ownedNow}/${cap}${atMaxCopiesNow ? " · max copies" : ` · ${cost} gems per copy`}`,
+      buyLabel: atMaxCopiesNow ? "Max copies owned" : `Buy copy (${cost} gems)`,
+      buyDisabled: !canAffordNow || atMaxCopiesNow || ownedNow < 1,
       onBuy: () => {
         buyOne();
         closeCardPreview();
       },
-      addDisabled: !addCheck.ok,
+      addDisabled: !addCheckNow.ok,
       onAdd: deckEdit
         ? () => {
-            if (addCardToWorkingDeck(def.id)) closeCardPreview();
+            if (addCardToWorkingDeck(def.id)) openInspect();
           }
         : undefined,
     });
