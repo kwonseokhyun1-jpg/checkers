@@ -126,6 +126,7 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
     gameOver: null,
     turnNumber: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     spellPlayed: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    spellPhaseOpen: { [COLORS.RED]: true, [COLORS.BLACK]: true },
     gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     pvpSpellSeq: 0,
     pvpLastSpell: null,
@@ -533,12 +534,31 @@ export class MatchSession {
     return true;
   }
 
+  ensureSpellPhaseOpen(color) {
+    const s = this.state;
+    if (!s.spellPhaseOpen) {
+      s.spellPhaseOpen = { [COLORS.RED]: true, [COLORS.BLACK]: true };
+    }
+    if (s.spellPhaseOpen[color] === undefined) {
+      s.spellPhaseOpen[color] = s.phase === PHASE.CARDS;
+    }
+    return !!s.spellPhaseOpen[color];
+  }
+
+  closeSpellPhase(color = this.localColor) {
+    const s = this.state;
+    if (!s.spellPhaseOpen) {
+      s.spellPhaseOpen = { [COLORS.RED]: true, [COLORS.BLACK]: true };
+    }
+    s.spellPhaseOpen[color] = false;
+  }
+
   canPlaySpells() {
     const s = this.state;
     return (
       !this.isViewingHistory() &&
       s.turn === this.localColor &&
-      s.phase === PHASE.CARDS &&
+      this.ensureSpellPhaseOpen(this.localColor) &&
       !s.gameOver &&
       !s.spellPlayed[this.localColor] &&
       !s.meta.shatterSilenced?.[this.localColor] &&
@@ -703,8 +723,12 @@ export class MatchSession {
     const color = this.localColor;
     s.spellPlayed[color] = false;
     s.phase = PHASE.CARDS;
+    if (!s.spellPhaseOpen) s.spellPhaseOpen = { [COLORS.RED]: true, [COLORS.BLACK]: true };
+    s.spellPhaseOpen[color] = true;
     this.actionBusy = false;
     this.cardPlay = null;
+    this.selectedSquare = null;
+    this.validMoves = [];
     startTurnMeta(s, color);
   }
 
@@ -714,8 +738,12 @@ export class MatchSession {
     s.turnNumber[color]++;
     s.spellPlayed[color] = false;
     s.phase = PHASE.CARDS;
+    if (!s.spellPhaseOpen) s.spellPhaseOpen = { [COLORS.RED]: true, [COLORS.BLACK]: true };
+    s.spellPhaseOpen[color] = true;
     this.actionBusy = false;
     this.cardPlay = null;
+    this.selectedSquare = null;
+    this.validMoves = [];
     if (s.boardFx) s.boardFx = null;
     if (s.turnNumber[color] > 1 && s.turnNumber[color] % DRAW_EVERY_TURNS === 0) {
       const n = drawToHand(s, color, 1);
@@ -1277,7 +1305,7 @@ export class MatchSession {
     el.classList.toggle("disabled", !canCast);
     if (!canCast) {
       el.title =
-        s.phase === PHASE.MOVE
+        !this.ensureSpellPhaseOpen(this.localColor)
           ? "Spells skipped — select a piece to move"
           : s.meta.shatterSilenced?.[this.localColor]
             ? "Spell backlash — no spells this turn"
@@ -1401,6 +1429,9 @@ export class MatchSession {
     if (piece) this.showPieceInfo(piece, row, col);
 
     if (piece && piece.color === this.localColor) {
+      if (this.ensureSpellPhaseOpen(this.localColor) && s.phase === PHASE.MOVE) {
+        s.phase = PHASE.CARDS;
+      }
       this.selectedSquare = [row, col];
       this.validMoves = getAllMovesForColor(s.board, this.localColor, s).filter(
         (m) => m.from[0] === row && m.from[1] === col
@@ -1572,6 +1603,7 @@ export class MatchSession {
       move = forced;
     }
     this.cancelCardPlay();
+    this.closeSpellPhase(this.localColor);
     s.phase = PHASE.MOVE;
     s.meta.lastMove[this.localColor] = move;
     const capBefore = s.captured[this.localColor]?.length ?? 0;
@@ -2636,6 +2668,7 @@ ${starLine}`;
       return;
     }
     this.cancelCardPlay();
+    if (!afterSpell) this.closeSpellPhase(this.localColor);
     s.phase = PHASE.MOVE;
     if (isConfused(s.meta, this.localColor)) {
       const forced = this.pickConfusedMove(this.localColor);
@@ -3356,10 +3389,9 @@ ${starLine}`;
           banner.textContent = "Confused — select a piece to move";
           banner.className = "turn-banner";
         } else {
-          banner.textContent =
-            s.phase === PHASE.CARDS
-              ? "Cast a spell or select a piece to move"
-              : "Select a piece to move";
+          banner.textContent = this.ensureSpellPhaseOpen(this.localColor)
+            ? "Cast a spell or select a piece to move"
+            : "Select a piece to move";
           banner.className = "turn-banner";
         }
       } else {
