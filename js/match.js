@@ -2987,6 +2987,7 @@ ${starLine}`;
           if (piece.bearAwakened) el.classList.add("bear-awoken");
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.fortifyTurns > 0) el.classList.add("fortify-mark");
+          if (piece.mindControlTurns > 0) el.classList.add("mind-controlled");
           if (piece.bountyBy) el.classList.add("bounty-mark");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (piece.isClone) el.classList.add("clone-mark");
@@ -3256,6 +3257,24 @@ ${starLine}`;
             fortify.appendChild(mark);
             fortify.appendChild(turns);
             sq.appendChild(fortify);
+          }
+          if (piece.mindControlTurns > 0) {
+            const mc = document.createElement("div");
+            mc.className = "mind-control-indicator";
+            mc.setAttribute(
+              "aria-label",
+              `Mind controlled — ${piece.mindControlTurns} turn${piece.mindControlTurns === 1 ? "" : "s"} left`
+            );
+            const mark = document.createElement("span");
+            mark.className = "mind-control-indicator__mark";
+            mark.textContent = "👁";
+            mark.setAttribute("aria-hidden", "true");
+            const turns = document.createElement("span");
+            turns.className = "mind-control-indicator__turns";
+            turns.textContent = String(piece.mindControlTurns);
+            mc.appendChild(mark);
+            mc.appendChild(turns);
+            sq.appendChild(mc);
           }
           if (piece.bountyBy) {
             const bounty = document.createElement("div");
