@@ -316,7 +316,8 @@ body.match-active {
   z-index: 200;
   width: 100%;
   margin: 0;
-  padding: 0;
+  padding: 0 0 var(--game-safe-bottom);
+  min-height: calc(var(--nav-height) + var(--game-safe-bottom));
   background: linear-gradient(180deg, rgba(30, 40, 58, 0.98), rgba(12, 16, 24, 0.98));
   border: none;
   border-top: 1px solid rgba(201, 162, 39, 0.35);
@@ -331,15 +332,17 @@ body.match-active {
 .game-nav .game-nav__btn {
   flex: 1;
   flex-direction: column;
-  gap: 0.03rem;
-  padding: 0.08rem 0.15rem calc(0.18rem + var(--game-safe-bottom));
-  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12rem;
+  padding: 0.2rem 0.15rem;
+  min-height: var(--nav-height);
   border: none;
   border-right: 1px solid rgba(201, 162, 39, 0.2);
   background: transparent;
   color: var(--text-muted);
   border-radius: 0;
-  font-size: 0.56rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -351,7 +354,7 @@ body.match-active {
 }
 
 .game-nav .tab-btn__icon {
-  font-size: 1.15rem;
+  font-size: var(--nav-icon-size);
   line-height: 1;
   opacity: 1;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
@@ -365,7 +368,7 @@ body.match-active {
 
 /* Highlight Adventure tab (center) */
 .game-nav .tab-btn[data-tab="play"] .tab-btn__icon {
-  font-size: 1.22rem;
+  font-size: calc(var(--nav-icon-size) * 1.08);
 }
 
 .game-nav .tab-btn[data-tab="play"].active {
