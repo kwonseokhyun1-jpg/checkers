@@ -36,7 +36,7 @@ const ID_TO_CATEGORY = {
   coin_flip: "attack",
   collapse: "special",
   confusion: "control",
-  constitution: "special",
+  constitution: "defense",
   counterspell: "trap",
   crown: "special",
   cryo_bolt: "attack",
