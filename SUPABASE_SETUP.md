@@ -59,4 +59,6 @@ If the PvP lobby shows **`column pvp_matches.host_piece_skin does not exist`**, 
 
 To grant **+1000 gems** to every signed-in player once, run `supabase/grant_gems_1000.sql` in the same SQL Editor.
 
+To fully unlock the **goomba** account (all spells, cosmetics, adventure stages, 10,000 gems), run `supabase/unlock_goomba_full.sql`. Regenerate that file after catalog changes with `node scripts/generate-goomba-unlock-sql.mjs`.
+
 To delete every open waiting room immediately, run `supabase/clear_waiting_pvp_rooms.sql` in the same editor.
