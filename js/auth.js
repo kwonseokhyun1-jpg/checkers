@@ -1,4 +1,5 @@
 import { getSupabase, isSupabaseConfigured } from "./supabaseClient.js";
+import { setStoredProfileOwnerId } from "./storage.js";
 
 /** @type {import('@supabase/supabase-js').User | null} */
 let currentUser = null;
@@ -19,6 +20,7 @@ export function onAuthChange(fn) {
 }
 
 function notify() {
+  setStoredProfileOwnerId(currentUser?.id ?? null);
   for (const fn of listeners) fn(currentUser);
 }
 
