@@ -84,7 +84,7 @@ import { startInteractiveTutorial } from "./tutorialMatch.js";
 import { startMetaTutorial, notifyMetaTutorial } from "./tutorialMeta.js";
 import { startQuestsTutorial, startPvpTutorial, startCosmeticsTutorial, notifyUnlockTutorial } from "./tutorialUnlocks.js";
 import { initPvpUI } from "./pvpUI.js";
-import { initPanelHelp } from "./panelHelp.js";
+import { initPanelHelp, openPanelHelpPopup } from "./panelHelp.js";
 import { clearAllWaitingRoomsOnce } from "./pvp.js";
 import { getMatchHtml } from "./matchView.js";
 import {
@@ -261,19 +261,14 @@ function hideStageModal() {
 }
 
 function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
-  const desc = $("adventure-help-desc");
   const btn = $("adventure-help-btn");
-  if (!desc || !btn) return;
-  desc.textContent = message;
-  desc.hidden = false;
-  btn.setAttribute("aria-expanded", "true");
-  clearTimeout(showUnlockHint._timer);
-  showUnlockHint._timer = setTimeout(() => {
-    desc.hidden = true;
-    btn.setAttribute("aria-expanded", "false");
-    desc.innerHTML =
-      "Tap a stage below to battle. Earn <strong>★ stars</strong> on victory (more pieces left = more stars). Clear <strong>stage 30</strong> to unlock hidden worlds.";
-  }, 4500);
+  if (!btn) return;
+  openPanelHelpPopup({
+    title: btn.getAttribute("aria-label") || "Help",
+    bodyHtml: message,
+    triggerBtn: btn,
+    autoCloseMs: 4500,
+  });
 }
 
 function syncMainTabShellState() {
