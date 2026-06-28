@@ -78,4 +78,31 @@ const res = tryAutoPlay(work, COLORS.BLACK, bomb);
 assert.equal(res.success, true, "AI bomb cast should succeed");
 assert.deepEqual(res.picks, [[5, 2]], "AI bomb should arm the movable piece");
 
+const plagueNoEnemy = getCardDef("plague");
+assert.deepEqual(
+  getValidTargets(state, COLORS.BLACK, plagueNoEnemy, []),
+  [],
+  "plague should not target friendly pieces with no adjacent enemy"
+);
+assert.equal(
+  canAiPlay(state, COLORS.BLACK, plagueNoEnemy),
+  false,
+  "plague should not be AI-playable when no friendly piece is adjacent to an enemy"
+);
+
+const plagueBoard = emptyBoard();
+plagueBoard[3][2] = createPiece(COLORS.BLACK, 3, 2);
+plagueBoard[4][3] = createPiece(COLORS.RED, 4, 3);
+const plagueState = makeState(plagueBoard);
+const plague = getCardDef("plague");
+assert.deepEqual(
+  getValidTargets(plagueState, COLORS.BLACK, plague, []),
+  [[3, 2]],
+  "plague should target friendly pieces adjacent to an enemy"
+);
+assert.equal(canAiPlay(plagueState, COLORS.BLACK, plague), true, "plague should be AI-playable");
+const plagueRes = tryAutoPlay(structuredClone(plagueState), COLORS.BLACK, plague);
+assert.equal(plagueRes.success, true, "AI plague cast should succeed");
+assert.deepEqual(plagueRes.picks, [[3, 2]], "AI plague should infect the piece adjacent to an enemy");
+
 console.log("test-ai-spell-targets.mjs: all assertions passed");
