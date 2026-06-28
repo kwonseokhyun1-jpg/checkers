@@ -595,7 +595,6 @@ export class MatchSession {
       captures: move.captures || [],
     };
     if (message) this.setMessage(message);
-    this._moveAnimHideFrom = [fr, fc];
     this.render();
 
     await delay(280);
@@ -604,7 +603,6 @@ export class MatchSession {
     const toSq = board.querySelector(`[data-row="${tr}"][data-col="${tc}"]`);
     const pieceEl = fromSq?.querySelector(".piece");
     if (!fromSq || !toSq || !pieceEl) {
-      this._moveAnimHideFrom = null;
       this.aiHighlight = null;
       this.render();
       return;
@@ -631,6 +629,10 @@ export class MatchSession {
     flyer.style.width = `${w}px`;
     flyer.style.height = `${h}px`;
     board.appendChild(flyer);
+
+    // Hide the board piece only after the flyer is in place (no render — that would remove the flyer).
+    this._moveAnimHideFrom = [fr, fc];
+    pieceEl.classList.add("piece--move-hidden");
 
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
     flyer.style.left = `${toRect.left - boardRect.left + toRect.width * inset}px`;
