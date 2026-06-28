@@ -96,7 +96,7 @@ export function showCardPreview(def, opts = {}) {
       const rem = document.createElement("button");
       rem.type = "button";
       rem.className = "btn-secondary";
-      rem.textContent = "Remove from deck";
+      rem.textContent = "Remove all from deck";
       rem.addEventListener("click", () => {
         opts.onRemove();
         closeCardPreview();
