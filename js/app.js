@@ -38,7 +38,6 @@ import {
   recordLevelClear,
   formatStars,
   getLevelStars,
-  MAP_PIN_LAYOUT,
   MAP_THEME_PALETTES,
   repairAdventureProgress,
   getNextPlayableLevelId,
@@ -1444,54 +1443,37 @@ function getMapSceneryMarkup(theme) {
     <defs>
       <linearGradient id="mapSky" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${p.sky}"/>
-        <stop offset="100%" stop-color="#e8ecf0"/>
+        <stop offset="55%" stop-color="${p.gridLight}"/>
+        <stop offset="100%" stop-color="${p.gridDark}"/>
       </linearGradient>
-      <pattern id="isoCheck" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="skewY(-26) scale(1.2)">
-        <rect width="4" height="8" fill="${p.gridLight}"/>
-        <rect x="4" width="4" height="8" fill="${p.gridDark}"/>
-      </pattern>
+      <linearGradient id="mapHill" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${p.grass}"/>
+        <stop offset="100%" stop-color="${p.grassDark}"/>
+      </linearGradient>
+      <linearGradient id="mapFoundation" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${p.rock}"/>
+        <stop offset="100%" stop-color="${p.rockDark}"/>
+      </linearGradient>
       <filter id="mapSoft" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="0.3"/>
+        <feGaussianBlur stdDeviation="0.4"/>
       </filter>
     </defs>
     <rect width="100" height="120" fill="url(#mapSky)"/>
-    <rect x="-5" y="30" width="110" height="95" fill="url(#isoCheck)" opacity="0.92"/>
-    <!-- large boulder left -->
-    <ellipse cx="14" cy="68" rx="9" ry="5" fill="${p.rockDark}" opacity="0.5"/>
-    <path fill="${p.rock}" d="M6 72 C8 64 14 60 20 64 C24 68 22 76 16 78 C10 80 5 77 6 72 Z"/>
-    <path fill="${p.rockDark}" d="M10 76 C12 72 16 72 18 76 C16 78 12 78 10 76 Z"/>
-    <!-- grass tufts on boulder -->
-    <ellipse cx="12" cy="63" rx="3" ry="1.5" fill="${p.grass}"/>
-    <ellipse cx="17" cy="62" rx="2.5" ry="1.2" fill="${p.grassDark}"/>
-    <!-- large boulder right -->
-    <path fill="${p.rock}" d="M82 58 C88 52 94 54 96 62 C98 70 92 76 86 74 C80 72 78 64 82 58 Z"/>
-    <ellipse cx="90" cy="56" rx="2" ry="1" fill="${p.grass}"/>
-    <!-- small rocks -->
-    <ellipse cx="38" cy="88" rx="4" ry="2.5" fill="${p.rock}" opacity="0.7"/>
-    <ellipse cx="68" cy="92" rx="3.5" ry="2" fill="${p.rock}" opacity="0.6"/>
-    <!-- bushes -->
-    <circle cx="22" cy="82" r="3" fill="${p.grass}"/>
-    <circle cx="25" cy="81" r="2.5" fill="${p.grassDark}"/>
-    <circle cx="76" cy="78" r="3.5" fill="${p.grass}"/>
-    <circle cx="80" cy="79" r="2.8" fill="${p.grassDark}"/>
-    <!-- flowers -->
-    <circle cx="32" cy="90" r="0.8" fill="#f0a040"/>
-    <circle cx="35" cy="91" r="0.7" fill="#fff"/>
-    <circle cx="62" cy="86" r="0.8" fill="#f06080"/>
-    <circle cx="65" cy="87" r="0.7" fill="#fff"/>
-    <!-- castle tower at summit -->
-    <path fill="${p.castle}" d="M44 18 h12 v14 h-12z"/>
-    <path fill="${p.castleRoof}" d="M42 18 h16 v3 h-16z M46 14 h8 v4 h-8z"/>
-    <rect x="48" y="22" width="4" height="3" fill="#4a5060" rx="0.3"/>
-    <path fill="${p.flag}" d="M56 12 L56 20 L60 16 Z"/>
-    <line x1="56" y1="12" x2="56" y2="22" stroke="${p.castleRoof}" stroke-width="0.5"/>
-    <!-- vines on castle -->
-    <path fill="none" stroke="${p.grass}" stroke-width="0.6" d="M44 28 C43 24 45 20 47 18"/>
-    <path fill="none" stroke="${p.grassDark}" stroke-width="0.5" d="M54 30 C55 26 54 22 52 18"/>
-    <!-- goat on rock (right boulder) -->
-    <ellipse cx="88" cy="60" rx="2.5" ry="1.5" fill="#a08060"/>
-    <circle cx="90" cy="58" r="1.2" fill="#a08060"/>
-    <path fill="#806040" d="M86 61 L85 63 M90 61 L91 63"/>
+    <!-- distant hills -->
+    <path fill="${p.grass}" opacity="0.35" d="M0 52 C12 44 22 48 34 42 C46 36 58 44 72 40 C84 36 94 42 100 38 L100 62 L0 62 Z"/>
+    <path fill="${p.grassDark}" opacity="0.25" d="M0 58 C18 50 30 54 48 48 C66 42 82 50 100 46 L100 68 L0 68 Z"/>
+    <!-- clouds -->
+    <ellipse cx="18" cy="14" rx="10" ry="4" fill="#fff" opacity="0.55" filter="url(#mapSoft)"/>
+    <ellipse cx="24" cy="13" rx="7" ry="3.5" fill="#fff" opacity="0.5" filter="url(#mapSoft)"/>
+    <ellipse cx="72" cy="10" rx="12" ry="4.5" fill="#fff" opacity="0.5" filter="url(#mapSoft)"/>
+    <ellipse cx="80" cy="9" rx="8" ry="3.5" fill="#fff" opacity="0.45" filter="url(#mapSoft)"/>
+    <ellipse cx="48" cy="18" rx="9" ry="3.5" fill="#fff" opacity="0.35" filter="url(#mapSoft)"/>
+    <!-- ground -->
+    <rect x="0" y="88" width="100" height="32" fill="url(#mapHill)" opacity="0.85"/>
+    <ellipse cx="50" cy="90" rx="48" ry="6" fill="rgba(0,0,0,0.12)"/>
+    <!-- stone tower foundation -->
+    <path fill="url(#mapFoundation)" d="M18 90 L82 90 L86 97 L14 97 Z"/>
+    <path fill="${p.rockDark}" opacity="0.5" d="M14 97 L86 97 L84 101 L16 101 Z"/>
   </svg>`;
 }
 
@@ -1565,7 +1547,6 @@ function renderAdventureMap() {
   const nextId = getNextPlayableLevelId(progress);
 
   levels.forEach((level, i) => {
-    const pos = MAP_PIN_LAYOUT[i] || MAP_PIN_LAYOUT[MAP_PIN_LAYOUT.length - 1];
     const unlocked = isLevelUnlocked(progress, level.id);
     const cleared = isLevelCleared(progress, level.id);
     const isNext = level.id === nextId && unlocked;
@@ -1574,26 +1555,28 @@ function renderAdventureMap() {
     const tile = document.createElement("button");
     tile.type = "button";
     tile.className = "adventure-map-tile";
-    tile.style.left = `${pos.left}%`;
-    tile.style.top = `${pos.top}%`;
+    tile.style.zIndex = String(i + 10);
     tile.dataset.level = String(level.id);
     if (!unlocked) tile.classList.add("adventure-map-tile--locked");
     if (cleared) tile.classList.add("adventure-map-tile--cleared");
     if (isNext) tile.classList.add("adventure-map-tile--next");
+    if (level.stageInWorld === 10) tile.classList.add("adventure-map-tile--summit");
     tile.setAttribute("aria-disabled", unlocked ? "false" : "true");
     if (!unlocked) tile.title = `Clear global stage ${level.id - 1} to unlock`;
     tile.setAttribute("aria-label", `Stage ${level.stageInWorld}: ${level.opponent}, ${level.flavor}`);
-    const starLine = stars > 0 ? `<span class="adventure-map-tile__stars">${formatStars(stars)}</span>` : "";
+    const starLine = cleared ? `<span class="adventure-map-tile__stars">${formatStars(stars)}</span>` : "";
     const pawn = isNext ? `<span class="adventure-map-tile__pawn">${getMapPawnMarkup()}</span>` : "";
     tile.innerHTML = `
       ${pawn}
       <span class="adventure-map-tile__stone" aria-hidden="true">
+        <span class="adventure-map-tile__crenel"></span>
         <span class="adventure-map-tile__face">
           <span class="adventure-map-tile__num">${level.stageInWorld}</span>
+          ${starLine}
         </span>
-        <span class="adventure-map-tile__side"></span>
-      </span>
-      ${starLine}`;
+        <span class="adventure-map-tile__side adventure-map-tile__side--left"></span>
+        <span class="adventure-map-tile__side adventure-map-tile__side--right"></span>
+      </span>`;
     if (!unlocked) tile.disabled = true;
     tile.onclick = (e) => {
       e.preventDefault();
