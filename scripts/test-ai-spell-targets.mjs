@@ -80,9 +80,14 @@ assert.deepEqual(res.picks, [[5, 2]], "AI bomb should arm the movable piece");
 
 const plagueNoEnemy = getCardDef("plague");
 assert.deepEqual(
-  getValidTargets(state, COLORS.BLACK, plagueNoEnemy, []),
-  [],
-  "plague should not target friendly pieces with no adjacent enemy"
+  getValidTargets(state, COLORS.BLACK, plagueNoEnemy, []).sort((a, b) => a[0] - b[0] || a[1] - b[1]),
+  [
+    [5, 0],
+    [5, 2],
+    [5, 4],
+    [5, 6],
+  ],
+  "plague should target any friendly piece for the player"
 );
 assert.equal(
   canAiPlay(state, COLORS.BLACK, plagueNoEnemy),
