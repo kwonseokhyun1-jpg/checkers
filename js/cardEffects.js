@@ -408,6 +408,7 @@ export function getValidTargets(state, color, card, picks) {
           if (pieceCloakedByDarkness(state, r, c)) continue;
           if (FRIENDLY_REQUIRES_MOVABLE.has(card.effect) && !pieceHasLegalMoves(state.board, color, state, r, c)) continue;
           if (card.effect === "shockwave" && !shockwaveCanHitAdjacentEnemy(state, color, r, c)) continue;
+          if (card.effect === "plague" && !adjacentEnemiesTo(state, color, r, c).length) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
           if (card.effect === "magnet" && !magnetHasPull(state, color, r, c)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
