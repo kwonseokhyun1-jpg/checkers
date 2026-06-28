@@ -2035,6 +2035,77 @@ body.tutorial-match-active .spell-drag-ghost {
   background: rgba(232, 197, 71, 0.14);
 }
 
+.panel-help-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 450;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.panel-help-popup.hidden {
+  display: none;
+}
+
+body.panel-help-open {
+  overflow: hidden;
+}
+
+.panel-help-popup__backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: rgba(4, 6, 12, 0.72);
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+}
+
+.panel-help-popup__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 26rem);
+  padding: 1.25rem 1.15rem 1.1rem;
+  background: linear-gradient(165deg, var(--bg-panel-elevated), var(--bg-panel));
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), 0 0 48px rgba(92, 225, 230, 0.12);
+}
+
+.panel-help-popup__close {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.45rem;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.panel-help-popup__title {
+  margin: 0 1.75rem 0.65rem 0;
+  font-size: 1.05rem;
+}
+
+.panel-help-popup__body {
+  margin-bottom: 1rem;
+}
+
+.panel-help-popup__body p {
+  margin: 0;
+}
+
+.panel-help-popup__dismiss {
+  width: 100%;
+  min-height: 44px;
+}
+
 .panel-head__desc,
 .meta-desc {
   color: var(--text-muted);

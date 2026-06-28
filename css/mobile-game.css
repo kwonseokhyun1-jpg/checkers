@@ -954,6 +954,26 @@ body.match-active {
     min-height: 44px;
   }
 
+  /* Panel help — bottom sheet instead of inline header expansion */
+  .panel-help-popup {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .panel-help-popup__dialog {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 24px 24px 0 0;
+    border-bottom: none;
+    padding: 1.15rem 1.15rem calc(1.15rem + var(--game-safe-bottom));
+    animation: sheet-up 0.28s ease;
+  }
+
+  .panel-help-popup__close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   /* Mobile confirm sheet */
   .mobile-confirm {
     position: fixed;
