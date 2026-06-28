@@ -1657,7 +1657,7 @@ function openAdventurePrebattle(levelId) {
   const title = $("prebattle-title");
   const flavor = $("prebattle-flavor");
   const opponent = $("prebattle-opponent");
-  if (title) title.textContent = level.name + ": " + level.opponent;
+  if (title) title.textContent = `Chapter ${level.worldId} · Stage ${level.stageInWorld}`;
   if (flavor) flavor.textContent = level.flavor || "";
   if (opponent) opponent.textContent = "Loading…";
 
