@@ -432,17 +432,17 @@ export function getEnemyDeckPreview(cardIds) {
     .sort((a, b) => a.def.name.localeCompare(b.def.name));
 }
 
-/** Linear map tile positions (% of canvas) per stage in world (1–10), bottom → top. */
+/** Tower map tile positions (% of canvas) per stage in world (1–10), base → summit. */
 export const MAP_PIN_LAYOUT = [
-  { left: 28, top: 94 },
-  { left: 72, top: 84 },
-  { left: 22, top: 74 },
-  { left: 78, top: 64 },
-  { left: 30, top: 54 },
-  { left: 70, top: 44 },
-  { left: 25, top: 34 },
-  { left: 75, top: 24 },
-  { left: 35, top: 14 },
+  { left: 50, top: 94 },
+  { left: 50, top: 84 },
+  { left: 50, top: 74 },
+  { left: 50, top: 64 },
+  { left: 50, top: 54 },
+  { left: 50, top: 44 },
+  { left: 50, top: 34 },
+  { left: 50, top: 24 },
+  { left: 50, top: 14 },
   { left: 50, top: 5 },
 ];
 
