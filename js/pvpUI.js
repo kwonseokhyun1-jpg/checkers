@@ -78,10 +78,6 @@ function pvpPanelHead(descHtml) {
     </header>`;
 }
 
-function bindPvpPanelHelp() {
-  initPanelHelp(root.querySelector("#pvp-help-btn"), root.querySelector("#pvp-help-desc"));
-}
-
 /**
  * @param {object} opts
  * @param {HTMLElement} opts.root
@@ -90,6 +86,10 @@ function bindPvpPanelHelp() {
  */
 export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPvpViewShown }) {
   if (!root) return { render: () => {}, dispose: () => {} };
+
+  function bindPvpPanelHelp() {
+    initPanelHelp(root.querySelector("#pvp-help-btn"), root.querySelector("#pvp-help-desc"));
+  }
 
   let pvpService = null;
   let matchSession = null;
