@@ -3,7 +3,7 @@
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 import { friendlyHasDebuffs, pieceHasIronWillDebuff } from "./pieceStatus.js";
 
@@ -356,11 +356,8 @@ function fEmptyFirstPickTargets(state, color, card) {
     );
   }
   if (card.effect === "recall") {
-    const rows = color === COLORS.RED ? [5, 6, 7] : [0, 1, 2];
-    const hasBackSpot = rows.some((r) => {
-      for (let c = 0; c < SIZE; c++) if (emptyDark(state, r, c)) return true;
-      return false;
-    });
+    const row = ownBackRank(color);
+    const hasBackSpot = Array.from({ length: SIZE }, (_, c) => c).some((c) => emptyDark(state, row, c));
     return hasBackSpot ? friends : [];
   }
   if (card.effect === "long_step") {
@@ -516,12 +513,10 @@ export function getValidTargets(state, color, card, picks) {
         return getLeapfrogTargets(state.board, p, color).filter(([r, c]) => emptyDark(state, r, c));
       }
       if (card.effect === "recall") {
-        const rows = color === COLORS.RED ? [5, 6, 7] : [0, 1, 2];
+        const row = ownBackRank(color);
         const spots = [];
-        for (const r of rows) {
-          for (let c = 0; c < SIZE; c++) {
-            if (emptyDark(state, r, c)) spots.push([r, c]);
-          }
+        for (let c = 0; c < SIZE; c++) {
+          if (emptyDark(state, row, c)) spots.push([row, c]);
         }
         return spots;
       }

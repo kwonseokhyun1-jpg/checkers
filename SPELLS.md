@@ -54,7 +54,7 @@
 - **Panic** — Force an enemy man to step backward on its owner's next turn if possible.
 - **Quicksand** — Hidden trap on an empty dark square; the next piece to end a turn there is frozen (invisible until it triggers).
 - **Rally** — All pieces adjacent to a friendly piece gain retreat for 1 turn.
-- **Recall** — Return one of your pieces to any empty dark square in its starting row.
+- **Recall** — Return one of your pieces to an empty dark square on your back row (only playable when your back row has an empty space).
 - **Repel** — Push an adjacent enemy piece 1 square away if the landing square is empty.
 - **Retreat** — Grant a piece backward movement for 3 turns.
 - **Root** — Enemy cannot jump or capture for 2 turns (can still step).
