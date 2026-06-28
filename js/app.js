@@ -210,6 +210,14 @@ function removeOneFromDeck(cardId) {
   notifyMetaTutorial("card-removed-from-deck", { cardId });
 }
 
+function removeAllFromDeck(cardId) {
+  const before = workingDeck.length;
+  workingDeck = workingDeck.filter((id) => id !== cardId);
+  if (workingDeck.length === before) return;
+  renderDeckEditor();
+  notifyMetaTutorial("card-removed-from-deck", { cardId });
+}
+
 function autoFinishDeck() {
   const candidates = getPlayableCards()
     .map((def) => ({ def, owned: collectionCount(profile, def.id) }))
@@ -1349,7 +1357,7 @@ function renderDeckEditor() {
       onClick: () => {
         showCardPreview(def, {
           meta: count > 1 ? `${count} copies in deck` : "In your deck",
-          onRemove: () => removeOneFromDeck(def.id),
+          onRemove: () => removeAllFromDeck(def.id),
         });
       },
     });
