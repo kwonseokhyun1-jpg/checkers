@@ -233,7 +233,9 @@ export class MatchSession {
         this._beginLocalPvpTurnIfNeeded(this.state);
       }
     } else if (!(options.initialState && this.isPvp)) {
-      if (
+      if (options.skipInitialTurn) {
+        // Tutorial / restored snapshots set up turn phase after construction.
+      } else if (
         options.initialState &&
         !this.isPvp &&
         this.state.turn === this.opponentColor &&

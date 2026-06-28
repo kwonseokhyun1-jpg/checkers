@@ -9,6 +9,11 @@ body.splash-active .ambient-bg {
   visibility: hidden;
 }
 
+body.splash-active.match-active .game-shell,
+body.splash-active.tutorial-match-active .game-shell {
+  visibility: visible;
+}
+
 .app-splash {
   position: fixed;
   inset: 0;
