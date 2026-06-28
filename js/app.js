@@ -11,6 +11,8 @@ import {
   loadProfile,
   repairProfile,
   saveProfile,
+  resetToDefaultProfile,
+  getStoredProfileOwnerId,
   createDeck,
   upsertDeck,
   deleteDeck,
@@ -2010,7 +2012,7 @@ function init() {
     authBtn,
     modal: authModal,
     onNewAccount: () => {
-      profile = loadProfile();
+      profile = getStoredProfileOwnerId() ? resetToDefaultProfile() : loadProfile();
       prepareInteractiveTutorialForNewAccount(profile, saveProfile);
     },
     onSignedIn: () => {
@@ -2043,6 +2045,11 @@ function init() {
       matchSession = null;
       exitMatchMode({ clearCheckpoint: true });
       reconcileMatchShellState();
+      profile = resetToDefaultProfile();
+      syncNavUnlockState();
+      updateCurrencyHeader();
+      renderDeckList();
+      renderStarsShop();
       authGate?.show();
       showTab("deck");
     },

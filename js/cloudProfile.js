@@ -1,5 +1,12 @@
 import { getCurrentUser, fetchProfileRow, upsertProfileRow, isAuthAvailable } from "./auth.js";
-import { readProfileFromStorage, saveProfile, repairProfile, isDefaultProfile } from "./storage.js";
+import {
+  readProfileFromStorage,
+  saveProfile,
+  repairProfile,
+  isDefaultProfile,
+  getStoredProfileOwnerId,
+  resetToDefaultProfile,
+} from "./storage.js";
 import {
   mergeMonotonicProfileStats,
   reconcileMonotonicProfileStats,
@@ -31,6 +38,11 @@ function applyRemoteProfile(remote) {
   return remote;
 }
 
+function localBelongsToUser(userId) {
+  const ownerId = getStoredProfileOwnerId();
+  return ownerId === userId || ownerId === null;
+}
+
 export async function pullCloudProfile() {
   const user = getCurrentUser();
   if (!user || !isAuthAvailable()) return null;
@@ -38,15 +50,17 @@ export async function pullCloudProfile() {
   const row = await fetchProfileRow(user.id);
   const local = readProfileFromStorage();
   const remote = row?.profile_json;
+  const ownedLocal = localBelongsToUser(user.id);
 
   if (!remote || typeof remote !== "object" || isEmptyRemoteProfile(remote)) {
-    if (!isDefaultProfile(local)) applyRemoteProfile(local);
-    return local;
+    if (!isDefaultProfile(local) && ownedLocal) applyRemoteProfile(local);
+    else if (!isDefaultProfile(local) && !ownedLocal) return applyRemoteProfile(resetToDefaultProfile());
+    return readProfileFromStorage();
   }
 
-  if (isDefaultProfile(local)) {
+  if (isDefaultProfile(local) || !ownedLocal) {
     const merged = { ...remote };
-    mergeMonotonicProfileStats(merged, local);
+    if (ownedLocal) mergeMonotonicProfileStats(merged, local);
     reconcileMonotonicProfileStats(merged);
     return applyRemoteProfile(merged);
   }
