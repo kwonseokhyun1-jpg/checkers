@@ -8,6 +8,7 @@ import { reconcileMonotonicProfileStats } from "./profileStats.js";
 
 const STORAGE_KEY = "cardCheckersProfile_v7";
 const LEGACY_STORAGE_KEY = "cardCheckersProfile_v5";
+const PROFILE_OWNER_KEY = "cardCheckersProfileOwner_v1";
 export const STARTING_GEMS = 200;
 export const STARTING_STARS = 0;
 export const TESTING_STARS = 30;
@@ -76,6 +77,29 @@ function defaultProfile() {
 
 export function hasStoredProfile() {
   return Boolean(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY));
+}
+
+export function getStoredProfileOwnerId() {
+  return localStorage.getItem(PROFILE_OWNER_KEY);
+}
+
+export function setStoredProfileOwnerId(userId) {
+  if (userId) localStorage.setItem(PROFILE_OWNER_KEY, userId);
+  else localStorage.removeItem(PROFILE_OWNER_KEY);
+}
+
+export function clearStoredProfile() {
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(LEGACY_STORAGE_KEY);
+  localStorage.removeItem(PROFILE_OWNER_KEY);
+}
+
+/** Wipe local progress and return a fresh default profile (no cloud sync). */
+export function resetToDefaultProfile() {
+  clearStoredProfile();
+  const profile = finalizeProfile(defaultProfile());
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+  return profile;
 }
 
 function profileSignature(profile) {
@@ -331,19 +355,21 @@ export function loadProfile() {
     return profile;
   } catch (err) {
     console.error("Profile load failed, resetting:", err);
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    clearStoredProfile();
     const profile = finalizeProfile(defaultProfile());
     saveProfile(profile);
     return profile;
   }
 }
 
-export function saveProfile(profile, { bumpTimestamp = true } = {}) {
+export function saveProfile(profile, { bumpTimestamp = true, skipCloudSync = false, ownerUserId } = {}) {
   if (bumpTimestamp) profile.savedAt = Date.now();
   else if (typeof profile.savedAt !== "number") profile.savedAt = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
-  void import("./cloudProfile.js").then(({ scheduleCloudSave }) => scheduleCloudSave(profile)).catch(() => {});
+  if (ownerUserId !== undefined) setStoredProfileOwnerId(ownerUserId);
+  if (!skipCloudSync) {
+    void import("./cloudProfile.js").then(({ scheduleCloudSave }) => scheduleCloudSave(profile)).catch(() => {});
+  }
 }
 
 export function collectionRoom(profile, cardId) {
