@@ -35,6 +35,14 @@ function assert(cond, msg) {
   if (!cond) throw new Error(msg);
 }
 
+// Isolated seed with no adjacent pieces still infects itself
+const isolatedState = baseState();
+setPiece(isolatedState.board, 5, 4, createPiece(COLORS.RED, 5, 4));
+const isolatedCast = applyCard(isolatedState, COLORS.RED, { effect: "plague" }, [[5, 4]]);
+assert(isolatedCast.success, "Plague should succeed on an isolated friendly piece");
+assert(isolatedState.board[5][4]?.plagueTurns === PLAGUE_TURNS, "Isolated seed should be infected");
+assert(isolatedState.board[5][4]?.plagueSeed, "Isolated seed should be marked as plague seed");
+
 // Initial cast infects seed, adjacent enemy, and adjacent friendly
 const state = baseState();
 const seed = createPiece(COLORS.RED, 5, 4);
