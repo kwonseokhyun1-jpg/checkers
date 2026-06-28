@@ -434,16 +434,16 @@ export function getEnemyDeckPreview(cardIds) {
 
 /** Tower map tile positions (% of canvas) per stage in world (1–10), base → summit. */
 export const MAP_PIN_LAYOUT = [
-  { left: 50, top: 94 },
-  { left: 50, top: 84 },
-  { left: 50, top: 74 },
+  { left: 50, top: 88 },
+  { left: 50, top: 82 },
+  { left: 50, top: 76 },
+  { left: 50, top: 70 },
   { left: 50, top: 64 },
-  { left: 50, top: 54 },
-  { left: 50, top: 44 },
+  { left: 50, top: 58 },
+  { left: 50, top: 52 },
+  { left: 50, top: 46 },
+  { left: 50, top: 40 },
   { left: 50, top: 34 },
-  { left: 50, top: 24 },
-  { left: 50, top: 14 },
-  { left: 50, top: 5 },
 ];
 
 /** Per-world palette for isometric map scenery. */

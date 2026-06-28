@@ -6840,8 +6840,8 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   z-index: 2;
 }
 .adventure-map-canvas--iso {
-  aspect-ratio: 5 / 11;
-  min-height: min(92vh, 52rem);
+  aspect-ratio: 3 / 7;
+  min-height: min(92vh, 48rem);
   max-height: none;
   height: auto;
 }
@@ -6865,14 +6865,14 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  background: #e8e4dc;
+  background: #c8d8e8;
   scroll-padding: 1rem;
 }
 .adventure-map-canvas {
   position: relative;
   isolation: isolate;
   width: 100%;
-  min-height: min(92vh, 52rem);
+  min-height: min(92vh, 48rem);
   overflow: visible;
   touch-action: manipulation;
   --map-accent: #58cc02;
@@ -6897,52 +6897,58 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   pointer-events: none !important;
 }
 .adventure-map-scenery--verdant {
-  background: linear-gradient(180deg, #b8d4e8 0%, #e8ecf0 40%, #e8e4dc 100%);
+  background: linear-gradient(180deg, #8ec0e8 0%, #b8d4e8 35%, #c8dcc8 75%, #88b070 100%);
 }
 .adventure-map-scenery--verdant::before,
 .adventure-map-scenery--verdant::after {
   display: none;
 }
 .adventure-map-scenery--frost {
-  background: linear-gradient(180deg, #c8dce8 0%, #e8eef4 40%, #e8ecf0 100%);
+  background: linear-gradient(180deg, #a0c8e8 0%, #c8dce8 35%, #d8e8f0 75%, #98b8c8 100%);
 }
 .adventure-map-scenery--frost::before {
   display: none;
 }
 .adventure-map-scenery--ember {
-  background: linear-gradient(180deg, #e8c8a8 0%, #ece0d4 40%, #e8e0d4 100%);
+  background: linear-gradient(180deg, #e8a878 0%, #e8c8a8 35%, #ece0d4 75%, #a87858 100%);
 }
 .adventure-map-scenery--ember::before {
   display: none;
 }
 .adventure-map-scenery--void {
-  background: linear-gradient(180deg, #b8a8d8 0%, #dcd4e8 40%, #e0d8e8 100%);
+  background: linear-gradient(180deg, #9888c8 0%, #b8a8d8 35%, #dcd4e8 75%, #7868a0 100%);
 }
 .adventure-map-scenery--void::before {
   display: none;
 }
 .adventure-map-scenery--legend {
-  background: linear-gradient(180deg, #a8d8c0 0%, #dce8dc 40%, #e0e8e0 100%);
+  background: linear-gradient(180deg, #78c8a0 0%, #a8d8c0 35%, #dce8dc 75%, #58a878 100%);
 }
 .adventure-map-scenery--legend::before {
   display: none;
 }
 .adventure-map-tiles {
   position: absolute;
-  inset: 0;
+  left: 50%;
+  bottom: 9%;
+  transform: translateX(-50%);
   z-index: 20;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0;
   pointer-events: none;
 }
 .adventure-map-tile {
-  position: absolute;
-  transform: translate(-50%, -72%);
+  position: relative;
+  transform: none;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.1rem;
   padding: 0;
   border: none;
   background: transparent;
@@ -6951,18 +6957,22 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   color: var(--text);
   text-align: center;
   pointer-events: auto;
+  flex-shrink: 0;
+}
+.adventure-map-tile + .adventure-map-tile {
+  margin-bottom: -0.45rem;
 }
 .adventure-map-tile::before {
   content: "";
   position: absolute;
-  inset: -18px;
+  inset: -14px;
   z-index: -1;
 }
 .adventure-map-tile > * {
   pointer-events: none;
 }
 .adventure-map-tile:not(:disabled):active {
-  transform: translate(-50%, -72%) scale(0.95);
+  transform: scale(0.97);
 }
 .adventure-map-tile--locked {
   opacity: 0.45;
@@ -6974,39 +6984,67 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile__stone {
   position: relative;
   display: block;
-  width: 4.75rem;
-  height: 3.75rem;
+  width: 6.5rem;
+  height: 3.85rem;
+}
+.adventure-map-tile__crenel {
+  display: none;
+}
+.adventure-map-tile--summit .adventure-map-tile__crenel {
+  display: block;
+  position: absolute;
+  top: -0.55rem;
+  left: 0;
+  right: 0;
+  height: 0.65rem;
+  background:
+  linear-gradient(90deg,
+    #b0a8a0 0%, #b0a8a0 16%, transparent 16%, transparent 26%,
+    #b0a8a0 26%, #b0a8a0 42%, transparent 42%, transparent 52%,
+    #b0a8a0 52%, #b0a8a0 68%, transparent 68%, transparent 78%,
+    #b0a8a0 78%, #b0a8a0 100%);
+  border-radius: 2px 2px 0 0;
+  z-index: 3;
 }
 .adventure-map-tile__face {
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
-  height: 2.9rem;
+  bottom: 0.42rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(165deg, #e0d8cc 0%, #c8c0b4 35%, #b0a8a0 100%);
-  border-radius: 7px 7px 5px 5px;
+  gap: 0.08rem;
+  background: linear-gradient(180deg, #d8d0c4 0%, #c0b8ac 40%, #a8a098 100%);
+  border-left: 3px solid #988880;
+  border-right: 3px solid #988880;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.12),
-    0 2px 0 #988880,
-    0 4px 8px rgba(0, 0, 0, 0.22);
-  transform: perspective(80px) rotateX(18deg);
-  transform-origin: center bottom;
+    inset 0 3px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -4px 8px rgba(0, 0, 0, 0.15),
+    0 2px 0 #807870;
+  z-index: 2;
 }
 .adventure-map-tile__side {
   position: absolute;
-  left: 2px;
-  right: 2px;
   bottom: 0;
-  height: 0.9rem;
-  background: linear-gradient(180deg, #908880 0%, #706860 100%);
-  border-radius: 0 0 5px 5px;
-  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
-  transform: perspective(80px) rotateX(45deg);
-  transform-origin: center top;
+  width: 0.85rem;
+  height: 0.48rem;
+  background: linear-gradient(180deg, #908880 0%, #605850 100%);
+  z-index: 1;
+}
+.adventure-map-tile__side--left {
+  left: -0.7rem;
+  transform: skewY(14deg);
+  border-radius: 0 0 0 4px;
+  box-shadow: inset -2px 0 4px rgba(0, 0, 0, 0.2);
+}
+.adventure-map-tile__side--right {
+  right: -0.7rem;
+  transform: skewY(-14deg);
+  border-radius: 0 0 4px 0;
+  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.2);
 }
 .adventure-map-tile__num {
   font-family: var(--font-heading);
@@ -7017,12 +7055,13 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   line-height: 1;
 }
 .adventure-map-tile--cleared .adventure-map-tile__face {
-  background: linear-gradient(165deg, #d8e8d0 0%, #b8d0b0 35%, #98b890 100%);
+  background: linear-gradient(180deg, #d0e0c8 0%, #b0c8a8 40%, #90b088 100%);
+  border-left-color: #689060;
+  border-right-color: #689060;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.5),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.1),
-    0 2px 0 #689060,
-    0 4px 8px rgba(0, 0, 0, 0.18);
+    inset 0 2px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.1),
+    0 1px 0 #508050;
 }
 .adventure-map-tile--cleared .adventure-map-tile__side {
   background: linear-gradient(180deg, #588050 0%, #406838 100%);
@@ -7030,14 +7069,23 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile--cleared .adventure-map-tile__num {
   color: #2a5030;
 }
+.adventure-map-tile--cleared.adventure-map-tile--summit .adventure-map-tile__crenel {
+  background:
+  linear-gradient(90deg,
+    #90b088 0%, #90b088 16%, transparent 16%, transparent 26%,
+    #90b088 26%, #90b088 42%, transparent 42%, transparent 52%,
+    #90b088 52%, #90b088 68%, transparent 68%, transparent 78%,
+    #90b088 78%, #90b088 100%);
+}
 .adventure-map-tile--next .adventure-map-tile__face {
-  background: linear-gradient(165deg, #e8f0d8 0%, #c8e0a8 35%, #a8d080 100%);
+  background: linear-gradient(180deg, #e0f0d0 0%, #c0e0a0 40%, #a0d080 100%);
+  border-left-color: #68a040;
+  border-right-color: #68a040;
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.6),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.08),
-    0 2px 0 #68a040,
-    0 0 0 3px var(--map-accent),
-    0 4px 12px rgba(88, 204, 2, 0.35);
+    inset 0 2px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.08),
+    0 0 0 2px var(--map-accent),
+    0 2px 8px rgba(88, 204, 2, 0.35);
   animation: map-tile-pulse 2s ease-in-out infinite;
 }
 .adventure-map-tile--next .adventure-map-tile__side {
@@ -7046,17 +7094,25 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile--next .adventure-map-tile__num {
   color: #2a6020;
 }
+.adventure-map-tile--next.adventure-map-tile--summit .adventure-map-tile__crenel {
+  background:
+  linear-gradient(90deg,
+    #a0d080 0%, #a0d080 16%, transparent 16%, transparent 26%,
+    #a0d080 26%, #a0d080 42%, transparent 42%, transparent 52%,
+    #a0d080 52%, #a0d080 68%, transparent 68%, transparent 78%,
+    #a0d080 78%, #a0d080 100%);
+}
 @keyframes map-tile-pulse {
-  0%, 100% { box-shadow: inset 0 2px 0 rgba(255,255,255,0.6), inset 0 -4px 8px rgba(0,0,0,0.08), 0 2px 0 #68a040, 0 0 0 3px var(--map-accent), 0 4px 12px rgba(88,204,2,0.35); }
-  50% { box-shadow: inset 0 2px 0 rgba(255,255,255,0.6), inset 0 -4px 8px rgba(0,0,0,0.08), 0 2px 0 #68a040, 0 0 0 4px var(--map-accent), 0 6px 18px rgba(88,204,2,0.5); }
+  0%, 100% { box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), inset 0 -3px 6px rgba(0,0,0,0.08), 0 0 0 2px var(--map-accent), 0 2px 8px rgba(88,204,2,0.35); }
+  50% { box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), inset 0 -3px 6px rgba(0,0,0,0.08), 0 0 0 3px var(--map-accent), 0 4px 14px rgba(88,204,2,0.5); }
 }
 .adventure-map-tile__pawn {
   position: absolute;
-  bottom: calc(100% - 0.15rem);
+  bottom: calc(100% + 0.1rem);
   left: 50%;
   transform: translateX(-50%);
-  width: 2.6rem;
-  height: 3.4rem;
+  width: 2.4rem;
+  height: 3.1rem;
   z-index: 5;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
   animation: pawn-bob 2.2s ease-in-out infinite;
@@ -7071,14 +7127,12 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   50% { transform: translateX(-50%) translateY(-4px); }
 }
 .adventure-map-tile__stars {
-  position: absolute;
-  top: calc(100% + 0.15rem);
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
   color: var(--accent-gold);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
   white-space: nowrap;
+  line-height: 1;
 }
 .adventure-map-tile:not(:disabled) {
   z-index: 25;
