@@ -432,18 +432,18 @@ export function getEnemyDeckPreview(cardIds) {
     .sort((a, b) => a.def.name.localeCompare(b.def.name));
 }
 
-/** Isometric map tile positions (% of canvas) per stage in world (1–10). */
+/** Linear map tile positions (% of canvas) per stage in world (1–10), bottom → top. */
 export const MAP_PIN_LAYOUT = [
-  { left: 50, top: 86 },
-  { left: 64, top: 80 },
-  { left: 76, top: 72 },
-  { left: 80, top: 60 },
-  { left: 72, top: 50 },
-  { left: 56, top: 44 },
-  { left: 40, top: 46 },
-  { left: 26, top: 56 },
-  { left: 30, top: 70 },
-  { left: 50, top: 26 },
+  { left: 28, top: 94 },
+  { left: 72, top: 84 },
+  { left: 22, top: 74 },
+  { left: 78, top: 64 },
+  { left: 30, top: 54 },
+  { left: 70, top: 44 },
+  { left: 25, top: 34 },
+  { left: 75, top: 24 },
+  { left: 35, top: 14 },
+  { left: 50, top: 5 },
 ];
 
 /** Per-world palette for isometric map scenery. */
