@@ -432,20 +432,88 @@ export function getEnemyDeckPreview(cardIds) {
     .sort((a, b) => a.def.name.localeCompare(b.def.name));
 }
 
-/** Portrait map pin positions (% of canvas) per stage in world (1–10). */
-/** Stage positions (% of map) along the island path — beach to summit. */
+/** Isometric map tile positions (% of canvas) per stage in world (1–10). */
 export const MAP_PIN_LAYOUT = [
-  { left: 50, top: 84 },
-  { left: 68, top: 76 },
-  { left: 78, top: 64 },
-  { left: 70, top: 52 },
-  { left: 54, top: 44 },
-  { left: 36, top: 40 },
-  { left: 22, top: 50 },
-  { left: 20, top: 64 },
-  { left: 34, top: 76 },
-  { left: 50, top: 22 },
+  { left: 50, top: 86 },
+  { left: 64, top: 80 },
+  { left: 76, top: 72 },
+  { left: 80, top: 60 },
+  { left: 72, top: 50 },
+  { left: 56, top: 44 },
+  { left: 40, top: 46 },
+  { left: 26, top: 56 },
+  { left: 30, top: 70 },
+  { left: 50, top: 26 },
 ];
+
+/** Per-world palette for isometric map scenery. */
+export const MAP_THEME_PALETTES = {
+  verdant: {
+    sky: "#b8d4e8",
+    gridLight: "#e8e4dc",
+    gridDark: "#d0ccc4",
+    rock: "#a8a4a0",
+    rockDark: "#787470",
+    grass: "#5a9a48",
+    grassDark: "#3a6a30",
+    castle: "#8a9098",
+    castleRoof: "#6a7078",
+    flag: "#e8c547",
+    accent: "#58cc02",
+  },
+  frost: {
+    sky: "#c8dce8",
+    gridLight: "#e8eef4",
+    gridDark: "#c8d4dc",
+    rock: "#98a8b8",
+    rockDark: "#687888",
+    grass: "#6a98b0",
+    grassDark: "#4a7898",
+    castle: "#a0b0c0",
+    castleRoof: "#8090a8",
+    flag: "#a8d8f0",
+    accent: "#1cb0f6",
+  },
+  ember: {
+    sky: "#e8c8a8",
+    gridLight: "#ece0d4",
+    gridDark: "#d4c0b0",
+    rock: "#a88870",
+    rockDark: "#786050",
+    grass: "#8a6840",
+    grassDark: "#6a4830",
+    castle: "#987860",
+    castleRoof: "#785840",
+    flag: "#f08030",
+    accent: "#ff9600",
+  },
+  void: {
+    sky: "#b8a8d8",
+    gridLight: "#dcd4e8",
+    gridDark: "#c0b4d0",
+    rock: "#9080a8",
+    rockDark: "#605080",
+    grass: "#7a58a8",
+    grassDark: "#5a3888",
+    castle: "#8878a8",
+    castleRoof: "#685888",
+    flag: "#c8a0ff",
+    accent: "#ce82ff",
+  },
+  legend: {
+    sky: "#a8d8c0",
+    gridLight: "#dce8dc",
+    gridDark: "#c0d4c0",
+    rock: "#88a090",
+    rockDark: "#587068",
+    grass: "#48a868",
+    grassDark: "#288848",
+    castle: "#78a888",
+    castleRoof: "#588868",
+    flag: "#e8c547",
+    accent: "#58cc02",
+  },
+};
 
 export function getNextPlayableLevelId(progress) {
   const next = progress?.highestUnlocked || 1;

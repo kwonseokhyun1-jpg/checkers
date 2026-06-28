@@ -42,13 +42,13 @@ if (tutorialVisible) {
 
 await page.locator('[data-tab="play"]').click();
 await page.waitForTimeout(1200);
-const stages = await page.locator("#adventure-stage-list .adventure-stage-row").count();
-if (stages < 1) {
-  console.error("Expected adventure stages, found", stages);
+const tiles = await page.locator("#adventure-map .adventure-map-tile").count();
+if (tiles < 1) {
+  console.error("Expected adventure map tiles, found", tiles);
   process.exit(1);
 }
 
-await page.locator("#adventure-stage-list .adventure-stage-row").first().click();
+await page.locator("#adventure-map .adventure-map-tile--next, #adventure-map .adventure-map-tile:not(.adventure-map-tile--locked)").first().click();
 await page.waitForTimeout(800);
 if (!(await page.locator("#adventure-prebattle:not(.hidden)").isVisible())) {
   console.error("Prebattle modal did not open");
@@ -115,5 +115,5 @@ if (await authHeader.isVisible()) {
   }
 }
 
-console.log("Smoke test passed:", { baseUrl, stages, squares });
+console.log("Smoke test passed:", { baseUrl, tiles, squares });
 await browser.close();
