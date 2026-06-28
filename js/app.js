@@ -39,6 +39,7 @@ import {
   formatStars,
   getLevelStars,
   MAP_PIN_LAYOUT,
+  MAP_THEME_PALETTES,
   repairAdventureProgress,
   getNextPlayableLevelId,
   getWorldForLevel,
@@ -1438,46 +1439,70 @@ function showAdventureMap() {
 
 
 function getMapSceneryMarkup(theme) {
-  const ocean = theme === "frost" ? "#1a3050" : theme === "ember" ? "#2a1810" : theme === "void" ? "#12082a" : theme === "legend" ? "#0a1a10" : "#0d2848";
-  const land = theme === "frost" ? "#5a7a6a" : theme === "ember" ? "#6a4a30" : theme === "void" ? "#4a3868" : theme === "legend" ? "#2d6a4f" : "#3d7a48";
-  const beach = theme === "frost" ? "#9ab8c8" : theme === "ember" ? "#c8a070" : "#c4b090";
-  return `<svg class="adventure-map-scenery-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  const p = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
+  return `<svg class="adventure-map-scenery-svg" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
-      <linearGradient id="mapOcean" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${ocean}"/>
-        <stop offset="100%" stop-color="#061018"/>
+      <linearGradient id="mapSky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${p.sky}"/>
+        <stop offset="100%" stop-color="#e8ecf0"/>
       </linearGradient>
-      <linearGradient id="mapLand" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${land}"/>
-        <stop offset="100%" stop-color="#1a3020"/>
-      </linearGradient>
+      <pattern id="isoCheck" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="skewY(-26) scale(1.2)">
+        <rect width="4" height="8" fill="${p.gridLight}"/>
+        <rect x="4" width="4" height="8" fill="${p.gridDark}"/>
+      </pattern>
       <filter id="mapSoft" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="0.4" />
+        <feGaussianBlur stdDeviation="0.3"/>
       </filter>
     </defs>
-    <rect width="100" height="100" fill="url(#mapOcean)"/>
-    <!-- waves -->
-    <ellipse cx="18" cy="88" rx="14" ry="3" fill="rgba(255,255,255,0.06)"/>
-    <ellipse cx="82" cy="92" rx="18" ry="4" fill="rgba(255,255,255,0.05)"/>
-    <ellipse cx="50" cy="95" rx="22" ry="4" fill="rgba(255,255,255,0.07)"/>
-    <!-- island -->
-    <path fill="url(#mapLand)" stroke="rgba(255,255,255,0.12)" stroke-width="0.35"
-      d="M50 20 C62 20 72 26 78 36 C84 46 82 58 74 68 C68 78 58 84 50 86 C42 84 32 78 26 68 C18 58 16 46 22 36 C28 26 38 20 50 20 Z"/>
-    <!-- beach cove -->
-    <path fill="${beach}" opacity="0.55"
-      d="M42 80 C48 84 56 84 62 80 C58 86 50 88 42 86 Z"/>
-    <!-- castle summit -->
-    <path fill="#2a3548" d="M46 24 h8 v6 h-8z M44 22 h4 v4 h-4z M52 22 h4 v4 h-4z M47 20 h6 v2 h-6z"/>
-    <rect x="48.5" y="27" width="3" height="2" fill="#1a2430"/>
-    <!-- trees -->
-    <polygon points="24,62 26,56 28,62" fill="#0f2818"/>
-    <polygon points="74,58 76,52 78,58" fill="#143220"/>
-    <polygon points="34,70 36,64 38,70" fill="#0f2818"/>
-    <polygon points="66,72 68,66 70,72" fill="#143220"/>
-    <polygon points="58,38 60,32 62,38" fill="#0f2818"/>
-    <!-- path on island (decorative) -->
-    <path fill="none" stroke="rgba(200,180,120,0.35)" stroke-width="0.6" stroke-dasharray="2 1.5"
-      d="M52 82 L64 74 L74 66 L72 56 L60 50 L46 46 L32 52 L26 62 L38 72 L50 28"/>
+    <rect width="100" height="120" fill="url(#mapSky)"/>
+    <rect x="-5" y="30" width="110" height="95" fill="url(#isoCheck)" opacity="0.92"/>
+    <!-- large boulder left -->
+    <ellipse cx="14" cy="68" rx="9" ry="5" fill="${p.rockDark}" opacity="0.5"/>
+    <path fill="${p.rock}" d="M6 72 C8 64 14 60 20 64 C24 68 22 76 16 78 C10 80 5 77 6 72 Z"/>
+    <path fill="${p.rockDark}" d="M10 76 C12 72 16 72 18 76 C16 78 12 78 10 76 Z"/>
+    <!-- grass tufts on boulder -->
+    <ellipse cx="12" cy="63" rx="3" ry="1.5" fill="${p.grass}"/>
+    <ellipse cx="17" cy="62" rx="2.5" ry="1.2" fill="${p.grassDark}"/>
+    <!-- large boulder right -->
+    <path fill="${p.rock}" d="M82 58 C88 52 94 54 96 62 C98 70 92 76 86 74 C80 72 78 64 82 58 Z"/>
+    <ellipse cx="90" cy="56" rx="2" ry="1" fill="${p.grass}"/>
+    <!-- small rocks -->
+    <ellipse cx="38" cy="88" rx="4" ry="2.5" fill="${p.rock}" opacity="0.7"/>
+    <ellipse cx="68" cy="92" rx="3.5" ry="2" fill="${p.rock}" opacity="0.6"/>
+    <!-- bushes -->
+    <circle cx="22" cy="82" r="3" fill="${p.grass}"/>
+    <circle cx="25" cy="81" r="2.5" fill="${p.grassDark}"/>
+    <circle cx="76" cy="78" r="3.5" fill="${p.grass}"/>
+    <circle cx="80" cy="79" r="2.8" fill="${p.grassDark}"/>
+    <!-- flowers -->
+    <circle cx="32" cy="90" r="0.8" fill="#f0a040"/>
+    <circle cx="35" cy="91" r="0.7" fill="#fff"/>
+    <circle cx="62" cy="86" r="0.8" fill="#f06080"/>
+    <circle cx="65" cy="87" r="0.7" fill="#fff"/>
+    <!-- castle tower at summit -->
+    <path fill="${p.castle}" d="M44 18 h12 v14 h-12z"/>
+    <path fill="${p.castleRoof}" d="M42 18 h16 v3 h-16z M46 14 h8 v4 h-8z"/>
+    <rect x="48" y="22" width="4" height="3" fill="#4a5060" rx="0.3"/>
+    <path fill="${p.flag}" d="M56 12 L56 20 L60 16 Z"/>
+    <line x1="56" y1="12" x2="56" y2="22" stroke="${p.castleRoof}" stroke-width="0.5"/>
+    <!-- vines on castle -->
+    <path fill="none" stroke="${p.grass}" stroke-width="0.6" d="M44 28 C43 24 45 20 47 18"/>
+    <path fill="none" stroke="${p.grassDark}" stroke-width="0.5" d="M54 30 C55 26 54 22 52 18"/>
+    <!-- goat on rock (right boulder) -->
+    <ellipse cx="88" cy="60" rx="2.5" ry="1.5" fill="#a08060"/>
+    <circle cx="90" cy="58" r="1.2" fill="#a08060"/>
+    <path fill="#806040" d="M86 61 L85 63 M90 61 L91 63"/>
+  </svg>`;
+}
+
+function getMapPawnMarkup() {
+  return `<svg class="adventure-map-tile__pawn-svg" viewBox="0 0 24 32" aria-hidden="true">
+    <ellipse cx="12" cy="30" rx="7" ry="2" fill="rgba(0,0,0,0.2)"/>
+    <path fill="#58cc02" stroke="#46a302" stroke-width="0.8"
+      d="M12 4 C15 4 17 7 17 11 C17 15 14 17 12 20 C10 17 7 15 7 11 C7 7 9 4 12 4 Z"/>
+    <circle cx="12" cy="10" r="3.5" fill="#58cc02" stroke="#46a302" stroke-width="0.6"/>
+    <rect x="10" y="18" width="4" height="10" rx="1" fill="#58cc02" stroke="#46a302" stroke-width="0.6"/>
+    <ellipse cx="12" cy="28" rx="5" ry="2" fill="#58cc02" stroke="#46a302" stroke-width="0.6"/>
   </svg>`;
 }
 
@@ -1524,19 +1549,18 @@ function renderAdventureMap() {
   const map = $("adventure-map");
   if (!map) return;
   const theme = worldMeta?.theme || "verdant";
-  map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--island`;
+  const palette = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
+  map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--iso`;
+  map.style.setProperty("--map-accent", palette.accent);
   map.setAttribute("role", "group");
-  map.setAttribute("aria-label", "Island stage map");
+  map.setAttribute("aria-label", "Adventure stage map");
   map.innerHTML = `
     <div class="adventure-map-canvas__bg" aria-hidden="true">
       <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
     </div>
-    <svg class="adventure-map-path" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" style="pointer-events:none"></svg>
-    <div class="adventure-map-pins"></div>`;
+    <div class="adventure-map-tiles"></div>`;
 
-  const pathEl = map.querySelector(".adventure-map-path");
-  const pinsLayer = map.querySelector(".adventure-map-pins");
-  const points = [];
+  const tilesLayer = map.querySelector(".adventure-map-tiles");
   const levels = getLevelsForWorld(selectedAdventureWorldId);
   const nextId = getNextPlayableLevelId(progress);
 
@@ -1546,45 +1570,49 @@ function renderAdventureMap() {
     const cleared = isLevelCleared(progress, level.id);
     const isNext = level.id === nextId && unlocked;
     const stars = getLevelStars(progress, level.id);
-    points.push(`${pos.left},${pos.top}`);
 
-    const pin = document.createElement("button");
-    pin.type = "button";
-    pin.className = "adventure-map-pin";
-    pin.style.left = `${pos.left}%`;
-    pin.style.top = `${pos.top}%`;
-    pin.dataset.level = String(level.id);
-    if (!unlocked) pin.classList.add("adventure-map-pin--locked");
-    if (cleared) pin.classList.add("adventure-map-pin--cleared");
-    if (isNext) pin.classList.add("adventure-map-pin--next");
-    pin.setAttribute("aria-disabled", unlocked ? "false" : "true");
-    if (!unlocked) pin.title = `Clear global stage ${level.id - 1} to unlock`;
-    pin.setAttribute("aria-label", `Stage ${level.stageInWorld}: ${level.opponent}`);
-    const starLine = stars > 0 ? `<span class="adventure-map-pin__stars">${formatStars(stars)}</span>` : "";
-    pin.innerHTML = `
-      ${isNext ? '<span class="adventure-map-pin__next">NEXT</span>' : ""}
-      <span class="adventure-map-pin__diamond" aria-hidden="true"></span>
-      <span class="adventure-map-pin__title">${level.stageInWorld}. ${level.opponent}</span>
-      <span class="adventure-map-pin__flavor">${level.flavor}</span>
+    const tile = document.createElement("button");
+    tile.type = "button";
+    tile.className = "adventure-map-tile";
+    tile.style.left = `${pos.left}%`;
+    tile.style.top = `${pos.top}%`;
+    tile.dataset.level = String(level.id);
+    if (!unlocked) tile.classList.add("adventure-map-tile--locked");
+    if (cleared) tile.classList.add("adventure-map-tile--cleared");
+    if (isNext) tile.classList.add("adventure-map-tile--next");
+    tile.setAttribute("aria-disabled", unlocked ? "false" : "true");
+    if (!unlocked) tile.title = `Clear global stage ${level.id - 1} to unlock`;
+    tile.setAttribute("aria-label", `Stage ${level.stageInWorld}: ${level.opponent}, ${level.flavor}`);
+    const starLine = stars > 0 ? `<span class="adventure-map-tile__stars">${formatStars(stars)}</span>` : "";
+    const pawn = isNext ? `<span class="adventure-map-tile__pawn">${getMapPawnMarkup()}</span>` : "";
+    tile.innerHTML = `
+      ${pawn}
+      <span class="adventure-map-tile__stone" aria-hidden="true">
+        <span class="adventure-map-tile__face">
+          <span class="adventure-map-tile__num">${level.stageInWorld}</span>
+        </span>
+        <span class="adventure-map-tile__side"></span>
+      </span>
       ${starLine}`;
-    if (!unlocked) pin.disabled = true;
-    pin.onclick = (e) => {
+    if (!unlocked) tile.disabled = true;
+    tile.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
       openAdventureStage(level.id);
     };
-    pin.addEventListener("keydown", (e) => {
+    tile.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         openAdventureStage(level.id);
       }
     });
-    pinsLayer?.appendChild(pin);
+    tilesLayer?.appendChild(tile);
   });
 
 
   const stageList = $("adventure-stage-list");
   if (stageList) {
+    stageList.classList.add("adventure-stage-list--sr");
     stageList.innerHTML = "";
     for (const level of levels) {
       const unlocked = isLevelUnlocked(progress, level.id);
@@ -1609,12 +1637,8 @@ function renderAdventureMap() {
     }
   }
 
-  if (pathEl && points.length > 1) {
-    pathEl.innerHTML = `<polyline points="${points.join(" ")}" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2" opacity="0.35"/>`;
-  }
-
-  const nextPin = map.querySelector(".adventure-map-pin--next");
-  if (nextPin) requestAnimationFrame(() => nextPin.scrollIntoView({ behavior: "smooth", block: "center" }));
+  const nextTile = map.querySelector(".adventure-map-tile--next");
+  if (nextTile) requestAnimationFrame(() => nextTile.scrollIntoView({ behavior: "smooth", block: "center" }));
 
   const nextRow = stageList?.querySelector(".adventure-stage-row--next");
   if (nextRow) {
@@ -1867,7 +1891,7 @@ function bindAdventureMapCapture() {
   if (window.__adventureMapCaptureBound) return;
   window.__adventureMapCaptureBound = true;
   const handle = (e) => {
-    const pin = e.target.closest?.("#adventure-map .adventure-map-pin");
+    const pin = e.target.closest?.("#adventure-map .adventure-map-tile, #adventure-map .adventure-map-pin");
     if (!pin || pin.disabled) return;
     e.preventDefault();
     e.stopPropagation();
