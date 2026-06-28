@@ -311,6 +311,16 @@
     </div>
   </div>
 
+  <div id="panel-help-popup" class="panel-help-popup hidden" role="dialog" aria-modal="true" aria-labelledby="panel-help-popup-title" aria-describedby="panel-help-popup-body">
+    <button type="button" class="panel-help-popup__backdrop" data-panel-help-close aria-label="Close"></button>
+    <div class="panel-help-popup__dialog panel game-panel">
+      <button type="button" class="panel-help-popup__close" data-panel-help-close aria-label="Close">×</button>
+      <h2 id="panel-help-popup-title" class="panel-head__title panel-help-popup__title">Help</h2>
+      <div id="panel-help-popup-body" class="panel-help-popup__body panel-head__desc"></div>
+      <button type="button" class="btn-primary panel-help-popup__dismiss" data-panel-help-close>Got it</button>
+    </div>
+  </div>
+
   <div id="mobile-confirm" class="mobile-confirm hidden" role="alertdialog" aria-modal="true" aria-labelledby="mobile-confirm-title" aria-describedby="mobile-confirm-body">
     <button type="button" class="mobile-confirm__backdrop" data-mobile-confirm-backdrop aria-label="Cancel"></button>
     <div class="mobile-confirm__dialog panel game-panel">
