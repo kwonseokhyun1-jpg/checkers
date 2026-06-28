@@ -151,6 +151,22 @@ export function friendlyHasDebuffs(board, color) {
   return false;
 }
 
+/** Frozen, paralyzed, or rooted — debuffs Iron Will can consume to allow one move. */
+export function pieceHasIronWillDebuff(piece) {
+  if (!piece) return false;
+  return piece.frozenTurns > 0 || piece.paralyzedTurns > 0 || piece.rooted > 0;
+}
+
+export function friendlyHasIronWillTarget(board, color) {
+  for (let r = 0; r < board.length; r++) {
+    for (let c = 0; c < board[r].length; c++) {
+      const p = board[r][c];
+      if (p && p.color === color && pieceHasIronWillDebuff(p)) return true;
+    }
+  }
+  return false;
+}
+
 export function cleanseFriendlyDebuffs(board, color) {
   for (let r = 0; r < board.length; r++) {
     for (let c = 0; c < board[r].length; c++) {

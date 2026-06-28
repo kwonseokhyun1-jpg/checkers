@@ -129,7 +129,8 @@ body.match-active .game-nav.tabs {
   display: none;
 }
 
-body.match-active #view-match:not(.hidden) {
+body.match-active #view-match:not(.hidden),
+body.match-active #view-pvp:not(.hidden) {
   display: block;
   width: 100%;
 }
@@ -253,7 +254,17 @@ body.match-active {
   }
 
   body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .adventure-panel {
+    padding-bottom: 0;
+  }
+
+  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .adventure-stage-list {
     padding-bottom: var(--nav-clearance);
+    scroll-padding-bottom: var(--nav-clearance);
+  }
+
+  body.install-banner-visible.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .adventure-stage-list {
+    padding-bottom: calc(var(--nav-clearance) + 3.25rem);
+    scroll-padding-bottom: calc(var(--nav-clearance) + 3.25rem);
   }
 
   body.install-banner-visible.main-tab-active:not(.match-active):not(.deck-editing) .game-main {
@@ -279,8 +290,16 @@ body.match-active {
 
 .hud-gems,
 .hud-stars {
-  padding: 0.35rem 0.55rem;
-  min-height: 2rem;
+  padding: 0.25rem 0.6rem 0.25rem 0.3rem;
+  min-height: 2.15rem;
+  gap: 0.4rem;
+}
+
+.hud-gems__icon,
+.hud-stars__icon {
+  width: 1.7rem;
+  height: 1.7rem;
+  font-size: 0.78rem;
 }
 
 .hud-gems__value,
@@ -303,10 +322,11 @@ body.match-active {
   z-index: 200;
   width: 100%;
   margin: 0;
-  padding: 0.35rem 0 0;
+  padding: 0 0 var(--game-safe-bottom);
+  min-height: calc(var(--nav-height) + var(--game-safe-bottom));
   background: linear-gradient(180deg, rgba(30, 40, 58, 0.98), rgba(12, 16, 24, 0.98));
   border: none;
-  border-top: 2px solid rgba(201, 162, 39, 0.35);
+  border-top: 1px solid rgba(201, 162, 39, 0.35);
   border-radius: 0;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
@@ -318,15 +338,17 @@ body.match-active {
 .game-nav .game-nav__btn {
   flex: 1;
   flex-direction: column;
-  gap: 0.15rem;
-  padding: 0.45rem 0.2rem calc(0.35rem + var(--game-safe-bottom));
-  min-height: 3.25rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12rem;
+  padding: 0.2rem 0.15rem;
+  min-height: var(--nav-height);
   border: none;
   border-right: 1px solid rgba(201, 162, 39, 0.2);
   background: transparent;
   color: var(--text-muted);
   border-radius: 0;
-  font-size: 0.62rem;
+  font-size: 0.65rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -338,7 +360,7 @@ body.match-active {
 }
 
 .game-nav .tab-btn__icon {
-  font-size: 1.35rem;
+  font-size: var(--nav-icon-size);
   line-height: 1;
   opacity: 1;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
@@ -352,7 +374,7 @@ body.match-active {
 
 /* Highlight Adventure tab (center) */
 .game-nav .tab-btn[data-tab="play"] .tab-btn__icon {
-  font-size: 1.55rem;
+  font-size: calc(var(--nav-icon-size) * 1.08);
 }
 
 .game-nav .tab-btn[data-tab="play"].active {
@@ -604,6 +626,8 @@ body.match-active {
   .panel-opponent,
   .panel-player {
     max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .board-wrap {
@@ -612,10 +636,19 @@ body.match-active {
     margin-inline: auto;
   }
 
-  /* Board size comes from flex space in .board-section (see match flex shell below) */
+  body.match-active .board-wrap {
+    width: min(
+      100%,
+      var(--board-fit-width),
+      calc(var(--app-height) - var(--board-v-chrome))
+    );
+  }
 
   .hand.spell-hand {
+    width: 100%;
+    min-width: 0;
     overflow-x: auto;
+    overflow-y: hidden;
     flex-wrap: nowrap;
     padding-bottom: 0.25rem;
     scrollbar-width: none;
@@ -738,7 +771,20 @@ body.match-active {
 
   body.match-active .panel-opponent,
   body.match-active .panel-player {
+    width: min(100%, var(--board-fit-width));
+    max-width: min(100%, var(--board-fit-width));
+    min-width: 0;
+    overflow: hidden;
     padding: 0.55rem 0.7rem;
+  }
+
+  body.match-active .hand.spell-hand {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
   }
 
   body.match-active .panel-opponent .player-badge,
@@ -846,117 +892,6 @@ body.match-active {
 
   body.match-active .pvp-loading {
     min-height: calc(100dvh - 1rem - var(--game-safe-top) - var(--game-safe-bottom));
-  }
-
-  /*
-   * Match flex shell — pin board to the viewport; hand grows horizontally only.
-   * Prevents the hand panel from pushing/scrolling the board when cards are drawn.
-   */
-  body.match-active .game-main {
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  body.match-active #view-match:not(.hidden) {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  body.match-active .match-wrap {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  body.match-active .match-scene #btn-leave-match {
-    flex-shrink: 0;
-  }
-
-  body.match-active .game-layout {
-    flex: 1 1 0;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    gap: 0.5rem;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  body.match-active .panel-opponent,
-  body.match-active .panel-player,
-  body.match-active .match-log,
-  body.match-active .match-history-footer {
-    flex-shrink: 0;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  body.match-active .board-section {
-    flex: 1 1 0;
-    min-height: 0;
-    overflow: hidden;
-    gap: 0.35rem;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  body.match-active #turn-banner,
-  body.match-active #spell-cast-bar,
-  body.match-active #ai-spell-banner,
-  body.match-active #piece-info {
-    flex-shrink: 0;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  body.match-active .board-wrap {
-    flex: 1 1 0;
-    min-height: 0;
-    min-width: 0;
-    width: 100%;
-    max-width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    container-type: size;
-    container-name: match-board;
-  }
-
-  body.match-active .board-wrap .board-frame {
-    width: min(100cqw, var(--board-fit-width), 100cqh);
-    max-width: 100%;
-    max-height: 100%;
-    height: auto;
-  }
-
-  /* Fixed-height hand row — new cards scroll sideways, never grow the panel */
-  body.match-active .hand.spell-hand {
-    height: 7.5rem;
-    min-height: 7.5rem;
-    max-height: 7.5rem;
-    flex-shrink: 0;
-    align-items: stretch;
-  }
-
-  body.match-active .hand.spell-hand .spell-card {
-    flex: 0 0 88px;
-    width: 88px;
-    max-width: 88px;
-    height: 100%;
-    max-height: 100%;
-  }
-
-  body.match-active .hand.spell-hand.spell-hand--crowded .spell-card {
-    flex: 0 0 76px;
-    width: 76px;
-    max-width: 76px;
   }
 }
 
@@ -1458,7 +1393,7 @@ body.install-banner-visible.deck-editing .game-shell {
 
   .tutorial-meta-overlay {
     padding: 0;
-    padding-bottom: max(calc(var(--nav-height, 4.25rem) + 0.25rem), env(safe-area-inset-bottom));
+    padding-bottom: max(calc(var(--nav-height, 2.75rem) + 0.25rem), env(safe-area-inset-bottom));
   }
 
   .tutorial-meta-overlay--card-top {
@@ -1511,29 +1446,35 @@ body.install-banner-visible.deck-editing .game-shell {
     max-width: 100%;
     margin-top: 0.5rem;
     padding-bottom: calc(0.15rem + var(--game-safe-bottom, 0px));
+    flex-shrink: 0;
   }
 
   .match-history-footer .pvp-move-history {
     width: 100%;
     padding: 0.35rem 0.4rem;
     margin-top: 0;
+    min-height: 3.25rem;
   }
 
   .pvp-move-history {
     width: 100%;
     padding: 0.35rem 0.4rem;
     margin-top: 0.4rem;
+    min-height: 3.25rem;
   }
 
   .pvp-move-history__arrow {
     width: 44px;
     height: 44px;
     border-radius: 10px;
+    flex-shrink: 0;
   }
 
-  .pvp-move-history__chip {
+  .pvp-move-history__track {
     min-height: 44px;
-    padding: 0.45rem 0.75rem;
+  }
+
+  .pvp-move-history__label {
     font-size: 0.85rem;
   }
 
@@ -1718,11 +1659,29 @@ body.install-banner-visible.deck-editing .game-shell {
     max-width: 100%;
     margin-top: 0.25rem;
     padding-bottom: 0.25rem;
+    flex-shrink: 0;
+    min-height: 2.5rem;
   }
 
   body.match-active .match-message {
     font-size: 0.8rem;
     padding: 0.5rem 0.65rem;
+    min-height: 2.25rem;
+    max-height: 2.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: block;
+  }
+
+  body.match-active .match-message:empty {
+    display: block;
+    visibility: hidden;
+  }
+
+  body.match-active .match-message--redundant {
+    display: none;
+    visibility: hidden;
   }
 
   /* Enemy spell announcement — readable on narrow boards */
@@ -1821,10 +1780,6 @@ body.install-banner-visible.deck-editing .game-shell {
     flex-direction: column;
   }
 
-  #view-play .adventure-panel {
-    padding-bottom: 0.25rem;
-  }
-
   .adventure-stage-list {
     max-height: min(46dvh, 22rem);
     margin-bottom: 0.35rem;
@@ -1833,8 +1788,19 @@ body.install-banner-visible.deck-editing .game-shell {
     scrollbar-width: thin;
   }
 
+  body.adventure-active:not(.adventure-stage-open) .adventure-panel {
+    padding-bottom: 0;
+  }
+
   body.adventure-active:not(.adventure-stage-open) .adventure-stage-list {
     max-height: none;
+    padding-bottom: var(--nav-clearance);
+    scroll-padding-bottom: var(--nav-clearance);
+  }
+
+  body.install-banner-visible.adventure-active:not(.adventure-stage-open) .adventure-stage-list {
+    padding-bottom: calc(var(--nav-clearance) + 3.25rem);
+    scroll-padding-bottom: calc(var(--nav-clearance) + 3.25rem);
   }
 
   .adventure-stage-row {

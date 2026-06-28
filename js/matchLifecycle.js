@@ -24,11 +24,13 @@ function isVisibleShellElement(el) {
 /** True when the in-match board UI (with Leave match) is visible on screen. */
 export function isLiveMatchUiVisible() {
   const leaveBtn = document.querySelector("#btn-leave-match");
-  if (!isVisibleShellElement(leaveBtn)) return false;
+  if (!leaveBtn) return false;
+  if (isVisibleShellElement(leaveBtn)) return true;
+  // PvP/adventure match may still be mounted in a hidden tab until the view is revealed.
+  if (!isMatchActive()) return false;
   const matchView = document.getElementById("view-match");
   const pvpView = document.getElementById("view-pvp");
-  if (matchView && !matchView.classList.contains("hidden") && matchView.contains(leaveBtn)) return true;
-  if (pvpView && !pvpView.classList.contains("hidden") && leaveBtn.closest("#view-pvp")) return true;
+  if (matchView?.contains(leaveBtn) || pvpView?.contains(leaveBtn)) return true;
   return false;
 }
 

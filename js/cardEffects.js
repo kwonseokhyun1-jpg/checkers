@@ -5,7 +5,7 @@ import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAd
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
-import { friendlyHasDebuffs } from "./pieceStatus.js";
+import { friendlyHasDebuffs, pieceHasIronWillDebuff } from "./pieceStatus.js";
 
 export { applyCard, applyEffect };
 export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS } from "./cullAnimation.js";
@@ -408,9 +408,11 @@ export function getValidTargets(state, color, card, picks) {
           if (pieceCloakedByDarkness(state, r, c)) continue;
           if (FRIENDLY_REQUIRES_MOVABLE.has(card.effect) && !pieceHasLegalMoves(state.board, color, state, r, c)) continue;
           if (card.effect === "shockwave" && !shockwaveCanHitAdjacentEnemy(state, color, r, c)) continue;
+          if (card.effect === "plague" && !adjacentEnemiesTo(state, color, r, c).length) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
           if (card.effect === "magnet" && !magnetHasPull(state, color, r, c)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
+          if (card.effect === "iron_will" && !pieceHasIronWillDebuff(p)) continue;
           res.push([r, c]);
         }
       return res;

@@ -82,6 +82,7 @@ import { startInteractiveTutorial } from "./tutorialMatch.js";
 import { startMetaTutorial, notifyMetaTutorial } from "./tutorialMeta.js";
 import { startQuestsTutorial, startPvpTutorial, startCosmeticsTutorial, notifyUnlockTutorial } from "./tutorialUnlocks.js";
 import { initPvpUI } from "./pvpUI.js";
+import { initPanelHelp } from "./panelHelp.js";
 import { clearAllWaitingRoomsOnce } from "./pvp.js";
 import { getMatchHtml } from "./matchView.js";
 import {
@@ -308,21 +309,24 @@ async function showTab(tab) {
   reconcileMatchShellState();
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
-    const label = TAB_LABELS[tab] || tab;
-    if (
-      !(await mobileConfirm(`Leave your current match to open ${label}?`, {
-        title: "Leave match?",
-        confirmLabel: "Leave",
-        cancelLabel: "Stay",
-        destructive: true,
-      }))
-    ) {
+    const switchingToActivePvpMatch = tab === "pvp" && document.getElementById("pvp-match-root");
+    if (!switchingToActivePvpMatch) {
+      const label = TAB_LABELS[tab] || tab;
+      if (
+        !(await mobileConfirm(`Leave your current match to open ${label}?`, {
+          title: "Leave match?",
+          confirmLabel: "Leave",
+          cancelLabel: "Stay",
+          destructive: true,
+        }))
+      ) {
+        return;
+      }
+      setPendingNavigationTab(tab);
+      armLeaveConfirmSkip();
+      document.querySelector("#btn-leave-match")?.click();
       return;
     }
-    setPendingNavigationTab(tab);
-    armLeaveConfirmSkip();
-    document.querySelector("#btn-leave-match")?.click();
-    return;
   }
   if (tab !== "deck" && deckSubview === "edit") {
     unlockBodyScrollForDeckEdit();
@@ -436,31 +440,6 @@ function initHeaderProfileMenu() {
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !dropdown.hidden) closeHeaderProfileMenu();
-  });
-}
-
-function initPanelHelp(btnId, descId) {
-  const btn = $(btnId);
-  const desc = $(descId);
-  if (!btn || !desc) return;
-
-  const setOpen = (open) => {
-    desc.hidden = !open;
-    btn.setAttribute("aria-expanded", open ? "true" : "false");
-    btn.classList.toggle("panel-help-btn--active", open);
-  };
-
-  btn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    setOpen(desc.hidden);
-  });
-
-  document.addEventListener("click", () => {
-    if (!desc.hidden) setOpen(false);
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !desc.hidden) setOpen(false);
   });
 }
 
@@ -1007,20 +986,26 @@ function appendCollectionCard(parent, def, opts = {}) {
   const buyOne = () => buyCardFromInventory(def.id, statusEl);
 
   const openInspect = () => {
+    const ownedNow = collectionCount(profile, def.id);
+    const inDeckNow = deckEdit ? countById(workingDeck)[def.id] || 0 : 0;
+    const atMaxCopiesNow = ownedNow >= cap;
+    const canAffordNow = profile.gems >= cost && !atMaxCopiesNow;
+    const addCheckNow = deckEdit ? canAddCardToDeck(workingDeck, def.id, profile) : { ok: false };
+
     showCardPreview(def, {
       meta: deckEdit
-        ? `Owned ${owned}/${cap} · In deck ${inDeck}/${cap} · ${atMaxCopies ? "max copies" : `${cost} gems per copy`}`
-        : `Owned ${owned}/${cap}${atMaxCopies ? " · max copies" : ` · ${cost} gems per copy`}`,
-      buyLabel: atMaxCopies ? "Max copies owned" : `Buy copy (${cost} gems)`,
-      buyDisabled: !canAfford || atMaxCopies || owned < 1,
+        ? `Owned ${ownedNow}/${cap} · In deck ${inDeckNow}/${cap} · ${atMaxCopiesNow ? "max copies" : `${cost} gems per copy`}`
+        : `Owned ${ownedNow}/${cap}${atMaxCopiesNow ? " · max copies" : ` · ${cost} gems per copy`}`,
+      buyLabel: atMaxCopiesNow ? "Max copies owned" : `Buy copy (${cost} gems)`,
+      buyDisabled: !canAffordNow || atMaxCopiesNow || ownedNow < 1,
       onBuy: () => {
         buyOne();
         closeCardPreview();
       },
-      addDisabled: !addCheck.ok,
+      addDisabled: !addCheckNow.ok,
       onAdd: deckEdit
         ? () => {
-            if (addCardToWorkingDeck(def.id)) closeCardPreview();
+            if (addCardToWorkingDeck(def.id)) openInspect();
           }
         : undefined,
     });
@@ -1625,6 +1610,11 @@ function renderAdventureMap() {
 
   const nextPin = map.querySelector(".adventure-map-pin--next");
   if (nextPin) requestAnimationFrame(() => nextPin.scrollIntoView({ behavior: "smooth", block: "center" }));
+
+  const nextRow = stageList?.querySelector(".adventure-stage-row--next");
+  if (nextRow) {
+    requestAnimationFrame(() => nextRow.scrollIntoView({ behavior: "smooth", block: "end" }));
+  }
 }
 
 
@@ -2034,8 +2024,9 @@ function init() {
       void refreshHeaderIdentity().then(() => {
         if (activeTab === "profile") renderProfile();
         if (activeTab === "quests") renderQuests();
+        if (activeTab === "pvp") pvpController?.render({ resume: true });
       });
-      pvpController?.render();
+      pvpController?.render({ resume: true });
       maybeStartInteractiveTutorial();
       maybeStartMetaTutorial();
       maybeStartPostStage1Tutorials();
@@ -2064,6 +2055,10 @@ function init() {
     getProfile: () => profile,
     openAuthModal: () => authUI?.open("signin", { forced: true }),
     onNavigateTab: showTab,
+    onPvpViewShown: () => {
+      activeTab = "pvp";
+      syncMainTabShellState();
+    },
   });
 
   bindMatchVisibilityHandlers(() => matchSession);
@@ -2265,6 +2260,7 @@ async function bootstrapAfterAuth() {
   }
   syncTutorialStorageWithProfile(profile);
   await refreshHeaderIdentity();
+  pvpController?.render();
   reconcileMatchShellState();
 
   if (requiresAuthGate()) {

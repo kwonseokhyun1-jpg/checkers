@@ -126,6 +126,7 @@ export function createMatchState(playerDeckIds, aiDeckIds = null) {
     gameOver: null,
     turnNumber: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     spellPlayed: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    spellPhaseOpen: { [COLORS.RED]: true, [COLORS.BLACK]: true },
     gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     pvpSpellSeq: 0,
     pvpLastSpell: null,
@@ -336,34 +337,33 @@ export class MatchSession {
     if (prevBtn) prevBtn.disabled = viewIdx <= 0;
     if (nextBtn) nextBtn.disabled = viewIdx >= max;
 
-    if (status) {
-      const reviewing = this.isViewingHistory();
-      status.classList.toggle("hidden", !reviewing);
-      if (reviewing) {
-        const entry = history[viewIdx];
-        status.textContent = entry
-          ? `Reviewing: ${formatHistoryChipLabel(entry, viewIdx)} — tap › for live`
-          : "Reviewing earlier position";
-      }
-    }
+    if (status) status.classList.add("hidden");
 
     if (!track) return;
-    track.innerHTML = "";
-    const start = Math.max(1, viewIdx - 2);
-    const end = Math.min(max, viewIdx + 2);
-    for (let i = start; i <= end; i++) {
-      const entry = history[i];
-      if (!entry || entry.type === "start") continue;
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "pvp-move-history__chip";
-      chip.setAttribute("role", "listitem");
-      if (i === viewIdx) chip.classList.add("pvp-move-history__chip--active");
-      else if (i < viewIdx) chip.classList.add("pvp-move-history__chip--past");
-      chip.textContent = formatHistoryChipLabel(entry, i);
-      chip.addEventListener("click", () => this.setHistoryViewIndex(i));
-      track.appendChild(chip);
+    const entry = history[viewIdx];
+    const reviewing = this.isViewingHistory();
+    let label = "Start";
+    if (entry) {
+      label =
+        entry.type === "start"
+          ? entry.label || "Start"
+          : formatHistoryChipLabel(entry, viewIdx);
+      if (reviewing) label = `Reviewing: ${label}`;
+    } else if (reviewing) {
+      label = "Reviewing earlier position";
     }
+
+    let labelEl = track.querySelector(".pvp-move-history__label");
+    if (!labelEl) {
+      track.innerHTML = "";
+      labelEl = document.createElement("span");
+      labelEl.className = "pvp-move-history__label";
+      labelEl.setAttribute("aria-live", "polite");
+      track.appendChild(labelEl);
+    }
+    labelEl.textContent = label;
+    labelEl.classList.toggle("pvp-move-history__label--review", reviewing);
+    track.setAttribute("aria-label", `Move ${viewIdx} of ${max}`);
   }
 
   recordHistoryFromReplayEntry(entry) {
@@ -534,12 +534,31 @@ export class MatchSession {
     return true;
   }
 
+  ensureSpellPhaseOpen(color) {
+    const s = this.state;
+    if (!s.spellPhaseOpen) {
+      s.spellPhaseOpen = { [COLORS.RED]: true, [COLORS.BLACK]: true };
+    }
+    if (s.spellPhaseOpen[color] === undefined) {
+      s.spellPhaseOpen[color] = s.phase === PHASE.CARDS;
+    }
+    return !!s.spellPhaseOpen[color];
+  }
+
+  closeSpellPhase(color = this.localColor) {
+    const s = this.state;
+    if (!s.spellPhaseOpen) {
+      s.spellPhaseOpen = { [COLORS.RED]: true, [COLORS.BLACK]: true };
+    }
+    s.spellPhaseOpen[color] = false;
+  }
+
   canPlaySpells() {
     const s = this.state;
     return (
       !this.isViewingHistory() &&
       s.turn === this.localColor &&
-      s.phase === PHASE.CARDS &&
+      this.ensureSpellPhaseOpen(this.localColor) &&
       !s.gameOver &&
       !s.spellPlayed[this.localColor] &&
       !s.meta.shatterSilenced?.[this.localColor] &&
@@ -704,8 +723,12 @@ export class MatchSession {
     const color = this.localColor;
     s.spellPlayed[color] = false;
     s.phase = PHASE.CARDS;
+    if (!s.spellPhaseOpen) s.spellPhaseOpen = { [COLORS.RED]: true, [COLORS.BLACK]: true };
+    s.spellPhaseOpen[color] = true;
     this.actionBusy = false;
     this.cardPlay = null;
+    this.selectedSquare = null;
+    this.validMoves = [];
     startTurnMeta(s, color);
   }
 
@@ -715,8 +738,12 @@ export class MatchSession {
     s.turnNumber[color]++;
     s.spellPlayed[color] = false;
     s.phase = PHASE.CARDS;
+    if (!s.spellPhaseOpen) s.spellPhaseOpen = { [COLORS.RED]: true, [COLORS.BLACK]: true };
+    s.spellPhaseOpen[color] = true;
     this.actionBusy = false;
     this.cardPlay = null;
+    this.selectedSquare = null;
+    this.validMoves = [];
     if (s.boardFx) s.boardFx = null;
     if (s.turnNumber[color] > 1 && s.turnNumber[color] % DRAW_EVERY_TURNS === 0) {
       const n = drawToHand(s, color, 1);
@@ -1278,7 +1305,7 @@ export class MatchSession {
     el.classList.toggle("disabled", !canCast);
     if (!canCast) {
       el.title =
-        s.phase === PHASE.MOVE
+        !this.ensureSpellPhaseOpen(this.localColor)
           ? "Spells skipped — select a piece to move"
           : s.meta.shatterSilenced?.[this.localColor]
             ? "Spell backlash — no spells this turn"
@@ -1390,8 +1417,6 @@ export class MatchSession {
       return;
     }
 
-    if (s.phase === PHASE.CARDS && !this.enterMovePhaseFromBoard(row, col)) return;
-
     if (!this.canMovePieces()) return;
 
     const clicked = this.validMoves.find((m) => m.to[0] === row && m.to[1] === col);
@@ -1404,6 +1429,9 @@ export class MatchSession {
     if (piece) this.showPieceInfo(piece, row, col);
 
     if (piece && piece.color === this.localColor) {
+      if (this.ensureSpellPhaseOpen(this.localColor) && s.phase === PHASE.MOVE) {
+        s.phase = PHASE.CARDS;
+      }
       this.selectedSquare = [row, col];
       this.validMoves = getAllMovesForColor(s.board, this.localColor, s).filter(
         (m) => m.from[0] === row && m.from[1] === col
@@ -1557,6 +1585,10 @@ export class MatchSession {
 
   executeHumanMove(move) {
     const s = this.state;
+    if (s.phase === PHASE.CARDS && !this.canEndSpellPhase()) {
+      this.setMessage(this.tutorialHooks?.spellPhaseBlockMessage || "Cast the spell first.");
+      return;
+    }
     const preMoveSnap = this.tutorialHooks ? cloneMatchState(s) : null;
     this._pendingHistoryMove = move;
     this._pendingHistoryLabel = formatPieceMoveLabel(s.board, move);
@@ -1571,6 +1603,7 @@ export class MatchSession {
       move = forced;
     }
     this.cancelCardPlay();
+    this.closeSpellPhase(this.localColor);
     s.phase = PHASE.MOVE;
     s.meta.lastMove[this.localColor] = move;
     const capBefore = s.captured[this.localColor]?.length ?? 0;
@@ -2627,40 +2660,6 @@ ${starLine}`;
     await this.finishOpponentTurn(capBefore);
   }
 
-  enterMovePhaseFromBoard(row, col) {
-    const s = this.state;
-    if (s.gameOver || s.turn !== this.localColor || s.phase !== PHASE.CARDS) return true;
-    if (!this.canEndSpellPhase()) {
-      this.setMessage(this.tutorialHooks?.spellPhaseBlockMessage || "Cast the spell first.");
-      return false;
-    }
-    if (this.cardPlay) this.cancelCardPlay();
-    s.phase = PHASE.MOVE;
-
-    const panicked = findPanicPiece(s.board, this.localColor);
-    if (panicked) {
-      const panicMoves = getBackwardStepMoves(s.board, panicked, s);
-      if (panicMoves.length) {
-        if (row !== panicked.row || col !== panicked.col) {
-          this.selectedSquare = [panicked.row, panicked.col];
-          this.validMoves = panicMoves;
-          this.setMessage("Panic — step backward!");
-          this.render();
-          return false;
-        }
-        return true;
-      }
-    }
-
-    const moves = getAllMovesForColor(s.board, this.localColor, s);
-    if (!moves.length) {
-      this.setMessage("No moves — turn passes.");
-      this.endHumanTurn();
-      return false;
-    }
-    return true;
-  }
-
   async beginMovePhase({ afterSpell = false, spellMessage = null } = {}) {
     const s = this.state;
     if (s.gameOver || s.turn !== this.localColor) return;
@@ -2669,6 +2668,7 @@ ${starLine}`;
       return;
     }
     this.cancelCardPlay();
+    if (!afterSpell) this.closeSpellPhase(this.localColor);
     s.phase = PHASE.MOVE;
     if (isConfused(s.meta, this.localColor)) {
       const forced = this.pickConfusedMove(this.localColor);
@@ -2988,6 +2988,7 @@ ${starLine}`;
           if (piece.bearAwakened) el.classList.add("bear-awoken");
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.fortifyTurns > 0) el.classList.add("fortify-mark");
+          if (piece.mindControlTurns > 0) el.classList.add("mind-controlled");
           if (piece.bountyBy) el.classList.add("bounty-mark");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (piece.isClone) el.classList.add("clone-mark");
@@ -3258,6 +3259,24 @@ ${starLine}`;
             fortify.appendChild(turns);
             sq.appendChild(fortify);
           }
+          if (piece.mindControlTurns > 0) {
+            const mc = document.createElement("div");
+            mc.className = "mind-control-indicator";
+            mc.setAttribute(
+              "aria-label",
+              `Mind controlled — ${piece.mindControlTurns} turn${piece.mindControlTurns === 1 ? "" : "s"} left`
+            );
+            const mark = document.createElement("span");
+            mark.className = "mind-control-indicator__mark";
+            mark.textContent = "👁";
+            mark.setAttribute("aria-hidden", "true");
+            const turns = document.createElement("span");
+            turns.className = "mind-control-indicator__turns";
+            turns.textContent = String(piece.mindControlTurns);
+            mc.appendChild(mark);
+            mc.appendChild(turns);
+            sq.appendChild(mc);
+          }
           if (piece.bountyBy) {
             const bounty = document.createElement("div");
             bounty.className = "bounty-indicator";
@@ -3370,10 +3389,9 @@ ${starLine}`;
           banner.textContent = "Confused — select a piece to move";
           banner.className = "turn-banner";
         } else {
-          banner.textContent =
-            s.phase === PHASE.CARDS
-              ? "Cast a spell or select a piece to move"
-              : "Select a piece to move";
+          banner.textContent = this.ensureSpellPhaseOpen(this.localColor)
+            ? "Cast a spell or select a piece to move"
+            : "Select a piece to move";
           banner.className = "turn-banner";
         }
       } else {

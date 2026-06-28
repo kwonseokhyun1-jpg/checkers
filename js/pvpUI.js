@@ -1,4 +1,10 @@
-import { fetchProfileRow, getCurrentUser, isAuthAvailable } from "./auth.js";
+import {
+  fetchProfileRow,
+  getCurrentUser,
+  initAuth,
+  isAuthAvailable,
+  onAuthChange,
+} from "./auth.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { COLORS } from "./board.js";
 import { MatchSession, isPvpTerminalBoard, isMutualElimination } from "./match.js";
@@ -43,6 +49,7 @@ import {
   buildRoomHostAvatarHtml,
 } from "./userProfileModal.js";
 import { enhanceSelect } from "./customSelect.js";
+import { initPanelHelp } from "./panelHelp.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -60,14 +67,29 @@ function roomModeLabel(room) {
   return isMysteryMode(room) ? mysteryModeBadge() : "";
 }
 
+function pvpPanelHead(descHtml) {
+  return `
+    <header class="panel-head panel-head--compact">
+      <div class="panel-head-title-row">
+        <h2 class="panel-head__title">PvP Arena</h2>
+        <button type="button" id="pvp-help-btn" class="panel-help-btn" aria-label="How PvP Arena works" aria-expanded="false" aria-controls="pvp-help-desc">?</button>
+      </div>
+      <p id="pvp-help-desc" class="panel-head__desc" hidden>${descHtml}</p>
+    </header>`;
+}
+
 /**
  * @param {object} opts
  * @param {HTMLElement} opts.root
  * @param {() => object} opts.getProfile
  * @param {() => void} opts.openAuthModal
  */
-export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
+export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPvpViewShown }) {
   if (!root) return { render: () => {}, dispose: () => {} };
+
+  function bindPvpPanelHelp() {
+    initPanelHelp(root.querySelector("#pvp-help-btn"), root.querySelector("#pvp-help-desc"));
+  }
 
   let pvpService = null;
   let matchSession = null;
@@ -127,34 +149,27 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     if (!isAuthAvailable()) {
       root.innerHTML = `
         <section class="panel game-panel pvp-panel">
-          <header class="panel-head">
-            <h2 class="panel-head__title">PvP Arena</h2>
-            <p class="panel-head__desc">Add your Supabase <strong>anon</strong> key to <code>js/supabaseConfig.js</code> from
-              <a href="https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/api" target="_blank" rel="noopener">API settings</a>, run <code>supabase/schema.sql</code>, then reload.</p>
-          </header>
+          ${pvpPanelHead(`Add your Supabase <strong>anon</strong> key to <code>js/supabaseConfig.js</code> from
+              <a href="https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/api" target="_blank" rel="noopener">API settings</a>, run <code>supabase/schema.sql</code>, then reload.`)}
         </section>`;
+      bindPvpPanelHelp();
       return;
     }
 
     if (!user) {
       root.innerHTML = `
         <section class="panel game-panel pvp-panel">
-          <header class="panel-head">
-            <h2 class="panel-head__title">PvP Arena</h2>
-            <p class="panel-head__desc">Sign in to challenge other players in real-time 1v1 matches.</p>
-          </header>
+          ${pvpPanelHead("Sign in to challenge other players in real-time 1v1 matches.")}
           <button type="button" class="btn-primary btn-lg" id="pvp-sign-in">Sign in / Sign up</button>
         </section>`;
       root.querySelector("#pvp-sign-in")?.addEventListener("click", openAuthModal);
+      bindPvpPanelHelp();
       return;
     }
 
     root.innerHTML = `
       <section class="panel game-panel pvp-panel">
-        <header class="panel-head">
-          <h2 class="panel-head__title">PvP Arena</h2>
-          <p class="panel-head__desc">Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.</p>
-        </header>
+        ${pvpPanelHead("Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.")}
         <div class="pvp-setup-row">
           <div class="pvp-setup-field">
             <label class="label-sm" for="pvp-deck-select">Your deck</label>
@@ -206,6 +221,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     enhanceSelect(root.querySelector("#pvp-mode-select"));
     root.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
     syncModeUi();
+    bindPvpPanelHelp();
     startOpenRoomsSync();
 
     void probePvpBackend().then((probe) => {
@@ -613,6 +629,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
       return;
     }
 
+    showPvpView();
+
     const localColor = pvpService.localColor;
     const opponentName = opponentNameFromRow(row);
     const localName = localNameFromRow(row);
@@ -844,6 +862,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
     document.querySelectorAll(".view").forEach((v) => {
       v.classList.toggle("hidden", v.id !== "view-pvp");
     });
+    onPvpViewShown?.();
   }
 
   async function tryResumePvpMatch() {
@@ -962,12 +981,25 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab }) {
   };
   window.addEventListener("cc-match-shell-reconciled", onShellReconciled);
 
-  renderLobby();
+  let lastAuthUserId = null;
+  const unsubAuth = onAuthChange((user) => {
+    if (matchSession || matchLaunching) return;
+    const nextId = user?.id ?? null;
+    if (nextId === lastAuthUserId) return;
+    lastAuthUserId = nextId;
+    renderPvpSurface({ resume: !!nextId });
+  });
+
+  void initAuth().then((user) => {
+    lastAuthUserId = user?.id ?? null;
+    renderPvpSurface({ resume: !!user });
+  });
 
   return {
     render: renderPvpSurface,
     tryResume: tryResumePvpMatch,
     dispose() {
+      unsubAuth();
       window.removeEventListener("cc-match-shell-reconciled", onShellReconciled);
       stopOpenRoomsSync();
       matchSession = null;
