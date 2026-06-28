@@ -405,7 +405,6 @@ export function getValidTargets(state, color, card, picks) {
           if (pieceCloakedByDarkness(state, r, c)) continue;
           if (FRIENDLY_REQUIRES_MOVABLE.has(card.effect) && !pieceHasLegalMoves(state.board, color, state, r, c)) continue;
           if (card.effect === "shockwave" && !shockwaveCanHitAdjacentEnemy(state, color, r, c)) continue;
-          if (card.effect === "plague" && !adjacentEnemiesTo(state, color, r, c).length) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
           if (card.effect === "magnet" && !magnetHasPull(state, color, r, c)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
@@ -636,8 +635,16 @@ export function playInstant(state, color, card) {
   return applyCard(state, color, card, []);
 }
 
+function getAiPickTargets(state, color, card) {
+  const targets = getValidTargets(state, color, card, []);
+  if (card.effect === "plague") {
+    return targets.filter(([r, c]) => adjacentEnemiesTo(state, color, r, c).length > 0);
+  }
+  return targets;
+}
+
 function* pickSequences(state, color, card, max = 24) {
-  const t0 = prioritizeFrontRowTargets(state, color, card, getValidTargets(state, color, card, []));
+  const t0 = prioritizeFrontRowTargets(state, color, card, getAiPickTargets(state, color, card));
   if (card.mode === "instant") {
     if (canCastInstant(state, color, card)) yield [];
     return;
