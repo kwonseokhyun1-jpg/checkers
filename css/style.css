@@ -6840,9 +6840,9 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   z-index: 2;
 }
 .adventure-map-canvas--iso {
-  aspect-ratio: 4 / 5;
-  min-height: min(68vh, 480px);
-  max-height: min(76vh, 580px);
+  aspect-ratio: 5 / 11;
+  min-height: min(92vh, 52rem);
+  max-height: none;
   height: auto;
 }
 .adventure-map-canvas--iso .adventure-map-scenery-svg {
@@ -6872,7 +6872,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   position: relative;
   isolation: isolate;
   width: 100%;
-  min-height: min(68vh, 480px);
+  min-height: min(92vh, 52rem);
   overflow: visible;
   touch-action: manipulation;
   --map-accent: #58cc02;
@@ -6955,7 +6955,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile::before {
   content: "";
   position: absolute;
-  inset: -12px;
+  inset: -18px;
   z-index: -1;
 }
 .adventure-map-tile > * {
@@ -6974,15 +6974,15 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile__stone {
   position: relative;
   display: block;
-  width: 3.25rem;
-  height: 2.6rem;
+  width: 4.75rem;
+  height: 3.75rem;
 }
 .adventure-map-tile__face {
   position: absolute;
   left: 0;
   right: 0;
   top: 0;
-  height: 2rem;
+  height: 2.9rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -7001,7 +7001,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   left: 2px;
   right: 2px;
   bottom: 0;
-  height: 0.65rem;
+  height: 0.9rem;
   background: linear-gradient(180deg, #908880 0%, #706860 100%);
   border-radius: 0 0 5px 5px;
   box-shadow: 0 3px 4px rgba(0, 0, 0, 0.2);
@@ -7011,7 +7011,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile__num {
   font-family: var(--font-heading);
   font-weight: 800;
-  font-size: 1.05rem;
+  font-size: 1.4rem;
   color: #5a5850;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
   line-height: 1;
@@ -7055,8 +7055,8 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   bottom: calc(100% - 0.15rem);
   left: 50%;
   transform: translateX(-50%);
-  width: 2rem;
-  height: 2.6rem;
+  width: 2.6rem;
+  height: 3.4rem;
   z-index: 5;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
   animation: pawn-bob 2.2s ease-in-out infinite;
@@ -7072,10 +7072,10 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 }
 .adventure-map-tile__stars {
   position: absolute;
-  top: calc(100% + 0.1rem);
+  top: calc(100% + 0.15rem);
   left: 50%;
   transform: translateX(-50%);
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   color: var(--accent-gold);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
