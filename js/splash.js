@@ -19,6 +19,11 @@ function dismissSplash() {
   window.setTimeout(remove, 600);
 }
 
+/** Reveal the game shell immediately (e.g. when a match or tutorial starts during splash). */
+export function dismissAppSplash() {
+  dismissSplash();
+}
+
 function scheduleDismiss() {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const delay = reduced ? REDUCED_MOTION_MS : MIN_VISIBLE_MS;
