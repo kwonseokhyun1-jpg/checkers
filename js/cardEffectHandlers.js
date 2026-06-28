@@ -253,7 +253,7 @@ function fri(state, color) { return piecesOfColor(state.board, color); }
 function en(state, color) { return enemyPieces(state.board, color); }
 function markMove(state, color) { state.meta.movementCardPlayed[color] = true; }
 function backRow(color) { return color === COLORS.RED ? [5, 6, 7] : [0, 1, 2]; }
-function ownBackRank(color) { return color === COLORS.RED ? SIZE - 1 : 0; }
+export function ownBackRank(color) { return color === COLORS.RED ? SIZE - 1 : 0; }
 
 export function ownSideRows(color) {
   return color === COLORS.RED ? [4, 5, 6, 7] : [0, 1, 2, 3];
@@ -356,7 +356,7 @@ const EFFECTS = {
   corner_hop(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const qr=r1<4?4:0, qc=c1<4?4:0; if((r2<qr||r2>=qr+4||c2<qc||c2>=qc+4)&&!emptyDark(state,r2,c2)) return fail(); if(!emptyDark(state,r2,c2)) return fail(); displacePiece(state,r1,c1,r2,c2); markMove(state,color); return ok(); },
   anchor_2(state, color, picks) { for (const p of fri(state, color)) p.anchored = 2; return ok('All your pieces are anchored for 2 turns.'); },
   drift(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color||Math.abs(r2-r1)!==Math.abs(c2-c1)) return fail(); displacePiece(state,r1,c1,r2,c2); markMove(state,color); return ok(); },
-  recall(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const rows=backRow(color); if(!rows.includes(r2)||!emptyDark(state,r2,c2)) return fail(); displacePiece(state,r1,c1,r2,c2); markMove(state,color); return ok(); },
+  recall(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const row=ownBackRank(color); if(r2!==row||!emptyDark(state,r2,c2)) return fail(); displacePiece(state,r1,c1,r2,c2); markMove(state,color); return ok(); },
   random_teleport(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);

@@ -26,7 +26,7 @@ export const CARD_REGISTRY = [
   { id: "backstep", name: "Backstep", desc: "Move one of your pieces 1 square backward-diagonal onto an empty dark square.", rarity: "common", weight: 6, mode: "f_empty", effect: "backstep" },
   { id: "retreat", name: "Retreat", desc: "Grant a piece backward movement for 3 turns.", rarity: "common", weight: 6, mode: "friendly", effect: "retreat_3" },
   { id: "anchor", name: "Anchor", desc: "All your pieces cannot be moved by enemy cards for 2 turns (they still move on your turn).", rarity: "common", weight: 6, mode: "instant", effect: "anchor_2" },
-  { id: "recall", name: "Recall", desc: "Return one of your pieces to any empty dark square in its starting row.", rarity: "common", weight: 6, mode: "f_empty", effect: "recall" },
+  { id: "recall", name: "Recall", desc: "Return one of your pieces to an empty dark square on your back row (only playable when your back row has an empty space).", rarity: "common", weight: 6, mode: "f_empty", effect: "recall" },
   { id: "repel", name: "Repel", desc: "Push an adjacent enemy piece 1 square away if the landing square is empty.", rarity: "common", weight: 6, mode: "friendly", effect: "repel" },
   { id: "leapfrog", name: "Leapfrog", desc: "Jump your piece over a friendly piece to land on the empty square beyond.", rarity: "common", weight: 6, mode: "f_empty", effect: "leapfrog" },
   { id: "random_teleport", name: "Random Teleportation", desc: "Select a piece and it jumps to a random empty square. If it ends up on the back rank, it automatically becomes a king.", rarity: "common", weight: 6, mode: "friendly", effect: "random_teleport" },

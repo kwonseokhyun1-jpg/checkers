@@ -26,7 +26,7 @@ SPELLS = [
     ("backstep", "Backstep", "Move one of your pieces 1 square straight backward onto an empty dark square.", "common", 6, "f_empty", "backstep"),
     ("anchor", "Anchor", "Your piece cannot be moved by enemy cards for 2 turns (still moves on your turn).", "uncommon", 4, "friendly", "anchor_2"),
     ("drift", "Drift", "Slide a piece any number of empty squares along one diagonal until blocked.", "epic", 2, "f_empty", "drift"),
-    ("recall", "Recall", "Return one of your pieces to any empty dark square in its starting row.", "uncommon", 4, "f_empty", "recall"),
+    ("recall", "Recall", "Return one of your pieces to an empty dark square on your back row (only playable when your back row has an empty space).", "uncommon", 4, "f_empty", "recall"),
     ("flank", "Flank", "Move your piece to any empty dark square up to 3 steps away along a diagonal.", "uncommon", 4, "f_empty", "flank_3"),
     ("rooks_mark", "Rook's Mark", "For 2 turns, a piece may slide along a rank or file over empty dark squares.", "rare", 3, "friendly", "rook_2"),
     ("bishops_mark", "Bishop's Mark", "For 2 turns, a piece may slide along either diagonal over empty dark squares.", "rare", 3, "friendly", "bishop_2"),
