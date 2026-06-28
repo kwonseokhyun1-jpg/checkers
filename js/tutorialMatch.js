@@ -12,6 +12,7 @@ import { getMatchHtml } from "./matchView.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { enterMatchMode, exitMatchMode } from "./matchLifecycle.js";
 import { mobileConfirm } from "./mobileConfirm.js";
+import { dismissAppSplash } from "./splash.js";
 import { dismissInteractiveTutorial } from "./tutorial.js";
 
 const TUTORIAL_DECK = buildStarterDeckCardIds();
@@ -295,6 +296,7 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
   let spellValidated = false;
   let kingStepPromoted = false;
 
+  dismissAppSplash();
   document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
   const root = document.getElementById("view-match");
   if (!root) {
@@ -437,6 +439,7 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
         cosmetics: getEquippedCosmetics(profile),
         profile,
         initialState: state,
+        skipInitialTurn: true,
         skipCheckpoint: true,
         tutorialHooks: hooks,
       }
@@ -444,11 +447,9 @@ export function startInteractiveTutorial({ profile, saveProfile, onComplete }) {
 
     if (step.autoAdvance) {
       matchSession.setMessage("");
-    } else if (state.phase === PHASE.MOVE && state.spellPlayed?.[COLORS.RED]) {
-      matchSession.state = state;
+    } else {
+      resetTutorialSessionState(matchSession, state);
       beginTutorialStepTurn(matchSession, state, step);
-    } else if (step.hint) {
-      matchSession.setMessage(step.hint);
     }
     matchSession.render();
   }
