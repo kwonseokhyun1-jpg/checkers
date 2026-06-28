@@ -1439,52 +1439,125 @@ function showAdventureMap() {
 
 function getMapSceneryMarkup(theme) {
   const p = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
+  const uid = `map-${theme}`;
   return `<svg class="adventure-map-scenery-svg" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
-      <linearGradient id="mapSky" x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id="${uid}-sky" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${p.sky}"/>
-        <stop offset="55%" stop-color="${p.gridLight}"/>
+        <stop offset="45%" stop-color="${p.skyGlow}"/>
         <stop offset="100%" stop-color="${p.gridDark}"/>
       </linearGradient>
-      <linearGradient id="mapHill" x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id="${uid}-hill" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${p.grass}"/>
         <stop offset="100%" stop-color="${p.grassDark}"/>
       </linearGradient>
-      <linearGradient id="mapFoundation" x1="0" y1="0" x2="0" y2="1">
+      <linearGradient id="${uid}-foundation" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${p.rock}"/>
         <stop offset="100%" stop-color="${p.rockDark}"/>
       </linearGradient>
-      <filter id="mapSoft" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="0.4"/>
+      <radialGradient id="${uid}-glow" cx="50%" cy="30%" r="55%">
+        <stop offset="0%" stop-color="${p.accent}" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="${p.accent}" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="${uid}-soft" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="0.6"/>
+      </filter>
+      <filter id="${uid}-glow-filter" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="1.2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <rect width="100" height="120" fill="url(#mapSky)"/>
-    <!-- distant hills -->
-    <path fill="${p.grass}" opacity="0.35" d="M0 52 C12 44 22 48 34 42 C46 36 58 44 72 40 C84 36 94 42 100 38 L100 62 L0 62 Z"/>
-    <path fill="${p.grassDark}" opacity="0.25" d="M0 58 C18 50 30 54 48 48 C66 42 82 50 100 46 L100 68 L0 68 Z"/>
-    <!-- clouds -->
-    <ellipse cx="18" cy="14" rx="10" ry="4" fill="#fff" opacity="0.55" filter="url(#mapSoft)"/>
-    <ellipse cx="24" cy="13" rx="7" ry="3.5" fill="#fff" opacity="0.5" filter="url(#mapSoft)"/>
-    <ellipse cx="72" cy="10" rx="12" ry="4.5" fill="#fff" opacity="0.5" filter="url(#mapSoft)"/>
-    <ellipse cx="80" cy="9" rx="8" ry="3.5" fill="#fff" opacity="0.45" filter="url(#mapSoft)"/>
-    <ellipse cx="48" cy="18" rx="9" ry="3.5" fill="#fff" opacity="0.35" filter="url(#mapSoft)"/>
+    <rect width="100" height="120" fill="url(#${uid}-sky)"/>
+    <rect width="100" height="120" fill="url(#${uid}-glow)"/>
+    <!-- distant castle silhouette -->
+    <g opacity="0.55" fill="${p.castle}">
+      <rect x="8" y="38" width="4" height="18" rx="0.5"/>
+      <rect x="6" y="42" width="8" height="3"/>
+      <rect x="14" y="44" width="10" height="12"/>
+      <polygon points="14,44 19,38 24,44" fill="${p.castleRoof}"/>
+      <rect x="78" y="36" width="5" height="20" rx="0.5"/>
+      <rect x="76" y="40" width="9" height="3"/>
+      <rect x="70" y="46" width="12" height="10"/>
+      <polygon points="70,46 76,40 82,46" fill="${p.castleRoof}"/>
+    </g>
+    <!-- misty hills -->
+    <path fill="${p.grass}" opacity="0.4" d="M0 50 C14 42 24 46 38 40 C52 34 64 42 78 38 C90 34 96 40 100 36 L100 64 L0 64 Z"/>
+    <path fill="${p.grassDark}" opacity="0.3" d="M0 56 C20 48 32 52 50 46 C68 40 84 48 100 44 L100 72 L0 72 Z"/>
+    <!-- fantasy trees -->
+    <g opacity="0.65">
+      <polygon points="6,62 10,52 14,62" fill="${p.grassDark}"/>
+      <rect x="9" y="62" width="2" height="5" fill="${p.rockDark}"/>
+      <polygon points="88,58 92,48 96,58" fill="${p.grassDark}"/>
+      <rect x="91" y="58" width="2" height="5" fill="${p.rockDark}"/>
+    </g>
+    <!-- clouds / aurora wisps -->
+    <ellipse cx="16" cy="12" rx="11" ry="4" fill="#fff" opacity="0.45" filter="url(#${uid}-soft)"/>
+    <ellipse cx="22" cy="11" rx="8" ry="3.5" fill="#fff" opacity="0.4" filter="url(#${uid}-soft)"/>
+    <ellipse cx="74" cy="9" rx="13" ry="5" fill="#fff" opacity="0.42" filter="url(#${uid}-soft)"/>
+    <ellipse cx="82" cy="8" rx="9" ry="4" fill="#fff" opacity="0.38" filter="url(#${uid}-soft)"/>
+    <ellipse cx="46" cy="16" rx="10" ry="3.5" fill="${p.skyGlow}" opacity="0.35" filter="url(#${uid}-soft)"/>
+    <!-- magical sparkles -->
+    <circle cx="28" cy="24" r="0.6" fill="${p.flag}" opacity="0.7" filter="url(#${uid}-glow-filter)"/>
+    <circle cx="68" cy="20" r="0.5" fill="${p.flag}" opacity="0.6" filter="url(#${uid}-glow-filter)"/>
+    <circle cx="50" cy="28" r="0.4" fill="${p.accent}" opacity="0.5" filter="url(#${uid}-glow-filter)"/>
     <!-- ground -->
-    <rect x="0" y="88" width="100" height="32" fill="url(#mapHill)" opacity="0.85"/>
-    <ellipse cx="50" cy="90" rx="48" ry="6" fill="rgba(0,0,0,0.12)"/>
-    <!-- stone tower foundation -->
-    <path fill="url(#mapFoundation)" d="M18 90 L82 90 L86 97 L14 97 Z"/>
-    <path fill="${p.rockDark}" opacity="0.5" d="M14 97 L86 97 L84 101 L16 101 Z"/>
+    <rect x="0" y="86" width="100" height="34" fill="url(#${uid}-hill)"/>
+    <ellipse cx="50" cy="88" rx="46" ry="7" fill="rgba(0,0,0,0.18)"/>
+    <!-- tower foundation platform -->
+    <path fill="url(#${uid}-foundation)" d="M14 88 L86 88 L90 95 L10 95 Z"/>
+    <path fill="${p.rockDark}" d="M10 95 L90 95 L88 100 L12 100 Z"/>
+    <path fill="none" stroke="${p.flag}" stroke-width="0.4" opacity="0.35" d="M14 90 L86 90"/>
+    <!-- torches flanking tower base -->
+    <g opacity="0.85">
+      <rect x="20" y="82" width="1.5" height="6" fill="${p.rockDark}"/>
+      <ellipse cx="20.75" cy="81" rx="2" ry="2.5" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.8"/>
+      <rect x="78" y="82" width="1.5" height="6" fill="${p.rockDark}"/>
+      <ellipse cx="78.75" cy="81" rx="2" ry="2.5" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.8"/>
+    </g>
   </svg>`;
 }
 
-function getMapPawnMarkup() {
-  return `<svg class="adventure-map-tile__pawn-svg" viewBox="0 0 24 32" aria-hidden="true">
-    <ellipse cx="12" cy="30" rx="7" ry="2" fill="rgba(0,0,0,0.2)"/>
-    <path fill="#58cc02" stroke="#46a302" stroke-width="0.8"
-      d="M12 4 C15 4 17 7 17 11 C17 15 14 17 12 20 C10 17 7 15 7 11 C7 7 9 4 12 4 Z"/>
-    <circle cx="12" cy="10" r="3.5" fill="#58cc02" stroke="#46a302" stroke-width="0.6"/>
-    <rect x="10" y="18" width="4" height="10" rx="1" fill="#58cc02" stroke="#46a302" stroke-width="0.6"/>
-    <ellipse cx="12" cy="28" rx="5" ry="2" fill="#58cc02" stroke="#46a302" stroke-width="0.6"/>
+function getMapPawnMarkup(accent = "#e8c547") {
+  return `<svg class="adventure-map-tile__pawn-svg" viewBox="0 0 28 36" aria-hidden="true">
+    <defs>
+      <linearGradient id="pawn-body" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#f0e8d8"/>
+        <stop offset="100%" stop-color="#c8b898"/>
+      </linearGradient>
+      <radialGradient id="pawn-gem" cx="50%" cy="40%" r="50%">
+        <stop offset="0%" stop-color="${accent}"/>
+        <stop offset="100%" stop-color="#8a6910"/>
+      </radialGradient>
+      <filter id="pawn-glow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="1" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <ellipse cx="14" cy="34" rx="8" ry="2.2" fill="rgba(0,0,0,0.35)"/>
+    <path fill="url(#pawn-body)" stroke="#8a7860" stroke-width="0.7"
+      d="M14 3 C18 3 21 7 21 12 C21 17 17 19 14 23 C11 19 7 17 7 12 C7 7 10 3 14 3 Z"/>
+    <circle cx="14" cy="11" r="4" fill="url(#pawn-gem)" stroke="#c9a227" stroke-width="0.8" filter="url(#pawn-glow)"/>
+    <path fill="none" stroke="${accent}" stroke-width="0.5" opacity="0.6"
+      d="M14 6 L14 16 M11 9 L17 9 M11 13 L17 13"/>
+    <rect x="11.5" y="21" width="5" height="11" rx="1.2" fill="url(#pawn-body)" stroke="#8a7860" stroke-width="0.6"/>
+    <ellipse cx="14" cy="32" rx="6.5" ry="2.2" fill="url(#pawn-body)" stroke="#8a7860" stroke-width="0.6"/>
+    <circle cx="14" cy="11" r="1.2" fill="#fff" opacity="0.55"/>
+  </svg>`;
+}
+
+function getMapBannerMarkup(theme) {
+  const p = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
+  return `<svg class="adventure-map-tile__banner-svg" viewBox="0 0 24 20" aria-hidden="true">
+    <defs>
+      <linearGradient id="banner-cloth" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="${p.accent}"/>
+        <stop offset="100%" stop-color="${p.flag}"/>
+      </linearGradient>
+    </defs>
+    <rect x="11" y="2" width="2" height="16" fill="${p.rockDark}" rx="0.5"/>
+    <circle cx="12" cy="2" r="1.5" fill="${p.flag}"/>
+    <path fill="url(#banner-cloth)" d="M13 4 C18 5 20 8 20 10 C20 12 18 14 13 15 Z"/>
+    <path fill="none" stroke="${p.flag}" stroke-width="0.5" opacity="0.6" d="M14 7 L18 8 M14 10 L18 10 M14 13 L17 12"/>
   </svg>`;
 }
 
@@ -1534,13 +1607,24 @@ function renderAdventureMap() {
   const palette = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
   map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--iso`;
   map.style.setProperty("--map-accent", palette.accent);
+  map.style.setProperty("--map-glow", palette.glow);
+  map.style.setProperty("--map-mist", palette.mist);
+  map.style.setProperty("--map-stone-light", palette.stoneLight);
+  map.style.setProperty("--map-stone-mid", palette.stoneMid);
+  map.style.setProperty("--map-stone-dark", palette.stoneDark);
+  map.style.setProperty("--map-stone-side", palette.stoneSide);
+  map.style.setProperty("--map-moss", palette.moss);
   map.setAttribute("role", "group");
   map.setAttribute("aria-label", "Adventure stage map");
   map.innerHTML = `
     <div class="adventure-map-canvas__bg" aria-hidden="true">
       <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
+      <div class="adventure-map-atmosphere" aria-hidden="true"></div>
     </div>
-    <div class="adventure-map-tiles"></div>`;
+    <div class="adventure-map-tower">
+      <div class="adventure-map-tower__shaft" aria-hidden="true"></div>
+      <div class="adventure-map-tiles"></div>
+    </div>`;
 
   const tilesLayer = map.querySelector(".adventure-map-tiles");
   const levels = getLevelsForWorld(selectedAdventureWorldId);
@@ -1565,10 +1649,13 @@ function renderAdventureMap() {
     if (!unlocked) tile.title = `Clear global stage ${level.id - 1} to unlock`;
     tile.setAttribute("aria-label", `Stage ${level.stageInWorld}: ${level.opponent}, ${level.flavor}`);
     const starLine = cleared ? `<span class="adventure-map-tile__stars">${formatStars(stars)}</span>` : "";
-    const pawn = isNext ? `<span class="adventure-map-tile__pawn">${getMapPawnMarkup()}</span>` : "";
+    const pawn = isNext ? `<span class="adventure-map-tile__pawn">${getMapPawnMarkup(palette.accent)}</span>` : "";
+    const banner = level.stageInWorld === 10 ? `<span class="adventure-map-tile__banner">${getMapBannerMarkup(theme)}</span>` : "";
     tile.innerHTML = `
       ${pawn}
+      ${banner}
       <span class="adventure-map-tile__stone" aria-hidden="true">
+        <span class="adventure-map-tile__rune"></span>
         <span class="adventure-map-tile__crenel"></span>
         <span class="adventure-map-tile__face">
           <span class="adventure-map-tile__num">${level.stageInWorld}</span>
@@ -1576,6 +1663,7 @@ function renderAdventureMap() {
         </span>
         <span class="adventure-map-tile__side adventure-map-tile__side--left"></span>
         <span class="adventure-map-tile__side adventure-map-tile__side--right"></span>
+        <span class="adventure-map-tile__moss"></span>
       </span>`;
     if (!unlocked) tile.disabled = true;
     tile.onclick = (e) => {
