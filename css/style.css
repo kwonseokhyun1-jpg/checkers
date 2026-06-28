@@ -6861,12 +6861,18 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   min-height: 0;
   margin: 0.35rem 0 0;
   border-radius: var(--radius-md);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--bg-panel), var(--bg-panel)) padding-box,
+    var(--panel-game-border) border-box;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  background: #c8d8e8;
+  background-color: var(--bg-deep);
   scroll-padding: 1rem;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.55),
+    0 8px 32px rgba(0, 0, 0, 0.4);
 }
 .adventure-map-canvas {
   position: relative;
@@ -6876,6 +6882,13 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   overflow: visible;
   touch-action: manipulation;
   --map-accent: #58cc02;
+  --map-glow: rgba(88, 204, 2, 0.45);
+  --map-mist: rgba(168, 212, 168, 0.35);
+  --map-stone-light: #c8c0b0;
+  --map-stone-mid: #a09888;
+  --map-stone-dark: #706860;
+  --map-stone-side: #585048;
+  --map-moss: #4a7840;
 }
 
 .adventure-map-scenery-svg {
@@ -6897,41 +6910,115 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   pointer-events: none !important;
 }
 .adventure-map-scenery--verdant {
-  background: linear-gradient(180deg, #8ec0e8 0%, #b8d4e8 35%, #c8dcc8 75%, #88b070 100%);
+  background: linear-gradient(180deg, #3a6888 0%, #6a9ec8 25%, #88b878 70%, #2a5838 100%);
 }
-.adventure-map-scenery--verdant::before,
 .adventure-map-scenery--verdant::after {
-  display: none;
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 40% at 50% 20%, var(--map-mist), transparent 70%);
+  pointer-events: none;
 }
 .adventure-map-scenery--frost {
-  background: linear-gradient(180deg, #a0c8e8 0%, #c8dce8 35%, #d8e8f0 75%, #98b8c8 100%);
+  background: linear-gradient(180deg, #486888 0%, #88b8d8 25%, #98b8c8 70%, #2a4868 100%);
 }
-.adventure-map-scenery--frost::before {
-  display: none;
+.adventure-map-scenery--frost::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 90% 50% at 50% 15%, var(--map-mist), transparent 65%);
+  pointer-events: none;
 }
 .adventure-map-scenery--ember {
-  background: linear-gradient(180deg, #e8a878 0%, #e8c8a8 35%, #ece0d4 75%, #a87858 100%);
+  background: linear-gradient(180deg, #683020 0%, #c87848 25%, #a86840 70%, #3a2010 100%);
 }
-.adventure-map-scenery--ember::before {
-  display: none;
+.adventure-map-scenery--ember::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 35% at 50% 80%, rgba(255, 120, 40, 0.25), transparent 70%);
+  pointer-events: none;
 }
 .adventure-map-scenery--void {
-  background: linear-gradient(180deg, #9888c8 0%, #b8a8d8 35%, #dcd4e8 75%, #7868a0 100%);
+  background: linear-gradient(180deg, #281848 0%, #6858a0 25%, #7868a0 70%, #180828 100%);
 }
-.adventure-map-scenery--void::before {
-  display: none;
+.adventure-map-scenery--void::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 45% at 50% 25%, var(--map-mist), transparent 70%);
+  pointer-events: none;
 }
 .adventure-map-scenery--legend {
-  background: linear-gradient(180deg, #78c8a0 0%, #a8d8c0 35%, #dce8dc 75%, #58a878 100%);
+  background: linear-gradient(180deg, #186838 0%, #48a878 25%, #68a878 70%, #083818 100%);
 }
-.adventure-map-scenery--legend::before {
-  display: none;
+.adventure-map-scenery--legend::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 75% 40% at 50% 20%, rgba(232, 197, 71, 0.2), transparent 70%);
+  pointer-events: none;
 }
-.adventure-map-tiles {
+.adventure-map-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 90% 80% at 50% 50%, transparent 40%, rgba(8, 10, 18, 0.45) 100%),
+    radial-gradient(circle at 20% 30%, var(--map-glow) 0%, transparent 25%),
+    radial-gradient(circle at 80% 25%, var(--map-glow) 0%, transparent 20%);
+  opacity: 0.85;
+}
+.adventure-map-tower {
   position: absolute;
   left: 50%;
-  bottom: 9%;
+  bottom: 7%;
   transform: translateX(-50%);
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+.adventure-map-tower__shaft {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 5.2rem;
+  height: calc(100% - 0.5rem);
+  background:
+    linear-gradient(90deg,
+      rgba(0, 0, 0, 0.35) 0%,
+      var(--map-stone-dark) 15%,
+      var(--map-stone-mid) 50%,
+      var(--map-stone-dark) 85%,
+      rgba(0, 0, 0, 0.35) 100%);
+  border-left: 2px solid rgba(0, 0, 0, 0.3);
+  border-right: 2px solid rgba(0, 0, 0, 0.3);
+  box-shadow:
+    inset 0 0 20px rgba(0, 0, 0, 0.4),
+    0 4px 16px rgba(0, 0, 0, 0.5);
+  border-radius: 4px 4px 0 0;
+  z-index: 0;
+  opacity: 0.75;
+}
+.adventure-map-tower__shaft::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 1.8rem,
+    rgba(0, 0, 0, 0.15) 1.8rem,
+    rgba(0, 0, 0, 0.15) calc(1.8rem + 2px)
+  );
+  border-radius: inherit;
+}
+.adventure-map-tiles {
+  position: relative;
   z-index: 20;
   display: flex;
   flex-direction: column-reverse;
@@ -6960,7 +7047,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   flex-shrink: 0;
 }
 .adventure-map-tile + .adventure-map-tile {
-  margin-bottom: -0.45rem;
+  margin-bottom: -0.55rem;
 }
 .adventure-map-tile::before {
   content: "";
@@ -6974,18 +7061,58 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile:not(:disabled):active {
   transform: scale(0.97);
 }
+.adventure-map-tile:not(:disabled):hover .adventure-map-tile__face {
+  filter: brightness(1.08);
+}
 .adventure-map-tile--locked {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: default;
-  filter: grayscale(0.5) brightness(0.85);
+  filter: grayscale(0.6) brightness(0.75);
   pointer-events: none !important;
   z-index: 1;
 }
 .adventure-map-tile__stone {
   position: relative;
   display: block;
-  width: 6.5rem;
-  height: 3.85rem;
+  width: 7rem;
+  height: 4.1rem;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45));
+}
+.adventure-map-tile__rune {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.adventure-map-tile--next .adventure-map-tile__rune {
+  opacity: 1;
+  border-color: transparent;
+  background: radial-gradient(circle, var(--map-glow) 0%, transparent 70%);
+  box-shadow: none;
+  animation: map-rune-pulse 2.5s ease-in-out infinite;
+}
+.adventure-map-tile--next .adventure-map-tile__rune::before {
+  content: "✦";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--map-accent);
+  text-shadow: 0 0 10px var(--map-glow);
+  opacity: 0.85;
+}
+@keyframes map-rune-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.6; }
+  50% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
 }
 .adventure-map-tile__crenel {
   display: none;
@@ -6993,17 +7120,18 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile--summit .adventure-map-tile__crenel {
   display: block;
   position: absolute;
-  top: -0.55rem;
-  left: 0;
-  right: 0;
-  height: 0.65rem;
+  top: -0.7rem;
+  left: -0.15rem;
+  right: -0.15rem;
+  height: 0.75rem;
   background:
-  linear-gradient(90deg,
-    #b0a8a0 0%, #b0a8a0 16%, transparent 16%, transparent 26%,
-    #b0a8a0 26%, #b0a8a0 42%, transparent 42%, transparent 52%,
-    #b0a8a0 52%, #b0a8a0 68%, transparent 68%, transparent 78%,
-    #b0a8a0 78%, #b0a8a0 100%);
-  border-radius: 2px 2px 0 0;
+    linear-gradient(90deg,
+      var(--map-stone-mid) 0%, var(--map-stone-mid) 14%, transparent 14%, transparent 24%,
+      var(--map-stone-mid) 24%, var(--map-stone-mid) 38%, transparent 38%, transparent 48%,
+      var(--map-stone-mid) 48%, var(--map-stone-mid) 62%, transparent 62%, transparent 72%,
+      var(--map-stone-mid) 72%, var(--map-stone-mid) 86%, transparent 86%, transparent 100%);
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.25);
   z-index: 3;
 }
 .adventure-map-tile__face {
@@ -7011,110 +7139,181 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   left: 0;
   right: 0;
   top: 0;
-  bottom: 0.42rem;
+  bottom: 0.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.08rem;
-  background: linear-gradient(180deg, #d8d0c4 0%, #c0b8ac 40%, #a8a098 100%);
-  border-left: 3px solid #988880;
-  border-right: 3px solid #988880;
+  gap: 0.1rem;
+  background:
+    linear-gradient(180deg,
+      var(--map-stone-light) 0%,
+      var(--map-stone-mid) 35%,
+      var(--map-stone-dark) 100%);
+  border-left: 3px solid var(--map-stone-side);
+  border-right: 3px solid var(--map-stone-side);
+  border-top: 2px solid rgba(255, 255, 255, 0.15);
   box-shadow:
-    inset 0 3px 0 rgba(255, 255, 255, 0.45),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.15),
-    0 2px 0 #807870;
+    inset 0 4px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.25),
+    0 3px 0 var(--map-stone-side);
   z-index: 2;
+}
+.adventure-map-tile__face::before {
+  content: "";
+  position: absolute;
+  inset: 0.35rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.adventure-map-tile__moss {
+  position: absolute;
+  left: 0.3rem;
+  right: 0.3rem;
+  bottom: 0.35rem;
+  height: 0.35rem;
+  background: linear-gradient(90deg, transparent, var(--map-moss) 30%, var(--map-moss) 70%, transparent);
+  opacity: 0.35;
+  border-radius: 0 0 2px 2px;
+  z-index: 3;
+  pointer-events: none;
 }
 .adventure-map-tile__side {
   position: absolute;
   bottom: 0;
-  width: 0.85rem;
-  height: 0.48rem;
-  background: linear-gradient(180deg, #908880 0%, #605850 100%);
+  width: 0.95rem;
+  height: 0.55rem;
+  background: linear-gradient(180deg, var(--map-stone-mid) 0%, var(--map-stone-side) 100%);
   z-index: 1;
 }
 .adventure-map-tile__side--left {
-  left: -0.7rem;
+  left: -0.78rem;
   transform: skewY(14deg);
   border-radius: 0 0 0 4px;
-  box-shadow: inset -2px 0 4px rgba(0, 0, 0, 0.2);
+  box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.3);
 }
 .adventure-map-tile__side--right {
-  right: -0.7rem;
+  right: -0.78rem;
   transform: skewY(-14deg);
   border-radius: 0 0 4px 0;
-  box-shadow: inset 2px 0 4px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 3px 0 6px rgba(0, 0, 0, 0.3);
 }
 .adventure-map-tile__num {
-  font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 1.4rem;
-  color: #5a5850;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  position: relative;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.55rem;
+  color: #f0e8d8;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(0, 0, 0, 0.3);
   line-height: 1;
+  z-index: 5;
 }
 .adventure-map-tile--cleared .adventure-map-tile__face {
-  background: linear-gradient(180deg, #d0e0c8 0%, #b0c8a8 40%, #90b088 100%);
-  border-left-color: #689060;
-  border-right-color: #689060;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--map-stone-light) 70%, var(--map-accent) 30%) 0%,
+      color-mix(in srgb, var(--map-stone-mid) 60%, var(--map-accent) 40%) 40%,
+      color-mix(in srgb, var(--map-stone-dark) 70%, var(--map-accent) 30%) 100%);
+  border-left-color: color-mix(in srgb, var(--map-stone-side) 60%, var(--map-accent) 40%);
+  border-right-color: color-mix(in srgb, var(--map-stone-side) 60%, var(--map-accent) 40%);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.1),
-    0 1px 0 #508050;
+    inset 0 3px 0 rgba(255, 255, 255, 0.25),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.15),
+    0 2px 0 var(--map-stone-side),
+    0 0 16px var(--map-glow);
 }
 .adventure-map-tile--cleared .adventure-map-tile__side {
-  background: linear-gradient(180deg, #588050 0%, #406838 100%);
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--map-stone-mid) 50%, var(--map-accent) 50%) 0%,
+    color-mix(in srgb, var(--map-stone-side) 50%, var(--map-accent) 50%) 100%);
 }
 .adventure-map-tile--cleared .adventure-map-tile__num {
-  color: #2a5030;
+  color: #fff8e8;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.4),
+    0 0 10px var(--map-glow);
+}
+.adventure-map-tile--cleared .adventure-map-tile__moss {
+  opacity: 0.5;
 }
 .adventure-map-tile--cleared.adventure-map-tile--summit .adventure-map-tile__crenel {
   background:
-  linear-gradient(90deg,
-    #90b088 0%, #90b088 16%, transparent 16%, transparent 26%,
-    #90b088 26%, #90b088 42%, transparent 42%, transparent 52%,
-    #90b088 52%, #90b088 68%, transparent 68%, transparent 78%,
-    #90b088 78%, #90b088 100%);
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--map-stone-mid) 60%, var(--map-accent) 40%) 0%,
+      color-mix(in srgb, var(--map-stone-mid) 60%, var(--map-accent) 40%) 14%, transparent 14%, transparent 24%,
+      color-mix(in srgb, var(--map-stone-mid) 60%, var(--map-accent) 40%) 24%,
+      color-mix(in srgb, var(--map-stone-mid) 60%, var(--map-accent) 40%) 38%, transparent 38%, transparent 48%,
+      color-mix(in srgb, var(--map-stone-mid) 60%, var(--map-accent) 40%) 48%,
+      color-mix(in srgb, var(--map-stone-mid) 60%, var(--map-accent) 40%) 62%, transparent 62%, transparent 72%,
+      color-mix(in srgb, var(--map-stone-mid) 60%, var(--map-accent) 40%) 72%,
+      color-mix(in srgb, var(--map-stone-mid) 60%, var(--map-accent) 40%) 86%, transparent 86%, transparent 100%);
 }
 .adventure-map-tile--next .adventure-map-tile__face {
-  background: linear-gradient(180deg, #e0f0d0 0%, #c0e0a0 40%, #a0d080 100%);
-  border-left-color: #68a040;
-  border-right-color: #68a040;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--map-stone-light) 50%, var(--map-accent) 50%) 0%,
+      color-mix(in srgb, var(--map-stone-mid) 40%, var(--map-accent) 60%) 40%,
+      color-mix(in srgb, var(--map-stone-dark) 50%, var(--map-accent) 50%) 100%);
+  border-left-color: var(--map-accent);
+  border-right-color: var(--map-accent);
   box-shadow:
-    inset 0 2px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -3px 6px rgba(0, 0, 0, 0.08),
+    inset 0 3px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -5px 10px rgba(0, 0, 0, 0.1),
     0 0 0 2px var(--map-accent),
-    0 2px 8px rgba(88, 204, 2, 0.35);
+    0 0 20px var(--map-glow),
+    0 4px 12px rgba(0, 0, 0, 0.35);
   animation: map-tile-pulse 2s ease-in-out infinite;
 }
 .adventure-map-tile--next .adventure-map-tile__side {
-  background: linear-gradient(180deg, #58a030 0%, #408020 100%);
+  background: linear-gradient(180deg, var(--map-accent) 0%, var(--map-stone-side) 100%);
 }
 .adventure-map-tile--next .adventure-map-tile__num {
-  color: #2a6020;
+  color: #fff;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.5),
+    0 0 14px var(--map-glow);
+}
+.adventure-map-tile--next .adventure-map-tile__moss {
+  opacity: 0.2;
 }
 .adventure-map-tile--next.adventure-map-tile--summit .adventure-map-tile__crenel {
   background:
-  linear-gradient(90deg,
-    #a0d080 0%, #a0d080 16%, transparent 16%, transparent 26%,
-    #a0d080 26%, #a0d080 42%, transparent 42%, transparent 52%,
-    #a0d080 52%, #a0d080 68%, transparent 68%, transparent 78%,
-    #a0d080 78%, #a0d080 100%);
+    linear-gradient(90deg,
+      var(--map-accent) 0%, var(--map-accent) 14%, transparent 14%, transparent 24%,
+      var(--map-accent) 24%, var(--map-accent) 38%, transparent 38%, transparent 48%,
+      var(--map-accent) 48%, var(--map-accent) 62%, transparent 62%, transparent 72%,
+      var(--map-accent) 72%, var(--map-accent) 86%, transparent 86%, transparent 100%);
 }
 @keyframes map-tile-pulse {
-  0%, 100% { box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), inset 0 -3px 6px rgba(0,0,0,0.08), 0 0 0 2px var(--map-accent), 0 2px 8px rgba(88,204,2,0.35); }
-  50% { box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), inset 0 -3px 6px rgba(0,0,0,0.08), 0 0 0 3px var(--map-accent), 0 4px 14px rgba(88,204,2,0.5); }
+  0%, 100% {
+    box-shadow:
+      inset 0 3px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -5px 10px rgba(0, 0, 0, 0.1),
+      0 0 0 2px var(--map-accent),
+      0 0 16px var(--map-glow),
+      0 4px 12px rgba(0, 0, 0, 0.35);
+  }
+  50% {
+    box-shadow:
+      inset 0 3px 0 rgba(255, 255, 255, 0.35),
+      inset 0 -5px 10px rgba(0, 0, 0, 0.1),
+      0 0 0 3px var(--map-accent),
+      0 0 28px var(--map-glow),
+      0 6px 18px rgba(0, 0, 0, 0.4);
+  }
 }
 .adventure-map-tile__pawn {
   position: absolute;
-  bottom: calc(100% + 0.1rem);
+  bottom: calc(100% + 0.15rem);
   left: 50%;
   transform: translateX(-50%);
-  width: 2.4rem;
-  height: 3.1rem;
-  z-index: 5;
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.3));
+  width: 2.6rem;
+  height: 3.4rem;
+  z-index: 8;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.45)) drop-shadow(0 0 12px var(--map-glow));
   animation: pawn-bob 2.2s ease-in-out infinite;
 }
 .adventure-map-tile__pawn-svg {
@@ -7122,17 +7321,41 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   width: 100%;
   height: 100%;
 }
+.adventure-map-tile__banner {
+  position: absolute;
+  top: -1.6rem;
+  right: -0.5rem;
+  width: 1.8rem;
+  height: 1.5rem;
+  z-index: 6;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+  animation: banner-wave 3s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+.adventure-map-tile__banner-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+@keyframes banner-wave {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(4deg); }
+}
 @keyframes pawn-bob {
   0%, 100% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(-4px); }
+  50% { transform: translateX(-50%) translateY(-5px); }
 }
 .adventure-map-tile__stars {
-  font-size: 0.68rem;
-  letter-spacing: 0.05em;
+  position: relative;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
   color: var(--accent-gold);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  text-shadow:
+    0 0 8px rgba(232, 197, 71, 0.7),
+    0 1px 2px rgba(0, 0, 0, 0.5);
   white-space: nowrap;
   line-height: 1;
+  z-index: 5;
 }
 .adventure-map-tile:not(:disabled) {
   z-index: 25;
@@ -7362,22 +7585,38 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   align-items: center;
   gap: 0.2rem;
   padding: 0.4rem 0.2rem;
-  border: 2px solid var(--card-border);
+  border: 2px solid rgba(201, 162, 39, 0.2);
   border-radius: 12px 12px 16px 16px;
-  background: var(--bg-panel-elevated);
+  background: linear-gradient(180deg, var(--bg-panel-elevated), var(--bg-panel));
   cursor: pointer;
   font-family: inherit;
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--text-muted);
   min-width: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .adventure-world-shield__icon {
   width: 1.85rem;
   height: 2rem;
   border-radius: 8px 8px 12px 12px;
   background: linear-gradient(180deg, #4a6a9a, #2a3a5a);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+.adventure-world-shield__icon::after {
+  content: "✦";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
 }
 .adventure-world-shield__label {
   width: 100%;
@@ -7387,11 +7626,19 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   line-height: 1.1;
 }
 .adventure-world-shield.active {
-  border-color: var(--accent-gem);
+  border-color: var(--accent-gold);
   color: var(--text);
+  box-shadow:
+    0 0 16px rgba(232, 197, 71, 0.2),
+    0 2px 8px rgba(0, 0, 0, 0.35);
 }
 .adventure-world-shield.active .adventure-world-shield__icon {
-  background: linear-gradient(180deg, #5ce1e6, #2a6a8a);
+  background: linear-gradient(180deg, #e8c547, #8a6910);
+  border-color: rgba(255, 220, 120, 0.4);
+}
+.adventure-world-shield.active .adventure-world-shield__icon::after {
+  color: rgba(255, 255, 255, 0.85);
+  text-shadow: 0 0 6px rgba(255, 220, 120, 0.6);
 }
 .adventure-world-shield:nth-child(2) .adventure-world-shield__icon { background: linear-gradient(180deg, #4ade80, #166534); }
 .adventure-world-shield:nth-child(3) .adventure-world-shield__icon { background: linear-gradient(180deg, #f97316, #7c2d12); }
