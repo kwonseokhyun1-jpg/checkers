@@ -27,6 +27,23 @@
   margin: 0 0 0.85rem;
 }
 
+.settings-legal {
+  margin: 0;
+}
+
+.settings-legal__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--accent-cyan, #5ce1e6);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.settings-legal__link:hover {
+  text-decoration: underline;
+}
+
 .settings-toggle {
   display: flex;
   align-items: center;
