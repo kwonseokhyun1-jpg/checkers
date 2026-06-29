@@ -2797,6 +2797,7 @@ ${starLine}`;
         if (terrain?.mine && !terrain?.hiddenMine) cls += " has-mine";
         if (terrain?.hiddenMine?.owner === this.localColor) cls += " has-own-hidden-mine";
         if (terrain?.quicksand && !terrain?.hiddenQuicksand) cls += " has-quicksand";
+        if (terrain?.hiddenQuicksand?.owner === this.localColor) cls += " has-own-hidden-quicksand";
         if (terrain?.barrier?.turnsLeft > 0) cls += " has-barrier";
         if (terrain?.sanctuary && terrain?.sanctuaryTurns > 0) cls += " has-sanctuary";
         if (terrain?.darkness > 0) cls += " has-darkness-core";
@@ -2884,6 +2885,18 @@ ${starLine}`;
           mineEl.appendChild(mark);
           mineEl.appendChild(turns);
           sq.appendChild(mineEl);
+        }
+
+        if (terrain?.hiddenQuicksand?.owner === this.localColor) {
+          const qsEl = document.createElement("div");
+          qsEl.className = "quicksand-indicator";
+          qsEl.setAttribute("aria-label", "Your quicksand trap");
+          const mark = document.createElement("span");
+          mark.className = "quicksand-indicator__mark";
+          mark.textContent = "∿";
+          mark.setAttribute("aria-hidden", "true");
+          qsEl.appendChild(mark);
+          sq.appendChild(qsEl);
         }
 
         if (this.aiHighlight?.from?.[0] === row && this.aiHighlight?.from?.[1] === col) {

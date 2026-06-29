@@ -21,6 +21,7 @@
 .board-frame--local-flipped .plague-indicator,
 .board-frame--local-flipped .fire-tile-indicator,
 .board-frame--local-flipped .landmine-indicator,
+.board-frame--local-flipped .quicksand-indicator,
 .board-frame--local-flipped .linked-fate-indicator,
 .board-frame--local-flipped .fortify-indicator,
 .board-frame--local-flipped .mind-control-indicator,
@@ -547,6 +548,10 @@
   box-shadow: inset 0 0 0 2px rgba(255, 90, 70, 0.45);
 }
 
+.square.has-own-hidden-quicksand {
+  box-shadow: inset 0 0 0 2px rgba(144, 205, 244, 0.45);
+}
+
 .landmine-indicator {
   position: absolute;
   inset: 0;
@@ -571,6 +576,24 @@
   color: rgba(255, 180, 170, 0.95);
   margin-left: 1px;
   text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.quicksand-indicator {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 2px 3px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.quicksand-indicator__mark {
+  font-size: clamp(0.65rem, 2.8vw, 0.85rem);
+  line-height: 1;
+  color: rgba(144, 205, 244, 0.95);
+  text-shadow: 0 0 4px rgba(56, 148, 210, 0.8);
 }
 
 
