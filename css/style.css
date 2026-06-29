@@ -4073,7 +4073,7 @@ html:has(body.cosmetic-open-active) {
   justify-content: center;
   font-size: 1.4rem;
   color: #ffd87a;
-  animation: spell-coin-hit 0.5s ease-out 3;
+  animation: spell-coin-hit 0.35s ease-out 2;
   pointer-events: none;
 }
 @keyframes spell-coin-hit {

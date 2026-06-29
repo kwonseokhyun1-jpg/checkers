@@ -108,7 +108,7 @@ export const META_SPELL_OVERLAY = {
 };
 
 export const VISUAL_DURATION_MS = {
-  coin: 2400,
+  coin: 1400,
   duel: 1500,
   stab: 1200,
   snipe: 1300,
