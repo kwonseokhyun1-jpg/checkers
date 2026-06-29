@@ -1697,7 +1697,11 @@ function renderAdventureMap() {
       btn.disabled = !unlocked;
       btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">${getWorldTabLabel(w)}</span>`;
       const unlockFloor = w.requiresClearLevel ?? BONUS_WORLDS_UNLOCK_AT_LEVEL;
-      btn.title = unlocked ? w.name : `Clear floor ${unlockFloor} to unlock`;
+      btn.title = unlocked
+        ? w.name
+        : w.mapType === "dungeon"
+          ? "Clear all floors in Tower 5 to unlock"
+          : `Clear floor ${unlockFloor} to unlock`;
       btn.addEventListener("click", () => {
         if (!isWorldUnlocked(progress, w.id)) return;
         selectedAdventureWorldId = w.id;
@@ -1800,7 +1804,7 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
   const levels = getLevelsForWorld(selectedAdventureWorldId);
   const nextId = getNextPlayableLevelId(progress);
 
-  tower?.style.setProperty("--tower-top-ratio", isDescent ? "0.68" : "0.72");
+  tower?.style.setProperty("--tower-top-ratio", isDescent ? "1.1" : "0.72");
 
   levels.forEach((level, i) => {
     const unlocked = isLevelUnlocked(progress, level.id);
@@ -1808,9 +1812,10 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
     const isNext = level.id === nextId && unlocked;
     const stars = getLevelStars(progress, level.id);
     const floorT = (level.floorInWorld - 1) / 9;
-    const floorScale = 1 - floorT * 0.26;
-    const floorHeightScale = 1 - floorT * 0.1;
-    const spiralOffset = Math.sin((level.floorInWorld - 1) * 0.62) * 0.32 * floorScale;
+    const floorScale = isDescent ? 0.72 + floorT * 0.38 : 1 - floorT * 0.26;
+    const floorHeightScale = isDescent ? 0.9 + floorT * 0.16 : 1 - floorT * 0.1;
+    const spiralMul = isDescent ? 0.38 : 0.32;
+    const spiralOffset = Math.sin((level.floorInWorld - 1) * 0.62) * spiralMul * floorScale;
 
     const tile = document.createElement("button");
     tile.type = "button";

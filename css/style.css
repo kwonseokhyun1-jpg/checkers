@@ -7203,7 +7203,11 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
   88% { opacity: 0.6; }
   89% { opacity: 0; }
 }
+.adventure-map-tower--dungeon {
+  width: min(96%, 32rem);
+}
 .adventure-map-tower--dungeon .adventure-map-tower__shaft {
+  width: 11.4rem;
   background:
     linear-gradient(90deg,
       rgba(0, 0, 0, 0.7) 0%,
@@ -7238,7 +7242,7 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
 }
 .adventure-map-tower--dungeon .adventure-map-tower__base {
   border-radius: 50% 50% 4px 4px;
-  width: 12.5rem;
+  width: 14.5rem;
   background:
     radial-gradient(ellipse 100% 80% at 50% 0%,
       var(--map-stone-mid) 0%,
@@ -7251,7 +7255,7 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
 }
 .adventure-map-tower--dungeon .adventure-map-tower__beacon {
   background: radial-gradient(ellipse 100% 100% at 50% 50%, var(--map-glow) 0%, transparent 70%);
-  width: 14rem;
+  width: 16rem;
   height: 2rem;
   opacity: 0.4;
 }
