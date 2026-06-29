@@ -44,6 +44,7 @@ import {
   getWorldForLevel,
   isQuestsAndPvpUnlocked,
   QUESTS_PVP_UNLOCK_MESSAGE,
+  questsPvpUnlockMessage,
   isCosmeticsUnlocked,
   COSMETICS_UNLOCK_MESSAGE,
   isChallengeModeUnlocked,
@@ -283,8 +284,9 @@ function syncNavUnlockState() {
   for (const tab of ["quests", "pvp"]) {
     const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
     if (!btn) continue;
+    const feature = tab === "pvp" ? "PvP" : "Quests";
     btn.classList.toggle("tab-btn--locked", !unlocked);
-    btn.title = unlocked ? "" : QUESTS_PVP_UNLOCK_MESSAGE;
+    btn.title = unlocked ? "" : questsPvpUnlockMessage(feature);
     btn.setAttribute("aria-disabled", unlocked ? "false" : "true");
   }
 
@@ -307,10 +309,17 @@ async function showTab(tab) {
     (tab === "quests" || tab === "pvp") &&
     !isQuestsAndPvpUnlocked(profile)
   ) {
-    showUnlockHint();
-    bypassQuestsPvpGate = true;
-    showTab("play");
-    bypassQuestsPvpGate = false;
+    const feature = tab === "pvp" ? "PvP" : "Quests";
+    const goToAdventure = await mobileConfirm(questsPvpUnlockMessage(feature), {
+      title: `${feature} locked`,
+      confirmLabel: "Go to Adventure",
+      cancelLabel: "Not now",
+    });
+    if (goToAdventure) {
+      bypassQuestsPvpGate = true;
+      showTab("play");
+      bypassQuestsPvpGate = false;
+    }
     return;
   }
   reconcileMatchShellState();

@@ -395,6 +395,11 @@ export function countClearedLevelsInWorld(progress, worldId) {
 export const QUESTS_PVP_UNLOCK_LEVEL = 1;
 export const QUESTS_PVP_UNLOCK_MESSAGE = "Clear Adventure floor 1 to unlock";
 
+/** @param {"PvP" | "Quests"} feature */
+export function questsPvpUnlockMessage(feature) {
+  return `Beat Adventure floor ${QUESTS_PVP_UNLOCK_LEVEL} to unlock ${feature}.`;
+}
+
 export const COSMETICS_UNLOCK_LEVEL = 5;
 export const COSMETICS_UNLOCK_MESSAGE = "Clear Adventure floor 5 to unlock";
 
