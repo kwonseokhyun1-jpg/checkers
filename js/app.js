@@ -1443,77 +1443,99 @@ function getMapSceneryMarkup(theme) {
   return `<svg class="adventure-map-scenery-svg" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs>
       <linearGradient id="${uid}-sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${p.sky}"/>
-        <stop offset="45%" stop-color="${p.skyGlow}"/>
-        <stop offset="100%" stop-color="${p.gridDark}"/>
+        <stop offset="0%" stop-color="#08060e"/>
+        <stop offset="35%" stop-color="${p.sky}"/>
+        <stop offset="70%" stop-color="${p.skyGlow}" stop-opacity="0.45"/>
+        <stop offset="100%" stop-color="${p.grassDark}"/>
       </linearGradient>
       <linearGradient id="${uid}-hill" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${p.grass}"/>
-        <stop offset="100%" stop-color="${p.grassDark}"/>
+        <stop offset="0%" stop-color="${p.grassDark}"/>
+        <stop offset="100%" stop-color="#0a0808"/>
       </linearGradient>
       <linearGradient id="${uid}-foundation" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="${p.rock}"/>
         <stop offset="100%" stop-color="${p.rockDark}"/>
       </linearGradient>
-      <radialGradient id="${uid}-glow" cx="50%" cy="30%" r="55%">
-        <stop offset="0%" stop-color="${p.accent}" stop-opacity="0.18"/>
+      <radialGradient id="${uid}-glow" cx="50%" cy="22%" r="50%">
+        <stop offset="0%" stop-color="${p.accent}" stop-opacity="0.12"/>
         <stop offset="100%" stop-color="${p.accent}" stop-opacity="0"/>
       </radialGradient>
+      <radialGradient id="${uid}-storm" cx="50%" cy="0%" r="80%">
+        <stop offset="0%" stop-color="#1a1028" stop-opacity="0.9"/>
+        <stop offset="60%" stop-color="#000" stop-opacity="0.4"/>
+        <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+      </radialGradient>
       <filter id="${uid}-soft" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="0.6"/>
+        <feGaussianBlur stdDeviation="1.2"/>
       </filter>
       <filter id="${uid}-glow-filter" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur stdDeviation="1.2" result="blur"/>
+        <feGaussianBlur stdDeviation="1.8" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
     <rect width="100" height="120" fill="url(#${uid}-sky)"/>
+    <rect width="100" height="120" fill="url(#${uid}-storm)"/>
     <rect width="100" height="120" fill="url(#${uid}-glow)"/>
-    <!-- distant castle silhouette -->
-    <g opacity="0.55" fill="${p.castle}">
-      <rect x="8" y="38" width="4" height="18" rx="0.5"/>
-      <rect x="6" y="42" width="8" height="3"/>
-      <rect x="14" y="44" width="10" height="12"/>
-      <polygon points="14,44 19,38 24,44" fill="${p.castleRoof}"/>
-      <rect x="78" y="36" width="5" height="20" rx="0.5"/>
-      <rect x="76" y="40" width="9" height="3"/>
-      <rect x="70" y="46" width="12" height="10"/>
-      <polygon points="70,46 76,40 82,46" fill="${p.castleRoof}"/>
+    <!-- distant ruined castle silhouettes -->
+    <g opacity="0.35" fill="#1a1420">
+      <rect x="6" y="36" width="5" height="22" rx="0.5"/>
+      <rect x="4" y="42" width="9" height="3"/>
+      <rect x="14" y="44" width="12" height="14"/>
+      <polygon points="14,44 20,36 26,44" fill="#120e18"/>
+      <rect x="76" y="34" width="6" height="24" rx="0.5"/>
+      <rect x="74" y="40" width="10" height="3"/>
+      <rect x="68" y="46" width="14" height="12"/>
+      <polygon points="68,46 75,38 82,46" fill="#120e18"/>
+      <rect x="42" y="48" width="3" height="10" opacity="0.6"/>
+      <rect x="54" y="50" width="2" height="8" opacity="0.5"/>
     </g>
-    <!-- misty hills -->
-    <path fill="${p.grass}" opacity="0.4" d="M0 50 C14 42 24 46 38 40 C52 34 64 42 78 38 C90 34 96 40 100 36 L100 64 L0 64 Z"/>
-    <path fill="${p.grassDark}" opacity="0.3" d="M0 56 C20 48 32 52 50 46 C68 40 84 48 100 44 L100 72 L0 72 Z"/>
-    <!-- fantasy trees -->
-    <g opacity="0.65">
-      <polygon points="6,62 10,52 14,62" fill="${p.grassDark}"/>
-      <rect x="9" y="62" width="2" height="5" fill="${p.rockDark}"/>
-      <polygon points="88,58 92,48 96,58" fill="${p.grassDark}"/>
-      <rect x="91" y="58" width="2" height="5" fill="${p.rockDark}"/>
+    <!-- jagged hills -->
+    <path fill="${p.grassDark}" opacity="0.55" d="M0 48 C12 40 22 44 36 38 C50 32 62 40 76 36 C88 32 96 38 100 34 L100 68 L0 68 Z"/>
+    <path fill="#0a0808" opacity="0.45" d="M0 54 C18 46 30 50 50 44 C70 38 84 46 100 42 L100 78 L0 78 Z"/>
+    <!-- dead twisted trees -->
+    <g opacity="0.5" stroke="${p.rockDark}" stroke-width="0.6" fill="none">
+      <path d="M8 68 L10 56 M10 60 L6 58 M10 58 L13 55"/>
+      <path d="M90 64 L92 52 M92 56 L88 54 M92 54 L95 50"/>
     </g>
-    <!-- clouds / aurora wisps -->
-    <ellipse cx="16" cy="12" rx="11" ry="4" fill="#fff" opacity="0.45" filter="url(#${uid}-soft)"/>
-    <ellipse cx="22" cy="11" rx="8" ry="3.5" fill="#fff" opacity="0.4" filter="url(#${uid}-soft)"/>
-    <ellipse cx="74" cy="9" rx="13" ry="5" fill="#fff" opacity="0.42" filter="url(#${uid}-soft)"/>
-    <ellipse cx="82" cy="8" rx="9" ry="4" fill="#fff" opacity="0.38" filter="url(#${uid}-soft)"/>
-    <ellipse cx="46" cy="16" rx="10" ry="3.5" fill="${p.skyGlow}" opacity="0.35" filter="url(#${uid}-soft)"/>
-    <!-- magical sparkles -->
-    <circle cx="28" cy="24" r="0.6" fill="${p.flag}" opacity="0.7" filter="url(#${uid}-glow-filter)"/>
-    <circle cx="68" cy="20" r="0.5" fill="${p.flag}" opacity="0.6" filter="url(#${uid}-glow-filter)"/>
-    <circle cx="50" cy="28" r="0.4" fill="${p.accent}" opacity="0.5" filter="url(#${uid}-glow-filter)"/>
+    <!-- storm clouds -->
+    <ellipse cx="18" cy="14" rx="16" ry="6" fill="#1a1428" opacity="0.75" filter="url(#${uid}-soft)"/>
+    <ellipse cx="28" cy="12" rx="12" ry="5" fill="#221830" opacity="0.7" filter="url(#${uid}-soft)"/>
+    <ellipse cx="72" cy="10" rx="18" ry="7" fill="#1a1428" opacity="0.8" filter="url(#${uid}-soft)"/>
+    <ellipse cx="84" cy="9" rx="11" ry="5" fill="#221830" opacity="0.65" filter="url(#${uid}-soft)"/>
+    <ellipse cx="48" cy="18" rx="14" ry="5" fill="#2a1838" opacity="0.5" filter="url(#${uid}-soft)"/>
+    <!-- eerie moon -->
+    <circle cx="78" cy="22" r="5" fill="#c8c0b0" opacity="0.18" filter="url(#${uid}-soft)"/>
+    <circle cx="79.5" cy="21" r="4.5" fill="#08060e" opacity="0.85"/>
+    <!-- distant lightning flash -->
+    <path d="M62 8 L64 18 L61 18 L63 28" stroke="${p.accent}" stroke-width="0.5" opacity="0.35" fill="none" filter="url(#${uid}-glow-filter)"/>
+    <!-- eerie embers / wisps -->
+    <circle cx="24" cy="30" r="0.5" fill="${p.accent}" opacity="0.45" filter="url(#${uid}-glow-filter)"/>
+    <circle cx="70" cy="26" r="0.4" fill="${p.flag}" opacity="0.35" filter="url(#${uid}-glow-filter)"/>
+    <circle cx="44" cy="34" r="0.35" fill="${p.accent}" opacity="0.3" filter="url(#${uid}-glow-filter)"/>
+    <!-- ravens -->
+    <g opacity="0.4" fill="#0a0808">
+      <path d="M32 28 Q34 26 36 28 Q34 27 32 28Z"/>
+      <path d="M58 24 Q60 22 62 24 Q60 23 58 24Z"/>
+    </g>
     <!-- ground -->
     <rect x="0" y="86" width="100" height="34" fill="url(#${uid}-hill)"/>
-    <ellipse cx="50" cy="88" rx="46" ry="7" fill="rgba(0,0,0,0.18)"/>
+    <ellipse cx="50" cy="88" rx="48" ry="8" fill="rgba(0,0,0,0.35)"/>
     <!-- tower foundation platform -->
-    <path fill="url(#${uid}-foundation)" d="M14 88 L86 88 L90 95 L10 95 Z"/>
-    <path fill="${p.rockDark}" d="M10 95 L90 95 L88 100 L12 100 Z"/>
-    <path fill="none" stroke="${p.flag}" stroke-width="0.4" opacity="0.35" d="M14 90 L86 90"/>
-    <!-- torches flanking tower base -->
-    <g opacity="0.85">
-      <rect x="20" y="82" width="1.5" height="6" fill="${p.rockDark}"/>
-      <ellipse cx="20.75" cy="81" rx="2" ry="2.5" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.8"/>
-      <rect x="78" y="82" width="1.5" height="6" fill="${p.rockDark}"/>
-      <ellipse cx="78.75" cy="81" rx="2" ry="2.5" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.8"/>
+    <path fill="url(#${uid}-foundation)" d="M10 88 L90 88 L94 96 L6 96 Z"/>
+    <path fill="${p.rockDark}" d="M6 96 L94 96 L92 102 L8 102 Z"/>
+    <path fill="none" stroke="${p.flag}" stroke-width="0.3" opacity="0.2" d="M12 90 L88 90"/>
+    <!-- braziers flanking tower base -->
+    <g opacity="0.9">
+      <rect x="18" y="80" width="2" height="8" fill="${p.rockDark}"/>
+      <ellipse cx="19" cy="79" rx="2.5" ry="3" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.7"/>
+      <ellipse cx="19" cy="79" rx="1.2" ry="1.5" fill="#fff8e0" opacity="0.5"/>
+      <rect x="80" y="80" width="2" height="8" fill="${p.rockDark}"/>
+      <ellipse cx="81" cy="79" rx="2.5" ry="3" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.7"/>
+      <ellipse cx="81" cy="79" rx="1.2" ry="1.5" fill="#fff8e0" opacity="0.5"/>
     </g>
+    <!-- ground fog wisps -->
+    <ellipse cx="30" cy="92" rx="18" ry="4" fill="#c8c0d0" opacity="0.12" filter="url(#${uid}-soft)"/>
+    <ellipse cx="70" cy="94" rx="20" ry="5" fill="#c8c0d0" opacity="0.1" filter="url(#${uid}-soft)"/>
   </svg>`;
 }
 
@@ -1620,10 +1642,19 @@ function renderAdventureMap() {
     <div class="adventure-map-canvas__bg" aria-hidden="true">
       <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
       <div class="adventure-map-atmosphere" aria-hidden="true"></div>
+      <div class="adventure-map-ominous" aria-hidden="true">
+        <div class="adventure-map-ominous__vignette"></div>
+        <div class="adventure-map-ominous__fog"></div>
+        <div class="adventure-map-ominous__fog adventure-map-ominous__fog--slow"></div>
+      </div>
     </div>
     <div class="adventure-map-tower">
+      <div class="adventure-map-tower__base" aria-hidden="true"></div>
       <div class="adventure-map-tower__shaft" aria-hidden="true"></div>
+      <div class="adventure-map-tower__buttress adventure-map-tower__buttress--left" aria-hidden="true"></div>
+      <div class="adventure-map-tower__buttress adventure-map-tower__buttress--right" aria-hidden="true"></div>
       <div class="adventure-map-tiles"></div>
+      <div class="adventure-map-tower__mist" aria-hidden="true"></div>
     </div>`;
 
   const tilesLayer = map.querySelector(".adventure-map-tiles");
