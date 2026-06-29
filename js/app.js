@@ -1645,7 +1645,7 @@ function renderAdventureMap() {
   const challengeUnlocked = isChallengeModeUnlocked(progress);
   const challengeOn = isChallengeModeEnabled(progress);
   const showChallengeToggle = selectedAdventureWorldId === 5 && challengeUnlocked;
-  const skyCornerHtml = showChallengeToggle
+  const challengeCornerHtml = showChallengeToggle
     ? `<div class="adventure-map-challenge-corner">
         <div class="adventure-map-ominous__moon" aria-hidden="true"></div>
         <button type="button" class="adventure-challenge-toggle${challengeOn ? " adventure-challenge-toggle--on" : ""}"
@@ -1655,20 +1655,21 @@ function renderAdventureMap() {
           <span class="adventure-challenge-toggle__label">Challenge</span>
         </button>
       </div>`
-    : `<div class="adventure-map-ominous__moon" aria-hidden="true"></div>`;
+    : "";
   map.innerHTML = `
     <div class="adventure-map-canvas__bg" aria-hidden="true">
       <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
       <div class="adventure-map-atmosphere" aria-hidden="true"></div>
       <div class="adventure-map-ominous" aria-hidden="true">
         <div class="adventure-map-ominous__sky"></div>
-        ${skyCornerHtml}
+        <div class="adventure-map-ominous__moon" aria-hidden="true"></div>
         <div class="adventure-map-ominous__clouds"></div>
         <div class="adventure-map-ominous__vignette"></div>
         <div class="adventure-map-ominous__fog"></div>
         <div class="adventure-map-ominous__fog adventure-map-ominous__fog--slow"></div>
       </div>
     </div>
+    ${challengeCornerHtml}
     <div class="adventure-map-tower">
       <div class="adventure-map-tower__base" aria-hidden="true"></div>
       <div class="adventure-map-tower__shaft" aria-hidden="true"></div>
