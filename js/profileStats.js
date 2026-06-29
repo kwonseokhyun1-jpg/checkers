@@ -55,7 +55,7 @@ export function recordPvpWin(profile) {
   return profile.pvpWins;
 }
 
-export function countAdventureStagesCleared(profile) {
+export function countAdventureFloorsCleared(profile) {
   const progress = repairAdventureProgress(profile?.adventure);
   return Object.values(progress.cleared || {}).filter(Boolean).length;
 }
@@ -84,7 +84,7 @@ export function countSpellsUnlocked(profile) {
 export function getProfileStats(profile) {
   return {
     pvpWins: getPvpWinCount(profile),
-    adventureStagesCleared: countAdventureStagesCleared(profile),
+    adventureFloorsCleared: countAdventureFloorsCleared(profile),
     spellsPlayed: getSpellPlayCount(profile),
   };
 }

@@ -18,7 +18,7 @@ body {
   body.splash-active,
   body.main-tab-active:not(.match-active):not(.deck-editing),
   body.match-active,
-  body.adventure-active:not(.adventure-stage-open),
+  body.adventure-active:not(.adventure-floor-open),
   body.deck-editing {
     height: var(--app-height);
     min-height: var(--app-height);
@@ -239,8 +239,8 @@ body.match-active {
     min-height: 0;
   }
 
-  /* Adventure — stage list scrolls inside the panel, not the whole shell */
-  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .game-main {
+  /* Adventure — floor list scrolls inside the panel, not the whole shell */
+  body.adventure-active:not(.adventure-floor-open):not(.match-active):not(.deck-editing) .game-main {
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -249,30 +249,30 @@ body.match-active {
     padding-bottom: 0;
   }
 
-  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .game-main > .view:not(.hidden) {
+  body.adventure-active:not(.adventure-floor-open):not(.match-active):not(.deck-editing) .game-main > .view:not(.hidden) {
     min-height: 0;
   }
 
-  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .adventure-panel {
+  body.adventure-active:not(.adventure-floor-open):not(.match-active):not(.deck-editing) .adventure-panel {
     padding-bottom: 0;
   }
 
-  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .adventure-map-scene {
+  body.adventure-active:not(.adventure-floor-open):not(.match-active):not(.deck-editing) .adventure-map-scene {
     padding-bottom: var(--nav-clearance);
     scroll-padding-bottom: var(--nav-clearance);
   }
 
-  body.install-banner-visible.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .adventure-map-scene {
+  body.install-banner-visible.adventure-active:not(.adventure-floor-open):not(.match-active):not(.deck-editing) .adventure-map-scene {
     padding-bottom: calc(var(--nav-clearance) + 3.25rem);
     scroll-padding-bottom: calc(var(--nav-clearance) + 3.25rem);
   }
 
-  body.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .adventure-stage-list:not(.adventure-stage-list--sr) {
+  body.adventure-active:not(.adventure-floor-open):not(.match-active):not(.deck-editing) .adventure-floor-list:not(.adventure-floor-list--sr) {
     padding-bottom: var(--nav-clearance);
     scroll-padding-bottom: var(--nav-clearance);
   }
 
-  body.install-banner-visible.adventure-active:not(.adventure-stage-open):not(.match-active):not(.deck-editing) .adventure-stage-list:not(.adventure-stage-list--sr) {
+  body.install-banner-visible.adventure-active:not(.adventure-floor-open):not(.match-active):not(.deck-editing) .adventure-floor-list:not(.adventure-floor-list--sr) {
     padding-bottom: calc(var(--nav-clearance) + 3.25rem);
     scroll-padding-bottom: calc(var(--nav-clearance) + 3.25rem);
   }
@@ -480,7 +480,7 @@ body.match-active {
 }
 
 /* Adventure list rows — tap targets */
-.adventure-stage-row {
+.adventure-floor-row {
   min-height: 3.25rem;
 }
 
@@ -814,12 +814,12 @@ body.match-active {
   }
 
   /* Adventure prebattle — bottom sheet like auth modal */
-  .adventure-stage-modal {
+  .adventure-floor-modal {
     align-items: flex-end;
     padding: 0;
   }
 
-  .adventure-stage-modal__dialog {
+  .adventure-floor-modal__dialog {
     width: 100%;
     max-width: 100%;
     max-height: min(92dvh, 720px);
@@ -913,7 +913,7 @@ body.match-active {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .adventure-stage-modal__dialog,
+  .adventure-floor-modal__dialog,
   .game-over-card {
     animation: none;
   }
@@ -1587,7 +1587,7 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   /* Adventure prebattle sheet — battle CTA and deck picker */
-  .adventure-stage-modal__close {
+  .adventure-floor-modal__close {
     min-width: 44px;
     min-height: 44px;
   }
@@ -1800,12 +1800,12 @@ body.install-banner-visible.deck-editing .game-shell {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
   }
 
-  /* Adventure — lock page scroll; stage list scrolls inside panel */
-  body.adventure-active:not(.adventure-stage-open):not(.match-active) {
+  /* Adventure — lock page scroll; floor list scrolls inside panel */
+  body.adventure-active:not(.adventure-floor-open):not(.match-active) {
     overflow: hidden;
   }
 
-  body.adventure-active:not(.adventure-stage-open):not(.match-active) .game-shell {
+  body.adventure-active:not(.adventure-floor-open):not(.match-active) .game-shell {
     display: flex;
     flex-direction: column;
   }
@@ -1817,7 +1817,7 @@ body.install-banner-visible.deck-editing .game-shell {
     min-height: 0;
   }
 
-  .adventure-stage-list:not(.adventure-stage-list--sr) {
+  .adventure-floor-list:not(.adventure-floor-list--sr) {
     max-height: min(46dvh, 22rem);
     margin-bottom: 0.35rem;
     padding-bottom: 0.35rem;
@@ -1825,38 +1825,38 @@ body.install-banner-visible.deck-editing .game-shell {
     scrollbar-width: thin;
   }
 
-  body.adventure-active:not(.adventure-stage-open) .adventure-panel {
+  body.adventure-active:not(.adventure-floor-open) .adventure-panel {
     padding-bottom: 0;
   }
 
-  body.adventure-active:not(.adventure-stage-open) .adventure-map-scene {
+  body.adventure-active:not(.adventure-floor-open) .adventure-map-scene {
     max-height: none;
     padding-bottom: var(--nav-clearance);
     scroll-padding-bottom: var(--nav-clearance);
   }
 
-  body.install-banner-visible.adventure-active:not(.adventure-stage-open) .adventure-map-scene {
+  body.install-banner-visible.adventure-active:not(.adventure-floor-open) .adventure-map-scene {
     padding-bottom: calc(var(--nav-clearance) + 3.25rem);
     scroll-padding-bottom: calc(var(--nav-clearance) + 3.25rem);
   }
 
-  body.adventure-active:not(.adventure-stage-open) .adventure-stage-list:not(.adventure-stage-list--sr) {
+  body.adventure-active:not(.adventure-floor-open) .adventure-floor-list:not(.adventure-floor-list--sr) {
     max-height: none;
     padding-bottom: var(--nav-clearance);
     scroll-padding-bottom: var(--nav-clearance);
   }
 
-  body.install-banner-visible.adventure-active:not(.adventure-stage-open) .adventure-stage-list:not(.adventure-stage-list--sr) {
+  body.install-banner-visible.adventure-active:not(.adventure-floor-open) .adventure-floor-list:not(.adventure-floor-list--sr) {
     padding-bottom: calc(var(--nav-clearance) + 3.25rem);
     scroll-padding-bottom: calc(var(--nav-clearance) + 3.25rem);
   }
 
-  .adventure-stage-row {
+  .adventure-floor-row {
     min-height: 3.5rem;
     padding: 0.7rem 0.85rem;
   }
 
-  .adventure-stage-row__title {
+  .adventure-floor-row__title {
     font-size: 0.92rem;
   }
 
