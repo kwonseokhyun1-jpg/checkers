@@ -1623,6 +1623,12 @@ function renderAdventureMap() {
       selectedAdventureWorldId = worlds[0]?.id || 1;
       progress.selectedWorld = selectedAdventureWorldId;
     }
+    const activeTab = tabs.querySelector(".adventure-world-shield.active");
+    if (activeTab) {
+      requestAnimationFrame(() => {
+        activeTab.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      });
+    }
   }
 
   const worldMeta = WORLDS.find((w) => w.id === selectedAdventureWorldId);
@@ -1634,13 +1640,25 @@ function renderAdventureMap() {
 }
 
 function renderTowerMap(worldMeta, progress) {
+  renderVerticalWorldMap(worldMeta, progress, { direction: "ascent" });
+}
+
+function renderDungeonMap(worldMeta, progress) {
+  renderVerticalWorldMap(worldMeta, progress, { direction: "descent" });
+}
+
+function renderVerticalWorldMap(worldMeta, progress, { direction }) {
+  const isDescent = direction === "descent";
   const map = $("adventure-map");
   const scene = map?.closest(".adventure-map-scene");
+  scene?.classList.toggle("adventure-map-scene--descent", isDescent);
   scene?.classList.remove("adventure-map-scene--dungeon");
   if (!map) return;
-  const theme = worldMeta?.theme || "verdant";
-  const palette = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
-  map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--iso`;
+
+  const defaultTheme = isDescent ? "crypt" : "verdant";
+  const theme = worldMeta?.theme || defaultTheme;
+  const palette = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES[defaultTheme];
+  map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--iso${isDescent ? " adventure-map-canvas--descent" : ""}`;
   map.style.setProperty("--map-accent", palette.accent);
   map.style.setProperty("--map-glow", palette.glow);
   map.style.setProperty("--map-mist", palette.mist);
@@ -1648,14 +1666,21 @@ function renderTowerMap(worldMeta, progress) {
   map.style.setProperty("--map-stone-mid", palette.stoneMid);
   map.style.setProperty("--map-stone-dark", palette.stoneDark);
   map.style.setProperty("--map-stone-side", palette.stoneSide);
-  map.style.setProperty("--map-moss", palette.moss);
+  map.style.setProperty("--map-moss", palette.moss || palette.grass || "#4a7840");
   map.setAttribute("role", "group");
-  map.setAttribute("aria-label", "Adventure floor map");
+  map.setAttribute(
+    "aria-label",
+    isDescent ? `${worldMeta.name} dungeon map` : "Adventure floor map",
+  );
+
+  const towerClass = isDescent ? "adventure-map-tower adventure-map-tower--descent" : "adventure-map-tower";
+  const tilesClass = isDescent ? "adventure-map-tiles adventure-map-tiles--descent" : "adventure-map-tiles";
+  const ominousClass = isDescent ? "adventure-map-ominous adventure-map-ominous--descent" : "adventure-map-ominous";
   map.innerHTML = `
     <div class="adventure-map-canvas__bg" aria-hidden="true">
       <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
       <div class="adventure-map-atmosphere" aria-hidden="true"></div>
-      <div class="adventure-map-ominous" aria-hidden="true">
+      <div class="${ominousClass}" aria-hidden="true">
         <div class="adventure-map-ominous__sky"></div>
         <div class="adventure-map-ominous__moon"></div>
         <div class="adventure-map-ominous__clouds"></div>
@@ -1664,12 +1689,12 @@ function renderTowerMap(worldMeta, progress) {
         <div class="adventure-map-ominous__fog adventure-map-ominous__fog--slow"></div>
       </div>
     </div>
-    <div class="adventure-map-tower">
+    <div class="${towerClass}">
       <div class="adventure-map-tower__base" aria-hidden="true"></div>
       <div class="adventure-map-tower__shaft" aria-hidden="true"></div>
       <div class="adventure-map-tower__buttress adventure-map-tower__buttress--left" aria-hidden="true"></div>
       <div class="adventure-map-tower__buttress adventure-map-tower__buttress--right" aria-hidden="true"></div>
-      <div class="adventure-map-tiles"></div>
+      <div class="${tilesClass}"></div>
       <div class="adventure-map-tower__mist" aria-hidden="true"></div>
       <div class="adventure-map-tower__beacon" aria-hidden="true"></div>
       <div class="adventure-map-tower__haze" aria-hidden="true"></div>
@@ -1680,7 +1705,7 @@ function renderTowerMap(worldMeta, progress) {
   const levels = getLevelsForWorld(selectedAdventureWorldId);
   const nextId = getNextPlayableLevelId(progress);
 
-  tower?.style.setProperty("--tower-top-ratio", "0.72");
+  tower?.style.setProperty("--tower-top-ratio", isDescent ? "0.68" : "0.72");
 
   levels.forEach((level, i) => {
     const unlocked = isLevelUnlocked(progress, level.id);
@@ -1708,7 +1733,8 @@ function renderTowerMap(worldMeta, progress) {
     if (level.floorInWorld === 10) tile.classList.add("adventure-map-tile--summit");
     tile.setAttribute("aria-disabled", unlocked ? "false" : "true");
     if (!unlocked) tile.title = `Clear global floor ${level.id - 1} to unlock`;
-    tile.setAttribute("aria-label", `Floor ${level.floorInWorld}: ${level.opponent}, ${level.flavor}`);
+    const floorLabel = isDescent ? "Depth" : "Floor";
+    tile.setAttribute("aria-label", `${floorLabel} ${level.floorInWorld}: ${level.opponent}, ${level.flavor}`);
     const starLine = cleared ? `<span class="adventure-map-tile__stars">${formatStars(stars)}</span>` : "";
     const pawn = isNext ? `<span class="adventure-map-tile__pawn">${getMapPawnMarkup(palette.accent)}</span>` : "";
     const banner = level.floorInWorld === 10 ? `<span class="adventure-map-tile__banner">${getMapBannerMarkup(theme)}</span>` : "";
@@ -1753,98 +1779,6 @@ function renderTowerMap(worldMeta, progress) {
 
   const nextTile = map.querySelector(".adventure-map-tile--next");
   if (nextTile) requestAnimationFrame(() => nextTile.scrollIntoView({ behavior: "smooth", block: "center" }));
-}
-
-function renderDungeonMap(worldMeta, progress) {
-  const map = $("adventure-map");
-  const scene = map?.closest(".adventure-map-scene");
-  if (scene) scene.classList.add("adventure-map-scene--dungeon");
-  if (!map) return;
-  const theme = worldMeta?.theme || "crypt";
-  const palette = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.crypt;
-  map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--dungeon`;
-  map.style.setProperty("--map-accent", palette.accent);
-  map.style.setProperty("--map-glow", palette.glow);
-  map.style.setProperty("--map-mist", palette.mist);
-  map.style.setProperty("--map-stone-light", palette.stoneLight);
-  map.style.setProperty("--map-stone-mid", palette.stoneMid);
-  map.style.setProperty("--map-stone-dark", palette.stoneDark);
-  map.style.setProperty("--map-stone-side", palette.stoneSide);
-  map.setAttribute("role", "group");
-  map.setAttribute("aria-label", `${worldMeta.name} dungeon map`);
-
-  const levels = getLevelsForWorld(selectedAdventureWorldId);
-  const nextId = getNextPlayableLevelId(progress);
-
-  map.innerHTML = `
-    <div class="adventure-dungeon-bg adventure-dungeon-bg--${theme}" aria-hidden="true"></div>
-    <div class="adventure-dungeon-scroll" tabindex="0" aria-label="Scroll through dungeon rooms">
-      <div class="adventure-dungeon-corridor"></div>
-    </div>`;
-
-  const corridor = map.querySelector(".adventure-dungeon-corridor");
-  const scrollEl = map.querySelector(".adventure-dungeon-scroll");
-
-  levels.forEach((level, i) => {
-    const unlocked = isLevelUnlocked(progress, level.id);
-    const cleared = isLevelCleared(progress, level.id);
-    const isNext = level.id === nextId && unlocked;
-    const stars = getLevelStars(progress, level.id);
-
-    const chamber = document.createElement("button");
-    chamber.type = "button";
-    chamber.className = "adventure-dungeon-chamber";
-    chamber.dataset.level = String(level.id);
-    if (!unlocked) chamber.classList.add("adventure-dungeon-chamber--locked");
-    if (cleared) chamber.classList.add("adventure-dungeon-chamber--cleared");
-    if (isNext) chamber.classList.add("adventure-dungeon-chamber--next");
-    if (level.floorInWorld === 10) chamber.classList.add("adventure-dungeon-chamber--boss");
-    chamber.setAttribute("aria-disabled", unlocked ? "false" : "true");
-    if (!unlocked) chamber.title = `Clear global floor ${level.id - 1} to unlock`;
-    chamber.setAttribute("aria-label", `Room ${level.floorInWorld}: ${level.opponent}, ${level.flavor}`);
-
-    const starLine = cleared ? `<span class="adventure-dungeon-chamber__stars">${formatStars(stars)}</span>` : "";
-    const pawn = isNext ? `<span class="adventure-dungeon-chamber__pawn">${getMapPawnMarkup(palette.accent)}</span>` : "";
-    chamber.innerHTML = `
-      ${pawn}
-      <span class="adventure-dungeon-chamber__arch" aria-hidden="true"></span>
-      <span class="adventure-dungeon-chamber__face">
-        <span class="adventure-dungeon-chamber__num">${level.floorInWorld}</span>
-        <span class="adventure-dungeon-chamber__name">${level.opponent}</span>
-        <span class="adventure-dungeon-chamber__flavor">${level.flavor}</span>
-        ${starLine}
-      </span>`;
-
-    if (!unlocked) chamber.disabled = true;
-    chamber.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      openAdventureFloor(level.id);
-    };
-    chamber.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        openAdventureFloor(level.id);
-      }
-    });
-
-    corridor?.appendChild(chamber);
-    if (i < levels.length - 1) {
-      const link = document.createElement("span");
-      link.className = "adventure-dungeon-link";
-      link.setAttribute("aria-hidden", "true");
-      corridor?.appendChild(link);
-    }
-  });
-
-  renderAdventureFloorList(levels, progress, nextId);
-
-  const nextChamber = map.querySelector(".adventure-dungeon-chamber--next");
-  if (nextChamber && scrollEl) {
-    requestAnimationFrame(() => {
-      nextChamber.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-    });
-  }
 }
 
 function renderAdventureFloorList(levels, progress, nextId) {
