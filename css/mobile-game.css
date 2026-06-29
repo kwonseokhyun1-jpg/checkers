@@ -613,6 +613,20 @@ body.match-active {
     width: 1.4rem;
     height: 1.55rem;
   }
+
+  .adventure-dungeon-scroll {
+    scrollbar-width: none;
+    padding: 1rem 0.5rem 0.75rem;
+  }
+
+  .adventure-dungeon-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .adventure-dungeon-chamber {
+    flex: 0 0 5.25rem;
+    width: 5.25rem;
+  }
 }
 
 /* Match + meta screens — phone presentation */
