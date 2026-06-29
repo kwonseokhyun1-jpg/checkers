@@ -57,6 +57,15 @@ export async function isUsernameAvailable(username) {
   return isUsernameAvailableForUser(username, null);
 }
 
+/** @type {boolean | null} */
+let usernameAvailabilityRpcSupported = null;
+
+function isMissingColumnError(error) {
+  const code = error?.code || error?.details?.code;
+  const msg = String(error?.message || error?.details || "");
+  return code === "PGRST204" || msg.includes("schema cache") || msg.includes("Could not find");
+}
+
 /** @param {string | null} exceptUserId — current user may keep their own name */
 export async function isUsernameAvailableForUser(username, exceptUserId) {
   const sb = getSupabase();
@@ -64,10 +73,15 @@ export async function isUsernameAvailableForUser(username, exceptUserId) {
   const name = String(username || "").trim();
   if (!name) return false;
 
-  const { data, error } = await sb.rpc("username_is_available", { name });
-  if (!error && typeof data === "boolean") {
-    if (data) return true;
-    if (!exceptUserId) return false;
+  if (usernameAvailabilityRpcSupported !== false) {
+    const { data, error } = await sb.rpc("username_is_available", { name });
+    if (!error && typeof data === "boolean") {
+      usernameAvailabilityRpcSupported = true;
+      if (data) return true;
+      if (!exceptUserId) return false;
+    } else if (isMissingRpcError(error)) {
+      usernameAvailabilityRpcSupported = false;
+    }
   }
 
   const { data: row, error: qErr } = await sb
@@ -149,12 +163,20 @@ export async function updateUsername(newUsername) {
       ? { ...row.profile_json, usernameChangedAt: now }
       : { usernameChangedAt: now };
 
-  await upsertProfileRow(user.id, {
+  const patch = {
     username: name,
     display_name: name,
     username_changed_at: now,
     profile_json: profileJson,
-  });
+  };
+  try {
+    await upsertProfileRow(user.id, patch);
+  } catch (e) {
+    // Production DB may not have run add_username_changed_at.sql yet.
+    if (!isMissingColumnError(e) || !("username_changed_at" in patch)) throw e;
+    const { username_changed_at: _ignored, ...fallbackPatch } = patch;
+    await upsertProfileRow(user.id, fallbackPatch);
+  }
   await syncAuthDisplayName(name);
   await updatePvpDisplayNames(user.id, name);
   return name;
@@ -208,7 +230,12 @@ export async function signUp(email, password, displayName, username) {
 function isMissingRpcError(error) {
   const code = error?.code || error?.details?.code;
   const msg = String(error?.message || "");
-  return code === "PGRST202" || msg.includes("email_for_login") || msg.includes("Could not find the function");
+  return (
+    code === "PGRST202" ||
+    msg.includes("email_for_login") ||
+    msg.includes("username_is_available") ||
+    msg.includes("Could not find the function")
+  );
 }
 
 /** @param {Record<string, unknown> | null | undefined} profileJson */
