@@ -3130,7 +3130,8 @@ ${starLine}`;
           }
           if (piece.plagueTurns > 0) {
             const plague = document.createElement("div");
-            plague.className = "plague-indicator";
+            plague.className =
+              "plague-indicator" + (piece.plagueSeed ? " plague-indicator--seed" : "");
             const mark = document.createElement("span");
             mark.className = "plague-indicator__mark";
             mark.textContent = "☣";
