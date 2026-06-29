@@ -16,6 +16,8 @@ import {
   validateUsernameFormat,
 } from "./auth.js";
 
+export const PRIVACY_POLICY_URL = "https://sites.google.com/view/arcane-checkers/home";
+
 function escapeHtml(text) {
   return String(text ?? "")
     .replace(/&/g, "&amp;")
@@ -60,6 +62,21 @@ export function settingsSectionHtml() {
       </section>
       <p class="settings-credits muted">Music &amp; SFX: royalty-free placeholders. See <code>assets/audio/LICENSES.md</code>.</p>
     </div>`;
+}
+
+function legalSectionHtml() {
+  return `
+    <section class="settings-group" aria-labelledby="settings-legal-heading">
+      <h4 id="settings-legal-heading" class="settings-group__title">Legal</h4>
+      <p class="settings-legal">
+        <a
+          class="settings-legal__link"
+          href="${PRIVACY_POLICY_URL}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Privacy policy</a>
+      </p>
+    </section>`;
 }
 
 function accountSectionHtml({ signedIn, username, email }) {
@@ -133,6 +150,7 @@ export function renderSettingsTab(root, { onUsernameChanged } = {}) {
         <p class="panel-head__desc">Audio, haptics, and account preferences.</p>
       </header>
       ${settingsSectionHtml()}
+      ${legalSectionHtml()}
       <section class="settings-group settings-account-section" aria-labelledby="settings-account-heading">
         <h4 id="settings-account-heading" class="settings-group__title">Account</h4>
         ${accountSectionHtml({ signedIn, username: "", email: user?.email || "" })}
