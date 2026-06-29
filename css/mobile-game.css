@@ -595,37 +595,23 @@ body.match-active {
   }
 }
 
-/* Adventure tower tabs — keep all five labels visible on one row */
+/* Adventure chapter tabs — horizontal scroll, five visible at a time */
 @media (max-width: 480px) {
   .adventure-world-shields {
-    gap: 0.2rem;
+    --world-tab-gap: 0.2rem;
     padding-left: 0;
     padding-right: 0;
   }
 
   .adventure-world-shield {
-    padding: 0.3rem 0.06rem;
-    font-size: clamp(0.46rem, 2.55vw, 0.6rem);
+    padding: 0.3rem 0.1rem;
+    font-size: 0.58rem;
     letter-spacing: -0.01em;
   }
 
   .adventure-world-shield__icon {
     width: 1.4rem;
     height: 1.55rem;
-  }
-
-  .adventure-dungeon-scroll {
-    scrollbar-width: none;
-    padding: 1rem 0.5rem 0.75rem;
-  }
-
-  .adventure-dungeon-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  .adventure-dungeon-chamber {
-    flex: 0 0 5.25rem;
-    width: 5.25rem;
   }
 }
 
