@@ -6970,28 +6970,40 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
   pointer-events: none;
 }
 .adventure-map-scenery--crypt {
-  background: linear-gradient(180deg, #201820 0%, #302830 35%, #181420 70%, #0a0810 100%);
+  background: linear-gradient(180deg, #0c0a08 0%, #1a1410 30%, #100c08 65%, #040404 100%);
 }
 .adventure-map-scenery--crypt::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 80% 45% at 50% 8%, rgba(212, 165, 116, 0.14), transparent 70%),
-    radial-gradient(ellipse 100% 50% at 50% 100%, rgba(0, 0, 0, 0.7), transparent 60%);
+    radial-gradient(ellipse 90% 50% at 50% 5%, rgba(232, 160, 80, 0.18), transparent 65%),
+    radial-gradient(ellipse 80% 55% at 50% 100%, rgba(0, 0, 0, 0.8), transparent 55%);
   pointer-events: none;
 }
 .adventure-map-scenery--abyss {
-  background: linear-gradient(180deg, #181830 0%, #101028 40%, #080818 75%, #040408 100%);
+  background: linear-gradient(180deg, #080818 0%, #101028 35%, #060610 70%, #020204 100%);
 }
 .adventure-map-scenery--abyss::after {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 70% 40% at 50% 92%, rgba(124, 108, 255, 0.2), transparent 70%),
-    radial-gradient(ellipse 90% 45% at 50% 5%, rgba(0, 0, 0, 0.45), transparent 70%);
+    radial-gradient(ellipse 75% 45% at 50% 95%, rgba(144, 128, 255, 0.28), transparent 65%),
+    radial-gradient(ellipse 85% 40% at 50% 3%, rgba(0, 0, 0, 0.55), transparent 70%);
   pointer-events: none;
+}
+.adventure-map-scenery--dungeon .adventure-map-scenery-svg {
+  opacity: 0.95;
+}
+.adventure-map-scene--dungeon {
+  background: #060608;
+}
+.adventure-map-scene--dungeon .adventure-map-canvas {
+  border-radius: 12px;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.7),
+    0 4px 24px rgba(0, 0, 0, 0.5);
 }
 .adventure-map-atmosphere {
   position: absolute;
@@ -7170,6 +7182,86 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
     radial-gradient(ellipse 55% 85% at 25% 0%, rgba(160, 150, 180, 0.28) 0%, transparent 68%),
     radial-gradient(ellipse 50% 75% at 75% 0%, rgba(130, 120, 160, 0.24) 0%, transparent 62%),
     linear-gradient(180deg, rgba(70, 60, 90, 0.28) 0%, transparent 100%);
+}
+.adventure-map-ominous--dungeon .adventure-map-ominous__sky {
+  background:
+    radial-gradient(ellipse 100% 40% at 50% 0%, rgba(0, 0, 0, 0.6) 0%, transparent 70%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, transparent 40%);
+}
+.adventure-map-ominous--dungeon .adventure-map-ominous__vignette {
+  background:
+    radial-gradient(ellipse 70% 80% at 50% 50%, transparent 15%, rgba(0, 0, 0, 0.65) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.6) 100%);
+}
+.adventure-map-ominous--dungeon::before {
+  animation: map-dungeon-flicker 12s ease-in-out infinite;
+}
+@keyframes map-dungeon-flicker {
+  0%, 85%, 100% { opacity: 0; }
+  86% { opacity: 0.5; }
+  87% { opacity: 0.1; }
+  88% { opacity: 0.6; }
+  89% { opacity: 0; }
+}
+.adventure-map-tower--dungeon .adventure-map-tower__shaft {
+  background:
+    linear-gradient(90deg,
+      rgba(0, 0, 0, 0.7) 0%,
+      var(--map-stone-dark) 8%,
+      var(--map-stone-mid) 35%,
+      var(--map-stone-light) 50%,
+      var(--map-stone-mid) 65%,
+      var(--map-stone-dark) 92%,
+      rgba(0, 0, 0, 0.7) 100%),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 1.8rem,
+      rgba(0, 0, 0, 0.15) 1.8rem,
+      rgba(0, 0, 0, 0.15) calc(1.8rem + 2px)
+    );
+  border-left: none;
+  border-right: none;
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.7),
+    inset 8px 0 20px rgba(0, 0, 0, 0.4),
+    inset -8px 0 20px rgba(0, 0, 0, 0.4);
+}
+.adventure-map-tower--dungeon .adventure-map-tower__shaft::before {
+  background: none;
+}
+.adventure-map-tower--dungeon .adventure-map-tower__shaft::after {
+  background:
+    radial-gradient(ellipse 60% 30% at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 25% at 50% 100%, var(--map-glow) 0%, transparent 70%);
+  opacity: 0.6;
+}
+.adventure-map-tower--dungeon .adventure-map-tower__base {
+  border-radius: 50% 50% 4px 4px;
+  width: 12.5rem;
+  background:
+    radial-gradient(ellipse 100% 80% at 50% 0%,
+      var(--map-stone-mid) 0%,
+      var(--map-stone-dark) 50%,
+      var(--map-stone-side) 100%);
+}
+.adventure-map-tower--dungeon .adventure-map-tower__buttress--left,
+.adventure-map-tower--dungeon .adventure-map-tower__buttress--right {
+  opacity: 0;
+}
+.adventure-map-tower--dungeon .adventure-map-tower__beacon {
+  background: radial-gradient(ellipse 100% 100% at 50% 50%, var(--map-glow) 0%, transparent 70%);
+  width: 14rem;
+  height: 2rem;
+  opacity: 0.4;
+}
+.adventure-map-tower--dungeon .adventure-map-tower__mist {
+  background: radial-gradient(ellipse 90% 100% at 50% 0%, var(--map-mist) 0%, transparent 72%);
+  animation: map-dungeon-mist 8s ease-in-out infinite;
+}
+@keyframes map-dungeon-mist {
+  0%, 100% { opacity: 0.35; transform: translateX(-50%) scaleX(1); }
+  50% { opacity: 0.65; transform: translateX(-50%) scaleX(1.12); }
 }
 .adventure-map-tower__base {
   position: absolute;
@@ -7761,6 +7853,175 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
 .adventure-map-tile--next {
   z-index: 30;
 }
+
+/* ── Dungeon-specific tile styling ── */
+.adventure-map-tile--dungeon .adventure-map-tile__face {
+  border-radius: 4px 4px 2px 2px;
+  border-top: none;
+  background:
+    linear-gradient(180deg,
+      var(--map-stone-light) 0%,
+      var(--map-stone-mid) 40%,
+      var(--map-stone-dark) 85%,
+      var(--map-stone-side) 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.4),
+    0 4px 0 var(--map-stone-side);
+}
+.adventure-map-tile--dungeon .adventure-map-tile__face::before {
+  border: none;
+  border-radius: 0;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 1.2rem,
+      rgba(0, 0, 0, 0.08) 1.2rem,
+      rgba(0, 0, 0, 0.08) calc(1.2rem + 1px)
+    );
+  inset: 0.5rem 0.4rem 0.6rem;
+}
+.adventure-map-tile--dungeon .adventure-map-tile__side {
+  border-radius: 0 0 3px 3px;
+}
+.adventure-map-tile--dungeon .adventure-map-tile__moss {
+  display: none;
+}
+.adventure-map-tile--dungeon .adventure-map-tile__num {
+  color: #e8dcc8;
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.6),
+    0 0 16px rgba(0, 0, 0, 0.5),
+    0 0 8px var(--map-glow);
+}
+.adventure-map-tile__cobweb {
+  position: absolute;
+  left: -0.1rem;
+  top: 5%;
+  width: 1.6rem;
+  height: 1.6rem;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.4;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(200, 195, 185, 0.6) 0%, transparent 50%),
+    linear-gradient(45deg, transparent 48%, rgba(200, 195, 185, 0.35) 49%, rgba(200, 195, 185, 0.35) 51%, transparent 52%),
+    linear-gradient(-45deg, transparent 48%, rgba(200, 195, 185, 0.3) 49%, rgba(200, 195, 185, 0.3) 51%, transparent 52%),
+    linear-gradient(0deg, transparent 48%, rgba(200, 195, 185, 0.25) 49%, rgba(200, 195, 185, 0.25) 51%, transparent 52%);
+}
+.adventure-map-tile__arch {
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  top: 12%;
+  height: 2.2rem;
+  z-index: 4;
+  pointer-events: none;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-bottom: none;
+  border-radius: 50% 50% 0 0;
+  box-shadow:
+    inset 0 4px 8px rgba(0, 0, 0, 0.3),
+    0 0 12px var(--map-glow);
+  opacity: 0.55;
+}
+.adventure-map-tile__arch::after {
+  content: "";
+  position: absolute;
+  left: 30%;
+  right: 30%;
+  top: 40%;
+  bottom: 0;
+  background: radial-gradient(ellipse 100% 100% at 50% 0%, rgba(255, 220, 140, 0.2) 0%, transparent 70%);
+  border-radius: 50% 50% 0 0;
+}
+.adventure-map-tile--locked .adventure-map-tile__arch {
+  opacity: 0.15;
+  box-shadow: none;
+}
+.adventure-map-tile__stalactite {
+  display: none;
+}
+.adventure-map-tile--deep .adventure-map-tile__stalactite,
+.adventure-map-tile--core .adventure-map-tile__stalactite {
+  display: block;
+  position: absolute;
+  top: calc(-0.9rem * var(--floor-scale, 1));
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(7rem * var(--floor-scale, 1));
+  height: calc(0.9rem * var(--floor-scale, 1));
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 12% 100% at 15% 100%, var(--map-stone-mid) 0%, transparent 70%),
+    radial-gradient(ellipse 10% 100% at 35% 100%, var(--map-stone-mid) 0%, transparent 70%),
+    radial-gradient(ellipse 14% 100% at 55% 100%, var(--map-stone-mid) 0%, transparent 70%),
+    radial-gradient(ellipse 11% 100% at 75% 100%, var(--map-stone-mid) 0%, transparent 70%),
+    radial-gradient(ellipse 9% 100% at 90% 100%, var(--map-stone-mid) 0%, transparent 70%);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.4));
+}
+.adventure-map-tile__torch--soul::before {
+  background: radial-gradient(circle at 50% 70%, var(--map-accent) 0%, color-mix(in srgb, var(--map-accent) 60%, #6020ff) 55%, transparent 72%);
+  box-shadow: 0 0 12px var(--map-glow), 0 0 24px var(--map-glow);
+  animation: map-soul-flicker 2.4s ease-in-out infinite;
+}
+@keyframes map-soul-flicker {
+  0%, 100% { opacity: 0.75; transform: translateX(-50%) scale(1); }
+  40% { opacity: 1; transform: translateX(-50%) scale(1.12); }
+  70% { opacity: 0.6; transform: translateX(-50%) scale(0.9); }
+}
+.adventure-map-tile--dungeon.adventure-map-tile--cleared .adventure-map-tile__face {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--map-stone-light) 55%, var(--map-accent) 45%) 0%,
+      color-mix(in srgb, var(--map-stone-mid) 45%, var(--map-accent) 55%) 45%,
+      color-mix(in srgb, var(--map-stone-dark) 55%, var(--map-accent) 45%) 100%);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.2),
+    0 3px 0 var(--map-stone-side),
+    0 0 20px var(--map-glow);
+}
+.adventure-map-tile--dungeon.adventure-map-tile--next .adventure-map-tile__face {
+  animation: map-dungeon-pulse 2.2s ease-in-out infinite;
+}
+@keyframes map-dungeon-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.15),
+      inset 0 -6px 12px rgba(0, 0, 0, 0.15),
+      0 0 0 2px var(--map-accent),
+      0 0 18px var(--map-glow),
+      0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+  50% {
+    box-shadow:
+      inset 0 2px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -6px 12px rgba(0, 0, 0, 0.1),
+      0 0 0 3px var(--map-accent),
+      0 0 32px var(--map-glow),
+      0 6px 20px rgba(0, 0, 0, 0.5);
+  }
+}
+.adventure-map-tile--dungeon.adventure-map-tile--core .adventure-map-tile__stone {
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 28px var(--map-glow));
+}
+.adventure-map-tile--dungeon.adventure-map-tile--next .adventure-map-tile__rune::before {
+  content: "☽";
+  font-size: 0.85rem;
+}
+.adventure-map-tiles--dungeon .adventure-map-tile + .adventure-map-tile {
+  margin-top: -0.85rem;
+}
+.adventure-map-canvas--descent.adventure-map-canvas--crypt {
+  --map-dungeon-accent: #e8a050;
+}
+.adventure-map-canvas--descent.adventure-map-canvas--abyss {
+  --map-dungeon-accent: #9080ff;
+}
+
 .adventure-floor-list--sr {
   position: absolute !important;
   width: 1px;
@@ -8063,10 +8324,10 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
 .adventure-world-shield:nth-child(3) .adventure-world-shield__icon { background: linear-gradient(180deg, #f97316, #7c2d12); }
 .adventure-world-shield:nth-child(4) .adventure-world-shield__icon { background: linear-gradient(180deg, #a78bfa, #4c1d95); }
 .adventure-world-shield:nth-child(5) .adventure-world-shield__icon { background: linear-gradient(180deg, #34d399, #065f46); }
-.adventure-world-shield:nth-child(6) .adventure-world-shield__icon { background: linear-gradient(180deg, #d4a574, #5c4030); }
-.adventure-world-shield:nth-child(7) .adventure-world-shield__icon { background: linear-gradient(180deg, #9080ff, #302060); }
+.adventure-world-shield:nth-child(6) .adventure-world-shield__icon { background: linear-gradient(180deg, #e8a050, #3a2010); }
+.adventure-world-shield:nth-child(7) .adventure-world-shield__icon { background: linear-gradient(180deg, #b0a0ff, #201040); }
 .adventure-world-shield--dungeon .adventure-world-shield__icon::after {
-  content: "⛩";
+  content: "⚰";
   font-size: 0.85rem;
 }
 .adventure-world-shield--locked {

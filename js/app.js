@@ -1437,6 +1437,94 @@ function showAdventureMap() {
 }
 
 
+function getDungeonSceneryMarkup(theme) {
+  const p = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.crypt;
+  const uid = `dungeon-${theme}`;
+  const isAbyss = theme === "abyss";
+  const crystalColor = isAbyss ? "#9080ff" : "#d4a574";
+  const dripColor = isAbyss ? "#484878" : "#5a5048";
+  return `<svg class="adventure-map-scenery-svg adventure-map-scenery-svg--dungeon" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="${uid}-void" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${p.sky}"/>
+        <stop offset="45%" stop-color="${p.skyGlow}" stop-opacity="0.6"/>
+        <stop offset="100%" stop-color="#040408"/>
+      </linearGradient>
+      <radialGradient id="${uid}-torch-glow" cx="50%" cy="8%" r="55%">
+        <stop offset="0%" stop-color="${p.accent}" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="${p.accent}" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="${uid}-depth-glow" cx="50%" cy="95%" r="45%">
+        <stop offset="0%" stop-color="${crystalColor}" stop-opacity="0.25"/>
+        <stop offset="100%" stop-color="${crystalColor}" stop-opacity="0"/>
+      </radialGradient>
+      <filter id="${uid}-soft" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="1.4"/>
+      </filter>
+      <filter id="${uid}-glow-filter" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="2" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <rect width="100" height="120" fill="url(#${uid}-void)"/>
+    <rect width="100" height="120" fill="url(#${uid}-torch-glow)"/>
+    <rect width="100" height="120" fill="url(#${uid}-depth-glow)"/>
+    <!-- cave ceiling -->
+    <path fill="${p.rockDark}" opacity="0.85" d="M0 0 L100 0 L100 28 C88 22 76 30 62 24 C48 18 38 26 24 20 C12 15 4 22 0 18 Z"/>
+    <path fill="${p.rock}" opacity="0.55" d="M0 12 C14 8 28 16 42 10 C56 4 72 14 86 8 C94 5 98 10 100 8 L100 36 C86 30 72 38 58 32 C44 26 28 34 14 28 C8 25 3 30 0 26 Z"/>
+    <!-- stalactites -->
+    <g fill="${dripColor}" opacity="0.7">
+      <path d="M12 18 L14 18 L13 32 Z"/>
+      <path d="M28 14 L30.5 14 L29 38 Z"/>
+      <path d="M46 20 L48 20 L47 30 Z"/>
+      <path d="M68 12 L71 12 L69.5 40 Z"/>
+      <path d="M84 16 L86 16 L85 28 Z"/>
+      <path d="M56 10 L58 10 L57 24 Z"/>
+    </g>
+    <!-- hanging chains -->
+    <g stroke="${p.rock}" stroke-width="0.5" fill="none" opacity="0.45">
+      <path d="M20 22 L20 48 M19.5 28 L20.5 28 M19.5 34 L20.5 34 M19.5 40 L20.5 40"/>
+      <path d="M78 20 L78 46 M77.5 26 L78.5 26 M77.5 32 L78.5 32 M77.5 38 L78.5 38"/>
+    </g>
+    <!-- wall sconces -->
+    <g opacity="0.9">
+      <rect x="8" y="42" width="1.5" height="4" fill="${p.rockDark}"/>
+      <ellipse cx="8.75" cy="41" rx="2" ry="2.5" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.8"/>
+      <ellipse cx="8.75" cy="41" rx="0.8" ry="1" fill="#fff4d0" opacity="0.6"/>
+      <rect x="90.5" y="42" width="1.5" height="4" fill="${p.rockDark}"/>
+      <ellipse cx="91.25" cy="41" rx="2" ry="2.5" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.8"/>
+      <ellipse cx="91.25" cy="41" rx="0.8" ry="1" fill="#fff4d0" opacity="0.6"/>
+    </g>
+    <!-- crystal veins (abyss) or bone piles (crypt) -->
+    ${isAbyss ? `
+    <g opacity="0.55" fill="${crystalColor}" filter="url(#${uid}-glow-filter)">
+      <polygon points="6,72 10,68 14,74 8,78"/>
+      <polygon points="86,76 92,70 96,78 88,82"/>
+      <polygon points="44,88 48,84 52,90 46,94"/>
+    </g>` : `
+    <g opacity="0.35" fill="#c8b8a8">
+      <ellipse cx="10" cy="78" rx="5" ry="2"/>
+      <ellipse cx="88" cy="82" rx="6" ry="2.5"/>
+      <circle cx="14" cy="76" r="1.2"/><circle cx="12" cy="79" r="0.8"/><circle cx="16" cy="80" r="1"/>
+    </g>`}
+    <!-- cave walls -->
+    <path fill="${p.rockDark}" opacity="0.9" d="M0 32 L0 120 L18 120 L16 40 C10 36 4 38 0 32 Z"/>
+    <path fill="${p.rockDark}" opacity="0.9" d="M100 32 L100 120 L82 120 L84 40 C90 36 96 38 100 32 Z"/>
+    <path fill="${p.rock}" opacity="0.4" d="M0 50 L14 48 L14 120 L0 120 Z"/>
+    <path fill="${p.rock}" opacity="0.4" d="M100 50 L86 48 L86 120 L100 120 Z"/>
+    <!-- floor rubble -->
+    <ellipse cx="50" cy="108" rx="38" ry="6" fill="rgba(0,0,0,0.45)"/>
+    <path fill="${p.rock}" opacity="0.5" d="M8 104 L92 104 L90 112 L10 112 Z"/>
+    <!-- mist wisps -->
+    <ellipse cx="35" cy="96" rx="18" ry="4" fill="${p.mist}" opacity="0.35" filter="url(#${uid}-soft)"/>
+    <ellipse cx="68" cy="100" rx="20" ry="5" fill="${p.mist}" opacity="0.28" filter="url(#${uid}-soft)"/>
+    <!-- floating embers -->
+    <circle cx="32" cy="58" r="0.4" fill="${p.accent}" opacity="0.5" filter="url(#${uid}-glow-filter)"/>
+    <circle cx="66" cy="52" r="0.35" fill="${p.flag}" opacity="0.4" filter="url(#${uid}-glow-filter)"/>
+    <circle cx="50" cy="64" r="0.3" fill="${p.accent}" opacity="0.35" filter="url(#${uid}-glow-filter)"/>
+  </svg>`;
+}
+
 function getMapSceneryMarkup(theme) {
   const p = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
   const uid = `map-${theme}`;
@@ -1652,7 +1740,7 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
   const map = $("adventure-map");
   const scene = map?.closest(".adventure-map-scene");
   scene?.classList.toggle("adventure-map-scene--descent", isDescent);
-  scene?.classList.remove("adventure-map-scene--dungeon");
+  scene?.classList.toggle("adventure-map-scene--dungeon", isDescent);
   if (!map) return;
 
   const defaultTheme = isDescent ? "crypt" : "verdant";
@@ -1673,12 +1761,19 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
     isDescent ? `${worldMeta.name} dungeon map` : "Adventure floor map",
   );
 
-  const towerClass = isDescent ? "adventure-map-tower adventure-map-tower--descent" : "adventure-map-tower";
-  const tilesClass = isDescent ? "adventure-map-tiles adventure-map-tiles--descent" : "adventure-map-tiles";
-  const ominousClass = isDescent ? "adventure-map-ominous adventure-map-ominous--descent" : "adventure-map-ominous";
+  const towerClass = isDescent
+    ? "adventure-map-tower adventure-map-tower--descent adventure-map-tower--dungeon"
+    : "adventure-map-tower";
+  const tilesClass = isDescent
+    ? "adventure-map-tiles adventure-map-tiles--descent adventure-map-tiles--dungeon"
+    : "adventure-map-tiles";
+  const ominousClass = isDescent
+    ? "adventure-map-ominous adventure-map-ominous--descent adventure-map-ominous--dungeon"
+    : "adventure-map-ominous";
+  const sceneryMarkup = isDescent ? getDungeonSceneryMarkup(theme) : getMapSceneryMarkup(theme);
   map.innerHTML = `
     <div class="adventure-map-canvas__bg" aria-hidden="true">
-      <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
+      <div class="adventure-map-scenery adventure-map-scenery--${theme}${isDescent ? " adventure-map-scenery--dungeon" : ""}" aria-hidden="true">${sceneryMarkup}</div>
       <div class="adventure-map-atmosphere" aria-hidden="true"></div>
       <div class="${ominousClass}" aria-hidden="true">
         <div class="adventure-map-ominous__sky"></div>
@@ -1719,7 +1814,7 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
 
     const tile = document.createElement("button");
     tile.type = "button";
-    tile.className = "adventure-map-tile";
+    tile.className = isDescent ? "adventure-map-tile adventure-map-tile--dungeon" : "adventure-map-tile";
     tile.classList.add(`adventure-map-tile--floor-${level.floorInWorld}`);
     tile.style.zIndex = String(i + 10);
     tile.style.setProperty("--floor-scale", floorScale.toFixed(4));
@@ -1729,8 +1824,10 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
     if (!unlocked) tile.classList.add("adventure-map-tile--locked");
     if (cleared) tile.classList.add("adventure-map-tile--cleared");
     if (isNext) tile.classList.add("adventure-map-tile--next");
-    if (level.floorInWorld >= 7 && level.floorInWorld < 10) tile.classList.add("adventure-map-tile--rampart");
-    if (level.floorInWorld === 10) tile.classList.add("adventure-map-tile--summit");
+    if (!isDescent && level.floorInWorld >= 7 && level.floorInWorld < 10) tile.classList.add("adventure-map-tile--rampart");
+    if (!isDescent && level.floorInWorld === 10) tile.classList.add("adventure-map-tile--summit");
+    if (isDescent && level.floorInWorld >= 7 && level.floorInWorld < 10) tile.classList.add("adventure-map-tile--deep");
+    if (isDescent && level.floorInWorld === 10) tile.classList.add("adventure-map-tile--core");
     tile.setAttribute("aria-disabled", unlocked ? "false" : "true");
     if (!unlocked) tile.title = `Clear global floor ${level.id - 1} to unlock`;
     const floorLabel = isDescent ? "Depth" : "Floor";
@@ -1738,18 +1835,33 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
     const starLine = cleared ? `<span class="adventure-map-tile__stars">${formatStars(stars)}</span>` : "";
     const pawn = isNext ? `<span class="adventure-map-tile__pawn">${getMapPawnMarkup(palette.accent)}</span>` : "";
     const banner = level.floorInWorld === 10 ? `<span class="adventure-map-tile__banner">${getMapBannerMarkup(theme)}</span>` : "";
-    const windows = level.floorInWorld > 1 && level.floorInWorld < 10
+    const windows = !isDescent && level.floorInWorld > 1 && level.floorInWorld < 10
       ? '<span class="adventure-map-tile__windows" aria-hidden="true"></span>'
       : "";
-    const torch = cleared ? '<span class="adventure-map-tile__torch" aria-hidden="true"></span>' : "";
-    const ivy = level.floorInWorld <= 3 ? '<span class="adventure-map-tile__ivy" aria-hidden="true"></span>' : "";
+    const torch = cleared
+      ? `<span class="adventure-map-tile__torch${isDescent ? " adventure-map-tile__torch--soul" : ""}" aria-hidden="true"></span>`
+      : "";
+    const ivy = !isDescent && level.floorInWorld <= 3
+      ? '<span class="adventure-map-tile__ivy" aria-hidden="true"></span>'
+      : "";
+    const cobweb = isDescent && level.floorInWorld <= 3
+      ? '<span class="adventure-map-tile__cobweb" aria-hidden="true"></span>'
+      : "";
+    const arch = isDescent && level.floorInWorld > 1 && level.floorInWorld < 10
+      ? '<span class="adventure-map-tile__arch" aria-hidden="true"></span>'
+      : "";
+    const crenel = isDescent
+      ? '<span class="adventure-map-tile__stalactite" aria-hidden="true"></span>'
+      : '<span class="adventure-map-tile__crenel"></span>';
     tile.innerHTML = `
       ${pawn}
       ${banner}
       <span class="adventure-map-tile__stone" aria-hidden="true">
         <span class="adventure-map-tile__rune"></span>
-        <span class="adventure-map-tile__crenel"></span>
+        ${crenel}
         ${ivy}
+        ${cobweb}
+        ${arch}
         ${windows}
         ${torch}
         <span class="adventure-map-tile__face">
