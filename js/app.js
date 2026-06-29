@@ -1660,26 +1660,40 @@ function renderAdventureMap() {
       <div class="adventure-map-tower__buttress adventure-map-tower__buttress--right" aria-hidden="true"></div>
       <div class="adventure-map-tiles"></div>
       <div class="adventure-map-tower__mist" aria-hidden="true"></div>
+      <div class="adventure-map-tower__beacon" aria-hidden="true"></div>
+      <div class="adventure-map-tower__haze" aria-hidden="true"></div>
     </div>`;
 
   const tilesLayer = map.querySelector(".adventure-map-tiles");
+  const tower = map.querySelector(".adventure-map-tower");
   const levels = getLevelsForWorld(selectedAdventureWorldId);
   const nextId = getNextPlayableLevelId(progress);
+
+  tower?.style.setProperty("--tower-top-ratio", "0.72");
 
   levels.forEach((level, i) => {
     const unlocked = isLevelUnlocked(progress, level.id);
     const cleared = isLevelCleared(progress, level.id);
     const isNext = level.id === nextId && unlocked;
     const stars = getLevelStars(progress, level.id);
+    const stageT = (level.stageInWorld - 1) / 9;
+    const floorScale = 1 - stageT * 0.26;
+    const floorHeightScale = 1 - stageT * 0.1;
+    const spiralOffset = Math.sin((level.stageInWorld - 1) * 0.62) * 0.32 * floorScale;
 
     const tile = document.createElement("button");
     tile.type = "button";
     tile.className = "adventure-map-tile";
+    tile.classList.add(`adventure-map-tile--stage-${level.stageInWorld}`);
     tile.style.zIndex = String(i + 10);
+    tile.style.setProperty("--floor-scale", floorScale.toFixed(4));
+    tile.style.setProperty("--floor-height-scale", floorHeightScale.toFixed(4));
+    tile.style.setProperty("--floor-offset-x", `${spiralOffset.toFixed(3)}rem`);
     tile.dataset.level = String(level.id);
     if (!unlocked) tile.classList.add("adventure-map-tile--locked");
     if (cleared) tile.classList.add("adventure-map-tile--cleared");
     if (isNext) tile.classList.add("adventure-map-tile--next");
+    if (level.stageInWorld >= 7 && level.stageInWorld < 10) tile.classList.add("adventure-map-tile--rampart");
     if (level.stageInWorld === 10) tile.classList.add("adventure-map-tile--summit");
     tile.setAttribute("aria-disabled", unlocked ? "false" : "true");
     if (!unlocked) tile.title = `Clear global stage ${level.id - 1} to unlock`;
@@ -1687,12 +1701,20 @@ function renderAdventureMap() {
     const starLine = cleared ? `<span class="adventure-map-tile__stars">${formatStars(stars)}</span>` : "";
     const pawn = isNext ? `<span class="adventure-map-tile__pawn">${getMapPawnMarkup(palette.accent)}</span>` : "";
     const banner = level.stageInWorld === 10 ? `<span class="adventure-map-tile__banner">${getMapBannerMarkup(theme)}</span>` : "";
+    const windows = level.stageInWorld > 1 && level.stageInWorld < 10
+      ? '<span class="adventure-map-tile__windows" aria-hidden="true"></span>'
+      : "";
+    const torch = cleared ? '<span class="adventure-map-tile__torch" aria-hidden="true"></span>' : "";
+    const ivy = level.stageInWorld <= 3 ? '<span class="adventure-map-tile__ivy" aria-hidden="true"></span>' : "";
     tile.innerHTML = `
       ${pawn}
       ${banner}
       <span class="adventure-map-tile__stone" aria-hidden="true">
         <span class="adventure-map-tile__rune"></span>
         <span class="adventure-map-tile__crenel"></span>
+        ${ivy}
+        ${windows}
+        ${torch}
         <span class="adventure-map-tile__face">
           <span class="adventure-map-tile__num">${level.stageInWorld}</span>
           ${starLine}
