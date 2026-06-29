@@ -35,6 +35,7 @@ import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
 import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
 import { pieceSkinCssSuffix } from "./cosmetics.js";
 import { renderSpellCardEl } from "./cardArt.js";
+import { getCardEffectTags } from "./cardEffectTags.js";
 import { showCardPreview } from "./cardPreview.js";
 import { initDeckPiles, drawToHand, pileRemaining } from "./deckPile.js";
 import { buildAiDeck } from "./deckRules.js";
@@ -1016,6 +1017,7 @@ export class MatchSession {
     if (!active) return;
     const { card, picks } = this.cardPlay;
     const hint = this.$("spell-cast-hint");
+    const desc = this.$("spell-cast-desc");
     const need = picksRequired(card, picks, this.state, this.localColor);
     const step = picks.length + 1;
     const base = getCardHint(card);
@@ -1024,8 +1026,19 @@ export class MatchSession {
         picks.length >= need
           ? base
           : card.mode === "column" || card.mode === "row"
-          ? `${base}`
-          : `${base} (${step}/${need} — click a highlighted square or drop the card on it)`;
+            ? base
+            : need > 1
+              ? `${base} (${step}/${need})`
+              : base;
+    }
+    if (desc) {
+      const tags = getCardEffectTags(card);
+      const text = tags.join(" · ");
+      desc.textContent = text;
+      const showDesc = !!text;
+      desc.hidden = !showDesc;
+      desc.setAttribute("aria-hidden", showDesc ? "false" : "true");
+      bar.classList.toggle("spell-cast-bar--has-desc", showDesc);
     }
   }
 
@@ -1119,16 +1132,8 @@ export class MatchSession {
     this.cardPlay = { card, picks: [] };
     this.validTargets = targets;
     this.updateSpellCastUI();
-    this.setMessage(
-      axisPickMessage(card) ??
-        (card.effect === "pyromancy"
-            ? `${card.name} — tap an enemy piece, then an empty dark square to ignite.`
-            : card.effect === "sanctuary" || card.effect === "darkness"
-              ? `${card.name} — tap a square; highlighted area shows the zone.`
-              : card.effect === "clone"
-                ? `${card.name} — tap your man, then pick where the copy spawns.`
-                : `${card.name} — drag to the board or tap highlighted squares.`)
-    );
+    this.setMessage("");
+    document.activeElement?.blur?.();
     this.render();
   }
 
@@ -3408,8 +3413,9 @@ ${starLine}`;
       const bannerText = (banner.textContent || "").toLowerCase();
       const msgText = (msgEl.textContent || "").toLowerCase();
       const redundant =
-        msgText.includes("select a piece") &&
-        (bannerText.includes("select a piece") || bannerText.includes("cast a spell"));
+        !!this.cardPlay ||
+        (msgText.includes("select a piece") &&
+          (bannerText.includes("select a piece") || bannerText.includes("cast a spell")));
       msgEl.classList.toggle("match-message--redundant", redundant);
     }
     this.updateSpellCastUI();
