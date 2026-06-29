@@ -49,4 +49,33 @@ function makeState(board) {
   assert.equal(state.board[res.picks[1][0]][res.picks[1][1]]?.color, COLORS.BLACK);
 }
 
+// Prefer mid-board enemy over back-rank target when no capture is available.
+{
+  const board = emptyBoard();
+  board[5][0] = createPiece(COLORS.BLACK, 5, 0);
+  board[0][1] = createPiece(COLORS.RED, 0, 1);
+  board[3][2] = createPiece(COLORS.RED, 3, 2);
+  const state = makeState(board);
+  const card = getCardDef("hostile_swap");
+  const res = tryAutoPlay(state, COLORS.BLACK, card);
+  assert.equal(res.success, true, "hostile_swap should succeed");
+  assert.deepEqual(res.picks?.[1], [3, 2], "AI should not target the back-rank enemy when another exists");
+  assert.equal(state.board[0][1]?.color, COLORS.RED, "back-rank enemy should stay put");
+}
+
+// Do not dump the opponent onto rank 8 when another swap is available.
+{
+  const board = emptyBoard();
+  board[0][1] = createPiece(COLORS.RED, 0, 1);
+  board[2][3] = createPiece(COLORS.RED, 2, 3);
+  board[3][2] = createPiece(COLORS.BLACK, 3, 2);
+  board[5][4] = createPiece(COLORS.BLACK, 5, 4);
+  const state = makeState(board);
+  const card = getCardDef("hostile_swap");
+  const res = tryAutoPlay(state, COLORS.RED, card);
+  assert.equal(res.success, true, "hostile_swap should succeed");
+  assert.notDeepEqual(res.picks?.[0], [0, 1], "AI should not swap from rank 8 when it sends the opponent there");
+  assert.notEqual(state.board[0][1]?.color, COLORS.BLACK, "opponent should not be stranded on rank 8");
+}
+
 console.log("AI hostile swap test passed");
