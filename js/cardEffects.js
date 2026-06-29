@@ -374,6 +374,16 @@ function dashWouldKillAt(state, color, r, c) {
   return true;
 }
 
+function hostileSwapEnemyColor(color) {
+  return color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+}
+
+/** Row where landing or targeting this enemy is especially punishing (back rank or promotion). */
+function hostileSwapSensitiveRowForEnemy(enemyColor, row) {
+  const promoRow = enemyColor === COLORS.RED ? 0 : SIZE - 1;
+  return row === ownBackRank(enemyColor) || row === promoRow;
+}
+
 /** True when hostile swap lands the friendly piece where it can capture next. */
 function hostileSwapWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
   const a = at(state, r1, c1);
@@ -392,6 +402,12 @@ function hostileSwapWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
   return getAllMovesForColor(board, color, state).some(
     (m) => m.from[0] === r2 && m.from[1] === c2 && m.captures?.length
   );
+}
+
+/** Avoid swaps that dump the opponent onto rank 8 / their promotion row, or pick them there when alternatives exist. */
+function hostileSwapAvoidsBackRank(color, [r1, c1], [r2, c2]) {
+  const enemy = hostileSwapEnemyColor(color);
+  return !hostileSwapSensitiveRowForEnemy(enemy, r1) && !hostileSwapSensitiveRowForEnemy(enemy, r2);
 }
 
 function fEmptyFirstPickTargets(state, color, card) {
@@ -793,15 +809,22 @@ function* pickSequences(state, color, card, max = 24) {
     }
     if (card.effect === "hostile_swap") {
       const captureSeqs = [];
+      const safeSeqs = [];
       const otherSeqs = [];
       for (const a of t0) {
         const t1 = getValidTargets(state, color, card, [a]);
         for (const b of t1) {
-          if (hostileSwapWouldCaptureAfter(state, color, a, b)) captureSeqs.push([a, b]);
-          else otherSeqs.push([a, b]);
+          const seq = [a, b];
+          if (hostileSwapWouldCaptureAfter(state, color, a, b)) captureSeqs.push(seq);
+          else if (hostileSwapAvoidsBackRank(color, a, b)) safeSeqs.push(seq);
+          else otherSeqs.push(seq);
         }
       }
       for (const seq of captureSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      for (const seq of safeSeqs) {
         yield seq;
         if (++n >= max) return;
       }
