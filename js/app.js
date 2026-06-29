@@ -1498,16 +1498,17 @@ function getMapSceneryMarkup(theme) {
       <path d="M90 64 L92 52 M92 56 L88 54 M92 54 L95 50"/>
     </g>
     <!-- storm clouds -->
-    <ellipse cx="18" cy="14" rx="16" ry="6" fill="#1a1428" opacity="0.75" filter="url(#${uid}-soft)"/>
-    <ellipse cx="28" cy="12" rx="12" ry="5" fill="#221830" opacity="0.7" filter="url(#${uid}-soft)"/>
-    <ellipse cx="72" cy="10" rx="18" ry="7" fill="#1a1428" opacity="0.8" filter="url(#${uid}-soft)"/>
-    <ellipse cx="84" cy="9" rx="11" ry="5" fill="#221830" opacity="0.65" filter="url(#${uid}-soft)"/>
-    <ellipse cx="48" cy="18" rx="14" ry="5" fill="#2a1838" opacity="0.5" filter="url(#${uid}-soft)"/>
+    <ellipse cx="18" cy="14" rx="16" ry="6" fill="#4a4068" opacity="0.85" filter="url(#${uid}-soft)"/>
+    <ellipse cx="28" cy="12" rx="12" ry="5" fill="#3a3458" opacity="0.8" filter="url(#${uid}-soft)"/>
+    <ellipse cx="72" cy="10" rx="18" ry="7" fill="#4a4068" opacity="0.9" filter="url(#${uid}-soft)"/>
+    <ellipse cx="84" cy="9" rx="11" ry="5" fill="#3a3458" opacity="0.75" filter="url(#${uid}-soft)"/>
+    <ellipse cx="48" cy="18" rx="14" ry="5" fill="#504070" opacity="0.65" filter="url(#${uid}-soft)"/>
     <!-- eerie moon -->
-    <circle cx="78" cy="22" r="5" fill="#c8c0b0" opacity="0.18" filter="url(#${uid}-soft)"/>
-    <circle cx="79.5" cy="21" r="4.5" fill="#08060e" opacity="0.85"/>
+    <circle cx="78" cy="22" r="6" fill="#d8d0c0" opacity="0.35" filter="url(#${uid}-soft)"/>
+    <circle cx="80" cy="20.5" r="5.2" fill="#141020" opacity="0.9"/>
     <!-- distant lightning flash -->
-    <path d="M62 8 L64 18 L61 18 L63 28" stroke="${p.accent}" stroke-width="0.5" opacity="0.35" fill="none" filter="url(#${uid}-glow-filter)"/>
+    <path d="M62 8 L64 18 L61 18 L63 28" stroke="${p.accent}" stroke-width="0.8" opacity="0.55" fill="none" filter="url(#${uid}-glow-filter)"/>
+    <path d="M62 8 L64 18 L61 18 L63 28" stroke="#fff" stroke-width="0.3" opacity="0.4" fill="none"/>
     <!-- eerie embers / wisps -->
     <circle cx="24" cy="30" r="0.5" fill="${p.accent}" opacity="0.45" filter="url(#${uid}-glow-filter)"/>
     <circle cx="70" cy="26" r="0.4" fill="${p.flag}" opacity="0.35" filter="url(#${uid}-glow-filter)"/>
@@ -1534,8 +1535,9 @@ function getMapSceneryMarkup(theme) {
       <ellipse cx="81" cy="79" rx="1.2" ry="1.5" fill="#fff8e0" opacity="0.5"/>
     </g>
     <!-- ground fog wisps -->
-    <ellipse cx="30" cy="92" rx="18" ry="4" fill="#c8c0d0" opacity="0.12" filter="url(#${uid}-soft)"/>
-    <ellipse cx="70" cy="94" rx="20" ry="5" fill="#c8c0d0" opacity="0.1" filter="url(#${uid}-soft)"/>
+    <ellipse cx="30" cy="92" rx="22" ry="5" fill="#b8b0c8" opacity="0.22" filter="url(#${uid}-soft)"/>
+    <ellipse cx="70" cy="94" rx="24" ry="6" fill="#b8b0c8" opacity="0.18" filter="url(#${uid}-soft)"/>
+    <ellipse cx="50" cy="96" rx="30" ry="4" fill="#a8a0b8" opacity="0.15" filter="url(#${uid}-soft)"/>
   </svg>`;
 }
 
@@ -1643,6 +1645,9 @@ function renderAdventureMap() {
       <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
       <div class="adventure-map-atmosphere" aria-hidden="true"></div>
       <div class="adventure-map-ominous" aria-hidden="true">
+        <div class="adventure-map-ominous__sky"></div>
+        <div class="adventure-map-ominous__moon"></div>
+        <div class="adventure-map-ominous__clouds"></div>
         <div class="adventure-map-ominous__vignette"></div>
         <div class="adventure-map-ominous__fog"></div>
         <div class="adventure-map-ominous__fog adventure-map-ominous__fog--slow"></div>

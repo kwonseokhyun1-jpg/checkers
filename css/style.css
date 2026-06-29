@@ -6922,7 +6922,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   pointer-events: none;
 }
 .adventure-map-scenery--frost {
-  background: linear-gradient(180deg, #080a14 0%, #1a2848 20%, #283858 55%, #080c18 100%);
+  background: linear-gradient(180deg, #101420 0%, #243050 22%, #384868 58%, #101828 100%);
 }
 .adventure-map-scenery--frost::after {
   content: "";
@@ -6934,7 +6934,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   pointer-events: none;
 }
 .adventure-map-scenery--ember {
-  background: linear-gradient(180deg, #100808 0%, #381810 20%, #482818 55%, #180808 100%);
+  background: linear-gradient(180deg, #181008 0%, #482820 22%, #583028 58%, #281010 100%);
 }
 .adventure-map-scenery--ember::after {
   content: "";
@@ -6946,7 +6946,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   pointer-events: none;
 }
 .adventure-map-scenery--void {
-  background: linear-gradient(180deg, #080410 0%, #1a1038 20%, #281848 55%, #060210 100%);
+  background: linear-gradient(180deg, #100818 0%, #281848 22%, #382858 58%, #100418 100%);
 }
 .adventure-map-scenery--void::after {
   content: "";
@@ -6958,7 +6958,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   pointer-events: none;
 }
 .adventure-map-scenery--legend {
-  background: linear-gradient(180deg, #081008 0%, #103828 20%, #184838 55%, #040c08 100%);
+  background: linear-gradient(180deg, #101818 0%, #184838 22%, #285848 58%, #081410 100%);
 }
 .adventure-map-scenery--legend::after {
   content: "";
@@ -6987,6 +6987,53 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   pointer-events: none;
   z-index: 2;
   overflow: hidden;
+}
+.adventure-map-ominous__sky {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 0%, rgba(48, 56, 88, 0.55) 0%, transparent 65%),
+    linear-gradient(180deg, #1a1830 0%, #283048 35%, transparent 72%);
+  pointer-events: none;
+}
+.adventure-map-ominous__moon {
+  position: absolute;
+  top: 6%;
+  right: 18%;
+  width: 3.2rem;
+  height: 3.2rem;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e8e0d0 0%, #a8a098 45%, transparent 70%);
+  opacity: 0.35;
+  box-shadow: 0 0 24px rgba(220, 210, 190, 0.2);
+  pointer-events: none;
+}
+.adventure-map-ominous__moon::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  left: 18%;
+  width: 88%;
+  height: 88%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 60% 40%, #141020 0%, #141020 55%, transparent 56%);
+}
+.adventure-map-ominous__clouds {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 28% 8% at 22% 14%, rgba(70, 62, 100, 0.75) 0%, transparent 100%),
+    radial-gradient(ellipse 22% 6% at 30% 12%, rgba(55, 48, 80, 0.65) 0%, transparent 100%),
+    radial-gradient(ellipse 32% 9% at 72% 10%, rgba(65, 55, 95, 0.8) 0%, transparent 100%),
+    radial-gradient(ellipse 20% 7% at 80% 13%, rgba(50, 44, 72, 0.6) 0%, transparent 100%),
+    radial-gradient(ellipse 26% 8% at 48% 18%, rgba(60, 52, 88, 0.55) 0%, transparent 100%);
+  filter: blur(1px);
+  animation: map-cloud-drift 24s ease-in-out infinite;
+}
+@keyframes map-cloud-drift {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(2%); }
 }
 .adventure-map-ominous__vignette {
   position: absolute;
