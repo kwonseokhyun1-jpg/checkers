@@ -1719,7 +1719,7 @@ export class MatchSession {
     if (isMutualElimination(s)) {
       this.showGameOver(
         this.isPvp ? "Tie!" : "Victory!",
-        this.isPvp ? "Both players lost all their pieces." : "You cleared the stage!"
+        this.isPvp ? "Both players lost all their pieces." : "You cleared the floor!"
       );
       return true;
     }
@@ -2583,7 +2583,7 @@ ${starLine}`;
     tickMeta(s, this.opponentColor);
 
     if (isMutualElimination(s)) {
-      this.showGameOver("Victory!", "You cleared the stage!");
+      this.showGameOver("Victory!", "You cleared the floor!");
       return;
     }
     if (countPieces(s.board, this.localColor) === 0) {
@@ -2591,7 +2591,7 @@ ${starLine}`;
       return;
     }
     if (countPieces(s.board, this.opponentColor) === 0) {
-      this.showGameOver("Victory!", "You cleared the stage!");
+      this.showGameOver("Victory!", "You cleared the floor!");
       return;
     }
 

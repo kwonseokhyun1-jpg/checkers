@@ -74,7 +74,7 @@ await page.locator('[data-tab="play"]').click();
 await page.waitForTimeout(1000);
 await page.screenshot({ path: path.join(outDir, "adventure-mobile.png"), fullPage: false });
 
-const stage = page.locator("#adventure-stage-list .adventure-stage-row").first();
+const stage = page.locator("#adventure-floor-list .adventure-floor-row").first();
 if (await stage.count()) {
   await stage.click();
   await page.waitForTimeout(700);

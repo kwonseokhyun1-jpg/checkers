@@ -6,7 +6,7 @@ import {
   isAchievementComplete,
   progressLabel,
   achievementProgressRatio,
-  countChapter5StagesCleared,
+  countChapter5FloorsCleared,
 } from "../js/achievements.js";
 import { getWorldForLevel } from "../js/adventure.js";
 
@@ -30,7 +30,7 @@ function testIncomplete() {
   syncExplorer(profile);
   assert(profile.achievements.progress.explorer === 3, "progress should mirror tower 5 clears");
   assert(!isAchievementComplete(profile, "explorer"), "3 clears should not complete explorer");
-  assert(progressLabel(profile, "explorer") === "3 / 10 tower 5 stages", "progress label should show clears");
+  assert(progressLabel(profile, "explorer") === "3 / 10 tower 5 floors", "progress label should show clears");
   assert(achievementProgressRatio(profile, "explorer") === 0.3, "ratio should be 3/10");
 }
 
@@ -48,7 +48,7 @@ function testComplete() {
 function testIgnoresOtherChapters() {
   const profile = makeProfile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
   syncExplorer(profile);
-  assert(countChapter5StagesCleared(profile) === 0, "tower 1 clears should not count");
+  assert(countChapter5FloorsCleared(profile) === 0, "tower 1 clears should not count");
   assert(profile.achievements.progress.explorer === 0, "progress should stay at 0");
 }
 

@@ -1,5 +1,5 @@
 /**
- * Post–stage unlock tutorials for Quests, PvP, and Cosmetics.
+ * Post–floor unlock tutorials for Quests, PvP, and Cosmetics.
  */
 import {
   dismissQuestsTutorial,
@@ -31,7 +31,7 @@ const QUESTS_STEPS = [
   {
     id: "quests-view",
     title: "Your quest list",
-    body: "Win matches, clear Adventure stages, and hit milestones to complete quests — then claim titles from your Profile.",
+    body: "Win matches, clear Adventure floors, and hit milestones to complete quests — then claim titles from your Profile.",
     autoAdvance: true,
   },
 ];

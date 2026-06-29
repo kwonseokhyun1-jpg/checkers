@@ -1,5 +1,5 @@
 /**
- * Adventure — 5 worlds × 10 stages (50 total). Worlds 4–5 unlock after clearing stage 30.
+ * Adventure — 5 worlds × 10 floors (50 total). Worlds 4–5 unlock after clearing floor 30.
  */
 import {
   getPlayableCards,
@@ -50,7 +50,7 @@ export const WORLDS = [
   {
     id: 4,
     name: "Void Threshold",
-    tagline: "Unlocked after stage 30 — reality frays; elite magic only.",
+    tagline: "Unlocked after floor 30 — reality frays; elite magic only.",
     theme: "void",
     levelStart: 31,
     levelEnd: 40,
@@ -109,7 +109,7 @@ const WORLD_FLAVOR = {
   ],
   5: [
     "Epic crucible I", "Epic crucible II", "Legend approach", "Legend gauntlet", "Sovereign path",
-    "Mythic stair", "Crown bridge", "Final stage", "Sundered apex", "Legend's End",
+    "Mythic stair", "Crown bridge", "Final floor", "Sundered apex", "Legend's End",
   ],
 };
 
@@ -132,17 +132,17 @@ export function getWorldsForMap(progress) {
   return WORLDS.filter((w) => isWorldUnlocked(progress, w.id));
 }
 
-function stageInWorld(levelNum) {
+function floorInWorld(levelNum) {
   const w = getWorldForLevel(levelNum);
   return levelNum - w.levelStart + 1;
 }
 
 function rarityWeight(levelNum, rarity) {
   const world = getWorldForLevel(levelNum).id;
-  const stage = stageInWorld(levelNum);
+  const floor = floorInWorld(levelNum);
 
   if (world === 1) {
-    if (stage <= 5) {
+    if (floor <= 5) {
       if (rarity === "common") return 88;
       if (rarity === "uncommon") return 12;
       return 0;
@@ -272,15 +272,15 @@ export function getAdventureLevels() {
   const levels = [];
   for (const world of WORLDS) {
     for (let n = world.levelStart; n <= world.levelEnd; n++) {
-      const stage = stageInWorld(n);
-      const opp = WORLD_OPPONENTS[world.id]?.[stage - 1] || `Champion ${n}`;
-      const flavor = WORLD_FLAVOR[world.id]?.[stage - 1] || world.name;
+      const floor = floorInWorld(n);
+      const opp = WORLD_OPPONENTS[world.id]?.[floor - 1] || `Champion ${n}`;
+      const flavor = WORLD_FLAVOR[world.id]?.[floor - 1] || world.name;
       levels.push({
         id: n,
         worldId: world.id,
         worldName: world.name,
-        stageInWorld: stage,
-        name: `${world.name} · Stage ${stage}`,
+        floorInWorld: floor,
+        name: `${world.name} · Floor ${floor}`,
         opponent: opp,
         flavor,
       });
@@ -382,10 +382,10 @@ export function countClearedLevelsInWorld(progress, worldId) {
 }
 
 export const QUESTS_PVP_UNLOCK_LEVEL = 1;
-export const QUESTS_PVP_UNLOCK_MESSAGE = "Clear Adventure stage 1 to unlock";
+export const QUESTS_PVP_UNLOCK_MESSAGE = "Clear Adventure floor 1 to unlock";
 
 export const COSMETICS_UNLOCK_LEVEL = 5;
-export const COSMETICS_UNLOCK_MESSAGE = "Clear Adventure stage 5 to unlock";
+export const COSMETICS_UNLOCK_MESSAGE = "Clear Adventure floor 5 to unlock";
 
 export function isQuestsAndPvpUnlocked(profile) {
   const progress = repairAdventureProgress(profile?.adventure);
@@ -432,7 +432,7 @@ export function getEnemyDeckPreview(cardIds) {
     .sort((a, b) => a.def.name.localeCompare(b.def.name));
 }
 
-/** Tower map tile positions (% of canvas) per stage in world (1–10), base → summit. */
+/** Tower map tile positions (% of canvas) per floor in world (1–10), base → summit. */
 export const MAP_PIN_LAYOUT = [
   { left: 50, top: 88 },
   { left: 50, top: 82 },
