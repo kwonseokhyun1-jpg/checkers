@@ -1741,11 +1741,6 @@ function renderAdventureMap() {
         <span class="adventure-map-tile__moss"></span>
       </span>`;
     if (!unlocked) tile.disabled = true;
-    tile.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      openAdventureFloor(level.id);
-    };
     tile.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
@@ -2074,17 +2069,91 @@ function startAdventureMatch() {
 function bindAdventureMapCapture() {
   if (window.__adventureMapCaptureBound) return;
   window.__adventureMapCaptureBound = true;
-  const handle = (e) => {
-    const pin = e.target.closest?.("#adventure-map .adventure-map-tile, #adventure-map .adventure-map-pin");
+
+  const MAP_TARGET_SELECTOR = "#adventure-map .adventure-map-tile, #adventure-map .adventure-map-pin";
+  const TAP_MOVE_THRESHOLD = 12;
+  const SCROLL_DELTA_THRESHOLD = 3;
+
+  let activeTap = null;
+  let suppressClick = false;
+  let suppressClickTimer = 0;
+
+  const getMapTarget = (target) => target.closest?.(MAP_TARGET_SELECTOR);
+  const getScrollParent = (el) => el?.closest?.(".adventure-map-scene");
+
+  const suppressClickBriefly = () => {
+    suppressClick = true;
+    clearTimeout(suppressClickTimer);
+    suppressClickTimer = setTimeout(() => {
+      suppressClick = false;
+    }, 280);
+  };
+
+  const activateFloor = (pin, e) => {
     if (!pin || pin.disabled) return;
-    e.preventDefault();
-    e.stopPropagation();
     const levelId = Number(pin.dataset.level);
     if (!Number.isFinite(levelId) || levelId < 1) return;
+    e.preventDefault();
+    e.stopPropagation();
     openAdventureFloor(levelId);
   };
-  document.addEventListener("click", handle, true);
-  document.addEventListener("touchend", handle, { capture: true, passive: false });
+
+  document.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    const pin = getMapTarget(e.target);
+    if (!pin || pin.disabled) return;
+    const scrollEl = getScrollParent(pin);
+    activeTap = {
+      pin,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      scrollTop: scrollEl?.scrollTop ?? 0,
+      scrollLeft: scrollEl?.scrollLeft ?? 0,
+      cancelled: false,
+    };
+  }, true);
+
+  document.addEventListener("pointermove", (e) => {
+    if (!activeTap || e.pointerId !== activeTap.pointerId || activeTap.cancelled) return;
+    const dx = e.clientX - activeTap.startX;
+    const dy = e.clientY - activeTap.startY;
+    if (Math.hypot(dx, dy) > TAP_MOVE_THRESHOLD) activeTap.cancelled = true;
+    const scrollEl = getScrollParent(activeTap.pin);
+    if (scrollEl) {
+      if (Math.abs(scrollEl.scrollTop - activeTap.scrollTop) > SCROLL_DELTA_THRESHOLD) activeTap.cancelled = true;
+      if (Math.abs(scrollEl.scrollLeft - activeTap.scrollLeft) > SCROLL_DELTA_THRESHOLD) activeTap.cancelled = true;
+    }
+  }, true);
+
+  document.addEventListener("pointerup", (e) => {
+    if (!activeTap || e.pointerId !== activeTap.pointerId) return;
+    const { pin, cancelled } = activeTap;
+    activeTap = null;
+    if (cancelled) {
+      suppressClickBriefly();
+      return;
+    }
+    activateFloor(pin, e);
+    suppressClickBriefly();
+  }, true);
+
+  document.addEventListener("pointercancel", (e) => {
+    if (!activeTap || e.pointerId !== activeTap.pointerId) return;
+    activeTap = null;
+    suppressClickBriefly();
+  }, true);
+
+  document.addEventListener("click", (e) => {
+    if (suppressClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    const pin = getMapTarget(e.target);
+    if (!pin || pin.disabled) return;
+    activateFloor(pin, e);
+  }, true);
 }
 
 function openAdventureFloor(levelId) {
