@@ -46,6 +46,8 @@ import {
   QUESTS_PVP_UNLOCK_MESSAGE,
   isCosmeticsUnlocked,
   COSMETICS_UNLOCK_MESSAGE,
+  isChallengeModeUnlocked,
+  isChallengeModeEnabled,
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { syncExplorer } from "./achievements.js";
@@ -1640,13 +1642,27 @@ function renderAdventureMap() {
   map.style.setProperty("--map-moss", palette.moss);
   map.setAttribute("role", "group");
   map.setAttribute("aria-label", "Adventure floor map");
+  const challengeUnlocked = isChallengeModeUnlocked(progress);
+  const challengeOn = isChallengeModeEnabled(progress);
+  const showChallengeToggle = selectedAdventureWorldId === 5 && challengeUnlocked;
+  const skyCornerHtml = showChallengeToggle
+    ? `<div class="adventure-map-challenge-corner">
+        <div class="adventure-map-ominous__moon" aria-hidden="true"></div>
+        <button type="button" class="adventure-challenge-toggle${challengeOn ? " adventure-challenge-toggle--on" : ""}"
+          aria-pressed="${challengeOn ? "true" : "false"}"
+          title="Challenge mode: enemy starts with an extra rank of pieces on rank 5">
+          <span class="adventure-challenge-toggle__icon" aria-hidden="true">⚔</span>
+          <span class="adventure-challenge-toggle__label">Challenge</span>
+        </button>
+      </div>`
+    : `<div class="adventure-map-ominous__moon" aria-hidden="true"></div>`;
   map.innerHTML = `
     <div class="adventure-map-canvas__bg" aria-hidden="true">
       <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
       <div class="adventure-map-atmosphere" aria-hidden="true"></div>
       <div class="adventure-map-ominous" aria-hidden="true">
         <div class="adventure-map-ominous__sky"></div>
-        <div class="adventure-map-ominous__moon"></div>
+        ${skyCornerHtml}
         <div class="adventure-map-ominous__clouds"></div>
         <div class="adventure-map-ominous__vignette"></div>
         <div class="adventure-map-ominous__fog"></div>
@@ -1773,6 +1789,17 @@ function renderAdventureMap() {
   if (nextRow) {
     requestAnimationFrame(() => nextRow.scrollIntoView({ behavior: "smooth", block: "end" }));
   }
+
+  map.querySelector(".adventure-challenge-toggle")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    progress.challengeMode = !progress.challengeMode;
+    profile.adventure = progress;
+    saveProfile(profile);
+    void hapticLight();
+    AudioSfx.tap();
+    renderAdventureMap();
+  });
 }
 
 
@@ -1803,9 +1830,14 @@ function openAdventurePrebattle(levelId) {
   const gemHint = $("prebattle-gem-hint");
   if (gemHint) {
     const gems = gemsForLevelClear(profile.adventure, levelId);
-    gemHint.textContent = isLevelCleared(profile.adventure, levelId)
+    const base = isLevelCleared(profile.adventure, levelId)
       ? `Repeat clear: +${gems} gems`
       : `First clear: +${gems} gems`;
+    const challenge =
+      level.worldId === 5 && isChallengeModeEnabled(profile.adventure)
+        ? " · Challenge mode: enemy has an extra rank of pieces"
+        : "";
+    gemHint.textContent = base + challenge;
   }
 
   const preview = $("enemy-deck-preview");
@@ -1878,7 +1910,15 @@ function openAdventurePrebattle(levelId) {
 }
 
 
-async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState = null, winRewarded = false) {
+async function launchAdventureMatch(
+  deck,
+  level,
+  enemyDeck,
+  levelId,
+  resumeState = null,
+  winRewarded = false,
+  challengeModeOverride = undefined,
+) {
   const opponentName = level.opponent;
   closeAdventurePrebattle();
   pendingEnemyDeck = null;
@@ -1890,11 +1930,16 @@ async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState
 
   root.innerHTML = getMatchHtml(opponentName);
 
+  const challengeMode =
+    challengeModeOverride ??
+    (getWorldForLevel(levelId).id === 5 && isChallengeModeEnabled(profile.adventure));
+
   const sessionOpts = {
     aiDeckIds: enemyDeck,
     opponentName,
     cosmetics: getEquippedCosmetics(profile),
     profile,
+    challengeMode,
   };
   if (resumeState) {
     sessionOpts.initialState = resumeState;
@@ -1956,6 +2001,7 @@ async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState
     aiDeckIds: enemyDeck,
     opponentName,
     levelId,
+    challengeMode,
   });
   await lockPortrait();
   setAudioMode("match");
@@ -1987,7 +2033,15 @@ async function tryResumeSavedMatch() {
     return false;
   }
   selectedAdventureLevel = cp.levelId;
-  await launchAdventureMatch(deck, level, cp.aiDeckIds, cp.levelId, cp.state, cp.winRewarded);
+  await launchAdventureMatch(
+    deck,
+    level,
+    cp.aiDeckIds,
+    cp.levelId,
+    cp.state,
+    cp.winRewarded,
+    cp.challengeMode,
+  );
   matchSession?.setMessage("Match resumed — pick up where you left off.");
   return true;
 }
