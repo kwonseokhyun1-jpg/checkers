@@ -95,7 +95,7 @@ export const ACHIEVEMENTS = [
   {
     id: "explorer",
     title: "Explorer",
-    description: "Clear all 10 stages in Adventure tower 5 (Legend's End).",
+    description: "Clear all 10 floors in Adventure tower 5 (Legend's End).",
     target: 10,
     track: "state",
   },
@@ -142,7 +142,7 @@ export function isAchievementComplete(profile, id) {
   if (!def) return false;
   if (id === "arcane_mastery") return hasArcaneMastery(profile);
   if (id === "champion") return getPvpWinCount(profile) >= CHAMPION_TARGET;
-  if (id === "explorer") return countChapter5StagesCleared(profile) >= EXPLORER_TARGET;
+  if (id === "explorer") return countChapter5FloorsCleared(profile) >= EXPLORER_TARGET;
   return getAchievementProgress(profile, id) >= def.target;
 }
 
@@ -204,7 +204,7 @@ export function hasArcaneMastery(profile) {
   return countTripledSpells(profile) >= ARCANE_MASTERY_TARGET;
 }
 
-export function countChapter5StagesCleared(profile) {
+export function countChapter5FloorsCleared(profile) {
   return countClearedLevelsInWorld(profile?.adventure, EXPLORER_CHAPTER);
 }
 
@@ -231,7 +231,7 @@ export function syncChampion(profile) {
 /** Sync explorer progress from Adventure tower 5 clears; returns newly completed ids */
 export function syncExplorer(profile) {
   profile.achievements = normalizeAchievements(profile.achievements);
-  const count = Math.min(EXPLORER_TARGET, countChapter5StagesCleared(profile));
+  const count = Math.min(EXPLORER_TARGET, countChapter5FloorsCleared(profile));
   const prev = profile.achievements.progress.explorer || 0;
   profile.achievements.progress.explorer = count;
   if (count >= EXPLORER_TARGET && prev < EXPLORER_TARGET) return ["explorer"];
@@ -255,8 +255,8 @@ export function progressLabel(profile, id) {
     return `${wins} / ${CHAMPION_TARGET} PvP wins`;
   }
   if (id === "explorer") {
-    const cleared = Math.min(EXPLORER_TARGET, countChapter5StagesCleared(profile));
-    return `${cleared} / ${EXPLORER_TARGET} tower 5 stages`;
+    const cleared = Math.min(EXPLORER_TARGET, countChapter5FloorsCleared(profile));
+    return `${cleared} / ${EXPLORER_TARGET} tower 5 floors`;
   }
   const cur = Math.min(def.target, getAchievementProgress(profile, id));
   return `${cur} / ${def.target}`;
@@ -273,7 +273,7 @@ export function achievementProgressRatio(profile, id) {
     return Math.min(1, getPvpWinCount(profile) / def.target);
   }
   if (id === "explorer") {
-    return Math.min(1, countChapter5StagesCleared(profile) / def.target);
+    return Math.min(1, countChapter5FloorsCleared(profile) / def.target);
   }
   return Math.min(1, getAchievementProgress(profile, id) / def.target);
 }

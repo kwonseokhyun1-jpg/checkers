@@ -94,7 +94,7 @@ function profileHeroStatsHtml(profile) {
   const stats = getProfileStats(profile);
   const cards = [
     { key: "pvp", label: "PvP wins", value: stats.pvpWins },
-    { key: "adventure", label: "Stages cleared", value: stats.adventureStagesCleared },
+    { key: "adventure", label: "Floors cleared", value: stats.adventureFloorsCleared },
     { key: "spells", label: "Spells played", value: stats.spellsPlayed },
   ];
   return `

@@ -10,7 +10,7 @@ const outDir = join(__dirname, "..", "assets/store");
 
 const frames = [
   { file: "01-decks.png", title: "Build your spell deck", subtitle: "30 cards · max 3 copies per spell" },
-  { file: "02-adventure.png", title: "Adventure mode", subtitle: "50 stages across 5 worlds" },
+  { file: "02-adventure.png", title: "Adventure mode", subtitle: "50 floors across 5 worlds" },
   { file: "03-match.png", title: "Spells on the board", subtitle: "Cast · move · capture · crown" },
   { file: "04-shop.png", title: "Shop & collection", subtitle: "Chests · cosmetics · mystery boxes" },
   { file: "05-pvp.png", title: "Real-time PvP", subtitle: "Challenge players worldwide" },

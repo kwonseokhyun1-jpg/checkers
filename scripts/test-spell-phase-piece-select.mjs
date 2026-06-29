@@ -34,7 +34,7 @@ await page.evaluate(() => {
 
 await page.locator('[data-tab="play"]').click();
 await page.waitForTimeout(700);
-await page.locator("#adventure-stage-list .adventure-stage-row").first().click();
+await page.locator("#adventure-floor-list .adventure-floor-row").first().click();
 await page.waitForTimeout(500);
 await page.locator("#btn-start-adventure").click();
 await page.waitForTimeout(4000);

@@ -26,7 +26,7 @@ const scenes = [
   { file: "01-match.png", async capture(page) {
     await page.locator('[data-tab="play"]').click();
     await page.waitForTimeout(900);
-    const stage = page.locator("#adventure-stage-list .adventure-stage-row").first();
+    const stage = page.locator("#adventure-floor-list .adventure-floor-row").first();
     if (await stage.count()) {
       await stage.click();
       await page.waitForTimeout(600);

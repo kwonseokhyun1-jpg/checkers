@@ -63,16 +63,16 @@ function aiOpponentCardHtml(opponentName, { subtitle } = {}) {
  *   mode: 'pvp' | 'ai',
  *   local: { username: string, cosmetics?: object },
  *   opponent: { username: string, cosmetics?: object },
- *   stageLabel?: string,
+ *   floorLabel?: string,
  * }} config
  */
 export function showMatchLoading(root, config) {
-  const { mode, local, opponent, stageLabel } = config;
+  const { mode, local, opponent, floorLabel } = config;
   const isPvp = mode === "pvp";
 
   const opponentHtml = isPvp
     ? playerCardHtml(opponent, { label: "Opponent" })
-    : aiOpponentCardHtml(opponent.username, { subtitle: stageLabel });
+    : aiOpponentCardHtml(opponent.username, { subtitle: floorLabel });
 
   root.innerHTML = `
     <div class="match-loading pvp-loading" role="dialog" aria-modal="true" aria-labelledby="match-loading-status">

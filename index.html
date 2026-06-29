@@ -103,7 +103,7 @@
               <h2 class="panel-head__title">Shop</h2>
               <button type="button" id="shop-help-btn" class="panel-help-btn" aria-label="How Shop works" aria-expanded="false" aria-controls="shop-help-desc">?</button>
             </div>
-            <p id="shop-help-desc" class="panel-head__desc" hidden>Spend gems on spell chests and cosmetic boxes (unlocked at Adventure stage 5), or stars on mystery boxes. Equip cosmetics in Profile.</p>
+            <p id="shop-help-desc" class="panel-head__desc" hidden>Spend gems on spell chests and cosmetic boxes (unlocked at Adventure floor 5), or stars on mystery boxes. Equip cosmetics in Profile.</p>
           </header>
           <nav class="vault-tabs" role="tablist" aria-label="Shop categories">
             <button type="button" class="vault-tab active" data-vault-tab="cards" role="tab" aria-selected="true" aria-controls="vault-tab-cards">Cards</button>
@@ -224,13 +224,13 @@
               <h2 class="panel-head__title">Adventure</h2>
               <button type="button" id="adventure-help-btn" class="panel-help-btn" aria-label="How Adventure works" aria-expanded="false" aria-controls="adventure-help-desc">?</button>
             </div>
-            <p id="adventure-help-desc" class="panel-head__desc" hidden>Tap a numbered stone on the map to battle. Earn <strong>★ stars</strong> on victory (more pieces left = more stars). Clear <strong>stage 30</strong> to unlock hidden worlds.</p>
+            <p id="adventure-help-desc" class="panel-head__desc" hidden>Tap a numbered stone on the map to battle. Earn <strong>★ stars</strong> on victory (more pieces left = more stars). Clear <strong>floor 30</strong> to unlock hidden worlds.</p>
           </header>
           <nav id="adventure-world-tabs" class="adventure-world-shields" role="tablist" aria-label="World towers"></nav>
           <div class="adventure-map-scene">
             <div id="adventure-map" class="adventure-map-canvas"></div>
           </div>
-          <div id="adventure-stage-list" class="adventure-stage-list adventure-stage-list--sr" aria-label="Tower stages"></div>
+          <div id="adventure-floor-list" class="adventure-floor-list adventure-floor-list--sr" aria-label="Tower floors"></div>
         </section>
 
       </div>
@@ -239,12 +239,12 @@
       <div id="view-match" class="view hidden"></div>
     </main>
 
-      <div id="adventure-prebattle" class="adventure-stage-modal hidden" role="dialog" aria-modal="true" aria-labelledby="prebattle-title">
-        <button type="button" id="adventure-stage-backdrop" class="adventure-stage-modal__backdrop" aria-label="Close"></button>
-        <div class="adventure-stage-modal__dialog panel game-panel adventure-prebattle">
-          <button type="button" id="btn-back-adventure" class="auth-modal-close adventure-stage-modal__close" aria-label="Close">×</button>
+      <div id="adventure-prebattle" class="adventure-floor-modal hidden" role="dialog" aria-modal="true" aria-labelledby="prebattle-title">
+        <button type="button" id="adventure-floor-backdrop" class="adventure-floor-modal__backdrop" aria-label="Close"></button>
+        <div class="adventure-floor-modal__dialog panel game-panel adventure-prebattle">
+          <button type="button" id="btn-back-adventure" class="auth-modal-close adventure-floor-modal__close" aria-label="Close">×</button>
           <header class="panel-head panel-head--compact">
-            <h2 id="prebattle-title" class="panel-head__title">Stage</h2>
+            <h2 id="prebattle-title" class="panel-head__title">Floor</h2>
             <p id="prebattle-flavor" class="panel-head__desc"></p>
             <p id="prebattle-opponent" class="prebattle-opponent"></p>
           </header>

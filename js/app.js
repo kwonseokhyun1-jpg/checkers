@@ -173,12 +173,12 @@ let authUI = null;
 let tutorialRunning = false;
 let bypassQuestsPvpGate = false;
 let bypassCosmeticsGate = false;
-let pendingPostStage1Tutorials = false;
-let pendingPostStage5CosmeticsTutorial = false;
+let pendingPostFloor1Tutorials = false;
+let pendingPostFloor5CosmeticsTutorial = false;
 /** @type {number|null} */
-let postStage1TutorialTimer = null;
+let postFloor1TutorialTimer = null;
 /** @type {number|null} */
-let postStage5CosmeticsTutorialTimer = null;
+let postFloor5CosmeticsTutorialTimer = null;
 /** @type {number|null} */
 let selectedAdventureLevel = null;
 let selectedAdventureWorldId = 1;
@@ -241,23 +241,23 @@ function autoFinishDeck() {
 
 const $ = (id) => document.getElementById(id);
 
-function ensureStageModalOnBody() {
+function ensureFloorModalOnBody() {
   const modal = document.getElementById("adventure-prebattle");
   if (modal && modal.parentElement !== document.body) {
     document.body.appendChild(modal);
   }
 }
 
-function showStageModal() {
-  ensureStageModalOnBody();
+function showFloorModal() {
+  ensureFloorModalOnBody();
   const modal = document.getElementById("adventure-prebattle");
   modal?.classList.remove("hidden");
-  document.body.classList.add("adventure-stage-open");
+  document.body.classList.add("adventure-floor-open");
 }
 
-function hideStageModal() {
+function hideFloorModal() {
   document.getElementById("adventure-prebattle")?.classList.add("hidden");
-  document.body.classList.remove("adventure-stage-open");
+  document.body.classList.remove("adventure-floor-open");
 }
 
 function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
@@ -709,7 +709,7 @@ async function handleOpenMysteryBox({ big = false } = {}) {
   const canAfford = (profile.stars ?? 0) >= cost;
   if (!canAfford) {
     if (log) {
-      log.textContent = `Need ${cost} ★ stars. Clear Adventure stages to earn stars.`;
+      log.textContent = `Need ${cost} ★ stars. Clear Adventure floors to earn stars.`;
       log.classList.add("chest-log--error");
     }
     return;
@@ -1424,7 +1424,7 @@ function startNewDeck() {
 }
 
 function closeAdventurePrebattle() {
-  hideStageModal();
+  hideFloorModal();
   selectedAdventureLevel = null;
 }
 
@@ -1607,7 +1607,7 @@ function renderAdventureMap() {
       if (!unlocked) btn.classList.add("adventure-world-shield--locked");
       btn.disabled = !unlocked;
       btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">Tower ${w.id}</span>`;
-      btn.title = unlocked ? w.name : `Clear stage ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
+      btn.title = unlocked ? w.name : `Clear floor ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
       btn.addEventListener("click", () => {
         if (!isWorldUnlocked(progress, w.id)) return;
         selectedAdventureWorldId = w.id;
@@ -1639,7 +1639,7 @@ function renderAdventureMap() {
   map.style.setProperty("--map-stone-side", palette.stoneSide);
   map.style.setProperty("--map-moss", palette.moss);
   map.setAttribute("role", "group");
-  map.setAttribute("aria-label", "Adventure stage map");
+  map.setAttribute("aria-label", "Adventure floor map");
   map.innerHTML = `
     <div class="adventure-map-canvas__bg" aria-hidden="true">
       <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
@@ -1676,15 +1676,15 @@ function renderAdventureMap() {
     const cleared = isLevelCleared(progress, level.id);
     const isNext = level.id === nextId && unlocked;
     const stars = getLevelStars(progress, level.id);
-    const stageT = (level.stageInWorld - 1) / 9;
-    const floorScale = 1 - stageT * 0.26;
-    const floorHeightScale = 1 - stageT * 0.1;
-    const spiralOffset = Math.sin((level.stageInWorld - 1) * 0.62) * 0.32 * floorScale;
+    const floorT = (level.floorInWorld - 1) / 9;
+    const floorScale = 1 - floorT * 0.26;
+    const floorHeightScale = 1 - floorT * 0.1;
+    const spiralOffset = Math.sin((level.floorInWorld - 1) * 0.62) * 0.32 * floorScale;
 
     const tile = document.createElement("button");
     tile.type = "button";
     tile.className = "adventure-map-tile";
-    tile.classList.add(`adventure-map-tile--stage-${level.stageInWorld}`);
+    tile.classList.add(`adventure-map-tile--floor-${level.floorInWorld}`);
     tile.style.zIndex = String(i + 10);
     tile.style.setProperty("--floor-scale", floorScale.toFixed(4));
     tile.style.setProperty("--floor-height-scale", floorHeightScale.toFixed(4));
@@ -1693,19 +1693,19 @@ function renderAdventureMap() {
     if (!unlocked) tile.classList.add("adventure-map-tile--locked");
     if (cleared) tile.classList.add("adventure-map-tile--cleared");
     if (isNext) tile.classList.add("adventure-map-tile--next");
-    if (level.stageInWorld >= 7 && level.stageInWorld < 10) tile.classList.add("adventure-map-tile--rampart");
-    if (level.stageInWorld === 10) tile.classList.add("adventure-map-tile--summit");
+    if (level.floorInWorld >= 7 && level.floorInWorld < 10) tile.classList.add("adventure-map-tile--rampart");
+    if (level.floorInWorld === 10) tile.classList.add("adventure-map-tile--summit");
     tile.setAttribute("aria-disabled", unlocked ? "false" : "true");
-    if (!unlocked) tile.title = `Clear global stage ${level.id - 1} to unlock`;
-    tile.setAttribute("aria-label", `Stage ${level.stageInWorld}: ${level.opponent}, ${level.flavor}`);
+    if (!unlocked) tile.title = `Clear global floor ${level.id - 1} to unlock`;
+    tile.setAttribute("aria-label", `Floor ${level.floorInWorld}: ${level.opponent}, ${level.flavor}`);
     const starLine = cleared ? `<span class="adventure-map-tile__stars">${formatStars(stars)}</span>` : "";
     const pawn = isNext ? `<span class="adventure-map-tile__pawn">${getMapPawnMarkup(palette.accent)}</span>` : "";
-    const banner = level.stageInWorld === 10 ? `<span class="adventure-map-tile__banner">${getMapBannerMarkup(theme)}</span>` : "";
-    const windows = level.stageInWorld > 1 && level.stageInWorld < 10
+    const banner = level.floorInWorld === 10 ? `<span class="adventure-map-tile__banner">${getMapBannerMarkup(theme)}</span>` : "";
+    const windows = level.floorInWorld > 1 && level.floorInWorld < 10
       ? '<span class="adventure-map-tile__windows" aria-hidden="true"></span>'
       : "";
     const torch = cleared ? '<span class="adventure-map-tile__torch" aria-hidden="true"></span>' : "";
-    const ivy = level.stageInWorld <= 3 ? '<span class="adventure-map-tile__ivy" aria-hidden="true"></span>' : "";
+    const ivy = level.floorInWorld <= 3 ? '<span class="adventure-map-tile__ivy" aria-hidden="true"></span>' : "";
     tile.innerHTML = `
       ${pawn}
       ${banner}
@@ -1716,7 +1716,7 @@ function renderAdventureMap() {
         ${windows}
         ${torch}
         <span class="adventure-map-tile__face">
-          <span class="adventure-map-tile__num">${level.stageInWorld}</span>
+          <span class="adventure-map-tile__num">${level.floorInWorld}</span>
           ${starLine}
         </span>
         <span class="adventure-map-tile__side adventure-map-tile__side--left"></span>
@@ -1727,22 +1727,22 @@ function renderAdventureMap() {
     tile.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      openAdventureStage(level.id);
+      openAdventureFloor(level.id);
     };
     tile.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        openAdventureStage(level.id);
+        openAdventureFloor(level.id);
       }
     });
     tilesLayer?.appendChild(tile);
   });
 
 
-  const stageList = $("adventure-stage-list");
-  if (stageList) {
-    stageList.classList.add("adventure-stage-list--sr");
-    stageList.innerHTML = "";
+  const floorList = $("adventure-floor-list");
+  if (floorList) {
+    floorList.classList.add("adventure-floor-list--sr");
+    floorList.innerHTML = "";
     for (const level of levels) {
       const unlocked = isLevelUnlocked(progress, level.id);
       const cleared = isLevelCleared(progress, level.id);
@@ -1750,26 +1750,26 @@ function renderAdventureMap() {
       const stars = getLevelStars(progress, level.id);
       const row = document.createElement("button");
       row.type = "button";
-      row.className = "adventure-stage-row";
+      row.className = "adventure-floor-row";
       if (!unlocked) row.disabled = true;
-      if (cleared) row.classList.add("adventure-stage-row--cleared");
-      if (isNext) row.classList.add("adventure-stage-row--next");
+      if (cleared) row.classList.add("adventure-floor-row--cleared");
+      if (isNext) row.classList.add("adventure-floor-row--next");
       row.innerHTML = `
-        <span class="adventure-stage-row__main">
-          <span class="adventure-stage-row__title">${level.stageInWorld}. ${level.opponent}</span>
-          <span class="adventure-stage-row__flavor">${level.flavor}</span>
+        <span class="adventure-floor-row__main">
+          <span class="adventure-floor-row__title">${level.floorInWorld}. ${level.opponent}</span>
+          <span class="adventure-floor-row__flavor">${level.flavor}</span>
         </span>
-        ${isNext ? '<span class="adventure-stage-row__badge">Next</span>' : ""}
-        ${stars > 0 ? `<span class="adventure-stage-row__stars">${formatStars(stars)}</span>` : ""}`;
-      row.addEventListener("click", () => openAdventureStage(level.id));
-      stageList.appendChild(row);
+        ${isNext ? '<span class="adventure-floor-row__badge">Next</span>' : ""}
+        ${stars > 0 ? `<span class="adventure-floor-row__stars">${formatStars(stars)}</span>` : ""}`;
+      row.addEventListener("click", () => openAdventureFloor(level.id));
+      floorList.appendChild(row);
     }
   }
 
   const nextTile = map.querySelector(".adventure-map-tile--next");
   if (nextTile) requestAnimationFrame(() => nextTile.scrollIntoView({ behavior: "smooth", block: "center" }));
 
-  const nextRow = stageList?.querySelector(".adventure-stage-row--next");
+  const nextRow = floorList?.querySelector(".adventure-floor-row--next");
   if (nextRow) {
     requestAnimationFrame(() => nextRow.scrollIntoView({ behavior: "smooth", block: "end" }));
   }
@@ -1781,12 +1781,12 @@ function openAdventurePrebattle(levelId) {
   if (!level || !isLevelUnlocked(profile.adventure, levelId)) return;
 
   selectedAdventureLevel = levelId;
-  showStageModal();
+  showFloorModal();
 
   const title = $("prebattle-title");
   const flavor = $("prebattle-flavor");
   const opponent = $("prebattle-opponent");
-  if (title) title.textContent = `Tower ${level.worldId} · Stage ${level.stageInWorld}`;
+  if (title) title.textContent = `Tower ${level.worldId} · Floor ${level.floorInWorld}`;
   if (flavor) flavor.textContent = level.flavor || "";
   if (opponent) opponent.textContent = "Loading…";
 
@@ -1912,11 +1912,11 @@ async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState
         root.innerHTML = "";
         $("view-match")?.classList.add("hidden");
         showTab(consumePendingNavigationTab() || "play");
-        if (pendingPostStage1Tutorials) {
-          schedulePostStage1Tutorials();
+        if (pendingPostFloor1Tutorials) {
+          schedulePostFloor1Tutorials();
         }
-        if (pendingPostStage5CosmeticsTutorial) {
-          schedulePostStage5CosmeticsTutorial();
+        if (pendingPostFloor5CosmeticsTutorial) {
+          schedulePostFloor5CosmeticsTutorial();
         }
       },
       (stars) => {
@@ -1928,11 +1928,11 @@ async function launchAdventureMatch(deck, level, enemyDeck, levelId, resumeState
         updateCurrencyHeader();
         syncNavUnlockState();
         if (levelId === 1 && result.firstTime) {
-          pendingPostStage1Tutorials = true;
-          schedulePostStage1Tutorials();
+          pendingPostFloor1Tutorials = true;
+          schedulePostFloor1Tutorials();
         }
         if (levelId === 5 && result.firstTime) {
-          pendingPostStage5CosmeticsTutorial = true;
+          pendingPostFloor5CosmeticsTutorial = true;
         }
         return {
           message: `+${gems} gems! · Best: ${formatStars(bestStars)}`,
@@ -2006,7 +2006,7 @@ function startAdventureMatch() {
       if (!deck || deck.cardIds.length !== DECK_SIZE) {
         opponent.textContent = `Build a complete ${DECK_SIZE}-card deck in the Decks tab, then try again.`;
       } else {
-        opponent.textContent = "Could not start battle — close and pick the stage again.";
+        opponent.textContent = "Could not start battle — close and pick the floor again.";
       }
     }
     return;
@@ -2026,17 +2026,17 @@ function bindAdventureMapCapture() {
     e.stopPropagation();
     const levelId = Number(pin.dataset.level);
     if (!Number.isFinite(levelId) || levelId < 1) return;
-    openAdventureStage(levelId);
+    openAdventureFloor(levelId);
   };
   document.addEventListener("click", handle, true);
   document.addEventListener("touchend", handle, { capture: true, passive: false });
 }
 
-function openAdventureStage(levelId) {
+function openAdventureFloor(levelId) {
   const live = repairAdventureProgress(profile.adventure);
   profile.adventure = live;
   if (!isLevelUnlocked(live, levelId)) {
-    showUnlockHint(`Locked — beat global stage ${levelId - 1} first, then return here.`);
+    showUnlockHint(`Locked — beat global floor ${levelId - 1} first, then return here.`);
     return;
   }
   saveProfile(profile);
@@ -2053,7 +2053,7 @@ function init() {
   void initCapacitor();
   bindCardPreviewModal();
   bindAdventureMapCapture();
-  ensureStageModalOnBody();
+  ensureFloorModalOnBody();
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeAdventurePrebattle();
   });
@@ -2145,7 +2145,7 @@ function init() {
   $("btn-auto-finish-deck")?.addEventListener("click", autoFinishDeck);
   $("btn-save-deck")?.addEventListener("click", saveWorkingDeck);
   $("btn-back-adventure")?.addEventListener("click", closeAdventurePrebattle);
-  $("adventure-stage-backdrop")?.addEventListener("click", closeAdventurePrebattle);
+  $("adventure-floor-backdrop")?.addEventListener("click", closeAdventurePrebattle);
   $("btn-start-adventure")?.addEventListener("click", startAdventureMatch);
   resolveNativeSelect("adventure-deck-select")?.addEventListener("change", (e) => {
     profile.selectedDeckId = e.target.value;
@@ -2187,8 +2187,8 @@ function init() {
       pvpController?.render({ resume: true });
       maybeStartInteractiveTutorial();
       maybeStartMetaTutorial();
-      maybeStartPostStage1Tutorials();
-      maybeStartPostStage5CosmeticsTutorial();
+      maybeStartPostFloor1Tutorials();
+      maybeStartPostFloor5CosmeticsTutorial();
       if (!tutorialRunning) {
         showTab(activeTab);
       }
@@ -2232,64 +2232,64 @@ function init() {
   void bootstrapAfterAuth();
 }
 
-function schedulePostStage1Tutorials() {
-  if (!pendingPostStage1Tutorials) return;
-  if (postStage1TutorialTimer != null) return;
+function schedulePostFloor1Tutorials() {
+  if (!pendingPostFloor1Tutorials) return;
+  if (postFloor1TutorialTimer != null) return;
 
   let attempts = 0;
   const maxAttempts = 10;
 
   const tryStart = () => {
-    postStage1TutorialTimer = null;
+    postFloor1TutorialTimer = null;
     attempts += 1;
-    if (!pendingPostStage1Tutorials) return;
+    if (!pendingPostFloor1Tutorials) return;
     if (isLiveMatchUiVisible()) {
       if (attempts < maxAttempts) {
-        postStage1TutorialTimer = window.setTimeout(tryStart, 400);
+        postFloor1TutorialTimer = window.setTimeout(tryStart, 400);
       }
       return;
     }
     syncTutorialStorageWithProfile(profile);
-    if (maybeStartPostStage1Tutorials()) {
-      pendingPostStage1Tutorials = false;
+    if (maybeStartPostFloor1Tutorials()) {
+      pendingPostFloor1Tutorials = false;
       return;
     }
     if (attempts < maxAttempts) {
-      postStage1TutorialTimer = window.setTimeout(tryStart, 500);
+      postFloor1TutorialTimer = window.setTimeout(tryStart, 500);
     }
   };
 
-  postStage1TutorialTimer = window.setTimeout(tryStart, 350);
+  postFloor1TutorialTimer = window.setTimeout(tryStart, 350);
 }
 
-function schedulePostStage5CosmeticsTutorial() {
-  if (!pendingPostStage5CosmeticsTutorial) return;
-  if (postStage5CosmeticsTutorialTimer != null) return;
+function schedulePostFloor5CosmeticsTutorial() {
+  if (!pendingPostFloor5CosmeticsTutorial) return;
+  if (postFloor5CosmeticsTutorialTimer != null) return;
 
   let attempts = 0;
   const maxAttempts = 10;
 
   const tryStart = () => {
-    postStage5CosmeticsTutorialTimer = null;
+    postFloor5CosmeticsTutorialTimer = null;
     attempts += 1;
-    if (!pendingPostStage5CosmeticsTutorial) return;
+    if (!pendingPostFloor5CosmeticsTutorial) return;
     if (isLiveMatchUiVisible()) {
       if (attempts < maxAttempts) {
-        postStage5CosmeticsTutorialTimer = window.setTimeout(tryStart, 400);
+        postFloor5CosmeticsTutorialTimer = window.setTimeout(tryStart, 400);
       }
       return;
     }
     syncTutorialStorageWithProfile(profile);
-    if (maybeStartPostStage5CosmeticsTutorial()) {
-      pendingPostStage5CosmeticsTutorial = false;
+    if (maybeStartPostFloor5CosmeticsTutorial()) {
+      pendingPostFloor5CosmeticsTutorial = false;
       return;
     }
     if (attempts < maxAttempts) {
-      postStage5CosmeticsTutorialTimer = window.setTimeout(tryStart, 500);
+      postFloor5CosmeticsTutorialTimer = window.setTimeout(tryStart, 500);
     }
   };
 
-  postStage5CosmeticsTutorialTimer = window.setTimeout(tryStart, 350);
+  postFloor5CosmeticsTutorialTimer = window.setTimeout(tryStart, 350);
 }
 
 function maybeStartPvpTutorial() {
@@ -2306,13 +2306,13 @@ function maybeStartPvpTutorial() {
       repairProfile(profile);
       syncNavUnlockState();
       showTab("play");
-      maybeStartPostStage5CosmeticsTutorial();
+      maybeStartPostFloor5CosmeticsTutorial();
     },
   });
   return true;
 }
 
-function maybeStartPostStage5CosmeticsTutorial() {
+function maybeStartPostFloor5CosmeticsTutorial() {
   if (tutorialRunning || !getCurrentUser()) return false;
   if (!isCosmeticsUnlocked(profile)) return false;
   if (shouldShowInteractiveTutorial(profile) || shouldShowMetaTutorial(profile)) return false;
@@ -2334,7 +2334,7 @@ function maybeStartPostStage5CosmeticsTutorial() {
   return true;
 }
 
-function maybeStartPostStage1Tutorials() {
+function maybeStartPostFloor1Tutorials() {
   if (tutorialRunning || !getCurrentUser()) return false;
   if (!isQuestsAndPvpUnlocked(profile)) return false;
   syncTutorialStorageWithProfile(profile);
@@ -2350,7 +2350,7 @@ function maybeStartPostStage1Tutorials() {
       repairProfile(profile);
       syncNavUnlockState();
       maybeStartPvpTutorial();
-      maybeStartPostStage5CosmeticsTutorial();
+      maybeStartPostFloor5CosmeticsTutorial();
     },
   });
   return true;
@@ -2373,8 +2373,8 @@ function maybeStartInteractiveTutorial() {
       if (!maybeStartMetaTutorial()) {
         showTab("deck");
       }
-      maybeStartPostStage1Tutorials();
-      maybeStartPostStage5CosmeticsTutorial();
+      maybeStartPostFloor1Tutorials();
+      maybeStartPostFloor5CosmeticsTutorial();
     },
   });
   return true;
@@ -2396,8 +2396,8 @@ function maybeStartMetaTutorial() {
       renderDeckList();
       renderStarsShop();
       showTab("deck");
-      maybeStartPostStage1Tutorials();
-      maybeStartPostStage5CosmeticsTutorial();
+      maybeStartPostFloor1Tutorials();
+      maybeStartPostFloor5CosmeticsTutorial();
     },
   });
   return true;
@@ -2434,8 +2434,8 @@ async function bootstrapAfterAuth() {
 
   if (maybeStartInteractiveTutorial()) return;
   if (maybeStartMetaTutorial()) return;
-  if (maybeStartPostStage1Tutorials()) return;
-  if (maybeStartPostStage5CosmeticsTutorial()) return;
+  if (maybeStartPostFloor1Tutorials()) return;
+  if (maybeStartPostFloor5CosmeticsTutorial()) return;
   if (tutorialRunning) return;
   if (!(await tryResumeSavedMatch())) await showTab("deck");
   reconcileMatchShellState();
