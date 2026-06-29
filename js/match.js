@@ -114,9 +114,9 @@ export function isPvpTerminalBoard(state, localColor) {
   return countPieces(state.board, localColor) === 0 || countPieces(state.board, opp) === 0;
 }
 
-export function createMatchState(playerDeckIds, aiDeckIds = null) {
+export function createMatchState(playerDeckIds, aiDeckIds = null, options = {}) {
   const state = {
-    board: createInitialBoard(),
+    board: createInitialBoard({ challengeMode: !!options.challengeMode }),
     hands: { [COLORS.RED]: [], [COLORS.BLACK]: [] },
     turn: COLORS.RED,
     phase: PHASE.CARDS,
@@ -187,7 +187,9 @@ export class MatchSession {
       this.state.meta = { ...createMatchMeta(), ...this.state.meta };
       ensureConstitutionTurns(this.state.meta);
     } else {
-      this.state = createMatchState(deckCardIds, options.aiDeckIds ?? null);
+      this.state = createMatchState(deckCardIds, options.aiDeckIds ?? null, {
+        challengeMode: !!options.challengeMode,
+      });
     }
     this.root = rootEl;
     this.onExit = () => {
