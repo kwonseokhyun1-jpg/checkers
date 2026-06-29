@@ -182,8 +182,8 @@ function adjacentEnemiesTo(state, color, row, col) {
   return res;
 }
 
-/** True when this piece has a legal move landing adjacent to an enemy (shockwave pulse). */
-function shockwaveCanHitAdjacentEnemy(state, color, row, col) {
+/** True when this piece has a legal move whose landing square pulses adjacent enemies (bomb/shockwave). */
+function armedMoveEffectCanHitAdjacentEnemy(state, color, row, col) {
   if (!pieceHasLegalMoves(state.board, color, state, row, col)) return false;
   const o = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
   const moves = getAllMovesForColor(state.board, color, state).filter(
@@ -286,6 +286,9 @@ const FRONT_ROW_PROTECTION_EFFECTS = new Set([
 /** Enemy-targeting spells that should hit the opponent's front line first. */
 const ENEMY_FRONT_ROW_EFFECTS = new Set(["snowball"]);
 
+/** Armed-move spells (bomb/shockwave) — prefer the friendly front row that can move and pulse enemies. */
+const FRIENDLY_FRONT_ROW_OFFENSIVE_EFFECTS = new Set(["bomb", "shockwave"]);
+
 /** Friendly spells that only make sense on pieces able to move this turn. */
 const FRIENDLY_REQUIRES_MOVABLE = new Set([
   "bomb",
@@ -325,6 +328,9 @@ function prioritizeFrontRowTargets(state, color, card, targets) {
   if (ENEMY_FRONT_ROW_EFFECTS.has(card.effect)) {
     const opponent = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
     return preferRowTargets(targets, frontRowRank(state, opponent));
+  }
+  if (FRIENDLY_FRONT_ROW_OFFENSIVE_EFFECTS.has(card.effect)) {
+    return preferRowTargets(targets, frontRowRank(state, color));
   }
   return targets;
 }
@@ -404,7 +410,10 @@ export function getValidTargets(state, color, card, picks) {
           if (!p || p.color !== color) continue;
           if (pieceCloakedByDarkness(state, r, c)) continue;
           if (FRIENDLY_REQUIRES_MOVABLE.has(card.effect) && !pieceHasLegalMoves(state.board, color, state, r, c)) continue;
-          if (card.effect === "shockwave" && !shockwaveCanHitAdjacentEnemy(state, color, r, c)) continue;
+          if (
+            (card.effect === "bomb" || card.effect === "shockwave") &&
+            !armedMoveEffectCanHitAdjacentEnemy(state, color, r, c)
+          ) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
           if (card.effect === "magnet" && !magnetHasPull(state, color, r, c)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
