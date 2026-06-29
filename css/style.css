@@ -7096,14 +7096,15 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   pointer-events: none;
   width: min(94%, 28rem);
   filter: drop-shadow(0 12px 32px rgba(0, 0, 0, 0.65));
+  --tower-top-ratio: 0.72;
 }
 .adventure-map-tower__base {
   position: absolute;
   left: 50%;
   bottom: -0.35rem;
   transform: translateX(-50%);
-  width: 11.5rem;
-  height: 1.6rem;
+  width: 11.8rem;
+  height: 1.75rem;
   background:
     linear-gradient(180deg,
       var(--map-stone-mid) 0%,
@@ -7128,17 +7129,22 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   left: 50%;
   bottom: 1.1rem;
   transform: translateX(-50%);
-  width: 8rem;
+  width: 9.6rem;
   height: calc(100% - 0.25rem);
   background:
     linear-gradient(90deg,
-      rgba(0, 0, 0, 0.5) 0%,
-      var(--map-stone-dark) 12%,
-      var(--map-stone-mid) 45%,
+      rgba(0, 0, 0, 0.55) 0%,
+      var(--map-stone-dark) 10%,
+      var(--map-stone-mid) 42%,
       var(--map-stone-light) 50%,
-      var(--map-stone-mid) 55%,
-      var(--map-stone-dark) 88%,
-      rgba(0, 0, 0, 0.5) 100%);
+      var(--map-stone-mid) 58%,
+      var(--map-stone-dark) 90%,
+      rgba(0, 0, 0, 0.55) 100%),
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.04) 0%,
+      transparent 18%,
+      transparent 72%,
+      rgba(0, 0, 0, 0.35) 100%);
   border-left: 3px solid rgba(0, 0, 0, 0.45);
   border-right: 3px solid rgba(0, 0, 0, 0.45);
   box-shadow:
@@ -7147,8 +7153,14 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
     inset -4px 0 12px rgba(0, 0, 0, 0.25),
     0 6px 24px rgba(0, 0, 0, 0.65);
   border-radius: 6px 6px 0 0;
+  clip-path: polygon(
+    calc(50% - 50%) 100%,
+    calc(50% + 50%) 100%,
+    calc(50% + 50% * var(--tower-top-ratio, 0.72)) 0%,
+    calc(50% - 50% * var(--tower-top-ratio, 0.72)) 0%
+  );
   z-index: 0;
-  opacity: 0.9;
+  opacity: 0.92;
 }
 .adventure-map-tower__shaft::before {
   content: "";
@@ -7180,23 +7192,55 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tower__buttress {
   position: absolute;
   bottom: 1.1rem;
-  width: 1.4rem;
-  height: calc(100% * 0.55);
+  width: 1.55rem;
+  height: calc(100% * 0.62);
   background: linear-gradient(90deg, var(--map-stone-side) 0%, var(--map-stone-dark) 100%);
   z-index: -1;
-  opacity: 0.75;
+  opacity: 0.8;
   box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.4);
+  clip-path: polygon(8% 100%, 92% 100%, 78% 0%, 22% 0%);
 }
 .adventure-map-tower__buttress--left {
-  left: calc(50% - 5.2rem);
-  transform: skewX(6deg);
+  left: calc(50% - 5.55rem);
+  transform: skewX(7deg);
   border-radius: 3px 0 0 0;
 }
 .adventure-map-tower__buttress--right {
-  right: calc(50% - 5.2rem);
-  transform: skewX(-6deg);
+  right: calc(50% - 5.55rem);
+  transform: skewX(-7deg);
   border-radius: 0 3px 0 0;
   background: linear-gradient(270deg, var(--map-stone-side) 0%, var(--map-stone-dark) 100%);
+}
+.adventure-map-tower__beacon {
+  position: absolute;
+  top: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4.5rem;
+  height: 4.5rem;
+  background: radial-gradient(circle, var(--map-glow) 0%, transparent 68%);
+  opacity: 0.45;
+  z-index: 5;
+  pointer-events: none;
+  animation: map-beacon-pulse 3.5s ease-in-out infinite;
+}
+.adventure-map-tower__haze {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  transform: translateX(-50%);
+  width: 14rem;
+  height: 55%;
+  background:
+    linear-gradient(180deg, transparent 0%, rgba(180, 170, 200, 0.08) 35%, rgba(140, 130, 160, 0.14) 70%, transparent 100%);
+  z-index: 18;
+  pointer-events: none;
+  filter: blur(2px);
+  opacity: 0.7;
+}
+@keyframes map-beacon-pulse {
+  0%, 100% { opacity: 0.3; transform: translateX(-50%) scale(0.9); }
+  50% { opacity: 0.65; transform: translateX(-50%) scale(1.15); }
 }
 .adventure-map-tower__mist {
   position: absolute;
@@ -7226,7 +7270,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 }
 .adventure-map-tile {
   position: relative;
-  transform: none;
+  transform: translateX(var(--floor-offset-x, 0));
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   z-index: 10;
@@ -7256,7 +7300,7 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
   pointer-events: none;
 }
 .adventure-map-tile:not(:disabled):active {
-  transform: scale(0.97);
+  transform: translateX(var(--floor-offset-x, 0)) scale(0.97);
 }
 .adventure-map-tile:not(:disabled):hover .adventure-map-tile__face {
   filter: brightness(1.08);
@@ -7271,8 +7315,8 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile__stone {
   position: relative;
   display: block;
-  width: 9.25rem;
-  height: 5.4rem;
+  width: calc(9.25rem * var(--floor-scale, 1));
+  height: calc(5.4rem * var(--floor-height-scale, 1));
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.55));
 }
 .adventure-map-tile__rune {
@@ -7314,13 +7358,14 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile__crenel {
   display: none;
 }
+.adventure-map-tile--rampart .adventure-map-tile__crenel,
 .adventure-map-tile--summit .adventure-map-tile__crenel {
   display: block;
   position: absolute;
-  top: -0.9rem;
-  left: -0.2rem;
-  right: -0.2rem;
-  height: 0.95rem;
+  top: calc(-0.75rem * var(--floor-scale, 1));
+  left: calc(-0.15rem * var(--floor-scale, 1));
+  right: calc(-0.15rem * var(--floor-scale, 1));
+  height: calc(0.8rem * var(--floor-scale, 1));
   background:
     linear-gradient(90deg,
       var(--map-stone-mid) 0%, var(--map-stone-mid) 14%, transparent 14%, transparent 24%,
@@ -7379,28 +7424,103 @@ body.adventure-active:not(.adventure-stage-open) .panel-head--compact {
 .adventure-map-tile__side {
   position: absolute;
   bottom: 0;
-  width: 1.2rem;
-  height: 0.7rem;
+  width: calc(1.2rem * var(--floor-scale, 1));
+  height: calc(0.7rem * var(--floor-height-scale, 1));
   background: linear-gradient(180deg, var(--map-stone-mid) 0%, var(--map-stone-side) 100%);
   z-index: 1;
 }
 .adventure-map-tile__side--left {
-  left: -0.98rem;
+  left: calc(-0.98rem * var(--floor-scale, 1));
   transform: skewY(14deg);
   border-radius: 0 0 0 4px;
   box-shadow: inset -3px 0 6px rgba(0, 0, 0, 0.3);
 }
 .adventure-map-tile__side--right {
-  right: -0.98rem;
+  right: calc(-0.98rem * var(--floor-scale, 1));
   transform: skewY(-14deg);
   border-radius: 0 0 4px 0;
   box-shadow: inset 3px 0 6px rgba(0, 0, 0, 0.3);
+}
+.adventure-map-tile__windows {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 28%;
+  height: 1.1rem;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 22% 80% at 22% 50%, rgba(255, 220, 140, 0.55) 0%, rgba(255, 180, 80, 0.2) 45%, transparent 70%),
+    radial-gradient(ellipse 22% 80% at 78% 50%, rgba(255, 220, 140, 0.45) 0%, rgba(255, 180, 80, 0.15) 45%, transparent 70%);
+  opacity: 0.75;
+  filter: blur(0.2px);
+}
+.adventure-map-tile--locked .adventure-map-tile__windows {
+  opacity: 0.2;
+  background:
+    radial-gradient(ellipse 22% 80% at 22% 50%, rgba(40, 35, 50, 0.8) 0%, transparent 70%),
+    radial-gradient(ellipse 22% 80% at 78% 50%, rgba(40, 35, 50, 0.8) 0%, transparent 70%);
+}
+.adventure-map-tile__torch {
+  position: absolute;
+  top: 18%;
+  right: calc(-0.35rem * var(--floor-scale, 1));
+  width: 0.55rem;
+  height: 0.9rem;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(180deg, #6a5040 0%, #4a3828 100%);
+  border-radius: 2px 2px 1px 1px;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+}
+.adventure-map-tile__torch::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -0.55rem;
+  transform: translateX(-50%);
+  width: 0.7rem;
+  height: 0.75rem;
+  border-radius: 50% 50% 45% 45%;
+  background: radial-gradient(circle at 50% 70%, #ffb040 0%, #ff6020 55%, transparent 72%);
+  box-shadow: 0 0 10px rgba(255, 140, 40, 0.85), 0 0 18px rgba(255, 100, 20, 0.45);
+  animation: map-torch-flicker 1.8s ease-in-out infinite;
+}
+.adventure-map-tile__ivy {
+  position: absolute;
+  left: -0.15rem;
+  top: 8%;
+  width: 1.4rem;
+  height: 55%;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0.55;
+  background:
+    radial-gradient(ellipse 90% 35% at 30% 20%, var(--map-moss) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 30% at 60% 55%, var(--map-moss) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 25% at 25% 85%, var(--map-moss) 0%, transparent 70%);
+  filter: blur(0.3px);
+}
+@keyframes map-torch-flicker {
+  0%, 100% { opacity: 0.85; transform: translateX(-50%) scale(1); }
+  35% { opacity: 1; transform: translateX(-50%) scale(1.08); }
+  68% { opacity: 0.7; transform: translateX(-50%) scale(0.92); }
+}
+.adventure-map-tile--stage-1 .adventure-map-tile__face {
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--map-stone-light) 85%, var(--map-moss) 15%) 0%,
+      var(--map-stone-mid) 35%,
+      color-mix(in srgb, var(--map-stone-dark) 80%, var(--map-moss) 20%) 100%);
+}
+.adventure-map-tile--stage-10 .adventure-map-tile__stone {
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 20px var(--map-glow));
 }
 .adventure-map-tile__num {
   position: relative;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.85rem;
+  font-size: calc(1.85rem * var(--floor-scale, 1));
   color: #f0e8d8;
   text-shadow:
     0 1px 0 rgba(0, 0, 0, 0.5),
