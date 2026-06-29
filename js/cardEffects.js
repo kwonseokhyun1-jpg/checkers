@@ -323,8 +323,6 @@ const FRIENDLY_FRONT_ROW_OFFENSIVE_EFFECTS = new Set(["bomb", "shockwave"]);
 
 /** Friendly spells that only make sense on pieces able to move this turn. */
 const FRIENDLY_REQUIRES_MOVABLE = new Set([
-  "bomb",
-  "shockwave",
   "bishop_2",
   "bishop_3",
   "rook_2",
@@ -462,8 +460,6 @@ export function getValidTargets(state, color, card, picks) {
           if (!p || p.color !== color) continue;
           if (pieceCloakedByDarkness(state, r, c)) continue;
           if (FRIENDLY_REQUIRES_MOVABLE.has(card.effect) && !pieceHasLegalMoves(state.board, color, state, r, c)) continue;
-          if (card.effect === "bomb" && !armedBombCanKillEnemy(state, color, r, c)) continue;
-          if (card.effect === "shockwave" && !armedMoveEffectCanHitAdjacentEnemy(state, color, r, c)) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
           if (card.effect === "magnet" && !magnetHasPull(state, color, r, c)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
@@ -698,6 +694,12 @@ function getAiPickTargets(state, color, card) {
   const targets = getValidTargets(state, color, card, []);
   if (card.effect === "plague") {
     return targets.filter(([r, c]) => adjacentEnemiesTo(state, color, r, c).length > 0);
+  }
+  if (card.effect === "bomb") {
+    return targets.filter(([r, c]) => armedBombCanKillEnemy(state, color, r, c));
+  }
+  if (card.effect === "shockwave") {
+    return targets.filter(([r, c]) => armedMoveEffectCanHitAdjacentEnemy(state, color, r, c));
   }
   return targets;
 }

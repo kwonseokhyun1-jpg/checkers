@@ -388,8 +388,8 @@ const EFFECTS = {
     return ok();
   },
   landmine(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const sq=getSq(state,r,c); if(sq.mine||sq.hiddenMine) return fail("Square already trapped"); placeMine(sq, color, true); return ok(); },
-  bomb(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.bombArmed=true; return ok("Bomb armed — explodes on next move."); },
-  shockwave(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.shockwaveArmed=true; return ok("Shockwave armed — pulses on next move."); },
+  bomb(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.bombArmed=true; return ok("Bomb armed — explodes on next move."); },
+  shockwave(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shockwaveArmed=true; return ok("Shockwave armed — pulses on next move."); },
   detonate(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); removePiece(state.board,r,c); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const t=at(state,r+dr,c+dc); if(t&&t.color!==color) kill(state,r+dr,c+dc,color);} return ok(); },
   ricochet(state, color, picks) { state.meta.pendingRicochet[color]=true; return ok(); },
   duel(state, color, picks) {
