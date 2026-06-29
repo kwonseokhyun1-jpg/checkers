@@ -212,20 +212,33 @@ export function pickBestMove(board, color, state, moves = null) {
   return best.move;
 }
 
-function findBombArmedSquares(board, color) {
+function findArmedSquares(board, color, key) {
   const squares = [];
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
       const p = board[r][c];
-      if (p?.color === color && p.bombArmed) squares.push([r, c]);
+      if (p?.color === color && p[key]) squares.push([r, c]);
     }
   }
   return squares;
 }
 
+function movePulsesAdjacentEnemy(board, color, move) {
+  const enemy = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  const [tr, tc] = move.to;
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (!dr && !dc) continue;
+      const p = board[tr + dr]?.[tc + dc];
+      if (p?.color === enemy) return true;
+    }
+  }
+  return false;
+}
+
 /** After Bomb is armed, move that piece and prefer lines that kill at least one enemy. */
 function pickBombFollowUpMove(board, color, state) {
-  const armed = findBombArmedSquares(board, color);
+  const armed = findArmedSquares(board, color, "bombArmed");
   if (!armed.length) return null;
   const armedKeys = new Set(armed.map(([r, c]) => `${r},${c}`));
   const bombMoves = getAllMovesForColor(board, color, state).filter((m) =>
@@ -234,6 +247,19 @@ function pickBombFollowUpMove(board, color, state) {
   if (!bombMoves.length) return null;
   const lethal = bombMoves.filter((m) => enemyKillsFromMove(state, color, m) >= 1);
   return pickBestMove(board, color, state, lethal.length ? lethal : bombMoves);
+}
+
+/** After Shockwave is armed, move that piece and prefer lines that pulse adjacent enemies. */
+function pickShockwaveFollowUpMove(board, color, state) {
+  const armed = findArmedSquares(board, color, "shockwaveArmed");
+  if (!armed.length) return null;
+  const armedKeys = new Set(armed.map(([r, c]) => `${r},${c}`));
+  const shockMoves = getAllMovesForColor(board, color, state).filter((m) =>
+    armedKeys.has(`${m.from[0]},${m.from[1]}`)
+  );
+  if (!shockMoves.length) return null;
+  const effective = shockMoves.filter((m) => movePulsesAdjacentEnemy(board, color, m));
+  return pickBestMove(board, color, state, effective.length ? effective : shockMoves);
 }
 
 /**
@@ -316,9 +342,11 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     move = moves[Math.floor(Math.random() * moves.length)] || null;
     if (move) log.push({ type: "message", text: "Confusion — random move!" });
   } else {
-    const bombArmed = findBombArmedSquares(state.board, color);
-    if (bombArmed.length && !panicForced) {
-      move = pickBombFollowUpMove(state.board, color, state);
+    const bombArmed = findArmedSquares(state.board, color, "bombArmed");
+    const shockwaveArmed = findArmedSquares(state.board, color, "shockwaveArmed");
+    if (!panicForced) {
+      if (bombArmed.length) move = pickBombFollowUpMove(state.board, color, state);
+      else if (shockwaveArmed.length) move = pickShockwaveFollowUpMove(state.board, color, state);
     }
     if (!move) move = pickBestMove(state.board, color, state);
     if (panicForced && move) log.push({ type: "message", text: "Panic — forced backward step!" });

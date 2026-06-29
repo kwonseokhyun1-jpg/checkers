@@ -68,4 +68,25 @@ function makeState(board, hand, color = COLORS.BLACK) {
   assert.equal(spell, undefined, "AI should not cast bomb when blast cannot kill an enemy");
 }
 
+// AI casts shockwave then moves the armed piece to pulse an adjacent enemy.
+{
+  const board = emptyBoard();
+  board[3][2] = createPiece(COLORS.BLACK, 3, 2);
+  board[5][2] = createPiece(COLORS.BLACK, 5, 2);
+  board[3][4] = createPiece(COLORS.RED, 3, 4);
+  board[6][2] = createPiece(COLORS.RED, 6, 2);
+  const shockwave = getCardDef("shockwave");
+  const state = makeState(board, [shockwave]);
+
+  const log = runAiTurn(state, "You", COLORS.BLACK);
+  const spell = log.find((e) => e.type === "spell" && e.cardEffect === "shockwave");
+  assert.ok(spell, "AI should cast shockwave");
+  assert.deepEqual(spell.picks, [[5, 2]], "AI should arm the front-row piece that can pulse an enemy");
+
+  const moves = log.filter((e) => e.type === "move");
+  assert.ok(moves.length >= 1, "AI should move after arming shockwave");
+  assert.deepEqual(moves[0].from, [5, 2], "First move should be from the shockwave-armed piece");
+  assert.equal(state.board[6][2]?.paralyzedTurns, 1, "Shockwave follow-up should paralyze adjacent enemy");
+}
+
 console.log("test-ai-bomb-follow-up.mjs: all assertions passed");
