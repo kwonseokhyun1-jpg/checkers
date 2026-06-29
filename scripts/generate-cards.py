@@ -64,7 +64,7 @@ SPELLS = [
     ("blind", "Blind", "Opponent cannot play cards on their next turn.", "rare", 3, "instant", "blind"),
     ("confusion", "Confusion", "On opponent's next turn, their move is chosen randomly.", "epic", 2, "instant", "confusion"),
     ("silence", "Silence", "Suppress knight/retreat/bishop/rook movement on an enemy for 3 turns.", "uncommon", 4, "enemy", "silence_3"),
-    ("tangle", "Tangle", "Swap two adjacent enemies and freeze both for 1 turn.", "rare", 3, "e_e_adj", "tangle"),
+    ("tangle", "Tangle", "Swap two enemies and freeze both for 1 turn.", "rare", 3, "e_e", "tangle"),
     ("panic", "Panic", "Force an enemy man to step backward on its owner's next turn if possible.", "uncommon", 4, "enemy", "panic"),
     ("bribery", "Bribery", "Steal up to 15 gems from opponent.", "uncommon", 4, "instant", "bribery_15"),
     # === TRANSFORMATION ===
