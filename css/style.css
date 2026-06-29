@@ -8326,6 +8326,10 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
 .adventure-world-shield:nth-child(5) .adventure-world-shield__icon { background: linear-gradient(180deg, #34d399, #065f46); }
 .adventure-world-shield:nth-child(6) .adventure-world-shield__icon { background: linear-gradient(180deg, #e8a050, #3a2010); }
 .adventure-world-shield:nth-child(7) .adventure-world-shield__icon { background: linear-gradient(180deg, #b0a0ff, #201040); }
+.adventure-world-shield--tower .adventure-world-shield__icon::after {
+  content: "♜";
+  font-size: 0.85rem;
+}
 .adventure-world-shield--dungeon .adventure-world-shield__icon::after {
   content: "⚰";
   font-size: 0.85rem;
