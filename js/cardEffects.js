@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces, tryPromoteOnFarRow } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -374,6 +374,26 @@ function dashWouldKillAt(state, color, r, c) {
   if (pieceCloakedByDarkness(state, r, c)) return false;
   if (t.shieldTurns > 0 || isFortified(t)) return false;
   return true;
+}
+
+/** True when hostile swap lands the friendly piece where it can capture next. */
+function hostileSwapWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
+  const a = at(state, r1, c1);
+  const b = at(state, r2, c2);
+  if (!a || !b || a.color !== color || b.color === color) return false;
+  const board = state.board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+  const simA = board[r1][c1];
+  const simB = board[r2][c2];
+  board[r1][c1] = simB;
+  board[r2][c2] = simA;
+  simA.row = r2;
+  simA.col = c2;
+  simB.row = r1;
+  simB.col = c1;
+  tryPromoteOnFarRow(simA, r2);
+  return getAllMovesForColor(board, color, state).some(
+    (m) => m.from[0] === r2 && m.from[1] === c2 && m.captures?.length
+  );
 }
 
 function fEmptyFirstPickTargets(state, color, card) {
@@ -764,6 +784,26 @@ function* pickSequences(state, color, card, max = 24) {
         if (++n >= max) return;
       }
       for (const seq of moveSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      return;
+    }
+    if (card.effect === "hostile_swap") {
+      const captureSeqs = [];
+      const otherSeqs = [];
+      for (const a of t0) {
+        const t1 = getValidTargets(state, color, card, [a]);
+        for (const b of t1) {
+          if (hostileSwapWouldCaptureAfter(state, color, a, b)) captureSeqs.push([a, b]);
+          else otherSeqs.push([a, b]);
+        }
+      }
+      for (const seq of captureSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      for (const seq of otherSeqs) {
         yield seq;
         if (++n >= max) return;
       }
