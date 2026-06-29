@@ -1690,6 +1690,7 @@ function renderAdventureMap() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "adventure-world-shield";
+      if (w.mapType === "tower") btn.classList.add("adventure-world-shield--tower");
       if (w.mapType === "dungeon") btn.classList.add("adventure-world-shield--dungeon");
       btn.dataset.world = String(w.id);
       if (w.id === selectedAdventureWorldId) btn.classList.add("active");
