@@ -1606,7 +1606,7 @@ function renderAdventureMap() {
       if (w.id === selectedAdventureWorldId) btn.classList.add("active");
       if (!unlocked) btn.classList.add("adventure-world-shield--locked");
       btn.disabled = !unlocked;
-      btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">Chapter ${w.id}</span>`;
+      btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">Tower ${w.id}</span>`;
       btn.title = unlocked ? w.name : `Clear stage ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
       btn.addEventListener("click", () => {
         if (!isWorldUnlocked(progress, w.id)) return;
@@ -1786,7 +1786,7 @@ function openAdventurePrebattle(levelId) {
   const title = $("prebattle-title");
   const flavor = $("prebattle-flavor");
   const opponent = $("prebattle-opponent");
-  if (title) title.textContent = `Chapter ${level.worldId} · Stage ${level.stageInWorld}`;
+  if (title) title.textContent = `Tower ${level.worldId} · Stage ${level.stageInWorld}`;
   if (flavor) flavor.textContent = level.flavor || "";
   if (opponent) opponent.textContent = "Loading…";
 

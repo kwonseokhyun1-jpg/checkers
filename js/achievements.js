@@ -95,7 +95,7 @@ export const ACHIEVEMENTS = [
   {
     id: "explorer",
     title: "Explorer",
-    description: "Clear all 10 stages in Adventure chapter 5 (Legend's End).",
+    description: "Clear all 10 stages in Adventure tower 5 (Legend's End).",
     target: 10,
     track: "state",
   },
@@ -228,7 +228,7 @@ export function syncChampion(profile) {
   return [];
 }
 
-/** Sync explorer progress from Adventure chapter 5 clears; returns newly completed ids */
+/** Sync explorer progress from Adventure tower 5 clears; returns newly completed ids */
 export function syncExplorer(profile) {
   profile.achievements = normalizeAchievements(profile.achievements);
   const count = Math.min(EXPLORER_TARGET, countChapter5StagesCleared(profile));
@@ -256,7 +256,7 @@ export function progressLabel(profile, id) {
   }
   if (id === "explorer") {
     const cleared = Math.min(EXPLORER_TARGET, countChapter5StagesCleared(profile));
-    return `${cleared} / ${EXPLORER_TARGET} chapter 5 stages`;
+    return `${cleared} / ${EXPLORER_TARGET} tower 5 stages`;
   }
   const cur = Math.min(def.target, getAchievementProgress(profile, id));
   return `${cur} / ${def.target}`;
