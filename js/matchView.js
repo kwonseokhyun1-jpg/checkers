@@ -16,9 +16,8 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
           <div id="spell-cast-bar" class="spell-cast-bar hidden">
             <div class="spell-cast-copy">
               <p id="spell-cast-hint" class="spell-cast-hint">Select targets on the board</p>
-              <p id="spell-cast-desc" class="spell-cast-desc hidden" aria-hidden="true"></p>
+              <button type="button" id="btn-cancel-card" class="btn-text">Cancel spell</button>
             </div>
-            <button type="button" id="btn-cancel-card" class="btn-text">Cancel</button>
           </div>
           <div id="ai-spell-banner" class="ai-spell-banner hidden" role="status" aria-live="assertive">
             <div class="ai-spell-banner__inner">
