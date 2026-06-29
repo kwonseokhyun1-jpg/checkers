@@ -595,7 +595,7 @@ body.match-active {
   }
 }
 
-/* Adventure chapter tabs — keep all five labels visible on one row */
+/* Adventure tower tabs — keep all five labels visible on one row */
 @media (max-width: 480px) {
   .adventure-world-shields {
     gap: 0.2rem;
