@@ -5,8 +5,8 @@
 import { getSettings } from "./settings.js";
 
 const TRACKS = {
-  hub: "assets/audio/hub.mp3",
-  match: "assets/audio/match.mp3",
+  hub: "assets/audio/background.m4a",
+  match: "assets/audio/background.m4a",
 };
 
 const SFX = {
