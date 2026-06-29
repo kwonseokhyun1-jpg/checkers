@@ -2917,9 +2917,13 @@ ${starLine}`;
           qsEl.setAttribute("aria-label", "Your quicksand trap");
           const mark = document.createElement("span");
           mark.className = "quicksand-indicator__mark";
-          mark.textContent = "∿";
+          mark.textContent = "⊗";
           mark.setAttribute("aria-hidden", "true");
+          const label = document.createElement("span");
+          label.className = "quicksand-indicator__label";
+          label.textContent = "QS";
           qsEl.appendChild(mark);
+          qsEl.appendChild(label);
           sq.appendChild(qsEl);
         }
 
