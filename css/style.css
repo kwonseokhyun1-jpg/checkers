@@ -7008,6 +7008,59 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
   box-shadow: 0 0 24px rgba(220, 210, 190, 0.2);
   pointer-events: none;
 }
+.adventure-map-challenge-corner {
+  position: absolute;
+  top: 4%;
+  right: 3%;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  pointer-events: auto;
+}
+.adventure-map-challenge-corner .adventure-map-ominous__moon {
+  position: relative;
+  top: auto;
+  right: auto;
+  flex-shrink: 0;
+  width: 2.4rem;
+  height: 2.4rem;
+}
+.adventure-challenge-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.55rem 0.28rem 0.45rem;
+  border: 1px solid rgba(200, 170, 120, 0.45);
+  border-radius: 999px;
+  background: rgba(20, 16, 32, 0.82);
+  color: #c8b898;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.adventure-challenge-toggle:hover {
+  border-color: rgba(220, 190, 140, 0.7);
+  color: #e8dcc8;
+}
+.adventure-challenge-toggle--on {
+  border-color: rgba(255, 180, 80, 0.75);
+  background: rgba(48, 28, 12, 0.9);
+  color: #ffc870;
+  box-shadow: 0 0 14px rgba(255, 160, 60, 0.35);
+}
+.adventure-challenge-toggle__icon {
+  font-size: 0.85rem;
+  line-height: 1;
+}
+.adventure-challenge-toggle__label {
+  line-height: 1;
+}
 .adventure-map-ominous__moon::after {
   content: "";
   position: absolute;

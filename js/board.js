@@ -248,13 +248,14 @@ export function applyBurnToPiece(board, state, row, col, turns, byColor = null) 
   return true;
 }
 
-export function createInitialBoard() {
+export function createInitialBoard({ challengeMode = false } = {}) {
   nextPieceId = 1;
   const board = Array.from({ length: SIZE }, () => Array(SIZE).fill(null));
   for (let row = 0; row < SIZE; row++) {
     for (let col = 0; col < SIZE; col++) {
       if (!isDarkSquare(row, col)) continue;
       if (row < 3) board[row][col] = createPiece(COLORS.BLACK, row, col);
+      else if (challengeMode && row === 3) board[row][col] = createPiece(COLORS.BLACK, row, col);
       else if (row > 4) board[row][col] = createPiece(COLORS.RED, row, col);
     }
   }

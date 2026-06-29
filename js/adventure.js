@@ -17,6 +17,8 @@ export const ADVENTURE_FIRST_CLEAR_GEMS = 50;
 export const ADVENTURE_REPEAT_CLEAR_GEMS = 20;
 export const ENEMY_DECK_GENERATION = 5;
 export const BONUS_WORLDS_UNLOCK_AT_LEVEL = 30;
+/** Tower 5 floor 10 — unlocks Challenge mode toggle on the Legend's End map. */
+export const CHALLENGE_MODE_UNLOCK_LEVEL = 50;
 const EARLY_COPIES_PER_CARD = 3;
 
 export const WORLDS = [
@@ -335,11 +337,20 @@ export function repairAdventureProgress(progress) {
   if (!Number.isFinite(sw) || sw < 1 || sw > WORLDS.length) sw = 1;
   if (!isWorldUnlocked(repaired, sw)) sw = getWorldForLevel(hi).id;
   repaired.selectedWorld = sw;
+  repaired.challengeMode = !!repaired.challengeMode;
   return repaired;
 }
 
 export function defaultAdventureProgress() {
-  return { highestUnlocked: 1, cleared: {}, stars: {}, selectedWorld: 1 };
+  return { highestUnlocked: 1, cleared: {}, stars: {}, selectedWorld: 1, challengeMode: false };
+}
+
+export function isChallengeModeUnlocked(progress) {
+  return isLevelCleared(repairAdventureProgress(progress), CHALLENGE_MODE_UNLOCK_LEVEL);
+}
+
+export function isChallengeModeEnabled(progress) {
+  return !!repairAdventureProgress(progress).challengeMode;
 }
 
 export function starsForRemainingPieces(remaining) {
