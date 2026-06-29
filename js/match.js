@@ -50,7 +50,6 @@ import {
   mountSpellOverlay,
   removeSpellOverlay,
   revealCoinFlipResult,
-  animateCoinDropToSquare,
   formatCoinFlipResult,
 } from "./spellFx.js";
 import { pickCoinFlipVictim, pickRandomTeleportDestination } from "./cardEffectHandlers.js";
@@ -85,9 +84,9 @@ const BOUNTY_WANTED_SVG = `<svg viewBox="0 0 24 28" aria-hidden="true"><rect x="
 /** Extra time the top spell banner stays visible */
 const SPELL_BANNER_EXTRA_MS = 1000;
 
-const COIN_FLIP_SPIN_MS = 2700;
-const COIN_FLIP_REVEAL_MS = 450;
-const COIN_FLIP_VICTIM_MS = 1000;
+const COIN_FLIP_SPIN_MS = 800;
+const COIN_FLIP_REVEAL_MS = 180;
+const COIN_FLIP_VICTIM_MS = 650;
 
 /** Enemy turn replay pacing (ms) */
 const AI_PACE = {
@@ -1995,7 +1994,8 @@ ${starLine}`;
     this.setMessage(resultText);
     this.render();
     await delay(COIN_FLIP_REVEAL_MS);
-    await animateCoinDropToSquare(coinOverlay, board, victimRow, victimCol);
+    removeSpellOverlay(coinOverlay);
+    frame?.classList.remove("board-frame--fx-coin", "board-frame--spell-instant");
     const piece = this.state.board[victimRow]?.[victimCol];
     const snap = victimSnap || (piece ? cullVictimSnapshot(piece) : null);
     this.coinFlipVictimAnim = { row: victimRow, col: victimCol, victim: snap };
@@ -2010,13 +2010,11 @@ ${starLine}`;
     frame?.classList.add("board-frame--spell-impact");
     board?.classList.add("board--spell-shake");
     this.render();
-    await delay(COIN_FLIP_VICTIM_MS + 200);
+    await delay(COIN_FLIP_VICTIM_MS + 100);
     this.coinFlipVictimAnim = null;
     this.spellAnimation = null;
     board?.classList.remove("board--spell-shake");
     frame?.classList.remove("board-frame--spell-impact");
-    removeSpellOverlay(coinOverlay);
-    frame?.classList.remove("board-frame--fx-coin", "board-frame--spell-instant");
     if (banner) banner.className = "turn-banner";
   }
 
