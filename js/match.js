@@ -1564,11 +1564,11 @@ export class MatchSession {
 
   tryQuickMarchMove(s, color, landR, landC) {
     if (!s.meta.pendingDouble?.[color]) return false;
-    s.meta.pendingDouble[color] = false;
     const extras = getAllMovesForColor(s.board, color, s).filter(
       (m) => m.from[0] === landR && m.from[1] === landC && (m.type === "step" || m.type === "jump")
     );
     if (!extras.length) return false;
+    s.meta.pendingDouble[color] = false;
     s.phase = PHASE.MOVE;
     this.validMoves = extras;
     this.selectedSquare = [landR, landC];
@@ -1625,14 +1625,11 @@ export class MatchSession {
     const bountyMsg = flushPendingBountyMessage(s.meta, this.localColor);
     this.tutorialHooks?.onHumanMove?.(move);
 
-    const finish = () => {
-      const [landR, landC] = move.to;
-      if (move.captures?.length && this.continueMultiJump(landR, landC, bountyMsg)) return;
-      this.selectedSquare = null;
-      this.validMoves = [];
-      if (this.tryQuickMarchMove(s, this.localColor, landR, landC)) return;
-      if (this.tryBearBonusMove(s, this.localColor, landR, landC)) return;
-      if (this.tryPressExtraMove(s, this.localColor, landR, landC)) return;
+    const [landR, landC] = move.to;
+    const pendingBoardFx = s.boardFx;
+    s.boardFx = null;
+
+    const finishTurn = () => {
       if (bountyMsg) this.setMessage(bountyMsg);
       if (this.tutorialHooks?.beforeEndHumanTurn) {
         const verdict = this.tutorialHooks.beforeEndHumanTurn(this, move);
@@ -1651,12 +1648,33 @@ export class MatchSession {
       this.endHumanTurn();
     };
 
-    if (s.boardFx) {
-      this.playBoardFx(s, finish);
+    const tryFollowUpMoves = () => {
+      if (move.captures?.length && this.continueMultiJump(landR, landC, bountyMsg)) return true;
+      this.selectedSquare = null;
+      this.validMoves = [];
+      if (this.tryQuickMarchMove(s, this.localColor, landR, landC)) return true;
+      if (this.tryBearBonusMove(s, this.localColor, landR, landC)) return true;
+      if (this.tryPressExtraMove(s, this.localColor, landR, landC)) return true;
+      return false;
+    };
+
+    const playPendingBoardFx = (onDone) => {
+      if (!pendingBoardFx) {
+        onDone?.();
+        return;
+      }
+      s.boardFx = pendingBoardFx;
+      this.playBoardFx(s, onDone);
+    };
+
+    if (tryFollowUpMoves()) {
+      playPendingBoardFx(() => this.render());
       return;
     }
 
-    finish();
+    this.selectedSquare = null;
+    this.validMoves = [];
+    playPendingBoardFx(finishTurn);
   }
 
   tryPressExtraMove(s, color, landR, landC) {
@@ -2125,6 +2143,10 @@ ${starLine}`;
       return finishSpellTrack(res);
     }
 
+    if (card.effect === "quick_march") {
+      return finishSpellTrack(await this.applyCardWithTrapFx(card, picks));
+    }
+
     const s = this.state;
     if (card.effect === "trickster") {
       const plan = planTrickster(s);
@@ -2273,6 +2295,8 @@ ${starLine}`;
           moveMsg = "Last Stand armed (hidden) — select a piece to move.";
         } else if (card.effect === "deflect_1") {
           moveMsg = "Deflect armed (hidden) — select a piece to move.";
+        } else if (card.effect === "quick_march") {
+          moveMsg = "Bonus Step — select a piece to move.";
         } else if (res.message) {
           moveMsg = `${res.message} Select a piece to move.`;
         }
