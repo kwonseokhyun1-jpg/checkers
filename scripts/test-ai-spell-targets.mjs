@@ -5,6 +5,7 @@
 import assert from "node:assert/strict";
 import { COLORS, createPiece } from "../js/board.js";
 import { createMatchMeta } from "../js/gameMeta.js";
+import { applyCard } from "../js/cardEffectHandlers.js";
 import { canAiPlay, getValidTargets, tryAutoPlay } from "../js/cardEffects.js";
 import { getCardDef } from "../js/cardCatalog.js";
 
@@ -47,9 +48,14 @@ for (const id of ["bishops_mark", "rooks_mark"]) {
 
 const bombNoEnemy = getCardDef("bomb");
 assert.deepEqual(
-  getValidTargets(state, COLORS.BLACK, bombNoEnemy, []),
-  [],
-  "bomb should not target pieces with no landing square adjacent to an enemy"
+  getValidTargets(state, COLORS.BLACK, bombNoEnemy, []).sort((a, b) => a[0] - b[0] || a[1] - b[1]),
+  [
+    [5, 0],
+    [5, 2],
+    [5, 4],
+    [5, 6],
+  ],
+  "bomb should target any friendly piece for the player"
 );
 assert.equal(
   canAiPlay(state, COLORS.BLACK, bombNoEnemy),
@@ -59,9 +65,14 @@ assert.equal(
 
 const shockwaveNoEnemy = getCardDef("shockwave");
 assert.deepEqual(
-  getValidTargets(state, COLORS.BLACK, shockwaveNoEnemy, []),
-  [],
-  "shockwave should not target pieces with no landing square adjacent to an enemy"
+  getValidTargets(state, COLORS.BLACK, shockwaveNoEnemy, []).sort((a, b) => a[0] - b[0] || a[1] - b[1]),
+  [
+    [5, 0],
+    [5, 2],
+    [5, 4],
+    [5, 6],
+  ],
+  "shockwave should target any friendly piece for the player"
 );
 assert.equal(
   canAiPlay(state, COLORS.BLACK, shockwaveNoEnemy),
@@ -77,7 +88,7 @@ const shockwave = getCardDef("shockwave");
 assert.deepEqual(
   getValidTargets(shockwaveState, COLORS.BLACK, shockwave, []),
   [[3, 2]],
-  "shockwave should target movable piece that can land adjacent to an enemy"
+  "shockwave should target any friendly piece for the player"
 );
 assert.equal(canAiPlay(shockwaveState, COLORS.BLACK, shockwave), true, "shockwave should be AI-playable");
 const shockwaveRes = tryAutoPlay(structuredClone(shockwaveState), COLORS.BLACK, shockwave);
@@ -92,7 +103,7 @@ const bomb = getCardDef("bomb");
 assert.deepEqual(
   getValidTargets(bombState, COLORS.BLACK, bomb, []),
   [[3, 2]],
-  "bomb should target movable piece that can land adjacent to an enemy"
+  "bomb should target any friendly piece for the player"
 );
 assert.equal(canAiPlay(bombState, COLORS.BLACK, bomb), true, "bomb should be AI-playable");
 const bombRes = tryAutoPlay(structuredClone(bombState), COLORS.BLACK, bomb);
@@ -146,5 +157,19 @@ assert.equal(canAiPlay(plagueState, COLORS.BLACK, plague), true, "plague should 
 const plagueRes = tryAutoPlay(structuredClone(plagueState), COLORS.BLACK, plague);
 assert.equal(plagueRes.success, true, "AI plague cast should succeed");
 assert.deepEqual(plagueRes.picks, [[3, 2]], "AI plague should infect the piece adjacent to an enemy");
+
+const frozenBoard = emptyBoard();
+frozenBoard[5][2] = createPiece(COLORS.BLACK, 5, 2);
+frozenBoard[5][4] = createPiece(COLORS.BLACK, 5, 4);
+frozenBoard[5][4].frozenTurns = 3;
+for (const id of ["bomb", "shockwave"]) {
+  const card = getCardDef(id);
+  const frozenState = makeState(frozenBoard);
+  const targets = getValidTargets(frozenState, COLORS.BLACK, card, []);
+  assert.deepEqual(targets.sort((a, b) => a[1] - b[1]), [[5, 2], [5, 4]], `${id} should target immobile friendly pieces for the player`);
+  const res = applyCard(frozenState, COLORS.BLACK, card, [[5, 4]]);
+  assert.equal(res.success, true, `${id} should arm an immobile friendly piece`);
+  assert.equal(frozenState.board[5][4][id === "bomb" ? "bombArmed" : "shockwaveArmed"], true);
+}
 
 console.log("test-ai-spell-targets.mjs: all assertions passed");
