@@ -1,6 +1,6 @@
 /**
  * Adventure — 5 towers + 2 dungeons × 10 floors (70 total).
- * Towers 4–5 unlock after floor 30; dungeons unlock after floor 50.
+ * Towers 4–5 unlock after floor 30; dungeons unlock after Tower 5 (all 10 floors).
  */
 import {
   getPlayableCards,
@@ -75,7 +75,7 @@ export const WORLDS = [
   {
     id: 6,
     name: "Crypt of Echoes",
-    tagline: "Unlocked after floor 50 — torchlit halls where rare magic lingers.",
+    tagline: "Unlocked after Tower 5 — torchlit halls where rare magic lingers.",
     theme: "crypt",
     mapType: "dungeon",
     levelStart: 51,
@@ -174,9 +174,14 @@ export function areBonusWorldsUnlocked(progress) {
   return isLevelCleared(progress, BONUS_WORLDS_UNLOCK_AT_LEVEL);
 }
 
+export function areDungeonWorldsUnlocked(progress) {
+  return countClearedLevelsInWorld(progress, 5) >= LEVELS_PER_WORLD;
+}
+
 export function isWorldUnlocked(progress, worldId) {
   const world = WORLDS.find((w) => w.id === worldId);
   if (!world) return false;
+  if (world.mapType === "dungeon") return areDungeonWorldsUnlocked(progress);
   if (world.requiresClearLevel != null) return isLevelCleared(progress, world.requiresClearLevel);
   return true;
 }
