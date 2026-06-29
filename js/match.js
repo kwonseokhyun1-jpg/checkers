@@ -2774,7 +2774,6 @@ ${starLine}`;
     const canPlay = this.canPlaySpells();
     const castingId = this.cardPlay?.card?.instanceId;
     handEl.classList.toggle("spell-hand--locked", !canPlay);
-    handEl.classList.toggle("spell-hand--crowded", n >= 5);
     this.bindHandScroll();
 
     for (const card of s.hands[this.localColor]) {

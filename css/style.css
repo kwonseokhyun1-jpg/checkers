@@ -1615,20 +1615,6 @@ body {
   padding: 0.25rem;
   scroll-snap-align: start;
 }
-.hand.spell-hand.spell-hand--crowded {
-  gap: 0.35rem;
-  scroll-snap-type: x proximity;
-}
-.hand.spell-hand.spell-hand--crowded .spell-card {
-  flex-basis: 4.85rem;
-  width: 4.85rem;
-  max-width: 4.85rem;
-}
-.hand.spell-hand.spell-hand--crowded .spell-card__art {
-  aspect-ratio: 7 / 6;
-  height: auto;
-}
-
 .hand.spell-hand .spell-card__title-frame {
   padding: 0.15rem 0.2rem;
 }
