@@ -173,7 +173,7 @@ function uiPickCombos(state, card, limit = 64) {
     for (const p of t0.slice(0, limit)) combos.push([p]);
     return combos;
   }
-  if (["f_f", "e_e_adj", "f_f_adj"].includes(card.mode)) {
+  if (["f_f", "e_e", "e_e_adj", "f_f_adj"].includes(card.mode)) {
     let n = 0;
     for (const a of t0) for (const b of getValidTargets(state, COLOR, card, [a])) { combos.push([a, b]); if (++n >= limit) return combos; }
     return combos;
