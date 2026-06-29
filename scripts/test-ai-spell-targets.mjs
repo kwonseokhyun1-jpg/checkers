@@ -34,7 +34,7 @@ board[5][0].hibernationTurns = 2;
 
 const state = makeState(board);
 
-for (const id of ["bomb", "bishops_mark", "rooks_mark"]) {
+for (const id of ["bishops_mark", "rooks_mark"]) {
   const card = getCardDef(id);
   const targets = getValidTargets(state, COLORS.BLACK, card, []);
   assert.deepEqual(
@@ -44,6 +44,18 @@ for (const id of ["bomb", "bishops_mark", "rooks_mark"]) {
   );
   assert.equal(canAiPlay(state, COLORS.BLACK, card), true, `${id} should be AI-playable`);
 }
+
+const bombNoEnemy = getCardDef("bomb");
+assert.deepEqual(
+  getValidTargets(state, COLORS.BLACK, bombNoEnemy, []),
+  [],
+  "bomb should not target pieces with no landing square adjacent to an enemy"
+);
+assert.equal(
+  canAiPlay(state, COLORS.BLACK, bombNoEnemy),
+  false,
+  "bomb should not be AI-playable when no move lands next to an enemy"
+);
 
 const shockwaveNoEnemy = getCardDef("shockwave");
 assert.deepEqual(
@@ -72,11 +84,36 @@ const shockwaveRes = tryAutoPlay(structuredClone(shockwaveState), COLORS.BLACK, 
 assert.equal(shockwaveRes.success, true, "AI shockwave cast should succeed");
 assert.deepEqual(shockwaveRes.picks, [[3, 2]], "AI shockwave should arm the piece that can pulse an enemy");
 
+const bombBoard = emptyBoard();
+bombBoard[3][2] = createPiece(COLORS.BLACK, 3, 2);
+bombBoard[3][4] = createPiece(COLORS.RED, 3, 4);
+const bombState = makeState(bombBoard);
 const bomb = getCardDef("bomb");
-const work = structuredClone(state);
-const res = tryAutoPlay(work, COLORS.BLACK, bomb);
-assert.equal(res.success, true, "AI bomb cast should succeed");
-assert.deepEqual(res.picks, [[5, 2]], "AI bomb should arm the movable piece");
+assert.deepEqual(
+  getValidTargets(bombState, COLORS.BLACK, bomb, []),
+  [[3, 2]],
+  "bomb should target movable piece that can land adjacent to an enemy"
+);
+assert.equal(canAiPlay(bombState, COLORS.BLACK, bomb), true, "bomb should be AI-playable");
+const bombRes = tryAutoPlay(structuredClone(bombState), COLORS.BLACK, bomb);
+assert.equal(bombRes.success, true, "AI bomb cast should succeed");
+assert.deepEqual(bombRes.picks, [[3, 2]], "AI bomb should arm the piece that can explode an enemy");
+
+const frontRowBoard = emptyBoard();
+frontRowBoard[3][2] = createPiece(COLORS.BLACK, 3, 2);
+frontRowBoard[5][2] = createPiece(COLORS.BLACK, 5, 2);
+frontRowBoard[3][4] = createPiece(COLORS.RED, 3, 4);
+frontRowBoard[6][2] = createPiece(COLORS.RED, 6, 2);
+const frontRowState = makeState(frontRowBoard);
+for (const id of ["bomb", "shockwave"]) {
+  const card = getCardDef(id);
+  const targets = getValidTargets(frontRowState, COLORS.BLACK, card, []);
+  assert.ok(targets.some(([r]) => r === 5), `${id} should include front-row target`);
+  assert.ok(targets.some(([r]) => r === 3), `${id} should include back-row target when both can pulse`);
+  const auto = tryAutoPlay(structuredClone(frontRowState), COLORS.BLACK, card);
+  assert.equal(auto.success, true, `AI ${id} cast should succeed`);
+  assert.deepEqual(auto.picks, [[5, 2]], `AI ${id} should prefer the front-row piece`);
+}
 
 const plagueNoEnemy = getCardDef("plague");
 assert.deepEqual(
