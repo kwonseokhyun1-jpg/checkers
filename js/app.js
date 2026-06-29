@@ -25,10 +25,10 @@ import {
   getLevelsForWorld,
   WORLDS,
   getWorldsForMap,
+  areBonusWorldsUnlocked,
   defaultAdventureProgress,
   BONUS_WORLDS_UNLOCK_AT_LEVEL,
   isWorldUnlocked,
-  getWorldTabLabel,
   getLevel,
   getOrCreateLevelEnemyDeck,
   getEnemyDeckPreview,
@@ -1437,94 +1437,6 @@ function showAdventureMap() {
 }
 
 
-function getDungeonSceneryMarkup(theme) {
-  const p = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.crypt;
-  const uid = `dungeon-${theme}`;
-  const isAbyss = theme === "abyss";
-  const crystalColor = isAbyss ? "#9080ff" : "#d4a574";
-  const dripColor = isAbyss ? "#484878" : "#5a5048";
-  return `<svg class="adventure-map-scenery-svg adventure-map-scenery-svg--dungeon" viewBox="0 0 100 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-    <defs>
-      <linearGradient id="${uid}-void" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${p.sky}"/>
-        <stop offset="45%" stop-color="${p.skyGlow}" stop-opacity="0.6"/>
-        <stop offset="100%" stop-color="#040408"/>
-      </linearGradient>
-      <radialGradient id="${uid}-torch-glow" cx="50%" cy="8%" r="55%">
-        <stop offset="0%" stop-color="${p.accent}" stop-opacity="0.35"/>
-        <stop offset="100%" stop-color="${p.accent}" stop-opacity="0"/>
-      </radialGradient>
-      <radialGradient id="${uid}-depth-glow" cx="50%" cy="95%" r="45%">
-        <stop offset="0%" stop-color="${crystalColor}" stop-opacity="0.25"/>
-        <stop offset="100%" stop-color="${crystalColor}" stop-opacity="0"/>
-      </radialGradient>
-      <filter id="${uid}-soft" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur stdDeviation="1.4"/>
-      </filter>
-      <filter id="${uid}-glow-filter" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur stdDeviation="2" result="blur"/>
-        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-      </filter>
-    </defs>
-    <rect width="100" height="120" fill="url(#${uid}-void)"/>
-    <rect width="100" height="120" fill="url(#${uid}-torch-glow)"/>
-    <rect width="100" height="120" fill="url(#${uid}-depth-glow)"/>
-    <!-- cave ceiling -->
-    <path fill="${p.rockDark}" opacity="0.85" d="M0 0 L100 0 L100 28 C88 22 76 30 62 24 C48 18 38 26 24 20 C12 15 4 22 0 18 Z"/>
-    <path fill="${p.rock}" opacity="0.55" d="M0 12 C14 8 28 16 42 10 C56 4 72 14 86 8 C94 5 98 10 100 8 L100 36 C86 30 72 38 58 32 C44 26 28 34 14 28 C8 25 3 30 0 26 Z"/>
-    <!-- stalactites -->
-    <g fill="${dripColor}" opacity="0.7">
-      <path d="M12 18 L14 18 L13 32 Z"/>
-      <path d="M28 14 L30.5 14 L29 38 Z"/>
-      <path d="M46 20 L48 20 L47 30 Z"/>
-      <path d="M68 12 L71 12 L69.5 40 Z"/>
-      <path d="M84 16 L86 16 L85 28 Z"/>
-      <path d="M56 10 L58 10 L57 24 Z"/>
-    </g>
-    <!-- hanging chains -->
-    <g stroke="${p.rock}" stroke-width="0.5" fill="none" opacity="0.45">
-      <path d="M20 22 L20 48 M19.5 28 L20.5 28 M19.5 34 L20.5 34 M19.5 40 L20.5 40"/>
-      <path d="M78 20 L78 46 M77.5 26 L78.5 26 M77.5 32 L78.5 32 M77.5 38 L78.5 38"/>
-    </g>
-    <!-- wall sconces -->
-    <g opacity="0.9">
-      <rect x="8" y="42" width="1.5" height="4" fill="${p.rockDark}"/>
-      <ellipse cx="8.75" cy="41" rx="2" ry="2.5" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.8"/>
-      <ellipse cx="8.75" cy="41" rx="0.8" ry="1" fill="#fff4d0" opacity="0.6"/>
-      <rect x="90.5" y="42" width="1.5" height="4" fill="${p.rockDark}"/>
-      <ellipse cx="91.25" cy="41" rx="2" ry="2.5" fill="${p.accent}" filter="url(#${uid}-glow-filter)" opacity="0.8"/>
-      <ellipse cx="91.25" cy="41" rx="0.8" ry="1" fill="#fff4d0" opacity="0.6"/>
-    </g>
-    <!-- crystal veins (abyss) or bone piles (crypt) -->
-    ${isAbyss ? `
-    <g opacity="0.55" fill="${crystalColor}" filter="url(#${uid}-glow-filter)">
-      <polygon points="6,72 10,68 14,74 8,78"/>
-      <polygon points="86,76 92,70 96,78 88,82"/>
-      <polygon points="44,88 48,84 52,90 46,94"/>
-    </g>` : `
-    <g opacity="0.35" fill="#c8b8a8">
-      <ellipse cx="10" cy="78" rx="5" ry="2"/>
-      <ellipse cx="88" cy="82" rx="6" ry="2.5"/>
-      <circle cx="14" cy="76" r="1.2"/><circle cx="12" cy="79" r="0.8"/><circle cx="16" cy="80" r="1"/>
-    </g>`}
-    <!-- cave walls -->
-    <path fill="${p.rockDark}" opacity="0.9" d="M0 32 L0 120 L18 120 L16 40 C10 36 4 38 0 32 Z"/>
-    <path fill="${p.rockDark}" opacity="0.9" d="M100 32 L100 120 L82 120 L84 40 C90 36 96 38 100 32 Z"/>
-    <path fill="${p.rock}" opacity="0.4" d="M0 50 L14 48 L14 120 L0 120 Z"/>
-    <path fill="${p.rock}" opacity="0.4" d="M100 50 L86 48 L86 120 L100 120 Z"/>
-    <!-- floor rubble -->
-    <ellipse cx="50" cy="108" rx="38" ry="6" fill="rgba(0,0,0,0.45)"/>
-    <path fill="${p.rock}" opacity="0.5" d="M8 104 L92 104 L90 112 L10 112 Z"/>
-    <!-- mist wisps -->
-    <ellipse cx="35" cy="96" rx="18" ry="4" fill="${p.mist}" opacity="0.35" filter="url(#${uid}-soft)"/>
-    <ellipse cx="68" cy="100" rx="20" ry="5" fill="${p.mist}" opacity="0.28" filter="url(#${uid}-soft)"/>
-    <!-- floating embers -->
-    <circle cx="32" cy="58" r="0.4" fill="${p.accent}" opacity="0.5" filter="url(#${uid}-glow-filter)"/>
-    <circle cx="66" cy="52" r="0.35" fill="${p.flag}" opacity="0.4" filter="url(#${uid}-glow-filter)"/>
-    <circle cx="50" cy="64" r="0.3" fill="${p.accent}" opacity="0.35" filter="url(#${uid}-glow-filter)"/>
-  </svg>`;
-}
-
 function getMapSceneryMarkup(theme) {
   const p = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
   const uid = `map-${theme}`;
@@ -1690,19 +1602,12 @@ function renderAdventureMap() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "adventure-world-shield";
-      if (w.mapType === "tower") btn.classList.add("adventure-world-shield--tower");
-      if (w.mapType === "dungeon") btn.classList.add("adventure-world-shield--dungeon");
       btn.dataset.world = String(w.id);
       if (w.id === selectedAdventureWorldId) btn.classList.add("active");
       if (!unlocked) btn.classList.add("adventure-world-shield--locked");
       btn.disabled = !unlocked;
-      btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">${getWorldTabLabel(w)}</span>`;
-      const unlockFloor = w.requiresClearLevel ?? BONUS_WORLDS_UNLOCK_AT_LEVEL;
-      btn.title = unlocked
-        ? w.name
-        : w.mapType === "dungeon"
-          ? "Clear all floors in Tower 5 to unlock"
-          : `Clear floor ${unlockFloor} to unlock`;
+      btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">Tower ${w.id}</span>`;
+      btn.title = unlocked ? w.name : `Clear floor ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
       btn.addEventListener("click", () => {
         if (!isWorldUnlocked(progress, w.id)) return;
         selectedAdventureWorldId = w.id;
@@ -1716,42 +1621,15 @@ function renderAdventureMap() {
       selectedAdventureWorldId = worlds[0]?.id || 1;
       progress.selectedWorld = selectedAdventureWorldId;
     }
-    const activeTab = tabs.querySelector(".adventure-world-shield.active");
-    if (activeTab) {
-      requestAnimationFrame(() => {
-        activeTab.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-      });
-    }
   }
 
   const worldMeta = WORLDS.find((w) => w.id === selectedAdventureWorldId);
-  if (worldMeta?.mapType === "dungeon") {
-    renderDungeonMap(worldMeta, progress);
-    return;
-  }
-  renderTowerMap(worldMeta, progress);
-}
 
-function renderTowerMap(worldMeta, progress) {
-  renderVerticalWorldMap(worldMeta, progress, { direction: "ascent" });
-}
-
-function renderDungeonMap(worldMeta, progress) {
-  renderVerticalWorldMap(worldMeta, progress, { direction: "descent" });
-}
-
-function renderVerticalWorldMap(worldMeta, progress, { direction }) {
-  const isDescent = direction === "descent";
   const map = $("adventure-map");
-  const scene = map?.closest(".adventure-map-scene");
-  scene?.classList.toggle("adventure-map-scene--descent", isDescent);
-  scene?.classList.toggle("adventure-map-scene--dungeon", isDescent);
   if (!map) return;
-
-  const defaultTheme = isDescent ? "crypt" : "verdant";
-  const theme = worldMeta?.theme || defaultTheme;
-  const palette = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES[defaultTheme];
-  map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--iso${isDescent ? " adventure-map-canvas--descent" : ""}`;
+  const theme = worldMeta?.theme || "verdant";
+  const palette = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
+  map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--iso`;
   map.style.setProperty("--map-accent", palette.accent);
   map.style.setProperty("--map-glow", palette.glow);
   map.style.setProperty("--map-mist", palette.mist);
@@ -1759,28 +1637,14 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
   map.style.setProperty("--map-stone-mid", palette.stoneMid);
   map.style.setProperty("--map-stone-dark", palette.stoneDark);
   map.style.setProperty("--map-stone-side", palette.stoneSide);
-  map.style.setProperty("--map-moss", palette.moss || palette.grass || "#4a7840");
+  map.style.setProperty("--map-moss", palette.moss);
   map.setAttribute("role", "group");
-  map.setAttribute(
-    "aria-label",
-    isDescent ? `${worldMeta.name} dungeon map` : "Adventure floor map",
-  );
-
-  const towerClass = isDescent
-    ? "adventure-map-tower adventure-map-tower--descent adventure-map-tower--dungeon"
-    : "adventure-map-tower";
-  const tilesClass = isDescent
-    ? "adventure-map-tiles adventure-map-tiles--descent adventure-map-tiles--dungeon"
-    : "adventure-map-tiles";
-  const ominousClass = isDescent
-    ? "adventure-map-ominous adventure-map-ominous--descent adventure-map-ominous--dungeon"
-    : "adventure-map-ominous";
-  const sceneryMarkup = isDescent ? getDungeonSceneryMarkup(theme) : getMapSceneryMarkup(theme);
+  map.setAttribute("aria-label", "Adventure floor map");
   map.innerHTML = `
     <div class="adventure-map-canvas__bg" aria-hidden="true">
-      <div class="adventure-map-scenery adventure-map-scenery--${theme}${isDescent ? " adventure-map-scenery--dungeon" : ""}" aria-hidden="true">${sceneryMarkup}</div>
+      <div class="adventure-map-scenery adventure-map-scenery--${theme}" aria-hidden="true">${getMapSceneryMarkup(theme)}</div>
       <div class="adventure-map-atmosphere" aria-hidden="true"></div>
-      <div class="${ominousClass}" aria-hidden="true">
+      <div class="adventure-map-ominous" aria-hidden="true">
         <div class="adventure-map-ominous__sky"></div>
         <div class="adventure-map-ominous__moon"></div>
         <div class="adventure-map-ominous__clouds"></div>
@@ -1789,12 +1653,12 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
         <div class="adventure-map-ominous__fog adventure-map-ominous__fog--slow"></div>
       </div>
     </div>
-    <div class="${towerClass}">
+    <div class="adventure-map-tower">
       <div class="adventure-map-tower__base" aria-hidden="true"></div>
       <div class="adventure-map-tower__shaft" aria-hidden="true"></div>
       <div class="adventure-map-tower__buttress adventure-map-tower__buttress--left" aria-hidden="true"></div>
       <div class="adventure-map-tower__buttress adventure-map-tower__buttress--right" aria-hidden="true"></div>
-      <div class="${tilesClass}"></div>
+      <div class="adventure-map-tiles"></div>
       <div class="adventure-map-tower__mist" aria-hidden="true"></div>
       <div class="adventure-map-tower__beacon" aria-hidden="true"></div>
       <div class="adventure-map-tower__haze" aria-hidden="true"></div>
@@ -1805,7 +1669,7 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
   const levels = getLevelsForWorld(selectedAdventureWorldId);
   const nextId = getNextPlayableLevelId(progress);
 
-  tower?.style.setProperty("--tower-top-ratio", isDescent ? "1.1" : "0.72");
+  tower?.style.setProperty("--tower-top-ratio", "0.72");
 
   levels.forEach((level, i) => {
     const unlocked = isLevelUnlocked(progress, level.id);
@@ -1813,14 +1677,13 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
     const isNext = level.id === nextId && unlocked;
     const stars = getLevelStars(progress, level.id);
     const floorT = (level.floorInWorld - 1) / 9;
-    const floorScale = isDescent ? 0.72 + floorT * 0.38 : 1 - floorT * 0.26;
-    const floorHeightScale = isDescent ? 0.9 + floorT * 0.16 : 1 - floorT * 0.1;
-    const spiralMul = isDescent ? 0.38 : 0.32;
-    const spiralOffset = Math.sin((level.floorInWorld - 1) * 0.62) * spiralMul * floorScale;
+    const floorScale = 1 - floorT * 0.26;
+    const floorHeightScale = 1 - floorT * 0.1;
+    const spiralOffset = Math.sin((level.floorInWorld - 1) * 0.62) * 0.32 * floorScale;
 
     const tile = document.createElement("button");
     tile.type = "button";
-    tile.className = isDescent ? "adventure-map-tile adventure-map-tile--dungeon" : "adventure-map-tile";
+    tile.className = "adventure-map-tile";
     tile.classList.add(`adventure-map-tile--floor-${level.floorInWorld}`);
     tile.style.zIndex = String(i + 10);
     tile.style.setProperty("--floor-scale", floorScale.toFixed(4));
@@ -1830,44 +1693,26 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
     if (!unlocked) tile.classList.add("adventure-map-tile--locked");
     if (cleared) tile.classList.add("adventure-map-tile--cleared");
     if (isNext) tile.classList.add("adventure-map-tile--next");
-    if (!isDescent && level.floorInWorld >= 7 && level.floorInWorld < 10) tile.classList.add("adventure-map-tile--rampart");
-    if (!isDescent && level.floorInWorld === 10) tile.classList.add("adventure-map-tile--summit");
-    if (isDescent && level.floorInWorld >= 7 && level.floorInWorld < 10) tile.classList.add("adventure-map-tile--deep");
-    if (isDescent && level.floorInWorld === 10) tile.classList.add("adventure-map-tile--core");
+    if (level.floorInWorld >= 7 && level.floorInWorld < 10) tile.classList.add("adventure-map-tile--rampart");
+    if (level.floorInWorld === 10) tile.classList.add("adventure-map-tile--summit");
     tile.setAttribute("aria-disabled", unlocked ? "false" : "true");
     if (!unlocked) tile.title = `Clear global floor ${level.id - 1} to unlock`;
-    const floorLabel = isDescent ? "Depth" : "Floor";
-    tile.setAttribute("aria-label", `${floorLabel} ${level.floorInWorld}: ${level.opponent}, ${level.flavor}`);
+    tile.setAttribute("aria-label", `Floor ${level.floorInWorld}: ${level.opponent}, ${level.flavor}`);
     const starLine = cleared ? `<span class="adventure-map-tile__stars">${formatStars(stars)}</span>` : "";
     const pawn = isNext ? `<span class="adventure-map-tile__pawn">${getMapPawnMarkup(palette.accent)}</span>` : "";
     const banner = level.floorInWorld === 10 ? `<span class="adventure-map-tile__banner">${getMapBannerMarkup(theme)}</span>` : "";
-    const windows = !isDescent && level.floorInWorld > 1 && level.floorInWorld < 10
+    const windows = level.floorInWorld > 1 && level.floorInWorld < 10
       ? '<span class="adventure-map-tile__windows" aria-hidden="true"></span>'
       : "";
-    const torch = cleared
-      ? `<span class="adventure-map-tile__torch${isDescent ? " adventure-map-tile__torch--soul" : ""}" aria-hidden="true"></span>`
-      : "";
-    const ivy = !isDescent && level.floorInWorld <= 3
-      ? '<span class="adventure-map-tile__ivy" aria-hidden="true"></span>'
-      : "";
-    const cobweb = isDescent && level.floorInWorld <= 3
-      ? '<span class="adventure-map-tile__cobweb" aria-hidden="true"></span>'
-      : "";
-    const arch = isDescent && level.floorInWorld > 1 && level.floorInWorld < 10
-      ? '<span class="adventure-map-tile__arch" aria-hidden="true"></span>'
-      : "";
-    const crenel = isDescent
-      ? '<span class="adventure-map-tile__stalactite" aria-hidden="true"></span>'
-      : '<span class="adventure-map-tile__crenel"></span>';
+    const torch = cleared ? '<span class="adventure-map-tile__torch" aria-hidden="true"></span>' : "";
+    const ivy = level.floorInWorld <= 3 ? '<span class="adventure-map-tile__ivy" aria-hidden="true"></span>' : "";
     tile.innerHTML = `
       ${pawn}
       ${banner}
       <span class="adventure-map-tile__stone" aria-hidden="true">
         <span class="adventure-map-tile__rune"></span>
-        ${crenel}
+        <span class="adventure-map-tile__crenel"></span>
         ${ivy}
-        ${cobweb}
-        ${arch}
         ${windows}
         ${torch}
         <span class="adventure-map-tile__face">
@@ -1893,39 +1738,38 @@ function renderVerticalWorldMap(worldMeta, progress, { direction }) {
     tilesLayer?.appendChild(tile);
   });
 
-  renderAdventureFloorList(levels, progress, nextId);
+
+  const floorList = $("adventure-floor-list");
+  if (floorList) {
+    floorList.classList.add("adventure-floor-list--sr");
+    floorList.innerHTML = "";
+    for (const level of levels) {
+      const unlocked = isLevelUnlocked(progress, level.id);
+      const cleared = isLevelCleared(progress, level.id);
+      const isNext = level.id === nextId && unlocked;
+      const stars = getLevelStars(progress, level.id);
+      const row = document.createElement("button");
+      row.type = "button";
+      row.className = "adventure-floor-row";
+      if (!unlocked) row.disabled = true;
+      if (cleared) row.classList.add("adventure-floor-row--cleared");
+      if (isNext) row.classList.add("adventure-floor-row--next");
+      row.innerHTML = `
+        <span class="adventure-floor-row__main">
+          <span class="adventure-floor-row__title">${level.floorInWorld}. ${level.opponent}</span>
+          <span class="adventure-floor-row__flavor">${level.flavor}</span>
+        </span>
+        ${isNext ? '<span class="adventure-floor-row__badge">Next</span>' : ""}
+        ${stars > 0 ? `<span class="adventure-floor-row__stars">${formatStars(stars)}</span>` : ""}`;
+      row.addEventListener("click", () => openAdventureFloor(level.id));
+      floorList.appendChild(row);
+    }
+  }
 
   const nextTile = map.querySelector(".adventure-map-tile--next");
   if (nextTile) requestAnimationFrame(() => nextTile.scrollIntoView({ behavior: "smooth", block: "center" }));
-}
 
-function renderAdventureFloorList(levels, progress, nextId) {
-  const floorList = $("adventure-floor-list");
-  if (!floorList) return;
-  floorList.classList.add("adventure-floor-list--sr");
-  floorList.innerHTML = "";
-  for (const level of levels) {
-    const unlocked = isLevelUnlocked(progress, level.id);
-    const cleared = isLevelCleared(progress, level.id);
-    const isNext = level.id === nextId && unlocked;
-    const stars = getLevelStars(progress, level.id);
-    const row = document.createElement("button");
-    row.type = "button";
-    row.className = "adventure-floor-row";
-    if (!unlocked) row.disabled = true;
-    if (cleared) row.classList.add("adventure-floor-row--cleared");
-    if (isNext) row.classList.add("adventure-floor-row--next");
-    row.innerHTML = `
-      <span class="adventure-floor-row__main">
-        <span class="adventure-floor-row__title">${level.floorInWorld}. ${level.opponent}</span>
-        <span class="adventure-floor-row__flavor">${level.flavor}</span>
-      </span>
-      ${isNext ? '<span class="adventure-floor-row__badge">Next</span>' : ""}
-      ${stars > 0 ? `<span class="adventure-floor-row__stars">${formatStars(stars)}</span>` : ""}`;
-    row.addEventListener("click", () => openAdventureFloor(level.id));
-    floorList.appendChild(row);
-  }
-  const nextRow = floorList.querySelector(".adventure-floor-row--next");
+  const nextRow = floorList?.querySelector(".adventure-floor-row--next");
   if (nextRow) {
     requestAnimationFrame(() => nextRow.scrollIntoView({ behavior: "smooth", block: "end" }));
   }
@@ -1942,10 +1786,7 @@ function openAdventurePrebattle(levelId) {
   const title = $("prebattle-title");
   const flavor = $("prebattle-flavor");
   const opponent = $("prebattle-opponent");
-  if (title) {
-    const world = WORLDS.find((w) => w.id === level.worldId);
-    title.textContent = `${world ? getWorldTabLabel(world) : `Tower ${level.worldId}`} · Floor ${level.floorInWorld}`;
-  }
+  if (title) title.textContent = `Tower ${level.worldId} · Floor ${level.floorInWorld}`;
   if (flavor) flavor.textContent = level.flavor || "";
   if (opponent) opponent.textContent = "Loading…";
 

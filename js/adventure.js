@@ -1,6 +1,5 @@
 /**
- * Adventure — 5 towers + 2 dungeons × 10 floors (70 total).
- * Towers 4–5 unlock after floor 30; dungeons unlock after Tower 5 (all 10 floors).
+ * Adventure — 5 worlds × 10 floors (50 total). Worlds 4–5 unlock after clearing floor 30.
  */
 import {
   getPlayableCards,
@@ -12,13 +11,12 @@ import {
 } from "./cardCatalog.js";
 import { countById, shuffle } from "./deckRules.js";
 
-export const ADVENTURE_LEVEL_COUNT = 70;
+export const ADVENTURE_LEVEL_COUNT = 50;
 export const LEVELS_PER_WORLD = 10;
 export const ADVENTURE_FIRST_CLEAR_GEMS = 50;
 export const ADVENTURE_REPEAT_CLEAR_GEMS = 20;
-export const ENEMY_DECK_GENERATION = 6;
+export const ENEMY_DECK_GENERATION = 5;
 export const BONUS_WORLDS_UNLOCK_AT_LEVEL = 30;
-export const DUNGEON_WORLDS_UNLOCK_AT_LEVEL = 50;
 const EARLY_COPIES_PER_CARD = 3;
 
 export const WORLDS = [
@@ -27,7 +25,6 @@ export const WORLDS = [
     name: "Verdant Accord",
     tagline: "Meadows and training grounds — commons and uncommons rule the field.",
     theme: "verdant",
-    mapType: "tower",
     levelStart: 1,
     levelEnd: 10,
     requiresClearLevel: null,
@@ -37,7 +34,6 @@ export const WORLDS = [
     name: "Frost Expanse",
     tagline: "Ice bridges and frozen shrines — rarer spells begin to appear.",
     theme: "frost",
-    mapType: "tower",
     levelStart: 11,
     levelEnd: 20,
     requiresClearLevel: null,
@@ -47,7 +43,6 @@ export const WORLDS = [
     name: "Ember Depths",
     tagline: "Volcanic keeps and ash storms — hardened duelists await.",
     theme: "ember",
-    mapType: "tower",
     levelStart: 21,
     levelEnd: 30,
     requiresClearLevel: null,
@@ -57,7 +52,6 @@ export const WORLDS = [
     name: "Void Threshold",
     tagline: "Unlocked after floor 30 — reality frays; elite magic only.",
     theme: "void",
-    mapType: "tower",
     levelStart: 31,
     levelEnd: 40,
     requiresClearLevel: BONUS_WORLDS_UNLOCK_AT_LEVEL,
@@ -67,30 +61,9 @@ export const WORLDS = [
     name: "Legend's End",
     tagline: "Epic and legendary spells alone — the final proving ground.",
     theme: "legend",
-    mapType: "tower",
     levelStart: 41,
     levelEnd: 50,
     requiresClearLevel: BONUS_WORLDS_UNLOCK_AT_LEVEL,
-  },
-  {
-    id: 6,
-    name: "Crypt of Echoes",
-    tagline: "Unlocked after Tower 5 — torchlit halls where rare magic lingers.",
-    theme: "crypt",
-    mapType: "dungeon",
-    levelStart: 51,
-    levelEnd: 60,
-    requiresClearLevel: DUNGEON_WORLDS_UNLOCK_AT_LEVEL,
-  },
-  {
-    id: 7,
-    name: "Abyssal Vault",
-    tagline: "The deepest vault — only epic and legendary spells survive down here.",
-    theme: "abyss",
-    mapType: "dungeon",
-    levelStart: 61,
-    levelEnd: 70,
-    requiresClearLevel: DUNGEON_WORLDS_UNLOCK_AT_LEVEL,
   },
 ];
 
@@ -115,14 +88,6 @@ const WORLD_OPPONENTS = {
     "Crown of Cinders", "Heir of Storms", "The Gilded Oath", "Sundered Archon", "Mythwright",
     "Pale Imperator", "Dragon-Saint Alar", "Queen of Embers", "Lord of the Last Rite", "The Unbound Sigil",
   ],
-  6: [
-    "Grave Cantor", "Bone Warden", "Crypt Lich", "Dust Revenant", "Hollow Inquisitor",
-    "Tomb Herald", "Sepulcher Knight", "Echo Thief", "Pale Custodian", "Keeper of the Last Door",
-  ],
-  7: [
-    "Vault Breaker", "Abyss Warden", "Null Sovereign", "Shard Tyrant", "Depth Reaver",
-    "Obsidian Oracle", "Rift Executioner", "Void Regent", "Cathedral of Ash", "The Deep Sigil",
-  ],
 };
 
 const WORLD_FLAVOR = {
@@ -146,25 +111,7 @@ const WORLD_FLAVOR = {
     "Epic crucible I", "Epic crucible II", "Legend approach", "Legend gauntlet", "Sovereign path",
     "Mythic stair", "Crown bridge", "Final floor", "Sundered apex", "Legend's End",
   ],
-  6: [
-    "Entry hall", "Bone gallery", "Whisper corridor", "Collapsed arch", "Sarcophagus row",
-    "Echo chamber", "Sealed reliquary", "Catacomb fork", "Warden's antechamber", "Crypt heart",
-  ],
-  7: [
-    "Vault antechamber", "Obsidian gallery", "Pressure lock", "Abyss bridge", "Null reliquary",
-    "Depth tribunal", "Fractured vault", "Sovereign seal", "Final descent", "Abyssal core",
-  ],
 };
-
-export function getWorldTabLabel(world) {
-  if (world.mapType === "dungeon") return `Dungeon ${world.id - 5}`;
-  return `Tower ${world.id}`;
-}
-
-export function isDungeonWorld(worldId) {
-  const world = WORLDS.find((w) => w.id === worldId);
-  return world?.mapType === "dungeon";
-}
 
 export function getWorldForLevel(levelNum) {
   return WORLDS.find((w) => levelNum >= w.levelStart && levelNum <= w.levelEnd) || WORLDS[0];
@@ -174,15 +121,10 @@ export function areBonusWorldsUnlocked(progress) {
   return isLevelCleared(progress, BONUS_WORLDS_UNLOCK_AT_LEVEL);
 }
 
-export function areDungeonWorldsUnlocked(progress) {
-  return countClearedLevelsInWorld(progress, 5) >= LEVELS_PER_WORLD;
-}
-
 export function isWorldUnlocked(progress, worldId) {
   const world = WORLDS.find((w) => w.id === worldId);
   if (!world) return false;
-  if (world.mapType === "dungeon") return areDungeonWorldsUnlocked(progress);
-  if (world.requiresClearLevel != null) return isLevelCleared(progress, world.requiresClearLevel);
+  if (world.requiresClearLevel != null) return areBonusWorldsUnlocked(progress);
   return true;
 }
 
@@ -233,14 +175,6 @@ function rarityWeight(levelNum, rarity) {
     if (rarity === "rare") return 35;
     if (rarity === "epic") return 28;
     return 7;
-  }
-
-  if (world === 6) {
-    if (rarity === "common") return 0;
-    if (rarity === "uncommon") return 5;
-    if (rarity === "rare") return 30;
-    if (rarity === "epic") return 45;
-    return 20;
   }
 
   return 0;
@@ -329,7 +263,7 @@ function ensureEnemyDeckSize(ids) {
 
 export function buildLevelEnemyDeck(levelNum) {
   const world = getWorldForLevel(levelNum).id;
-  if (world === 5 || world === 7) return ensureEnemyDeckSize(buildEpicLegendaryDeck());
+  if (world === 5) return ensureEnemyDeckSize(buildEpicLegendaryDeck());
   if (world === 1) return ensureEnemyDeckSize(buildEarlyCommonUncommonDeck(levelNum));
   return ensureEnemyDeckSize(buildWeightedDeck(levelNum));
 }
@@ -376,7 +310,7 @@ export function getOrCreateLevelEnemyDeck(profile, levelId) {
     !Array.isArray(cached) ||
     cached.length !== DECK_SIZE ||
     (world === 1 && levelNum <= 10 && !isValidEarlyEnemyDeck(cached)) ||
-    ((world === 5 || world === 7) && cached.some((id) => {
+    (world === 5 && cached.some((id) => {
       const d = getCardDef(id);
       return d && d.rarity !== "epic" && d.rarity !== "legendary";
     }));
@@ -618,48 +552,6 @@ export const MAP_THEME_PALETTES = {
     moss: "#388858",
     glow: "rgba(232, 197, 71, 0.55)",
     mist: "rgba(168, 216, 168, 0.35)",
-  },
-  crypt: {
-    sky: "#1a1818",
-    skyGlow: "#3a3028",
-    gridLight: "#5a5048",
-    gridDark: "#2a2420",
-    rock: "#4a4038",
-    rockDark: "#1a1410",
-    grass: "#302820",
-    grassDark: "#100c08",
-    castle: "#3a3428",
-    castleRoof: "#201810",
-    flag: "#e8b878",
-    accent: "#e8a050",
-    stoneLight: "#7a7068",
-    stoneMid: "#5a5048",
-    stoneDark: "#3a3028",
-    stoneSide: "#221c18",
-    moss: "#3a3020",
-    glow: "rgba(232, 160, 80, 0.5)",
-    mist: "rgba(60, 48, 36, 0.5)",
-  },
-  abyss: {
-    sky: "#080818",
-    skyGlow: "#181838",
-    gridLight: "#303050",
-    gridDark: "#101020",
-    rock: "#202038",
-    rockDark: "#080810",
-    grass: "#101028",
-    grassDark: "#040408",
-    castle: "#181830",
-    castleRoof: "#080810",
-    flag: "#b0a0ff",
-    accent: "#9080ff",
-    stoneLight: "#484868",
-    stoneMid: "#303048",
-    stoneDark: "#1a1a30",
-    stoneSide: "#0c0c18",
-    moss: "#282848",
-    glow: "rgba(144, 128, 255, 0.55)",
-    mist: "rgba(32, 24, 64, 0.55)",
   },
 };
 
