@@ -7,7 +7,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell } from "./cardEffects.js";
+import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, enemyKillsFromMove } from "./cardEffects.js";
 import { queueTrapHistoryReveal, isConfused, clearConfusion } from "./gameMeta.js";
 import { getCardDef } from "./cardCatalog.js";
 
@@ -212,6 +212,30 @@ export function pickBestMove(board, color, state, moves = null) {
   return best.move;
 }
 
+function findBombArmedSquares(board, color) {
+  const squares = [];
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const p = board[r][c];
+      if (p?.color === color && p.bombArmed) squares.push([r, c]);
+    }
+  }
+  return squares;
+}
+
+/** After Bomb is armed, move that piece and prefer lines that kill at least one enemy. */
+function pickBombFollowUpMove(board, color, state) {
+  const armed = findBombArmedSquares(board, color);
+  if (!armed.length) return null;
+  const armedKeys = new Set(armed.map(([r, c]) => `${r},${c}`));
+  const bombMoves = getAllMovesForColor(board, color, state).filter((m) =>
+    armedKeys.has(`${m.from[0]},${m.from[1]}`)
+  );
+  if (!bombMoves.length) return null;
+  const lethal = bombMoves.filter((m) => enemyKillsFromMove(state, color, m) >= 1);
+  return pickBestMove(board, color, state, lethal.length ? lethal : bombMoves);
+}
+
 /**
  * Run AI turn; returns a replay log for the UI.
  * @returns {Array<{type: string, [key: string]: unknown}>}
@@ -292,7 +316,11 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     move = moves[Math.floor(Math.random() * moves.length)] || null;
     if (move) log.push({ type: "message", text: "Confusion — random move!" });
   } else {
-    move = pickBestMove(state.board, color, state);
+    const bombArmed = findBombArmedSquares(state.board, color);
+    if (bombArmed.length && !panicForced) {
+      move = pickBombFollowUpMove(state.board, color, state);
+    }
+    if (!move) move = pickBestMove(state.board, color, state);
     if (panicForced && move) log.push({ type: "message", text: "Panic — forced backward step!" });
   }
 
