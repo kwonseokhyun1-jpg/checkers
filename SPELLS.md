@@ -119,7 +119,7 @@
 - **Sanctuary** — Friendly pieces on the target dark square and its 6 surrounding dark squares cannot be captured for 1 turn.
 - **Scatter** — Push every piece adjacent to a square 1 step away radially.
 - **Succession** — When your king is captured, a chosen man becomes king instantly.
-- **Tangle** — Swap two adjacent enemies and freeze both for 1 turn.
+- **Tangle** — Swap two enemies and freeze both for 1 turn.
 - **Uno Reverse** — Opponent must capture with a specific piece if possible next turn.
 - **Vacuum** — Pull all pieces 1 step toward a chosen empty dark square.
 - **Warp Gate** — Link two empty dark squares for instant travel between them.

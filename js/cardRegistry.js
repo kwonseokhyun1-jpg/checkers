@@ -62,7 +62,7 @@ export const CARD_REGISTRY = [
   { id: "last_stand", name: "Last Stand", desc: "Hidden trap on a friendly piece — if it would be captured or destroyed, it survives with an ultra shield for 3 turns instead (invisible until it triggers).", rarity: "uncommon", weight: 4, mode: "friendly", effect: "last_stand" },
   { id: "snowball", name: "Snowball", desc: "Freeze an enemy piece — it cannot move on its owner's next turn.", rarity: "common", weight: 6, mode: "any_piece", effect: "snowball" },
   { id: "dash", name: "Dash", desc: "Move one of your pieces 1 square forward-diagonally; destroy an enemy on that square.", rarity: "rare", weight: 3, mode: "f_empty", effect: "dash" },
-  { id: "tangle", name: "Tangle", desc: "Swap two adjacent enemies and freeze both for 1 turn.", rarity: "rare", weight: 3, mode: "e_e_adj", effect: "tangle" },
+  { id: "tangle", name: "Tangle", desc: "Swap two enemies and freeze both for 1 turn.", rarity: "rare", weight: 3, mode: "e_e", effect: "tangle" },
   { id: "bishops_mark", name: "Bishop's Mark", desc: "For 2 turns, a piece may slide along either diagonal over empty dark squares.", rarity: "rare", weight: 3, mode: "friendly", effect: "bishop_2" },
   { id: "rooks_mark", name: "Rook's Mark", desc: "For 2 turns, a piece may slide along a rank or file over empty dark squares.", rarity: "rare", weight: 3, mode: "friendly", effect: "rook_2" },
   { id: "magnet", name: "Magnet", desc: "Pull every enemy 2 squares away on a diagonal to an adjacent empty square next to your piece.", rarity: "epic", weight: 2, mode: "friendly", effect: "magnet" },
