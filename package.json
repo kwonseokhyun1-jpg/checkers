@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "icons": "node scripts/generate-app-icons.mjs",
+    "icons:android": "node scripts/generate-android-launcher-icons.mjs",
     "screenshots": "node scripts/generate-store-placeholders.mjs",
     "sync:www": "sh scripts/sync-www.sh",
     "cap:sync": "npm run sync:www && npx cap sync",
