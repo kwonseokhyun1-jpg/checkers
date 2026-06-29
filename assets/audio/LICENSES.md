@@ -1,8 +1,16 @@
 # Audio licenses
 
-Placeholder audio files in this folder were generated locally with FFmpeg (sine-wave mixes) for development and testing. They are **not** final ship assets.
+## Background music
 
-Replace `hub.mp3`, `match.mp3`, and files in `sfx/` with properly licensed royalty-free music and sound effects before store release. Document each replacement here with:
+| File | Source / author | License | Attribution |
+| --- | --- | --- | --- |
+| `background.m4a` | User-provided | _(add license details)_ | _(add attribution if required)_ |
+
+## Placeholder SFX
+
+Files in `sfx/` were generated locally with FFmpeg (sine-wave mixes) for development and testing. They are **not** final ship assets.
+
+Replace `background.m4a` and files in `sfx/` with properly licensed royalty-free music and sound effects before store release. Document each replacement here with:
 
 - File name
 - Source / author
