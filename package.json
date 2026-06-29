@@ -8,6 +8,7 @@
     "icons": "node scripts/generate-app-icons.mjs",
     "icons:android": "node scripts/generate-android-launcher-icons.mjs",
     "screenshots": "node scripts/generate-store-placeholders.mjs",
+    "screenshots:auth": "node scripts/capture-authenticated-screenshots.mjs",
     "sync:www": "sh scripts/sync-www.sh",
     "cap:sync": "npm run sync:www && npx cap sync",
     "cap:open:android": "npx cap open android",
