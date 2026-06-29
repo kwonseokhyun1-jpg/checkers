@@ -25,10 +25,10 @@ import {
   getLevelsForWorld,
   WORLDS,
   getWorldsForMap,
-  areBonusWorldsUnlocked,
   defaultAdventureProgress,
   BONUS_WORLDS_UNLOCK_AT_LEVEL,
   isWorldUnlocked,
+  getWorldTabLabel,
   getLevel,
   getOrCreateLevelEnemyDeck,
   getEnemyDeckPreview,
@@ -1602,12 +1602,14 @@ function renderAdventureMap() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "adventure-world-shield";
+      if (w.mapType === "dungeon") btn.classList.add("adventure-world-shield--dungeon");
       btn.dataset.world = String(w.id);
       if (w.id === selectedAdventureWorldId) btn.classList.add("active");
       if (!unlocked) btn.classList.add("adventure-world-shield--locked");
       btn.disabled = !unlocked;
-      btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">Tower ${w.id}</span>`;
-      btn.title = unlocked ? w.name : `Clear floor ${BONUS_WORLDS_UNLOCK_AT_LEVEL} to unlock`;
+      btn.innerHTML = `<span class="adventure-world-shield__icon" aria-hidden="true"></span><span class="adventure-world-shield__label">${getWorldTabLabel(w)}</span>`;
+      const unlockFloor = w.requiresClearLevel ?? BONUS_WORLDS_UNLOCK_AT_LEVEL;
+      btn.title = unlocked ? w.name : `Clear floor ${unlockFloor} to unlock`;
       btn.addEventListener("click", () => {
         if (!isWorldUnlocked(progress, w.id)) return;
         selectedAdventureWorldId = w.id;
@@ -1624,8 +1626,17 @@ function renderAdventureMap() {
   }
 
   const worldMeta = WORLDS.find((w) => w.id === selectedAdventureWorldId);
+  if (worldMeta?.mapType === "dungeon") {
+    renderDungeonMap(worldMeta, progress);
+    return;
+  }
+  renderTowerMap(worldMeta, progress);
+}
 
+function renderTowerMap(worldMeta, progress) {
   const map = $("adventure-map");
+  const scene = map?.closest(".adventure-map-scene");
+  scene?.classList.remove("adventure-map-scene--dungeon");
   if (!map) return;
   const theme = worldMeta?.theme || "verdant";
   const palette = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.verdant;
@@ -1738,38 +1749,131 @@ function renderAdventureMap() {
     tilesLayer?.appendChild(tile);
   });
 
-
-  const floorList = $("adventure-floor-list");
-  if (floorList) {
-    floorList.classList.add("adventure-floor-list--sr");
-    floorList.innerHTML = "";
-    for (const level of levels) {
-      const unlocked = isLevelUnlocked(progress, level.id);
-      const cleared = isLevelCleared(progress, level.id);
-      const isNext = level.id === nextId && unlocked;
-      const stars = getLevelStars(progress, level.id);
-      const row = document.createElement("button");
-      row.type = "button";
-      row.className = "adventure-floor-row";
-      if (!unlocked) row.disabled = true;
-      if (cleared) row.classList.add("adventure-floor-row--cleared");
-      if (isNext) row.classList.add("adventure-floor-row--next");
-      row.innerHTML = `
-        <span class="adventure-floor-row__main">
-          <span class="adventure-floor-row__title">${level.floorInWorld}. ${level.opponent}</span>
-          <span class="adventure-floor-row__flavor">${level.flavor}</span>
-        </span>
-        ${isNext ? '<span class="adventure-floor-row__badge">Next</span>' : ""}
-        ${stars > 0 ? `<span class="adventure-floor-row__stars">${formatStars(stars)}</span>` : ""}`;
-      row.addEventListener("click", () => openAdventureFloor(level.id));
-      floorList.appendChild(row);
-    }
-  }
+  renderAdventureFloorList(levels, progress, nextId);
 
   const nextTile = map.querySelector(".adventure-map-tile--next");
   if (nextTile) requestAnimationFrame(() => nextTile.scrollIntoView({ behavior: "smooth", block: "center" }));
+}
 
-  const nextRow = floorList?.querySelector(".adventure-floor-row--next");
+function renderDungeonMap(worldMeta, progress) {
+  const map = $("adventure-map");
+  const scene = map?.closest(".adventure-map-scene");
+  if (scene) scene.classList.add("adventure-map-scene--dungeon");
+  if (!map) return;
+  const theme = worldMeta?.theme || "crypt";
+  const palette = MAP_THEME_PALETTES[theme] || MAP_THEME_PALETTES.crypt;
+  map.className = `adventure-map-canvas adventure-map-canvas--${theme} adventure-map-canvas--dungeon`;
+  map.style.setProperty("--map-accent", palette.accent);
+  map.style.setProperty("--map-glow", palette.glow);
+  map.style.setProperty("--map-mist", palette.mist);
+  map.style.setProperty("--map-stone-light", palette.stoneLight);
+  map.style.setProperty("--map-stone-mid", palette.stoneMid);
+  map.style.setProperty("--map-stone-dark", palette.stoneDark);
+  map.style.setProperty("--map-stone-side", palette.stoneSide);
+  map.setAttribute("role", "group");
+  map.setAttribute("aria-label", `${worldMeta.name} dungeon map`);
+
+  const levels = getLevelsForWorld(selectedAdventureWorldId);
+  const nextId = getNextPlayableLevelId(progress);
+
+  map.innerHTML = `
+    <div class="adventure-dungeon-bg adventure-dungeon-bg--${theme}" aria-hidden="true"></div>
+    <div class="adventure-dungeon-scroll" tabindex="0" aria-label="Scroll through dungeon rooms">
+      <div class="adventure-dungeon-corridor"></div>
+    </div>`;
+
+  const corridor = map.querySelector(".adventure-dungeon-corridor");
+  const scrollEl = map.querySelector(".adventure-dungeon-scroll");
+
+  levels.forEach((level, i) => {
+    const unlocked = isLevelUnlocked(progress, level.id);
+    const cleared = isLevelCleared(progress, level.id);
+    const isNext = level.id === nextId && unlocked;
+    const stars = getLevelStars(progress, level.id);
+
+    const chamber = document.createElement("button");
+    chamber.type = "button";
+    chamber.className = "adventure-dungeon-chamber";
+    chamber.dataset.level = String(level.id);
+    if (!unlocked) chamber.classList.add("adventure-dungeon-chamber--locked");
+    if (cleared) chamber.classList.add("adventure-dungeon-chamber--cleared");
+    if (isNext) chamber.classList.add("adventure-dungeon-chamber--next");
+    if (level.floorInWorld === 10) chamber.classList.add("adventure-dungeon-chamber--boss");
+    chamber.setAttribute("aria-disabled", unlocked ? "false" : "true");
+    if (!unlocked) chamber.title = `Clear global floor ${level.id - 1} to unlock`;
+    chamber.setAttribute("aria-label", `Room ${level.floorInWorld}: ${level.opponent}, ${level.flavor}`);
+
+    const starLine = cleared ? `<span class="adventure-dungeon-chamber__stars">${formatStars(stars)}</span>` : "";
+    const pawn = isNext ? `<span class="adventure-dungeon-chamber__pawn">${getMapPawnMarkup(palette.accent)}</span>` : "";
+    chamber.innerHTML = `
+      ${pawn}
+      <span class="adventure-dungeon-chamber__arch" aria-hidden="true"></span>
+      <span class="adventure-dungeon-chamber__face">
+        <span class="adventure-dungeon-chamber__num">${level.floorInWorld}</span>
+        <span class="adventure-dungeon-chamber__name">${level.opponent}</span>
+        <span class="adventure-dungeon-chamber__flavor">${level.flavor}</span>
+        ${starLine}
+      </span>`;
+
+    if (!unlocked) chamber.disabled = true;
+    chamber.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      openAdventureFloor(level.id);
+    };
+    chamber.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openAdventureFloor(level.id);
+      }
+    });
+
+    corridor?.appendChild(chamber);
+    if (i < levels.length - 1) {
+      const link = document.createElement("span");
+      link.className = "adventure-dungeon-link";
+      link.setAttribute("aria-hidden", "true");
+      corridor?.appendChild(link);
+    }
+  });
+
+  renderAdventureFloorList(levels, progress, nextId);
+
+  const nextChamber = map.querySelector(".adventure-dungeon-chamber--next");
+  if (nextChamber && scrollEl) {
+    requestAnimationFrame(() => {
+      nextChamber.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    });
+  }
+}
+
+function renderAdventureFloorList(levels, progress, nextId) {
+  const floorList = $("adventure-floor-list");
+  if (!floorList) return;
+  floorList.classList.add("adventure-floor-list--sr");
+  floorList.innerHTML = "";
+  for (const level of levels) {
+    const unlocked = isLevelUnlocked(progress, level.id);
+    const cleared = isLevelCleared(progress, level.id);
+    const isNext = level.id === nextId && unlocked;
+    const stars = getLevelStars(progress, level.id);
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "adventure-floor-row";
+    if (!unlocked) row.disabled = true;
+    if (cleared) row.classList.add("adventure-floor-row--cleared");
+    if (isNext) row.classList.add("adventure-floor-row--next");
+    row.innerHTML = `
+      <span class="adventure-floor-row__main">
+        <span class="adventure-floor-row__title">${level.floorInWorld}. ${level.opponent}</span>
+        <span class="adventure-floor-row__flavor">${level.flavor}</span>
+      </span>
+      ${isNext ? '<span class="adventure-floor-row__badge">Next</span>' : ""}
+      ${stars > 0 ? `<span class="adventure-floor-row__stars">${formatStars(stars)}</span>` : ""}`;
+    row.addEventListener("click", () => openAdventureFloor(level.id));
+    floorList.appendChild(row);
+  }
+  const nextRow = floorList.querySelector(".adventure-floor-row--next");
   if (nextRow) {
     requestAnimationFrame(() => nextRow.scrollIntoView({ behavior: "smooth", block: "end" }));
   }
@@ -1786,7 +1890,10 @@ function openAdventurePrebattle(levelId) {
   const title = $("prebattle-title");
   const flavor = $("prebattle-flavor");
   const opponent = $("prebattle-opponent");
-  if (title) title.textContent = `Tower ${level.worldId} · Floor ${level.floorInWorld}`;
+  if (title) {
+    const world = WORLDS.find((w) => w.id === level.worldId);
+    title.textContent = `${world ? getWorldTabLabel(world) : `Tower ${level.worldId}`} · Floor ${level.floorInWorld}`;
+  }
   if (flavor) flavor.textContent = level.flavor || "";
   if (opponent) opponent.textContent = "Loading…";
 
