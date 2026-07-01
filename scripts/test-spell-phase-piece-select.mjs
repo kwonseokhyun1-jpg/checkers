@@ -86,12 +86,17 @@ if (!after.selected) {
   process.exit(1);
 }
 
-// Explicit skip (Enter) should lock spells.
-await page.keyboard.press("Enter");
+// Explicit skip (button) should lock spells.
+const skipBtn = page.locator("#btn-end-cards");
+if (!(await skipBtn.isVisible())) {
+  console.error("Skip spell phase button should be visible during spell phase");
+  process.exit(1);
+}
+await skipBtn.click();
 await page.waitForTimeout(400);
 const skipped = await handState(page);
 if (!skipped.handLocked) {
-  console.error("Spell hand should lock after skipping spell phase with Enter");
+  console.error("Spell hand should lock after skipping spell phase with button");
   process.exit(1);
 }
 

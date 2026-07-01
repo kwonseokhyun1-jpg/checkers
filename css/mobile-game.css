@@ -808,6 +808,12 @@ body.match-active {
     font-size: 0.75rem;
   }
 
+  body.match-active .btn-skip-spell {
+    margin-top: 0.4rem;
+    font-size: 0.78rem;
+    padding: 0.42rem 0.55rem;
+  }
+
   body.match-active .turn-banner {
     font-size: 0.85rem;
     padding: 0.4rem 0.65rem;
