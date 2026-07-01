@@ -23,6 +23,11 @@ export function squareName(row, col) {
   return `${FILES[col]}${SIZE - row}`;
 }
 
+/** File and rank pair (e.g. (h, 2)). Row 0 = rank 8, row 7 = rank 1. */
+export function squareNameLabeled(row, col) {
+  return `(${FILES[col]}, ${SIZE - row})`;
+}
+
 /** Board grid with a–h file labels and 1–8 rank labels. */
 export function boardFrameHtml() {
   const fileBtn = (f, i) =>
