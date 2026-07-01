@@ -1565,6 +1565,13 @@ body {
   border-radius: 999px;
 }
 .hand.spell-hand .spell-card { max-width: none; }
+
+.btn-skip-spell {
+  width: 100%;
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.65rem;
+}
 .modal-content--card { max-width: 400px; }
 #modal-card-preview {
   display: flex;
