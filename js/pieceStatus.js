@@ -1,7 +1,7 @@
 /**
  * Piece buff/curse labels, inspection UI copy, and Purify cleanse logic.
  */
-import { squareName } from "./board.js";
+import { squareNameLabeled } from "./board.js";
 
 const BUFF_RULES = [
   { key: "shieldTurns", label: "Shield", turns: true },
@@ -86,7 +86,7 @@ export function formatPieceStatusMessage(piece, row, col) {
   const { buffs, curses } = getPieceStatus(piece);
   const side = piece.color === "red" ? "Your" : "Enemy";
   const role = piece.king ? "king" : "man";
-  const parts = [`${side} ${role} at ${squareName(row, col)}`];
+  const parts = [`${side} ${role} at ${squareNameLabeled(row, col)}`];
   if (buffs.length) parts.push(`Buffs: ${buffs.map(formatLine).join(", ")}`);
   else parts.push("Buffs: none");
   if (curses.length) parts.push(`Curses: ${curses.map(formatLine).join(", ")}`);

@@ -4,7 +4,7 @@
 import {
   SIZE,
   COLORS,
-  squareName,
+  squareNameLabeled,
   LAST_STAND_SHIELD_TURNS,
   VENGEANCE_BLOOD_TURNS,
   PLAGUE_TURNS,
@@ -687,7 +687,7 @@ export class MatchSession {
         : "None";
       const side = piece.color === this.localColor ? "Your" : "Enemy";
       const role = piece.king ? "king" : "man";
-      infoEl.innerHTML = `<strong>${side} ${role}</strong> <span class="piece-info__pos">${squareName(row, col)}</span>
+      infoEl.innerHTML = `<strong>${side} ${role}</strong> <span class="piece-info__pos">${squareNameLabeled(row, col)}</span>
         <span class="piece-info__buffs">Buffs: ${buffText}</span>
         <span class="piece-info__curses">Curses: ${curseText}</span>`;
       infoEl.classList.remove("hidden");
