@@ -1007,6 +1007,16 @@ export class MatchSession {
     saveProfile(this.profile);
   }
 
+  dismissCardTargetingUI() {
+    this.cardPlay = null;
+    this.validTargets = [];
+    this.selectedSquare = null;
+    this.selectedColumn = null;
+    this.selectedRow = null;
+    this.endDrag();
+    this.updateSpellCastUI();
+  }
+
   updateSpellCastUI() {
     const bar = this.$("spell-cast-bar");
     if (!bar) return;
@@ -1042,9 +1052,9 @@ export class MatchSession {
     }
   }
 
-  finishCardPlay(msg, replayExtras = {}) {
-    const card = this.cardPlay?.card;
-    const picks = this.cardPlay?.picks ? [...this.cardPlay.picks] : [];
+  finishCardPlay(msg, replayExtras = {}, spellCtx = null) {
+    const card = spellCtx?.card ?? this.cardPlay?.card;
+    const picks = spellCtx?.picks ?? (this.cardPlay?.picks ? [...this.cardPlay.picks] : []);
     const bonusSpell = !!this.state.meta.extraSpellCast?.[this.localColor];
     if (card) {
       this.recordPvpSpell(card, picks, replayExtras);
@@ -1053,13 +1063,7 @@ export class MatchSession {
     }
     if (!bonusSpell) this.state.spellPlayed[this.localColor] = true;
     else this.state.meta.extraSpellCast[this.localColor] = false;
-    this.cardPlay = null;
-    this.validTargets = [];
-    this.selectedSquare = null;
-    this.selectedColumn = null;
-    this.selectedRow = null;
-    this.endDrag();
-    this.updateSpellCastUI();
+    this.dismissCardTargetingUI();
     if (card && this.hasMoveHistory() && !this.shouldDeferTrapHistory(card)) {
       this.recordHistoryEntry(card.name, "spell", {
         color: this.localColor,
@@ -1087,13 +1091,7 @@ export class MatchSession {
   }
 
   cancelCardPlay() {
-    this.cardPlay = null;
-    this.validTargets = [];
-    this.selectedSquare = null;
-    this.selectedColumn = null;
-    this.selectedRow = null;
-    this.endDrag();
-    this.updateSpellCastUI();
+    this.dismissCardTargetingUI();
     this.setMessage("Spell cancelled.");
     this.render();
   }
@@ -1195,32 +1193,43 @@ export class MatchSession {
       this.render();
       return;
     }
-    void this.resolveTargetedSpell(card, [...picks]).then((res) => {
-      if (!res.success) {
-        if (res.countered) {
-          this.finalizeCounteredSpell(card, res.message);
+    const finalPicks = [...picks];
+    const spellCtx = { card, picks: finalPicks };
+    this.dismissCardTargetingUI();
+    this.render();
+    void this.resolveTargetedSpell(card, finalPicks)
+      .then((res) => {
+        if (!res.success) {
+          if (res.countered) {
+            this.finalizeCounteredSpell(card, res.message, finalPicks);
+            return;
+          }
+          this.cardPlay = { card, picks: finalPicks.slice(0, -1) };
+          this.setMessage(res.message);
+          this.validTargets = getValidTargets(this.state, this.localColor, card, this.cardPlay.picks);
+          this.updateSpellCastUI();
+          this.render();
           return;
         }
-        picks.pop();
-        this.setMessage(res.message);
-        this.validTargets = getValidTargets(this.state, this.localColor, card, picks);
-        this.updateSpellCastUI();
+        const replayExtras = {
+          ...(res.pvpAnimExtras || {}),
+          ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
+          ...(res.coinFlipSquare
+            ? {
+                coinFlipSquare: res.coinFlipSquare,
+                coinFlipVictimColor: res.coinFlipVictimColor,
+                coinFlipVictim: res.coinFlipVictim,
+              }
+            : {}),
+        };
+        this.finishCardPlay(res.message, replayExtras, spellCtx);
+      })
+      .catch((err) => {
+        console.error("Targeted spell failed:", err);
+        this.dismissCardTargetingUI();
+        this.setMessage("Spell failed — try again.");
         this.render();
-        return;
-      }
-      const replayExtras = {
-        ...(res.pvpAnimExtras || {}),
-        ...(res.cullTarget ? { cullTarget: res.cullTarget, cullVictim: res.cullVictim } : {}),
-        ...(res.coinFlipSquare
-          ? {
-              coinFlipSquare: res.coinFlipSquare,
-              coinFlipVictimColor: res.coinFlipVictimColor,
-              coinFlipVictim: res.coinFlipVictim,
-            }
-          : {}),
-      };
-      this.finishCardPlay(res.message, replayExtras);
-    });
+      });
   }
 
   squareAtPoint(clientX, clientY) {
@@ -1945,6 +1954,18 @@ ${starLine}`;
     if (banner) banner.className = "turn-banner";
   }
 
+  async runHiddenBoardTrapCast(card) {
+    const banner = this.$("turn-banner");
+    const label = card?.name || (card?.effect === "quicksand" ? "Quicksand" : "Landmine");
+    if (banner) {
+      banner.textContent = `${label} armed — hidden.`;
+      banner.className = "turn-banner spell-anim-instant";
+    }
+    this.render();
+    await delay(450 + SPELL_BANNER_EXTRA_MS);
+    if (banner) banner.className = "turn-banner";
+  }
+
   showTrapSpellBanner(cardName, cardDesc, { label = "Trap triggered" } = {}) {
     const banner = this.$("ai-spell-banner");
     const labelEl = this.root.querySelector(".ai-spell-banner__label");
@@ -2061,8 +2082,8 @@ ${starLine}`;
     if (banner) banner.classList.remove("cull-casting");
   }
 
-  finalizeCounteredSpell(card, message) {
-    const picks = this.cardPlay?.picks ? [...this.cardPlay.picks] : [];
+  finalizeCounteredSpell(card, message, picksOverride = null) {
+    const picks = picksOverride ?? (this.cardPlay?.picks ? [...this.cardPlay.picks] : []);
     this.recordPvpSpell(card, picks, { countered: true });
     this.removeCardFromHand(card);
     if (!this.state.meta.extraSpellCast?.[this.localColor]) {
@@ -2070,13 +2091,7 @@ ${starLine}`;
     } else {
       this.state.meta.extraSpellCast[this.localColor] = false;
     }
-    this.cardPlay = null;
-    this.validTargets = [];
-    this.selectedSquare = null;
-    this.selectedColumn = null;
-    this.selectedRow = null;
-    this.endDrag();
-    this.updateSpellCastUI();
+    this.dismissCardTargetingUI();
     this.setMessage(message || "Enemy Counterspell! Your spell fizzles.");
     if (this.hasMoveHistory()) {
       this.recordHistoryEntry(card.name, "spell", {
@@ -2140,6 +2155,12 @@ ${starLine}`;
     if (card.effect === "deflect_1") {
       const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success) await this.runHiddenDeflectCast();
+      return finishSpellTrack(res);
+    }
+
+    if (card.effect === "landmine" || card.effect === "quicksand") {
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (res.success) await this.runHiddenBoardTrapCast(card);
       return finishSpellTrack(res);
     }
 
