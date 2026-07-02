@@ -3,7 +3,7 @@
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, forwardBoltCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 import { friendlyHasDebuffs, pieceHasIronWillDebuff } from "./pieceStatus.js";
 
@@ -684,6 +684,9 @@ export function getValidTargets(state, color, card, picks) {
         const friends = getValidTargets(state, color, { mode: "friendly" }, []);
         if (card.effect === "deep_freeze") {
           return friends.filter(([r, c]) => deepFreezeHasEnemyOnDiagonal(state, color, r, c));
+        }
+        if (card.effect === "forward_bolt") {
+          return friends.filter(([r, c]) => forwardBoltCanTarget(state, color, r, c));
         }
         return friends;
       }
