@@ -329,6 +329,55 @@ const FRIENDLY_REQUIRES_MOVABLE = new Set([
   "rook_3",
 ]);
 
+function opponentColor(color) {
+  return color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+}
+
+function enemyPromotionRow(enemyColor) {
+  return enemyColor === COLORS.RED ? 0 : SIZE - 1;
+}
+
+/** Score a barrier square by how many dangerous enemy moves it blocks. */
+function scoreBarrierPlacement(state, color, barrierR, barrierC) {
+  const enemy = opponentColor(color);
+  const enemyMoves = getAllMovesForColor(state.board, enemy, state);
+  let score = 0;
+  const promoRow = enemyPromotionRow(enemy);
+  const friendlyFront = frontRowRank(state, color);
+
+  for (const move of enemyMoves) {
+    const [tr, tc] = move.to;
+    if (tr !== barrierR || tc !== barrierC) continue;
+
+    if (move.captures?.length) {
+      for (const [cr, cc] of move.captures) {
+        const victim = at(state, cr, cc);
+        if (victim?.color !== color) continue;
+        score += 100;
+        if (victim.king) score += 50;
+        if (friendlyFront != null && cr === friendlyFront) score += 25;
+      }
+    } else if (tr === promoRow) {
+      score += 40;
+    } else {
+      const [fr] = move.from;
+      const advancing =
+        (enemy === COLORS.RED && tr < fr) || (enemy === COLORS.BLACK && tr > fr);
+      if (advancing) score += 15;
+    }
+  }
+
+  return score;
+}
+
+function prioritizeBarrierTargets(state, color, targets) {
+  return targets
+    .map((pos) => ({ pos, score: scoreBarrierPlacement(state, color, pos[0], pos[1]) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.pos[0] - b.pos[0] || a.pos[1] - b.pos[1])
+    .map((entry) => entry.pos);
+}
+
 /** Most advanced row for this color (closest to the opponent). */
 function frontRowRank(state, color) {
   let front = color === COLORS.RED ? Infinity : -Infinity;
@@ -764,6 +813,9 @@ function getAiPickTargets(state, color, card) {
   }
   if (card.effect === "shockwave") {
     return targets.filter(([r, c]) => armedMoveEffectCanHitAdjacentEnemy(state, color, r, c));
+  }
+  if (card.effect === "barrier") {
+    return prioritizeBarrierTargets(state, color, targets);
   }
   return targets;
 }
