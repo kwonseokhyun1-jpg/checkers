@@ -158,6 +158,41 @@ const plagueRes = tryAutoPlay(structuredClone(plagueState), COLORS.BLACK, plague
 assert.equal(plagueRes.success, true, "AI plague cast should succeed");
 assert.deepEqual(plagueRes.picks, [[3, 2]], "AI plague should infect the piece adjacent to an enemy");
 
+const barrierCaptureBoard = emptyBoard();
+barrierCaptureBoard[3][2] = createPiece(COLORS.RED, 3, 2);
+barrierCaptureBoard[2][3] = createPiece(COLORS.BLACK, 2, 3);
+const barrierCaptureState = makeState(barrierCaptureBoard);
+const barrier = getCardDef("barrier");
+assert.equal(canAiPlay(barrierCaptureState, COLORS.BLACK, barrier), true, "barrier should be AI-playable when it blocks a capture");
+const barrierCaptureRes = tryAutoPlay(structuredClone(barrierCaptureState), COLORS.BLACK, barrier);
+assert.equal(barrierCaptureRes.success, true, "AI barrier cast should succeed");
+assert.deepEqual(
+  barrierCaptureRes.picks,
+  [[1, 4]],
+  "AI barrier should block the enemy jump landing square to protect the threatened piece"
+);
+
+const barrierPromoBoard = emptyBoard();
+barrierPromoBoard[1][4] = createPiece(COLORS.RED, 1, 4);
+const barrierPromoState = makeState(barrierPromoBoard);
+assert.equal(canAiPlay(barrierPromoState, COLORS.BLACK, barrier), true, "barrier should be AI-playable when it blocks promotion");
+const barrierPromoRes = tryAutoPlay(structuredClone(barrierPromoState), COLORS.BLACK, barrier);
+assert.equal(barrierPromoRes.success, true, "AI barrier promo block should succeed");
+assert.ok(
+  barrierPromoRes.picks.some(([r, c]) => r === 0 && (c === 3 || c === 5)),
+  "AI barrier should block an enemy promotion square"
+);
+
+const barrierNoThreatBoard = emptyBoard();
+barrierNoThreatBoard[5][2] = createPiece(COLORS.BLACK, 5, 2);
+barrierNoThreatBoard[6][1] = createPiece(COLORS.BLACK, 6, 1);
+const barrierNoThreatState = makeState(barrierNoThreatBoard);
+assert.equal(
+  canAiPlay(barrierNoThreatState, COLORS.BLACK, barrier),
+  false,
+  "barrier should not be AI-playable when no enemy move is blocked"
+);
+
 const frozenBoard = emptyBoard();
 frozenBoard[5][2] = createPiece(COLORS.BLACK, 5, 2);
 frozenBoard[5][4] = createPiece(COLORS.BLACK, 5, 4);
