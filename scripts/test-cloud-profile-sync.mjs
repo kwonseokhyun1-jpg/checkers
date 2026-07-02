@@ -9,6 +9,7 @@ import {
   resetToDefaultProfile,
   clearStoredProfile,
 } from "../js/storage.js";
+import { enterGuestMode, clearGuestMode } from "../js/guestMode.js";
 import {
   mergeMonotonicProfileStats,
   reconcileMonotonicProfileStats,
@@ -33,6 +34,31 @@ function mergeDefaultLocalWithRemote(local, remote) {
   mergeMonotonicProfileStats(merged, local);
   reconcileMonotonicProfileStats(merged);
   return merged;
+}
+
+function isEmptyRemoteProfile(json) {
+  if (!json || typeof json !== "object") return true;
+  const keys = Object.keys(json);
+  if (keys.length === 0) return true;
+  if (keys.every((k) => k === "loginEmail" || k === "login_email" || k === "savedAt")) return true;
+  const hasCollection = json.collection && Object.keys(json.collection).length > 0;
+  const hasDecks = Array.isArray(json.decks) && json.decks.length > 0;
+  const cleared = json.adventure?.cleared;
+  const hasProgress =
+    (Array.isArray(cleared) ? cleared.length : Object.keys(cleared || {}).length) > 0;
+  const hasCurrency = typeof json.gems === "number" || typeof json.stars === "number";
+  const hasStats =
+    (typeof json.pvpWins === "number" && json.pvpWins > 0) ||
+    (typeof json.spellsPlayed === "number" && json.spellsPlayed > 0);
+  return !(hasCollection || hasDecks || hasProgress || hasCurrency || hasStats);
+}
+
+/** Mirrors cloudProfile.localBelongsToUser for regression tests. */
+function resolveOwnedLocal(userId, remote, guestMode) {
+  const ownerId = getStoredProfileOwnerId();
+  if (ownerId !== userId && ownerId !== null) return false;
+  if (ownerId === null && guestMode && remote && !isEmptyRemoteProfile(remote)) return false;
+  return true;
 }
 
 function testFreshDefaultLosesToOlderRemote() {
@@ -94,7 +120,7 @@ function testForeignLocalNotUploadedToEmptyRemote() {
 
   const ownerId = getStoredProfileOwnerId();
   const currentUserId = "user-b";
-  const ownedLocal = ownerId === currentUserId || ownerId === null;
+  const ownedLocal = resolveOwnedLocal(currentUserId, null, false);
   assert(!ownedLocal, "user-a local must not belong to user-b");
 
   const remote = { loginEmail: "b@example.com" };
@@ -112,8 +138,46 @@ function testForeignLocalNotUploadedToEmptyRemote() {
   assert(result.gems === 200, "new user should get starter gems");
 }
 
+function testGuestSignInPreservesCloudProgress() {
+  store.clear();
+  clearGuestMode();
+  const local = readProfileFromStorage();
+  local.gems = 50;
+  local.adventure = { cleared: { 1: 1 } };
+  saveProfile(local);
+  enterGuestMode();
+
+  const remote = readProfileFromStorage();
+  remote.gems = 4820;
+  remote.stars = 12;
+  remote.adventure = { cleared: { 1: 3, 2: 2, 3: 1 } };
+  remote.savedAt = Date.now() - 86_400_000;
+
+  const ownedLocal = resolveOwnedLocal("user-b", remote, true);
+  assert(!ownedLocal, "guest local must not overwrite existing cloud on sign-in");
+
+  const merged = mergeDefaultLocalWithRemote(local, remote);
+  assert(merged.gems === 4820, "remote gems must win over guest session");
+  assert(merged.adventure.cleared["3"] === 1, "remote adventure must win over guest session");
+}
+
+function testGuestSignUpKeepsLocalProgress() {
+  store.clear();
+  clearGuestMode();
+  const local = readProfileFromStorage();
+  local.gems = 50;
+  saveProfile(local);
+  enterGuestMode();
+
+  const remote = { loginEmail: "new@example.com" };
+  const ownedLocal = resolveOwnedLocal("new-user", remote, true);
+  assert(ownedLocal, "guest local should carry over when cloud save is empty");
+}
+
 testFreshDefaultLosesToOlderRemote();
 testDefaultLocalKeepsHigherMonotonicStats();
 testSignOutClearsProfile();
 testForeignLocalNotUploadedToEmptyRemote();
+testGuestSignInPreservesCloudProgress();
+testGuestSignUpKeepsLocalProgress();
 console.log("test-cloud-profile-sync: ok");
