@@ -2,6 +2,7 @@ import { isKnightCard, isRemovedCard, getCardDef, getPlayableCards, maxCopiesFor
 import { defaultAdventureProgress, migrateAdventureDecks, repairAdventureProgress } from "./adventure.js";
 import { normalizeCosmetics, DEFAULT_COSMETICS } from "./cosmetics.js";
 import { normalizeAchievements, DEFAULT_ACHIEVEMENTS, syncArcaneMastery, syncChampion, syncExplorer } from "./achievements.js";
+import { DEFAULT_DAILY_QUESTS, refreshDailyQuests } from "./dailyQuests.js";
 import { reconcileMonotonicProfileStats } from "./profileStats.js";
 
 /** Player profile: gems, collection, saved decks (localStorage) */
@@ -71,6 +72,7 @@ function defaultProfile() {
     adventure: defaultAdventureProgress(),
     cosmetics: structuredClone(DEFAULT_COSMETICS),
     achievements: structuredClone(DEFAULT_ACHIEVEMENTS),
+    dailyQuests: structuredClone(DEFAULT_DAILY_QUESTS),
     savedAt: Date.now(),
   };
 }
@@ -311,6 +313,7 @@ function normalizeLoadedProfile(parsed) {
     selectedDeckId: parsed.selectedDeckId ?? null,
     cosmetics: normalizeCosmetics(parsed.cosmetics),
     achievements: normalizeAchievements(parsed.achievements),
+    dailyQuests: parsed.dailyQuests,
     adventure: stub.adventure,
     savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : undefined,
     newCardIds: parsed.newCardIds && typeof parsed.newCardIds === "object" ? parsed.newCardIds : undefined,
@@ -336,6 +339,7 @@ function finalizeProfile(profile) {
   syncArcaneMastery(p);
   syncChampion(p);
   syncExplorer(p);
+  refreshDailyQuests(p);
   return p;
 }
 
