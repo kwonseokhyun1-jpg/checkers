@@ -73,7 +73,7 @@ import {
 import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
-import { initAuthGate, requiresAuthGate } from "./authGate.js";
+import { initAuthGate, requiresAuthGate, allowsAppAccess } from "./authGate.js";
 import {
   shouldShowInteractiveTutorial,
   shouldShowMetaTutorial,
@@ -108,6 +108,7 @@ import { mobileConfirm } from "./mobileConfirm.js";
 import { enhanceAllSelectInputs, resolveNativeSelect } from "./customSelect.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
+import { enterGuestMode, clearGuestMode } from "./guestMode.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { renderSpellCardEl, escapeHtml } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardPreview.js";
@@ -2402,6 +2403,10 @@ function init() {
   authGate = initAuthGate({
     onSignIn: () => authUI?.open("signin", { forced: true }),
     onSignUp: () => authUI?.open("signup", { forced: true }),
+    onGuest: () => {
+      enterGuestMode();
+      void startAppAfterAuthGate();
+    },
   });
 
   authUI = initAuthUI({
@@ -2412,6 +2417,7 @@ function init() {
       prepareInteractiveTutorialForNewAccount(profile, saveProfile);
     },
     onSignedIn: () => {
+      clearGuestMode();
       profile = loadProfile();
       repairProfile(profile);
       syncTutorialStorageWithProfile(profile);
@@ -2434,6 +2440,7 @@ function init() {
       }
     },
     onSignedOut: () => {
+      clearGuestMode();
       closeHeaderProfileMenu();
       headerDisplayUsername = "";
       updateHeaderProfileBtn();
@@ -2533,7 +2540,7 @@ function schedulePostFloor5CosmeticsTutorial() {
 }
 
 function maybeStartPvpTutorial() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!isQuestsAndPvpUnlocked(profile)) return false;
   if (!shouldShowPvpTutorial(profile)) return false;
   tutorialRunning = true;
@@ -2553,7 +2560,7 @@ function maybeStartPvpTutorial() {
 }
 
 function maybeStartPostFloor5CosmeticsTutorial() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!isCosmeticsUnlocked(profile)) return false;
   if (shouldShowInteractiveTutorial(profile) || shouldShowMetaTutorial(profile)) return false;
   if (shouldShowQuestsTutorial(profile) || shouldShowPvpTutorial(profile)) return false;
@@ -2575,7 +2582,7 @@ function maybeStartPostFloor5CosmeticsTutorial() {
 }
 
 function maybeStartPostFloor1Tutorials() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!isQuestsAndPvpUnlocked(profile)) return false;
   syncTutorialStorageWithProfile(profile);
   if (!shouldShowQuestsTutorial(profile)) return maybeStartPvpTutorial();
@@ -2597,7 +2604,7 @@ function maybeStartPostFloor1Tutorials() {
 }
 
 function maybeStartInteractiveTutorial() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!shouldShowInteractiveTutorial(profile)) return false;
   tutorialRunning = true;
   startInteractiveTutorial({
@@ -2621,7 +2628,7 @@ function maybeStartInteractiveTutorial() {
 }
 
 function maybeStartMetaTutorial() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!shouldShowMetaTutorial(profile)) return false;
   tutorialRunning = true;
   showTab("deck");
@@ -2641,6 +2648,19 @@ function maybeStartMetaTutorial() {
     },
   });
   return true;
+}
+
+async function startAppAfterAuthGate() {
+  authGate?.hide();
+
+  if (maybeStartInteractiveTutorial()) return;
+  if (maybeStartMetaTutorial()) return;
+  if (maybeStartPostFloor1Tutorials()) return;
+  if (maybeStartPostFloor5CosmeticsTutorial()) return;
+  if (tutorialRunning) return;
+  if (!(await tryResumeSavedMatch())) await showTab("deck");
+  reconcileMatchShellState();
+  setAudioMode("hub");
 }
 
 async function bootstrapAfterAuth() {
@@ -2670,16 +2690,8 @@ async function bootstrapAfterAuth() {
     authGate?.show();
     return;
   }
-  authGate?.hide();
 
-  if (maybeStartInteractiveTutorial()) return;
-  if (maybeStartMetaTutorial()) return;
-  if (maybeStartPostFloor1Tutorials()) return;
-  if (maybeStartPostFloor5CosmeticsTutorial()) return;
-  if (tutorialRunning) return;
-  if (!(await tryResumeSavedMatch())) await showTab("deck");
-  reconcileMatchShellState();
-  setAudioMode("hub");
+  await startAppAfterAuthGate();
 }
 
 init();
