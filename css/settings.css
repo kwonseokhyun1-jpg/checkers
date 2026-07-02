@@ -123,3 +123,24 @@
 .settings-sign-out {
   width: 100%;
 }
+
+.profile-delete-account {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-delete-account__hint {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.profile-delete-account__status {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+}
+
+.profile-delete-account__status--error {
+  color: var(--accent-red, #f87171);
+}

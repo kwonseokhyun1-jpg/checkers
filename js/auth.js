@@ -234,6 +234,7 @@ function isMissingRpcError(error) {
     code === "PGRST202" ||
     msg.includes("email_for_login") ||
     msg.includes("username_is_available") ||
+    msg.includes("delete_own_account") ||
     msg.includes("Could not find the function")
   );
 }
@@ -332,6 +333,33 @@ export async function signOut() {
   if (!sb) return;
   await sb.auth.signOut();
   currentUser = null;
+  notify();
+}
+
+/** Permanently delete the signed-in account and cloud save (requires delete_own_account RPC). */
+export async function deleteAccount() {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Sign in to delete your account.");
+
+  const user = getCurrentUser();
+  if (!user) throw new Error("Sign in to delete your account.");
+
+  const { error } = await sb.rpc("delete_own_account");
+  if (error) {
+    if (isMissingRpcError(error)) {
+      throw new Error(
+        "Account deletion is not available yet. Ask the host to run supabase/delete_own_account.sql in Supabase."
+      );
+    }
+    throw error;
+  }
+
+  currentUser = null;
+  try {
+    await sb.auth.signOut({ scope: "local" });
+  } catch {
+    // Session is invalid after user deletion; local cleanup is enough.
+  }
   notify();
 }
 
