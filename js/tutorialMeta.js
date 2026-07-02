@@ -61,7 +61,7 @@ const STEPS = [
     title: "Make room in your deck",
     body: `Your deck holds ${DECK_SIZE} spells. Tap × on one in the strip above to remove it and make room for something new.`,
     hint: "Tap × on a card in your deck strip.",
-    highlight: ".deck-slot-remove--visible",
+    highlight: ".deck-slot-wrap--strip:has(.deck-slot-remove--visible)",
     allowed: [".deck-slot-remove", ".deck-slot-remove--visible", ".deck-slot-wrap", ".deck-slot-wrap *"],
     actionSelector: ".deck-slot-remove--visible, .deck-slot-remove",
   },

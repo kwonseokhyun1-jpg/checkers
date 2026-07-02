@@ -8447,6 +8447,11 @@ body.tutorial-match-active.card-preview-open .tutorial-match-card {
 .tutorial-meta-highlight.deck-row {
   cursor: pointer;
 }
+/* Keep strip remove chips anchored when the tutorial spotlights them */
+.tutorial-meta-highlight.deck-slot-remove,
+.tutorial-meta-highlight.deck-slot-remove--visible {
+  position: absolute;
+}
 @keyframes tutorial-meta-pulse {
   0%, 100% { outline-color: var(--accent-gem); }
   50% { outline-color: rgba(120, 200, 255, 0.55); }
