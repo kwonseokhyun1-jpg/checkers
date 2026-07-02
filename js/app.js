@@ -52,6 +52,7 @@ import {
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { syncExplorer } from "./achievements.js";
+import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { smallMysteryBoxSvgMarkup, bigMysteryBoxSvgMarkup } from "./mysteryBoxArt.js";
@@ -497,6 +498,7 @@ function renderSettings() {
 function renderQuests() {
   renderQuestsTab(profile, $("view-quests"), {
     onTitleChanged: () => updateHeaderProfileBtn(),
+    onCurrencyChange: () => updateCurrencyHeader(),
   });
 }
 
@@ -2032,6 +2034,7 @@ async function launchAdventureMatch(
         const result = recordLevelClear(profile, levelId, stars);
         const { gems, stars: bestStars, starsGained } = result;
         profile.gems += gems;
+        trackDailyQuestEvent(profile, "adventure_floors", 1);
         syncExplorer(profile);
         saveProfile(profile);
         updateCurrencyHeader();

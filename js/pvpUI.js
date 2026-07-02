@@ -42,6 +42,7 @@ import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 import { lockPortrait } from "./orientation.js";
 import { setAudioMode } from "./audio.js";
 import { syncChampion } from "./achievements.js";
+import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { recordPvpWin } from "./profileStats.js";
 import { saveProfile } from "./storage.js";
 import {
@@ -720,6 +721,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
             if (won) {
               const profile = getProfile();
               recordPvpWin(profile);
+              trackDailyQuestEvent(profile, "pvp_wins", 1);
               syncChampion(profile);
               saveProfile(profile);
             }

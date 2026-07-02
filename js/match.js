@@ -67,6 +67,7 @@ import {
 import { mobileConfirm } from "./mobileConfirm.js";
 import { createMatchAchievementTracker } from "./achievementTracker.js";
 import { recordSpellPlayed } from "./profileStats.js";
+import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { saveProfile } from "./storage.js";
 import {
   appendHistoryEntry,
@@ -1040,6 +1041,7 @@ export class MatchSession {
   recordSuccessfulSpellCast() {
     if (!this.profile) return;
     recordSpellPlayed(this.profile);
+    trackDailyQuestEvent(this.profile, "spells_played", 1);
     saveProfile(this.profile);
   }
 
