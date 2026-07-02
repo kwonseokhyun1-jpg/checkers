@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces, tryPromoteOnFarRow } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -404,6 +404,49 @@ function hostileSwapWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
   );
 }
 
+function createFoeSpawnColor(color) {
+  return color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+}
+
+function jumpCapturesSquare(move, row, col) {
+  return move.captures?.some(([cr, cc]) => cr === row && cc === col) ?? false;
+}
+
+function maxChainCapturesFromSquare(board, color, state, fromR, fromC) {
+  const jumps = getAllMovesForColor(board, color, state).filter(
+    (m) => m.type === "jump" && m.from[0] === fromR && m.from[1] === fromC && m.captures?.length
+  );
+  if (!jumps.length) return 0;
+  let max = 0;
+  for (const jump of jumps) {
+    const simBoard = board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+    const sim = { ...state, board: simBoard };
+    applyMove(simBoard, jump, sim);
+    const depth = 1 + maxChainCapturesFromSquare(simBoard, color, sim, jump.to[0], jump.to[1]);
+    if (depth > max) max = depth;
+  }
+  return max;
+}
+
+/** Max capture chain length using a spawned foe at (spawnR, spawnC) as the first jump target. */
+function createFoeCaptureChainDepth(state, color, spawnR, spawnC) {
+  const sim = cloneForMoveSim(state);
+  sim.board[spawnR][spawnC] = createPiece(createFoeSpawnColor(color), spawnR, spawnC, false);
+  const jumps = getAllMovesForColor(sim.board, color, sim).filter(
+    (m) => m.type === "jump" && jumpCapturesSquare(m, spawnR, spawnC)
+  );
+  if (!jumps.length) return 0;
+  let maxDepth = 0;
+  for (const jump of jumps) {
+    const simBoard = sim.board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+    const jumpState = { ...sim, board: simBoard };
+    applyMove(simBoard, jump, jumpState);
+    const depth = 1 + maxChainCapturesFromSquare(simBoard, color, jumpState, jump.to[0], jump.to[1]);
+    if (depth > maxDepth) maxDepth = depth;
+  }
+  return maxDepth;
+}
+
 /** Avoid swaps that dump the opponent onto rank 8 / their promotion row, or pick them there when alternatives exist. */
 function hostileSwapAvoidsBackRank(color, [r1, c1], [r2, c2]) {
   const enemy = hostileSwapEnemyColor(color);
@@ -728,6 +771,32 @@ function* pickSequences(state, color, card, max = 24) {
   }
   if (card.mode === "column" || card.mode === "row") {
     for (const p of t0.slice(0, max)) yield [p];
+    return;
+  }
+  if (card.effect === "create_foe") {
+    const chainTargets = [];
+    const captureTargets = [];
+    const otherTargets = [];
+    for (const p of t0) {
+      const depth = createFoeCaptureChainDepth(state, color, p[0], p[1]);
+      if (depth >= 2) chainTargets.push({ pos: p, depth });
+      else if (depth === 1) captureTargets.push(p);
+      else otherTargets.push(p);
+    }
+    chainTargets.sort((a, b) => b.depth - a.depth || a.pos[0] - b.pos[0] || a.pos[1] - b.pos[1]);
+    let n = 0;
+    for (const { pos } of chainTargets) {
+      yield [pos];
+      if (++n >= max) return;
+    }
+    for (const pos of captureTargets) {
+      yield [pos];
+      if (++n >= max) return;
+    }
+    for (const pos of otherTargets) {
+      yield [pos];
+      if (++n >= max) return;
+    }
     return;
   }
   if (card.mode === "friendly" || card.mode === "enemy" || card.mode === "empty" || card.mode === "any_square") {
