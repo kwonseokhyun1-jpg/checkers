@@ -258,6 +258,28 @@ export function backstabCanTarget(state, color, r, c) {
   }
   return false;
 }
+
+/** True when stab on this friendly piece has an adjacent forward-diagonal enemy it can hit. */
+export function forwardBoltCanTarget(state, color, r, c) {
+  const p = at(state, r, c);
+  if (!p || p.color !== color) return false;
+  const dir = p.color === COLORS.RED ? -1 : 1;
+  for (const dc of [-1, 1]) {
+    const tr = r + dir;
+    const tc = c + dc;
+    if (!inBounds(tr, tc) || !isDarkSquare(tr, tc)) continue;
+    const t = at(state, tr, tc);
+    if (!t || t.color === color) continue;
+    if (isInDarknessZone(state, tr, tc)) continue;
+    if (t.cloneNoCaptureThisTurn) continue;
+    if (isFortified(t)) continue;
+    if (t.shieldTurns > 0) continue;
+    if (t.king && ensureConstitutionTurns(state.meta)[t.color] > 0) continue;
+    if (t.mirrorShield) continue;
+    return true;
+  }
+  return false;
+}
 function bestChainLightningHits(state, pr, pc, color) {
   const first = enemySquaresAdjacentTo(state, pr, pc, color);
   if (!first.length) return [];
