@@ -151,6 +151,8 @@ let deckSubview = "list";
 /** @type {string|null} null | 'new' | deck id */
 let editingDeckId = null;
 let workingDeck = [];
+/** @type {{ name: string, cardIds: string[] }|null} */
+let deckEditSnapshot = null;
 let collectionFilter = "";
 let collectionRarity = "all";
 let collectionSort = "rarity-desc";
@@ -344,6 +346,13 @@ async function showTab(tab) {
       return;
     }
   }
+  if (
+    deckSubview === "edit" &&
+    (tab !== "deck" || (tab === "deck" && activeTab === "deck"))
+  ) {
+    if (!(await confirmDiscardDeckChanges())) return;
+    discardDeckEdit();
+  }
   if (tab !== "deck" && deckSubview === "edit") {
     unlockBodyScrollForDeckEdit();
     document.body.classList.remove("deck-editing");
@@ -367,7 +376,6 @@ async function showTab(tab) {
   }
   if (tab === "deck") {
     deckSubview = "list";
-    editingDeckId = null;
     showDeckSubview("list");
   }
   if (tab === "profile") renderProfile();
@@ -634,6 +642,7 @@ function showDeckSubview(sub) {
     collectionCategory = "all";
     collectionOwnedOnly = true;
     syncCollectionFilterControls();
+    captureDeckEditSnapshot();
   }
 
   if (sub === "list") renderDeckList();
@@ -1188,6 +1197,37 @@ function renderInventoryGrid(container, opts = {}) {
   }
 }
 
+function captureDeckEditSnapshot() {
+  deckEditSnapshot = {
+    name: $("deck-name-input")?.value?.trim() ?? "",
+    cardIds: [...workingDeck],
+  };
+}
+
+function hasUnsavedDeckChanges() {
+  if (!deckEditSnapshot) return false;
+  const name = $("deck-name-input")?.value?.trim() ?? "";
+  if (name !== deckEditSnapshot.name) return true;
+  if (workingDeck.length !== deckEditSnapshot.cardIds.length) return true;
+  return workingDeck.some((id, i) => id !== deckEditSnapshot.cardIds[i]);
+}
+
+async function confirmDiscardDeckChanges() {
+  if (!hasUnsavedDeckChanges()) return true;
+  return mobileConfirm("Discard unsaved changes to this deck?", {
+    title: "Unsaved changes",
+    confirmLabel: "Discard",
+    cancelLabel: "Keep editing",
+    destructive: true,
+  });
+}
+
+function discardDeckEdit() {
+  editingDeckId = null;
+  workingDeck = [];
+  deckEditSnapshot = null;
+}
+
 function openDeckEdit(deckId) {
   const deck = profile.decks.find((d) => d.id === deckId);
   if (!deck) return;
@@ -1412,8 +1452,7 @@ function saveWorkingDeck() {
   profile.selectedDeckId = deck.id;
   saveProfile(profile);
   notifyMetaTutorial("deck-saved", { deckId: deck.id });
-  editingDeckId = null;
-  workingDeck = [];
+  discardDeckEdit();
   showDeckSubview("list");
 }
 
@@ -2275,9 +2314,9 @@ function init() {
   });
 
   $("btn-new-deck")?.addEventListener("click", startNewDeck);
-  $("btn-back-from-edit")?.addEventListener("click", () => {
-    editingDeckId = null;
-    workingDeck = [];
+  $("btn-back-from-edit")?.addEventListener("click", async () => {
+    if (!(await confirmDiscardDeckChanges())) return;
+    discardDeckEdit();
     showDeckSubview("list");
   });
   $("btn-delete-deck")?.addEventListener("click", async () => {
@@ -2295,8 +2334,7 @@ function init() {
       return;
     }
     deleteDeck(profile, deck.id);
-    editingDeckId = null;
-    workingDeck = [];
+    discardDeckEdit();
     showDeckSubview("list");
   });
 
