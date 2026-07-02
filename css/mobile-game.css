@@ -1659,7 +1659,7 @@ body.install-banner-visible.deck-editing .game-shell {
   /* In-match spell casting — wide flat hint strip + inline cancel */
   body.match-active .spell-cast-bar {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
     width: min(100%, var(--board-fit-width));
     max-width: 100%;
     gap: 0.45rem;
@@ -1678,20 +1678,16 @@ body.install-banner-visible.deck-editing .game-shell {
 
   body.match-active .spell-cast-hint {
     font-size: 0.82rem;
-    line-height: 1.2;
+    line-height: 1.3;
     text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
   }
 
   body.match-active .spell-cast-desc {
     font-size: 0.64rem;
-    line-height: 1.15;
+    line-height: 1.25;
     text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-wrap: anywhere;
   }
 
   body.match-active #btn-cancel-card {
