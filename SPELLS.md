@@ -96,7 +96,7 @@
 - **Fireline** — Forward Bolt hits every enemy along one forward diagonal.
 - **Forge** — Discard 2 cards to add a random rare or epic to your hand.
 - **Fortify** — Piece is immobile and invulnerable for 2 turns, then gains shield for 1 turn.
-- **Fusion** — Merge two adjacent friendly men into one super-man (2-step non-capture).
+- **Fusion** — Merge two adjacent friendly men into one king with the Awoken Bear mark — after each move with it, move again.
 - **Ghost Guard** — When a friendly piece is captured, its square blocks enemies for 2 turns.
 - **Gravity Well** — Pull all enemies adjacent to a square 1 step toward that square.
 - **Hand Expand** — Your hand limit becomes 8 for the rest of the game.

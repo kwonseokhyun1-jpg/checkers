@@ -141,6 +141,14 @@ export function createPiece(color, row, col, king = false) {
   };
 }
 
+/** King + Awoken Bear mark — extra move after each move with this piece (Hibernation wake / Fusion). */
+export function grantAwokenBear(piece) {
+  piece.king = true;
+  piece.bearAwakened = true;
+  piece.superMan = 0;
+  piece.hibernationTurns = 0;
+}
+
 /** Stall/Fortify — fully invulnerable to capture, destruction, and debuffs. */
 export function isFortified(piece) {
   return !!(piece && piece.fortifyTurns > 0);
@@ -817,8 +825,7 @@ export function tickEffects(board, color, state = null) {
         p.hibernationTurns--;
         if (p.hibernationTurns <= 0) {
           p.hibernationTurns = 0;
-          p.king = true;
-          p.bearAwakened = true;
+          grantAwokenBear(p);
         }
       }
       dec("shieldTurns"); dec("retreatTurns");

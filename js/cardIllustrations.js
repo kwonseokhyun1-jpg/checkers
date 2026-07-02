@@ -1121,20 +1121,20 @@ function sanctuaryMotif() {
     ${sparkles([[32, 8, 0.8], [14, 28, 0.6], [50, 28, 0.6]], "#e9d5ff", 0.5)}`;
 }
 
-/** Two allies merging into one empowered piece. */
+/** Two allies merging into one crowned Awoken Bear king. */
 function fusionMotif() {
   return `${groundShadow(32, 54, 20, 4)}
     ${allyPro(16, 42, 4.5)}${allyPro(48, 42, 4.5)}
     <path d="M22 42 C28 32 36 32 42 42" stroke="#0f172a" stroke-width="3.4" fill="none" stroke-linecap="round" opacity="0.2"/>
     <path d="M22 42 C28 32 36 32 42 42" stroke="#fde68a" stroke-width="2.8" fill="none" stroke-linecap="round"/>
     <path d="M20 40 L30 28 M44 40 L34 28" stroke="#fbbf24" stroke-width="1.6" opacity="0.55"/>
-    <circle cx="32" cy="24" r="10" fill="#2563eb" stroke="#0f172a" stroke-width="2.4" opacity="0.92"/>
-    <circle cx="32" cy="24" r="8" fill="#3b82f6"/>
-    <ellipse cx="32" cy="22" rx="6" ry="3.5" fill="#93c5fd" opacity="0.4"/>
-    <path d="M26 18 L32 10 L38 18" stroke="#0f172a" stroke-width="2.4" fill="none" stroke-linecap="round" opacity="0.25"/>
-    <path d="M26 18 L32 10 L38 18" stroke="#fbbf24" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M24 28 H40 M32 22 V32" stroke="#e9d5ff" stroke-width="1.8" opacity="0.55"/>
-    ${burst(32, 24, 7, "#60a5fa", "#1d4ed8")}
+    ${allyPro(32, 30, 6)}
+    <path d="M20 14 L24 6 L28 12 L32 2 L36 12 L40 6 L44 14 L44 22 H20 Z" fill="#fbbf24" opacity="0.88" stroke="#0f172a" stroke-width="1.6"/>
+    <path d="M20 14 L24 6 L28 12 L32 2 L36 12 L40 6 L44 14 L44 22 H20 Z" fill="none" stroke="#b45309" stroke-width="1.2"/>
+    <circle cx="24" cy="10" r="1.5" fill="#fde68a"/><circle cx="32" cy="6" r="1.5" fill="#fde68a"/><circle cx="40" cy="10" r="1.5" fill="#fde68a"/>
+    <circle cx="32" cy="52" r="5" fill="#fbbf24" opacity="0.45"/>
+    <path d="M24 50 C30 44 34 44 40 50" stroke="#fde68a" stroke-width="2" fill="none" opacity="0.7"/>
+    ${burst(32, 14, 5, "#fde68a", "#b45309")}
     ${sparkles([[24, 36, 0.7], [40, 36, 0.7], [32, 8, 0.9]], "#fde68a", 0.6)}`;
 }
 
