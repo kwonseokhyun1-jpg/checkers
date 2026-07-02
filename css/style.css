@@ -5149,6 +5149,17 @@ html:has(body.cosmetic-open-active) {
 .profile-sign-out:hover {
   color: var(--accent-red, #f87171);
 }
+.profile-delete-account {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.profile-delete-account__btn {
+  color: var(--accent-red, #f87171);
+}
+.profile-delete-account__btn:hover {
+  color: #fca5a5;
+}
 .panel-head--compact {
   margin-bottom: 0.85rem;
 }
