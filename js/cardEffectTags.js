@@ -38,6 +38,7 @@ const TAGS = {
   barrier: ["Place on any dark square", "Blocks enemies for 2 turn cycles"],
   vengeance: ["Hidden trap — destroys the next enemy who captures your piece", "Your piece survives 2 turns (blood counters), then dies"],
   hibernation: ["Sleep 2 turns (immobile)", "Wake as king + Awoken Bear", "Extra move every turn after"],
+  fusion: ["Merge two adjacent men into one", "Becomes king + Awoken Bear", "Extra move every turn after"],
   root_2: ["Enemy cannot jump/capture next turn"],
   silence_3: ["Suppress special movement 3 turns"],
   poison_3: ["Enemy dies in 3 turns — 3-turn poison bar"],

@@ -4,7 +4,7 @@
 import {
   SIZE, COLORS, isDarkSquare, inBounds, displacePiece, resolveLandingTraps, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
-  createPiece, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
+  createPiece, grantAwokenBear, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
   tryPromoteOnFarRow,
 } from "./board.js";
@@ -591,9 +591,8 @@ const EFFECTS = {
     if (a.king || b.king) return fail("Only men can fuse");
     if (Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col)) !== 1) return fail("Pick adjacent pieces");
     removePiece(state.board, b.row, b.col);
-    a.superMan = 0;
-    a.bearAwakened = true;
-    return ok("Fusion — Awoken Bear! Move again after each move with this piece.");
+    grantAwokenBear(a);
+    return ok("Fusion — Awoken Bear king! Move again after each move with this piece.");
   },
   chameleon(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=2; return ok(); },
   wraith_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.wraithTurns=2; return ok(); },

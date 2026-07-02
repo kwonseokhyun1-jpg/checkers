@@ -71,7 +71,7 @@ SPELLS = [
     ("bishops_sigil", "Bishop's Sigil", "Piece slides diagonally any distance over empties for 3 turns.", "rare", 3, "friendly", "bishop_3"),
     ("rooks_sigil", "Rook's Sigil", "Piece slides along rank/file over empties for 3 turns.", "rare", 3, "friendly", "rook_3"),    ("demote", "Demote", "Turn an enemy king back into a man.", "epic", 2, "enemy", "demote"),
     ("twin_soul", "Twin Soul", "Split a man into two tokens on adjacent squares; linked fate.", "epic", 2, "friendly", "twin_soul"),
-    ("fusion", "Fusion", "Merge two adjacent friendly men into one super-man (2-step non-capture).", "rare", 3, "f_f_adj", "fusion"),
+    ("fusion", "Fusion", "Merge two adjacent friendly men into one king with the Awoken Bear mark — after each move with it, move again.", "rare", 3, "f_f_adj", "fusion"),
     ("chameleon", "Chameleon", "Copy any piece's movement tags on the board for 2 turns.", "rare", 3, "any_piece", "chameleon"),
     ("wraith_form", "Wraith Form", "Piece passes through enemies for 2 turns (no capture while passing).", "rare", 3, "friendly", "wraith_2"),
     # === BOARD ===
