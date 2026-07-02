@@ -74,7 +74,7 @@ export const CARD_REGISTRY = [
   { id: "hibernation", name: "Hibernation", desc: "Your piece sleeps immobile for 2 turns, then awakens as a king with a bear mark — it may move twice each turn forever after.", rarity: "rare", weight: 3, mode: "friendly", effect: "hibernation" },
   { id: "vengeance", name: "Vengeance", desc: "Hidden trap: the next enemy capture of your piece destroys the capturer; your piece survives 2 turns (blood counters), then dies.", rarity: "rare", weight: 3, mode: "instant", effect: "vengeance" },
   { id: "sanctuary", name: "Sanctuary", desc: "Friendly pieces on the target dark square and its 6 surrounding dark squares cannot be captured for 1 turn.", rarity: "rare", weight: 3, mode: "empty", effect: "sanctuary" },
-  { id: "fusion", name: "Fusion", desc: "Merge two adjacent friendly men into one piece with the Awoken Bear mark — after each move with it, move again.", rarity: "rare", weight: 3, mode: "f_f_adj", effect: "fusion" },
+  { id: "fusion", name: "Fusion", desc: "Merge two adjacent friendly men into one king with the Awoken Bear mark — after each move with it, move again.", rarity: "rare", weight: 3, mode: "f_f_adj", effect: "fusion" },
   { id: "chameleon", name: "Chameleon", desc: "Copy any piece's movement tags on the board for 2 turns.", rarity: "rare", weight: 3, mode: "any_piece", effect: "chameleon" },
   { id: "cryo_bolt", name: "Cryo Bolt", desc: "Bolt along your diagonal: freezes a normal enemy, or destroys a frozen or paralyzed one (breaks shield).", rarity: "uncommon", weight: 3, mode: "diagonal", effect: "cryo_bolt" },
   { id: "collapse", name: "Collapse", desc: "Remove one dark square from play for 3 turns; piece on it relocates.", rarity: "uncommon", weight: 4, mode: "empty", effect: "collapse" },
