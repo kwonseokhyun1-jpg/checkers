@@ -8,6 +8,8 @@ import {
   canClaimDailyQuest,
   claimDailyQuest,
   getActiveDailyQuests,
+  getMsUntilLocalMidnight,
+  formatDailyResetCountdown,
   DAILY_QUEST_COUNT,
   DAILY_QUEST_BY_ID,
 } from "../js/dailyQuests.js";
@@ -91,9 +93,23 @@ function testActiveDailyQuestsShape() {
   }
 }
 
+function testResetCountdownHelpers() {
+  const noon = new Date(2026, 6, 2, 12, 0, 0);
+  const ms = getMsUntilLocalMidnight(noon);
+  assert(ms === 12 * 60 * 60 * 1000, "noon should be 12 hours until midnight");
+
+  const almostMidnight = new Date(2026, 6, 2, 23, 59, 30);
+  assert(getMsUntilLocalMidnight(almostMidnight) === 30 * 1000, "30 seconds left at 23:59:30");
+
+  assert(formatDailyResetCountdown(3661000) === "01:01:01", "should format HH:MM:SS");
+  assert(formatDailyResetCountdown(0) === "00:00:00", "zero ms should format as 00:00:00");
+  assert(formatDailyResetCountdown(-1000) === "00:00:00", "negative ms should clamp to zero");
+}
+
 testDeterministicRotation();
 testOneQuestPerKind();
 testProgressAndClaimGems();
 testDailyReset();
 testActiveDailyQuestsShape();
+testResetCountdownHelpers();
 console.log("All daily quest tests passed.");
