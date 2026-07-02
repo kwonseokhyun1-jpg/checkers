@@ -1925,10 +1925,14 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   /* Game over sheet — victory CTAs and star readout */
-  .game-over-card #btn-restart-match {
+  .game-over-actions {
+    margin-top: 0.65rem;
+  }
+
+  .game-over-actions .btn-primary,
+  .game-over-actions .btn-secondary {
     min-height: 48px;
     width: 100%;
-    margin-top: 0.65rem;
   }
 
   .game-over-star-gain {

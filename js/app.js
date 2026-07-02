@@ -34,6 +34,7 @@ import {
   getEnemyDeckPreview,
   isLevelUnlocked,
   isLevelCleared,
+  ADVENTURE_LEVEL_COUNT,
   gemsForLevelClear,
   recordLevelClear,
   formatStars,
@@ -1998,12 +1999,18 @@ async function launchAdventureMatch(
     challengeModeOverride ??
     (getWorldForLevel(levelId).id === 5 && isChallengeModeEnabled(profile.adventure));
 
+  const adventureCtx = { levelId, deckId: deck.id, challengeMode };
+
   const sessionOpts = {
     aiDeckIds: enemyDeck,
     opponentName,
     cosmetics: getEquippedCosmetics(profile),
     profile,
     challengeMode,
+    buildGameOverActions: ({ won, isTie }) => buildAdventureGameOverActions(adventureCtx, { won, isTie }),
+    onGameOverAction: (actionId) => {
+      void handleAdventureGameOverAction(actionId, adventureCtx, root);
+    },
   };
   if (resumeState) {
     sessionOpts.initialState = resumeState;
@@ -2108,6 +2115,81 @@ async function tryResumeSavedMatch() {
   );
   matchSession?.setMessage("Match resumed — pick up where you left off.");
   return true;
+}
+
+function buildAdventureGameOverActions({ levelId }, { won, isTie }) {
+  const nextId = levelId + 1;
+  const hasNextFloor =
+    won && nextId <= ADVENTURE_LEVEL_COUNT && isLevelUnlocked(profile.adventure, nextId);
+
+  if (isTie) {
+    return [{ id: "backToAdventure", label: "Back to Adventure", primary: true }];
+  }
+
+  if (won) {
+    const actions = [];
+    if (hasNextFloor) {
+      actions.push({ id: "nextFloor", label: "Next floor", primary: true });
+      actions.push({ id: "retry", label: "Retry floor" });
+      actions.push({ id: "editDeck", label: "Edit deck" });
+      actions.push({ id: "backToAdventure", label: "Back to Adventure" });
+    } else {
+      actions.push({ id: "backToAdventure", label: "Back to Adventure", primary: true });
+      actions.push({ id: "retry", label: "Retry floor" });
+      actions.push({ id: "editDeck", label: "Edit deck" });
+    }
+    return actions;
+  }
+
+  return [
+    { id: "retry", label: "Retry floor", primary: true },
+    { id: "editDeck", label: "Edit deck" },
+    { id: "backToAdventure", label: "Back to Adventure" },
+  ];
+}
+
+async function handleAdventureGameOverAction(actionId, { levelId, deckId, challengeMode }, root) {
+  const deck = profile.decks.find((d) => d.id === deckId);
+
+  if (actionId === "backToAdventure") {
+    matchSession?.onExit?.();
+    return;
+  }
+
+  if (actionId === "editDeck") {
+    matchSession?.dispose();
+    matchSession = null;
+    exitMatchMode();
+    void lockPortrait();
+    setAudioMode("hub");
+    root.innerHTML = "";
+    root.classList.add("hidden");
+    showTab("deck");
+    openDeckEdit(deckId);
+    return;
+  }
+
+  if (actionId === "retry" || actionId === "nextFloor") {
+    const targetLevelId = actionId === "nextFloor" ? levelId + 1 : levelId;
+    const level = getLevel(targetLevelId);
+    if (!deck || deck.cardIds.length !== DECK_SIZE || !level) {
+      matchSession?.onExit?.();
+      return;
+    }
+    matchSession?.dispose();
+    matchSession = null;
+    exitMatchMode();
+    const enemyDeck = getOrCreateLevelEnemyDeck(profile, targetLevelId);
+    await launchAdventureMatch(
+      deck,
+      level,
+      enemyDeck,
+      targetLevelId,
+      null,
+      false,
+      actionId === "retry" ? challengeMode : undefined,
+    );
+  }
 }
 
 
