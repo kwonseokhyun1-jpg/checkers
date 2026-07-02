@@ -175,6 +175,8 @@ export class MatchSession {
     this.onPvpWin = options.onPvpWin ?? null;
     this.onPvpForfeit = options.onPvpForfeit ?? null;
     this.onPvpPendingRow = options.onPvpPendingRow ?? null;
+    this.buildGameOverActions = options.buildGameOverActions ?? null;
+    this.onGameOverAction = options.onGameOverAction ?? null;
     this.onPvpSyncError = options.onPvpSyncError ?? null;
     this.skipCheckpoint = !!options.skipCheckpoint;
     /** @type {import('./tutorialMatch.js').TutorialHooks | null} */
@@ -462,7 +464,6 @@ export class MatchSession {
       if (!this.skipCheckpoint) saveMatchCheckpoint(this);
       this.onExit?.();
     });
-    this.root.querySelector("#btn-restart-match")?.addEventListener("click", () => this.onExit?.());
     this.$("pvp-history-prev")?.addEventListener("click", () => this.stepHistory(-1));
     this.$("pvp-history-next")?.addEventListener("click", () => this.stepHistory(1));
     this._onDocPointerMove = (e) => this.onDragMove(e);
@@ -1862,6 +1863,7 @@ ${starLine}`;
       }
       const gainEl = this.root.querySelector("#game-over-star-gain");
       if (gainEl) gainEl.classList.add("hidden");
+      this.renderGameOverActions({ won, isTie, stars });
       overlay.classList.remove("hidden");
       if (won && this._pendingStarsGained > 0) {
         const n = this._pendingStarsGained;
@@ -1882,6 +1884,31 @@ ${starLine}`;
     this.render();
   }
 
+  renderGameOverActions({ won, isTie, stars }) {
+    const container = this.root.querySelector("#game-over-actions");
+    if (!container) return;
+    container.innerHTML = "";
+
+    const actions = this.buildGameOverActions?.({ won, isTie, stars, isPvp: this.isPvp }) ?? [
+      { id: "back", label: "Back", primary: true },
+    ];
+
+    for (const action of actions) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = action.label;
+      btn.className = action.primary ? "btn-primary" : "btn-secondary";
+      btn.dataset.action = action.id;
+      btn.addEventListener("click", () => {
+        if (this.onGameOverAction) {
+          this.onGameOverAction(action.id);
+        } else {
+          this.onExit?.();
+        }
+      });
+      container.appendChild(btn);
+    }
+  }
 
   squareInAnim(spec, row, col) {
     if (!spec) return null;

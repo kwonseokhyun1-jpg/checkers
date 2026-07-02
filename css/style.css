@@ -8132,6 +8132,18 @@ body.adventure-active:not(.adventure-floor-open) .adventure-map-canvas__bg::afte
   to { transform: scale(1); opacity: 1; }
 }
 
+.game-over-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+}
+.game-over-actions .btn-primary,
+.game-over-actions .btn-secondary {
+  width: 100%;
+  min-height: 44px;
+}
+
 /* Tutorial */
 .tutorial-modal {
   position: fixed;

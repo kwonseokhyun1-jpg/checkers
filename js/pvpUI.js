@@ -757,6 +757,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
             if (winnerId) await pvpService.finishMatch(winnerId);
           },
           onPvpPendingRow: (pendingRow) => applyPvpMatchRow(pendingRow),
+          buildGameOverActions: () => [{ id: "back", label: "Back to PvP", primary: true }],
+          onGameOverAction: () => matchSession?.onExit?.(),
           onPvpSyncError: (err) => {
             if (!matchSession?._gameOverUiShown) {
               matchSession.setMessage(formatPvpError(err, { context: "sync" }));
