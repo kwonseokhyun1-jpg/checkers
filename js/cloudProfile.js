@@ -1,4 +1,5 @@
 import { getCurrentUser, fetchProfileRow, upsertProfileRow, isAuthAvailable } from "./auth.js";
+import { isGuestMode } from "./guestMode.js";
 import {
   readProfileFromStorage,
   saveProfile,
@@ -38,9 +39,14 @@ function applyRemoteProfile(remote) {
   return remote;
 }
 
-function localBelongsToUser(userId) {
+function localBelongsToUser(userId, remote) {
   const ownerId = getStoredProfileOwnerId();
-  return ownerId === userId || ownerId === null;
+  if (ownerId !== userId && ownerId !== null) return false;
+  // Guest session progress must not replace an existing cloud save on sign-in.
+  if (ownerId === null && isGuestMode() && remote && !isEmptyRemoteProfile(remote)) {
+    return false;
+  }
+  return true;
 }
 
 export async function pullCloudProfile() {
@@ -50,7 +56,7 @@ export async function pullCloudProfile() {
   const row = await fetchProfileRow(user.id);
   const local = readProfileFromStorage();
   const remote = row?.profile_json;
-  const ownedLocal = localBelongsToUser(user.id);
+  const ownedLocal = localBelongsToUser(user.id, remote);
 
   if (!remote || typeof remote !== "object" || isEmptyRemoteProfile(remote)) {
     if (!isDefaultProfile(local) && ownedLocal) applyRemoteProfile(local);
