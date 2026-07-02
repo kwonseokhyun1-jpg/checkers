@@ -20,14 +20,46 @@ if (errors.length) {
   process.exit(1);
 }
 
-// Auth gate blocks nav in CI (Supabase configured, no signed-in user).
+// Auth gate blocks nav when Supabase is configured and the player has not signed in or continued as guest.
 if (await page.locator("#auth-gate:not(.hidden)").isVisible()) {
-  await page.evaluate(() => {
-    document.getElementById("auth-gate")?.classList.add("hidden");
-    document.body.classList.remove("auth-gate-active");
-  });
+  const guestBtn = page.locator("#auth-gate-guest");
+  if (await guestBtn.isVisible()) {
+    await guestBtn.click();
+  } else {
+    await page.evaluate(() => {
+      document.getElementById("auth-gate")?.classList.add("hidden");
+      document.body.classList.remove("auth-gate-active");
+    });
+  }
   await page.waitForTimeout(300);
 }
+
+async function dismissInteractiveTutorialIfOpen(page) {
+  const skipBtn = page.locator("#tutorial-match-skip");
+  if (!(await skipBtn.isVisible().catch(() => false))) return;
+  await skipBtn.click();
+  await page.waitForTimeout(300);
+  const okBtn = page.locator("#mobile-confirm-ok");
+  if (await okBtn.isVisible().catch(() => false)) {
+    await okBtn.click();
+    await page.waitForTimeout(800);
+  }
+}
+
+async function dismissMetaTutorialIfOpen(page) {
+  const skipBtn = page.locator("#tutorial-meta-skip");
+  if (!(await skipBtn.isVisible().catch(() => false))) return;
+  await skipBtn.click();
+  await page.waitForTimeout(300);
+  const okBtn = page.locator("#mobile-confirm-ok");
+  if (await okBtn.isVisible().catch(() => false)) {
+    await okBtn.click();
+    await page.waitForTimeout(800);
+  }
+}
+
+await dismissInteractiveTutorialIfOpen(page);
+await dismissMetaTutorialIfOpen(page);
 
 const tutorialVisible = await page.locator("#tutorial-modal:not(.hidden)").isVisible();
 if (tutorialVisible) {
@@ -100,10 +132,22 @@ if (!boardMetrics.ranksBesideBoard || boardMetrics.frameDisplay !== "grid") {
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.waitForTimeout(1000);
 if (await page.locator("#auth-gate:not(.hidden)").isVisible()) {
-  await page.evaluate(() => {
-    document.getElementById("auth-gate")?.classList.add("hidden");
-    document.body.classList.remove("auth-gate-active");
-  });
+  const guestBtn = page.locator("#auth-gate-guest");
+  if (await guestBtn.isVisible()) {
+    await guestBtn.click();
+  } else {
+    await page.evaluate(() => {
+      document.getElementById("auth-gate")?.classList.add("hidden");
+      document.body.classList.remove("auth-gate-active");
+    });
+  }
+  await page.waitForTimeout(300);
+}
+await dismissInteractiveTutorialIfOpen(page);
+await dismissMetaTutorialIfOpen(page);
+if (await page.locator("#mobile-confirm:not(.hidden)").isVisible().catch(() => false)) {
+  await page.locator("#mobile-confirm-cancel").click();
+  await page.waitForTimeout(200);
 }
 const authHeader = page.locator("#auth-header-btn");
 if (await authHeader.isVisible()) {

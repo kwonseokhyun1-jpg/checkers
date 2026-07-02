@@ -6,6 +6,7 @@ import { getSettings, saveSettings } from "./settings.js";
 import { refreshAudioFromSettings } from "./audio.js";
 import {
   canChangeUsername,
+  deleteAccount,
   fetchProfileRow,
   getCurrentUser,
   isAuthAvailable,
@@ -15,6 +16,7 @@ import {
   updateUsername,
   validateUsernameFormat,
 } from "./auth.js";
+import { mobileConfirm } from "./mobileConfirm.js";
 
 export const PRIVACY_POLICY_URL = "https://sites.google.com/view/arcane-checkers/home";
 
@@ -115,6 +117,11 @@ function accountSectionHtml({ signedIn, username, email }) {
         <p id="settings-username-status" class="profile-username-status" role="status"></p>
       </div>
       <button type="button" class="btn-text profile-sign-out" id="settings-sign-out">Sign out</button>
+      <div class="profile-delete-account">
+        <button type="button" class="btn-text profile-delete-account__btn" id="settings-delete-account">Delete account</button>
+        <p class="profile-delete-account__hint muted">Permanently removes your account, cloud save, and username. This cannot be undone.</p>
+        <p id="settings-delete-account-status" class="profile-delete-account__status" role="status"></p>
+      </div>
     </div>`;
 }
 
@@ -162,6 +169,32 @@ export function renderSettingsTab(root, { onUsernameChanged } = {}) {
 
   root.querySelector("#settings-sign-out")?.addEventListener("click", () => {
     void signOut();
+  });
+
+  const deleteBtn = root.querySelector("#settings-delete-account");
+  const deleteStatus = root.querySelector("#settings-delete-account-status");
+  deleteBtn?.addEventListener("click", async () => {
+    const confirmed = await mobileConfirm(
+      "This permanently deletes your account, cloud save, decks, and username. You will need a new account to play again.",
+      {
+        title: "Delete account?",
+        confirmLabel: "Delete account",
+        cancelLabel: "Keep account",
+        destructive: true,
+      }
+    );
+    if (!confirmed) return;
+
+    deleteStatus.textContent = "";
+    deleteStatus.classList.remove("profile-delete-account__status--error");
+    deleteBtn.disabled = true;
+    try {
+      await deleteAccount();
+    } catch (e) {
+      deleteStatus.textContent = e.message || "Could not delete account";
+      deleteStatus.classList.add("profile-delete-account__status--error");
+      deleteBtn.disabled = false;
+    }
   });
 
   if (!signedIn) return;

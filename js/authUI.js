@@ -314,9 +314,12 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
     }
   });
 
+  let sawUser = false;
+
   onAuthChange(async (user) => {
     updateHeaderBtn(user);
     if (user) {
+      sawUser = true;
       if (handlingAuthForm) return;
       try {
         await pullCloudProfile();
@@ -328,7 +331,8 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
       closeBtn?.classList.remove("hidden");
       backdrop?.classList.remove("auth-modal-backdrop--locked");
       close();
-    } else {
+    } else if (sawUser) {
+      sawUser = false;
       onSignedOut?.();
     }
   });

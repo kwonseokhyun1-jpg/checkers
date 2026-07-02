@@ -53,6 +53,7 @@ import {
 } from "./adventure.js";
 import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { syncExplorer } from "./achievements.js";
+import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { smallMysteryBoxSvgMarkup, bigMysteryBoxSvgMarkup } from "./mysteryBoxArt.js";
@@ -74,7 +75,7 @@ import {
 import { playStarCollectAnimation } from "./starCollectAnimation.js";
 import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
-import { initAuthGate, requiresAuthGate } from "./authGate.js";
+import { initAuthGate, requiresAuthGate, allowsAppAccess } from "./authGate.js";
 import {
   shouldShowInteractiveTutorial,
   shouldShowMetaTutorial,
@@ -109,6 +110,7 @@ import { mobileConfirm } from "./mobileConfirm.js";
 import { enhanceAllSelectInputs, resolveNativeSelect } from "./customSelect.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
+import { enterGuestMode, clearGuestMode } from "./guestMode.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { renderSpellCardEl, escapeHtml } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardPreview.js";
@@ -152,6 +154,8 @@ let deckSubview = "list";
 /** @type {string|null} null | 'new' | deck id */
 let editingDeckId = null;
 let workingDeck = [];
+/** @type {{ name: string, cardIds: string[] }|null} */
+let deckEditSnapshot = null;
 let collectionFilter = "";
 let collectionRarity = "all";
 let collectionSort = "rarity-desc";
@@ -345,6 +349,13 @@ async function showTab(tab) {
       return;
     }
   }
+  if (
+    deckSubview === "edit" &&
+    (tab !== "deck" || (tab === "deck" && activeTab === "deck"))
+  ) {
+    if (!(await confirmDiscardDeckChanges())) return;
+    discardDeckEdit();
+  }
   if (tab !== "deck" && deckSubview === "edit") {
     unlockBodyScrollForDeckEdit();
     document.body.classList.remove("deck-editing");
@@ -368,7 +379,6 @@ async function showTab(tab) {
   }
   if (tab === "deck") {
     deckSubview = "list";
-    editingDeckId = null;
     showDeckSubview("list");
   }
   if (tab === "profile") renderProfile();
@@ -498,6 +508,7 @@ function renderSettings() {
 function renderQuests() {
   renderQuestsTab(profile, $("view-quests"), {
     onTitleChanged: () => updateHeaderProfileBtn(),
+    onCurrencyChange: () => updateCurrencyHeader(),
   });
 }
 
@@ -534,7 +545,7 @@ function syncCollectionFilterControls() {
 }
 
 const DECK_EDIT_MOBILE_MQ = "(max-width: 899px)";
-const MAIN_TAB_INNER_SCROLL_MQ = "(max-width: 768px)";
+const MAIN_TAB_INNER_SCROLL_MQ = "(max-width: 1280px)";
 /** @type {number|null} */
 let deckListScrollYBeforeEdit = null;
 
@@ -635,6 +646,7 @@ function showDeckSubview(sub) {
     collectionCategory = "all";
     collectionOwnedOnly = true;
     syncCollectionFilterControls();
+    captureDeckEditSnapshot();
   }
 
   if (sub === "list") renderDeckList();
@@ -1189,6 +1201,37 @@ function renderInventoryGrid(container, opts = {}) {
   }
 }
 
+function captureDeckEditSnapshot() {
+  deckEditSnapshot = {
+    name: $("deck-name-input")?.value?.trim() ?? "",
+    cardIds: [...workingDeck],
+  };
+}
+
+function hasUnsavedDeckChanges() {
+  if (!deckEditSnapshot) return false;
+  const name = $("deck-name-input")?.value?.trim() ?? "";
+  if (name !== deckEditSnapshot.name) return true;
+  if (workingDeck.length !== deckEditSnapshot.cardIds.length) return true;
+  return workingDeck.some((id, i) => id !== deckEditSnapshot.cardIds[i]);
+}
+
+async function confirmDiscardDeckChanges() {
+  if (!hasUnsavedDeckChanges()) return true;
+  return mobileConfirm("Discard unsaved changes to this deck?", {
+    title: "Unsaved changes",
+    confirmLabel: "Discard",
+    cancelLabel: "Keep editing",
+    destructive: true,
+  });
+}
+
+function discardDeckEdit() {
+  editingDeckId = null;
+  workingDeck = [];
+  deckEditSnapshot = null;
+}
+
 function openDeckEdit(deckId) {
   const deck = profile.decks.find((d) => d.id === deckId);
   if (!deck) return;
@@ -1413,8 +1456,7 @@ function saveWorkingDeck() {
   profile.selectedDeckId = deck.id;
   saveProfile(profile);
   notifyMetaTutorial("deck-saved", { deckId: deck.id });
-  editingDeckId = null;
-  workingDeck = [];
+  discardDeckEdit();
   showDeckSubview("list");
 }
 
@@ -2039,6 +2081,7 @@ async function launchAdventureMatch(
         const result = recordLevelClear(profile, levelId, stars);
         const { gems, stars: bestStars, starsGained } = result;
         profile.gems += gems;
+        trackDailyQuestEvent(profile, "adventure_floors", 1);
         syncExplorer(profile);
         saveProfile(profile);
         updateCurrencyHeader();
@@ -2357,9 +2400,9 @@ function init() {
   });
 
   $("btn-new-deck")?.addEventListener("click", startNewDeck);
-  $("btn-back-from-edit")?.addEventListener("click", () => {
-    editingDeckId = null;
-    workingDeck = [];
+  $("btn-back-from-edit")?.addEventListener("click", async () => {
+    if (!(await confirmDiscardDeckChanges())) return;
+    discardDeckEdit();
     showDeckSubview("list");
   });
   $("btn-delete-deck")?.addEventListener("click", async () => {
@@ -2377,8 +2420,7 @@ function init() {
       return;
     }
     deleteDeck(profile, deck.id);
-    editingDeckId = null;
-    workingDeck = [];
+    discardDeckEdit();
     showDeckSubview("list");
   });
 
@@ -2446,6 +2488,10 @@ function init() {
   authGate = initAuthGate({
     onSignIn: () => authUI?.open("signin", { forced: true }),
     onSignUp: () => authUI?.open("signup", { forced: true }),
+    onGuest: () => {
+      enterGuestMode();
+      void startAppAfterAuthGate();
+    },
   });
 
   authUI = initAuthUI({
@@ -2456,6 +2502,7 @@ function init() {
       prepareInteractiveTutorialForNewAccount(profile, saveProfile);
     },
     onSignedIn: () => {
+      clearGuestMode();
       profile = loadProfile();
       repairProfile(profile);
       syncTutorialStorageWithProfile(profile);
@@ -2478,6 +2525,7 @@ function init() {
       }
     },
     onSignedOut: () => {
+      clearGuestMode();
       closeHeaderProfileMenu();
       headerDisplayUsername = "";
       updateHeaderProfileBtn();
@@ -2577,7 +2625,7 @@ function schedulePostFloor5CosmeticsTutorial() {
 }
 
 function maybeStartPvpTutorial() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!isQuestsAndPvpUnlocked(profile)) return false;
   if (!shouldShowPvpTutorial(profile)) return false;
   tutorialRunning = true;
@@ -2597,7 +2645,7 @@ function maybeStartPvpTutorial() {
 }
 
 function maybeStartPostFloor5CosmeticsTutorial() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!isCosmeticsUnlocked(profile)) return false;
   if (shouldShowInteractiveTutorial(profile) || shouldShowMetaTutorial(profile)) return false;
   if (shouldShowQuestsTutorial(profile) || shouldShowPvpTutorial(profile)) return false;
@@ -2619,7 +2667,7 @@ function maybeStartPostFloor5CosmeticsTutorial() {
 }
 
 function maybeStartPostFloor1Tutorials() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!isQuestsAndPvpUnlocked(profile)) return false;
   syncTutorialStorageWithProfile(profile);
   if (!shouldShowQuestsTutorial(profile)) return maybeStartPvpTutorial();
@@ -2641,7 +2689,7 @@ function maybeStartPostFloor1Tutorials() {
 }
 
 function maybeStartInteractiveTutorial() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!shouldShowInteractiveTutorial(profile)) return false;
   tutorialRunning = true;
   startInteractiveTutorial({
@@ -2665,7 +2713,7 @@ function maybeStartInteractiveTutorial() {
 }
 
 function maybeStartMetaTutorial() {
-  if (tutorialRunning || !getCurrentUser()) return false;
+  if (tutorialRunning || !allowsAppAccess()) return false;
   if (!shouldShowMetaTutorial(profile)) return false;
   tutorialRunning = true;
   showTab("deck");
@@ -2685,6 +2733,19 @@ function maybeStartMetaTutorial() {
     },
   });
   return true;
+}
+
+async function startAppAfterAuthGate() {
+  authGate?.hide();
+
+  if (maybeStartInteractiveTutorial()) return;
+  if (maybeStartMetaTutorial()) return;
+  if (maybeStartPostFloor1Tutorials()) return;
+  if (maybeStartPostFloor5CosmeticsTutorial()) return;
+  if (tutorialRunning) return;
+  if (!(await tryResumeSavedMatch())) await showTab("deck");
+  reconcileMatchShellState();
+  setAudioMode("hub");
 }
 
 async function bootstrapAfterAuth() {
@@ -2714,16 +2775,8 @@ async function bootstrapAfterAuth() {
     authGate?.show();
     return;
   }
-  authGate?.hide();
 
-  if (maybeStartInteractiveTutorial()) return;
-  if (maybeStartMetaTutorial()) return;
-  if (maybeStartPostFloor1Tutorials()) return;
-  if (maybeStartPostFloor5CosmeticsTutorial()) return;
-  if (tutorialRunning) return;
-  if (!(await tryResumeSavedMatch())) await showTab("deck");
-  reconcileMatchShellState();
-  setAudioMode("hub");
+  await startAppAfterAuthGate();
 }
 
 init();

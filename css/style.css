@@ -51,7 +51,7 @@ body {
   min-width: 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1280px) {
   .game-layout {
     grid-template-columns: 1fr;
     justify-items: center;
@@ -1663,7 +1663,7 @@ body {
   min-width: 0;
 }
 
-@media (min-width: 901px) {
+@media (min-width: 1281px) {
   .match-wrap .panel-player {
     min-width: 0;
     max-width: 188px;
@@ -5149,6 +5149,17 @@ html:has(body.cosmetic-open-active) {
 .profile-sign-out:hover {
   color: var(--accent-red, #f87171);
 }
+.profile-delete-account {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.profile-delete-account__btn {
+  color: var(--accent-red, #f87171);
+}
+.profile-delete-account__btn:hover {
+  color: #fca5a5;
+}
 .panel-head--compact {
   margin-bottom: 0.85rem;
 }
@@ -8232,6 +8243,15 @@ body.auth-gate-active .game-shell {
 .auth-gate__btn {
   width: 100%;
 }
+.auth-gate__guest {
+  margin-top: 0.35rem;
+  width: 100%;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+.auth-gate__guest:hover {
+  color: var(--text);
+}
 
 /* In-match interactive tutorial overlay */
 .tutorial-match-active {
@@ -8588,6 +8608,55 @@ body.tutorial-match-active.card-preview-open .tutorial-match-card {
 .profile-achievement-card__claim {
   margin-top: 0.65rem;
   width: 100%;
+}
+.daily-quests-section {
+  margin-bottom: 1.5rem;
+}
+.daily-quests-section__head,
+.title-quests-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.daily-quests-section__title,
+.title-quests-section__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text, #e8ecf4);
+}
+.daily-quests-section__reset {
+  margin: 0;
+  font-size: 0.72rem;
+}
+.title-quests-section {
+  padding-top: 0.35rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.title-quests-section__desc {
+  margin: 0;
+  font-size: 0.75rem;
+}
+.daily-quest-card__reward {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+}
+.daily-quest-card__reward--gems {
+  color: #5ce1e6;
+  background: rgba(92, 225, 230, 0.12);
+  border-color: rgba(92, 225, 230, 0.35);
+}
+.daily-quest-card__reward--stars {
+  color: #ffd87a;
+  background: rgba(255, 216, 122, 0.12);
+  border-color: rgba(255, 216, 122, 0.35);
 }
 .profile-title-grid {
   display: grid;

@@ -69,6 +69,14 @@
   --nav-icon-idle: #8b9cb3;
 }
 
+/* 7–10″ tablets (portrait ~600–1280 CSS px) — larger board, same mobile shell UX */
+@media (min-width: 769px) and (max-width: 1280px) {
+  :root {
+    --board-max-size: 560px;
+    --board-v-chrome: 340px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-safe: 0;
