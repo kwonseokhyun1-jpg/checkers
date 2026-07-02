@@ -45,8 +45,28 @@ import {
   dailyQuestRewardLabel,
   getActiveDailyQuests,
   getDailyQuestProgress,
-  getLocalDateKey,
+  getMsUntilLocalMidnight,
+  formatDailyResetCountdown,
 } from "./dailyQuests.js";
+
+let dailyQuestResetTimerId = null;
+
+function clearDailyQuestResetTimer() {
+  if (dailyQuestResetTimerId != null) {
+    clearInterval(dailyQuestResetTimerId);
+    dailyQuestResetTimerId = null;
+  }
+}
+
+function startDailyQuestResetCountdown(el) {
+  if (!el) return;
+  clearDailyQuestResetTimer();
+  const tick = () => {
+    el.textContent = `Resets in: ${formatDailyResetCountdown(getMsUntilLocalMidnight())}`;
+  };
+  tick();
+  dailyQuestResetTimerId = setInterval(tick, 1000);
+}
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -347,7 +367,7 @@ function bindDailyQuestsGrid(profile, grid, { onCurrencyChange } = {}) {
 
 export function renderQuestsTab(profile, root, { onTitleChanged, onCurrencyChange } = {}) {
   if (!root) return;
-  const resetLabel = `Resets at midnight · ${getLocalDateKey()}`;
+  clearDailyQuestResetTimer();
   root.innerHTML = `
     <section class="panel game-panel quests-panel">
       <header class="panel-head panel-head--compact">
@@ -359,11 +379,10 @@ export function renderQuestsTab(profile, root, { onTitleChanged, onCurrencyChang
         <button type="button" class="quests-section-tab" role="tab" aria-selected="false" data-quests-section="title">Title quests</button>
       </div>
       <div id="quests-section-daily" class="quests-section-panel">
-        <p class="daily-quests-section__reset muted">${escapeHtml(resetLabel)}</p>
+        <p id="daily-quests-reset-countdown" class="daily-quests-section__reset muted" aria-live="polite">Resets in: --:--:--</p>
         <div id="daily-quests-grid" class="profile-achievement-grid daily-quests-grid"></div>
       </div>
       <div id="quests-section-title" class="quests-section-panel hidden" hidden>
-        <p class="title-quests-section__desc muted">Long-term goals that unlock mage titles.</p>
         <div id="quests-grid" class="profile-achievement-grid"></div>
       </div>
     </section>`;
@@ -390,6 +409,7 @@ export function renderQuestsTab(profile, root, { onTitleChanged, onCurrencyChang
     tab.addEventListener("click", () => setQuestsSection(tab.dataset.questsSection));
   }
 
+  startDailyQuestResetCountdown(root.querySelector("#daily-quests-reset-countdown"));
   bindDailyQuestsGrid(profile, root.querySelector("#daily-quests-grid"), { onCurrencyChange });
   bindAchievementsGrid(profile, root.querySelector("#quests-grid"), { onTitleChanged });
 }
