@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -129,7 +129,7 @@ function massNudgeCanMovePiece(state, color, row, col, exclude = []) {
   const p = at(state, row, col);
   if (!p || p.color !== color || pieceCloakedByDarkness(state, row, col)) return false;
   if (exclude.some(([er, ec]) => er === row && ec === col)) return false;
-  return getAdjacentEmpty(state.board, p).some(([r, c]) => emptyDark(state, r, c));
+  return getNudgeTarget(state.board, p, state).some(([r, c]) => emptyDark(state, r, c));
 }
 
 export function massNudgeHasAnotherPiece(state, color, picks) {
@@ -493,7 +493,7 @@ function fEmptyFirstPickTargets(state, color, card) {
     return getDisplacementDestinations(state, color).length ? friends : [];
   }
   if (card.effect === "nudge") {
-    return filter((piece) => getAdjacentEmpty(state.board, piece).some(([r, c]) => emptyDark(state, r, c)));
+    return filter((piece) => getNudgeTarget(state.board, piece, state).some(([r, c]) => emptyDark(state, r, c)));
   }
   if (card.effect === "sidestep") {
     return filter((piece, r, c) =>
@@ -579,7 +579,7 @@ export function getValidTargets(state, color, card, picks) {
           const [pr, pc] = picks[0];
           const p = at(state, pr, pc);
           if (!p || p.color !== color) return [];
-          return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
+          return getNudgeTarget(state.board, p, state).filter(([r, c]) => emptyDark(state, r, c));
         }
         if (picks.length === 2) {
           const used = [picks[0]];
@@ -595,7 +595,7 @@ export function getValidTargets(state, color, card, picks) {
           const [pr, pc] = picks[2];
           const p = at(state, pr, pc);
           if (!p || p.color !== color) return [];
-          return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
+          return getNudgeTarget(state.board, p, state).filter(([r, c]) => emptyDark(state, r, c));
         }
         return [];
       }
@@ -622,6 +622,7 @@ export function getValidTargets(state, color, card, picks) {
         ].filter(([r, c]) => emptyDark(state, r, c));
       if (card.effect === "clone") return getAdjacentEmpty(state.board, p).filter(([r, c]) => emptyDark(state, r, c));
       if (card.effect === "backstep") return getBackstepTarget(state.board, p, state);
+      if (card.effect === "nudge") return getNudgeTarget(state.board, p, state);
       if (card.effect === "leapfrog" || card.effect === "phase_walk") {
         return getLeapfrogTargets(state.board, p, color).filter(([r, c]) => emptyDark(state, r, c));
       }

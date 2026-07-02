@@ -5,7 +5,7 @@
 # mode: instant | friendly | enemy | empty | f_empty | f_f | f_e | e_empty | diagonal
 SPELLS = [
     # === IN GAME (12) ===
-    ("nudge", "Nudge", "Displace one of your pieces 1 square to an adjacent empty dark square.", "common", 8, "f_empty", "nudge"),
+    ("nudge", "Nudge", "Displace one of your pieces 1 square forward-diagonal onto an empty dark square.", "common", 8, "f_empty", "nudge"),
     ("aegis", "Aegis", "Shield a piece — it cannot be captured for 2 turns.", "common", 7, "friendly", "shield_2"),
     ("bolt", "Forward Bolt", "Eliminate the first enemy piece directly ahead along your piece's forward diagonal.", "uncommon", 6, "diagonal", "forward_bolt"),
     ("frost", "Frost Bind", "Freeze an enemy piece — it cannot move on its owner's next turn.", "uncommon", 6, "enemy", "freeze_1"),
