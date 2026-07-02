@@ -57,7 +57,7 @@ export const CARD_REGISTRY = [
   { id: "root", name: "Root", desc: "Enemy cannot jump or capture on its next turn (can still step).", rarity: "uncommon", weight: 4, mode: "enemy", effect: "root_2" },
   { id: "sacrifice", name: "Sacrifice", desc: "Destroy one of your pieces to destroy any enemy (including kings).", rarity: "uncommon", weight: 4, mode: "f_e", effect: "sacrifice" },
   { id: "scatter", name: "Scatter", desc: "Push every piece adjacent to a square 1 step away radially.", rarity: "uncommon", weight: 4, mode: "empty", effect: "scatter" },
-  { id: "displacement", name: "Displacement", desc: "Teleport one of your pieces to any empty dark square on your side of the board.", rarity: "uncommon", weight: 4, mode: "f_empty", effect: "displacement" },
+  { id: "displacement", name: "Displacement", desc: "Teleport one of your pieces to any empty dark square on your side of the board.", rarity: "rare", weight: 3, mode: "f_empty", effect: "displacement" },
   { id: "backrank_protection", name: "Backrank Protection", desc: "Shield all your pieces on your back rank for 1 turn.", rarity: "uncommon", weight: 4, mode: "instant", effect: "sanctuary_pulse" },
   { id: "last_stand", name: "Last Stand", desc: "Hidden trap on a friendly piece — if it would be captured or destroyed, it survives with an ultra shield for 3 turns instead (invisible until it triggers).", rarity: "uncommon", weight: 4, mode: "friendly", effect: "last_stand" },
   { id: "snowball", name: "Snowball", desc: "Freeze an enemy piece — it cannot move on its owner's next turn.", rarity: "common", weight: 6, mode: "any_piece", effect: "snowball" },

@@ -396,6 +396,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "chameleon",
   "blind",
   "trickster",
+  "displacement",
 ]);
 
 /** @param {string} [effect] */
@@ -1601,18 +1602,18 @@ function displacementMotif() {
   return `${groundShadow(32, 54, 22, 4)}
     <path d="M4 30 H60" stroke="#0f172a" stroke-width="2.8" opacity="0.18"/>
     <path d="M4 30 H60" stroke="#64748b" stroke-width="2" opacity="0.45" stroke-dasharray="5 3"/>
-    <rect x="6" y="30" width="52" height="22" rx="2" fill="#1e3a8a" opacity="0.14" stroke="#334155" stroke-width="1.2"/>
-    <text x="10" y="38" font-size="5" fill="#93c5fd" opacity="0.75" font-weight="700">YOUR SIDE</text>
+    <rect x="6" y="30" width="52" height="22" rx="2" fill="#4c1d95" opacity="0.16" stroke="#553c7a" stroke-width="1.2"/>
+    <text x="10" y="38" font-size="5" fill="#c4b5fd" opacity="0.8" font-weight="700">YOUR SIDE</text>
     ${ghost(44, 18, 5)}
     ${allyPro(18, 48, 5)}
-    ${destRing(44, 18, 5.5, "#7dd3fc")}
+    ${destRing(44, 18, 5.5, "#a78bfa")}
     <path d="M22 44 Q34 20 44 18" stroke="#0f172a" stroke-width="3.6" fill="none" stroke-linecap="round" opacity="0.2"/>
-    <path d="M22 44 Q34 20 44 18" stroke="#bae6fd" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-dasharray="5 3"/>
-    ${energyArc(22, 44, 44, 18, "#38bdf8", 2.4)}
-    <circle cx="44" cy="18" r="10" fill="#38bdf8" opacity="0.1" stroke="#0f172a" stroke-width="1.4"/>
-    <circle cx="44" cy="18" r="10" fill="none" stroke="#7dd3fc" stroke-width="1.4" opacity="0.55"/>
-    <path d="M40 14 L48 22 M48 14 L40 22" stroke="#e0f2fe" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
-    ${sparkles([[44, 10, 0.75], [30, 28, 0.55], [20, 46, 0.5]], "#bae6fd", 0.5)}`;
+    <path d="M22 44 Q34 20 44 18" stroke="#c4b5fd" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-dasharray="5 3"/>
+    ${energyArc(22, 44, 44, 18, "#a78bfa", 2.4)}
+    <circle cx="44" cy="18" r="10" fill="#a78bfa" opacity="0.12" stroke="#0f172a" stroke-width="1.4"/>
+    <circle cx="44" cy="18" r="10" fill="none" stroke="#c4b5fd" stroke-width="1.4" opacity="0.55"/>
+    <path d="M40 14 L48 22 M48 14 L40 22" stroke="#e9d5ff" stroke-width="1.4" stroke-linecap="round" opacity="0.45"/>
+    ${sparkles([[44, 10, 0.75], [30, 28, 0.55], [20, 46, 0.5]], "#e9d5ff", 0.5)}`;
 }
 
 function sanctuaryPulseMotif() {
@@ -1697,7 +1698,7 @@ export const EFFECT_ILLUSTRATIONS = {
   recall: () => commonBleed("rc", "#93c5fd", "#1e3a5f", recallMotif()),
   repel: () => commonBleed("rp", "#94a3b8", "#1e293b", repelMotif()),
   mass_nudge: () => uncommonBleed("mn", "#7dd3fc", "#1e3a5f", massNudgeMotif()),
-  displacement: () => uncommonBleed("dp", "#7dd3fc", "#1e3a5f", displacementMotif()),
+  displacement: () => rareBleed("dp", "#b794f4", "#553c7a", displacementMotif()),
   swap_friendly: () => commonBleed("sw", "#a78bfa", "#312e81", shadowSwapMotif()),
   dominion: () => uncommonBleed("dm", "#60a5fa", "#1e3a5f", dominionMotif()),
 
