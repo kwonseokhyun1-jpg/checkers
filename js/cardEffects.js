@@ -3,7 +3,7 @@
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 import { friendlyHasDebuffs, pieceHasIronWillDebuff } from "./pieceStatus.js";
 
@@ -519,6 +519,7 @@ export function getValidTargets(state, color, card, picks) {
           if (!p || p.color !== color) continue;
           if (pieceCloakedByDarkness(state, r, c)) continue;
           if (FRIENDLY_REQUIRES_MOVABLE.has(card.effect) && !pieceHasLegalMoves(state.board, color, state, r, c)) continue;
+          if (card.effect === "backstab" && !backstabCanTarget(state, color, r, c)) continue;
           if (card.effect === "chain_lightning" && !chainLightningCanTarget(state, r, c, color)) continue;
           if (card.effect === "magnet" && !magnetHasPull(state, color, r, c)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
