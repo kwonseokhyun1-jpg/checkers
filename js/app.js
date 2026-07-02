@@ -533,7 +533,7 @@ function syncCollectionFilterControls() {
 }
 
 const DECK_EDIT_MOBILE_MQ = "(max-width: 899px)";
-const MAIN_TAB_INNER_SCROLL_MQ = "(max-width: 768px)";
+const MAIN_TAB_INNER_SCROLL_MQ = "(max-width: 1280px)";
 /** @type {number|null} */
 let deckListScrollYBeforeEdit = null;
 

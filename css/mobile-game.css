@@ -14,7 +14,7 @@ body {
   touch-action: manipulation;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   body.splash-active,
   body.main-tab-active:not(.match-active):not(.deck-editing),
   body.match-active,
@@ -181,7 +181,7 @@ body.match-active {
 }
 
 /* Chess.com-style shell: pinned top HUD, only main content scrolls (no pull past top) */
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   html:has(body.main-tab-active:not(.match-active):not(.deck-editing)) {
     overflow: hidden;
     height: 100%;
@@ -508,7 +508,7 @@ body.match-active {
   display: none;
 }
 
-@media (min-width: 769px) {
+@media (min-width: 1281px) {
   .deck-row {
     min-height: 8.25rem;
   }
@@ -531,7 +531,7 @@ body.match-active {
   }
 }
 
-@media (min-width: 769px) {
+@media (min-width: 1281px) {
   .game-shell {
     max-width: 1100px;
     padding-top: 1.25rem;
@@ -616,7 +616,7 @@ body.match-active {
 }
 
 /* Match + meta screens — phone presentation */
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   .match-scene {
     padding: 0;
   }
@@ -739,7 +739,7 @@ body.match-active {
   }
 }
 
-@media (min-width: 390px) and (max-width: 768px) {
+@media (min-width: 390px) and (max-width: 1280px) {
   .collection-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -747,7 +747,7 @@ body.match-active {
 
 /* ── Agent #3: immersive match, bottom sheets, PvP loading ── */
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   /* Hide header during matches — board + hand get full viewport */
   body.match-active .game-shell {
     display: flex;
@@ -927,7 +927,7 @@ body.match-active {
 
 /* ── Agent #4: confirm sheet, install banner, tutorial/profile sheets, PvP/shop ── */
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   /* Tutorial intro — bottom sheet */
   .tutorial-modal {
     align-items: flex-end;
@@ -1260,7 +1260,7 @@ body.install-banner-visible.deck-editing .game-shell {
 
 /* ── Agent #5: chest reveals, deck editor, profile/quests, auth gate, tutorial overlays ── */
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   /* Chest / cosmetic open — compact cinematic with safe areas */
   .chest-open-overlay,
   .cosmetic-open-overlay {
@@ -1460,7 +1460,7 @@ body.install-banner-visible.deck-editing .game-shell {
 
 /* ── Agent #6: mystery box, PvP history, account, prebattle, deck tools ── */
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   /* Mystery box shop — touch-sized open buttons */
   .mystery-box__btn {
     min-height: 44px;
@@ -1655,7 +1655,7 @@ body.install-banner-visible.deck-editing .game-shell {
 
 /* ── Agent #7: spell cast HUD, card preview actions, deck strips, adventure scroll, shop pulls, game over ── */
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   /* In-match spell casting — wide flat hint strip + inline cancel */
   body.match-active .spell-cast-bar {
     flex-direction: row;
@@ -1955,7 +1955,7 @@ body.install-banner-visible.deck-editing .game-shell {
 
 /* ── Agent #8: shell HUD, shop chests, profile/quests, board picks, PvP lobby, splash safe areas ── */
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   /* Compact header row — override style.css column stack on narrow phones */
   .game-header {
     flex-direction: row;
@@ -2272,5 +2272,101 @@ body.install-banner-visible.deck-editing .game-shell {
 
   .app-splash__title {
     font-size: 1.15rem;
+  }
+}
+
+/* ── Tablet portrait (7–10″, ~769–1280 CSS px) — wider shell, denser meta grids ── */
+
+@media (min-width: 769px) and (max-width: 1280px) {
+  .game-shell {
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .game-shell::before {
+    inset: 0 0.5rem 0.5rem 0.5rem;
+  }
+
+  .install-banner {
+    max-width: 680px;
+  }
+
+  /* Shop — two-up chest rows fill the wider frame */
+  .chest-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .chest-card {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .chest-card__visual {
+    width: auto;
+    height: 5.5rem;
+    margin-bottom: 0.5rem;
+    align-self: center;
+  }
+
+  .chest-card__body {
+    text-align: center;
+  }
+
+  .chest-card__btn {
+    flex: none;
+    width: 100%;
+    margin-top: 0.75rem;
+  }
+
+  .cosmetic-box-list,
+  .mystery-box-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .vault-panel {
+    max-width: 100%;
+  }
+
+  /* Quests — two-column achievement grid */
+  .profile-achievement-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .deck-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .collection-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .adventure-map {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .profile-title-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .profile-cosmetic-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* Match — centered board uses the larger tablet token */
+  body.match-active .board-wrap {
+    width: min(
+      100%,
+      var(--board-fit-width),
+      calc(var(--app-height) - var(--board-v-chrome))
+    );
+  }
+
+  .hand.spell-hand .spell-card {
+    width: 96px;
   }
 }
