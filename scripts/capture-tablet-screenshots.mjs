@@ -6,7 +6,6 @@
 import { chromium } from "playwright";
 import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,9 +17,6 @@ const sizes = [
   { dir: "assets/store/tablet-7", width: 600, height: 1024, label: "7-inch" },
   { dir: "assets/store/tablet-10", width: 1200, height: 1920, label: "10-inch" },
 ];
-
-/** Match UI only renders below ~700px width; upscale phone capture for large tablets. */
-const MATCH_UPSCALE_FROM = path.join(root, "screenshots/match-mobile.png");
 
 const scenes = [
   { file: "01-match.png", async capture(page) {
@@ -103,23 +99,5 @@ for (const size of sizes) {
 
 await browser.close();
 serverProc.kill("SIGTERM");
-
-// Match board layout caps below ~700px width — upscale phone capture for 10-inch hero shot.
-if (existsSync(MATCH_UPSCALE_FROM)) {
-  try {
-    const sharp = (await import("sharp")).default;
-    const tenMatch = path.join(root, "assets/store/tablet-10/01-match.png");
-    const ten = sizes.find((s) => s.dir.includes("tablet-10"));
-    await sharp(MATCH_UPSCALE_FROM)
-      .resize(ten.width, ten.height, {
-        fit: "contain",
-        background: { r: 8, g: 10, b: 18, alpha: 1 },
-      })
-      .toFile(tenMatch);
-    console.log("  upscaled phone match →", path.relative(root, tenMatch));
-  } catch (e) {
-    console.warn("Could not upscale 10-inch match:", e.message);
-  }
-}
 
 console.log("\nDone.");
