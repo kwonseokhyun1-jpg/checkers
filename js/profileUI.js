@@ -354,21 +354,42 @@ export function renderQuestsTab(profile, root, { onTitleChanged, onCurrencyChang
         <h2 class="panel-head__title">Quests</h2>
         <p class="panel-head__desc">Complete daily quests for gems and stars, or title quests for mage titles.</p>
       </header>
-      <div class="daily-quests-section">
-        <header class="daily-quests-section__head">
-          <h3 class="daily-quests-section__title">Daily quests</h3>
-          <p class="daily-quests-section__reset muted">${escapeHtml(resetLabel)}</p>
-        </header>
+      <div class="quests-section-tabs" role="tablist" aria-label="Quest categories">
+        <button type="button" class="quests-section-tab active" role="tab" aria-selected="true" data-quests-section="daily">Daily quests</button>
+        <button type="button" class="quests-section-tab" role="tab" aria-selected="false" data-quests-section="title">Title quests</button>
+      </div>
+      <div id="quests-section-daily" class="quests-section-panel">
+        <p class="daily-quests-section__reset muted">${escapeHtml(resetLabel)}</p>
         <div id="daily-quests-grid" class="profile-achievement-grid daily-quests-grid"></div>
       </div>
-      <div class="title-quests-section">
-        <header class="title-quests-section__head">
-          <h3 class="title-quests-section__title">Title quests</h3>
-          <p class="title-quests-section__desc muted">Long-term goals that unlock mage titles.</p>
-        </header>
+      <div id="quests-section-title" class="quests-section-panel hidden" hidden>
+        <p class="title-quests-section__desc muted">Long-term goals that unlock mage titles.</p>
         <div id="quests-grid" class="profile-achievement-grid"></div>
       </div>
     </section>`;
+
+  const setQuestsSection = (section) => {
+    root.querySelectorAll(".quests-section-tab").forEach((tab) => {
+      const active = tab.dataset.questsSection === section;
+      tab.classList.toggle("active", active);
+      tab.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    const dailyPanel = root.querySelector("#quests-section-daily");
+    const titlePanel = root.querySelector("#quests-section-title");
+    if (dailyPanel) {
+      dailyPanel.classList.toggle("hidden", section !== "daily");
+      dailyPanel.hidden = section !== "daily";
+    }
+    if (titlePanel) {
+      titlePanel.classList.toggle("hidden", section !== "title");
+      titlePanel.hidden = section !== "title";
+    }
+  };
+
+  for (const tab of root.querySelectorAll(".quests-section-tab")) {
+    tab.addEventListener("click", () => setQuestsSection(tab.dataset.questsSection));
+  }
+
   bindDailyQuestsGrid(profile, root.querySelector("#daily-quests-grid"), { onCurrencyChange });
   bindAchievementsGrid(profile, root.querySelector("#quests-grid"), { onTitleChanged });
 }
