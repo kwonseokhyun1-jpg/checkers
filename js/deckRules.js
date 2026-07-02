@@ -37,39 +37,6 @@ export function validateDeck(cardIds, profile) {
   return { valid: errors.length === 0, errors };
 }
 
-/** Player-facing deck problem with a next step, or null when the deck is PvP-ready. */
-export function describeDeckIssue(cardIds, profile) {
-  const ids = Array.isArray(cardIds) ? cardIds : [];
-  const { valid, errors } = validateDeck(ids, profile);
-  if (valid) return null;
-
-  const count = ids.length;
-  if (count !== DECK_SIZE) {
-    const diff = DECK_SIZE - count;
-    if (diff > 0) {
-      const add =
-        diff === 1 ? "add 1 more spell" : `add ${diff} more spells`;
-      return `Your deck has ${count}/${DECK_SIZE} cards — open Decks and ${add}.`;
-    }
-    const excess = count - DECK_SIZE;
-    const remove =
-      excess === 1 ? "remove 1 spell" : `remove ${excess} spells`;
-    return `Your deck has ${count}/${DECK_SIZE} cards — open Decks and ${remove}.`;
-  }
-
-  const first = errors[0] || "This deck can't be used in PvP.";
-  if (first.includes("Not enough copies")) {
-    return `${first} Open Decks and remove extras, or buy more copies.`;
-  }
-  if (first.includes("Max")) {
-    return `${first} Open Decks and reduce duplicate cards.`;
-  }
-  if (first.includes("Removed spell") || first.includes("Economy spell")) {
-    return `${first} Open Decks and swap out disabled spells.`;
-  }
-  return `${first} Open Decks to fix your deck.`;
-}
-
 export function canAddCardToDeck(deckIds, cardId, profile) {
   if (isKnightCard(cardId)) return { ok: false, reason: "This spell is no longer in the game." };
   if (isEconomyCard(cardId)) return { ok: false, reason: "Economy spells are disabled." };

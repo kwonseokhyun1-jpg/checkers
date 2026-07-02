@@ -6,7 +6,6 @@ import {
   onAuthChange,
 } from "./auth.js";
 import { DECK_SIZE } from "./cardCatalog.js";
-import { describeDeckIssue, validateDeck } from "./deckRules.js";
 import { COLORS } from "./board.js";
 import { MatchSession, isPvpTerminalBoard, isMutualElimination } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
@@ -38,7 +37,6 @@ import {
   clearActivePvpMatchId,
   matchRowFingerprint,
   shouldApplyPvpRow,
-  formatPvpError,
 } from "./pvp.js";
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 import { lockPortrait } from "./orientation.js";
@@ -141,12 +139,10 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   function renderLobby(message = "", isError = false) {
     const user = getCurrentUser();
     const profile = getProfile();
-    const decks = (profile.decks || []).filter(
-      (d) => validateDeck(d.cardIds, profile).valid
-    );
+    const decks = (profile.decks || []).filter((d) => d.cardIds?.length === DECK_SIZE);
     const selected =
       decks.find((d) => d.id === profile.selectedDeckId) ||
-      decks[0];
+      decks.find((d) => d.cardIds?.length === DECK_SIZE);
 
     stopOpenRoomsSync();
 
@@ -186,7 +182,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
                           `<option value="${d.id}" ${d.id === selected?.id ? "selected" : ""}>${escapeHtml(d.name)}</option>`
                       )
                       .join("")
-                  : `<option value="">No PvP-ready deck — open Decks</option>`
+                  : '<option value="">No valid deck</option>'
               }
             </select>
           </div>
@@ -265,7 +261,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       const hostProfiles = await fetchHostProfilesMap([...mergedMine, ...others]);
       renderRoomLists(mergedMine, others, hostProfiles);
     } catch (e) {
-      const err = `<li class="pvp-open-empty pvp-open-empty--error">${escapeHtml(formatPvpError(e))}</li>`;
+      const err = `<li class="pvp-open-empty pvp-open-empty--error">${escapeHtml(e.message || "Could not load rooms")}</li>`;
       yourList.innerHTML = err;
       openList.innerHTML = err;
     } finally {
@@ -599,37 +595,12 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   }
 
   function localDeckIdsFromRow(row) {
-    const profile = getProfile();
     const storedIds =
       pvpService?.localColor === COLORS.RED ? row.host_deck_ids : row.guest_deck_ids;
-    if (Array.isArray(storedIds) && !describeDeckIssue(storedIds, profile)) {
-      return storedIds;
-    }
+    if (Array.isArray(storedIds) && storedIds.length === DECK_SIZE) return storedIds;
     if (isMysteryMode(row)) return null;
     const deck = getSelectedDeck();
-    if (deck && !describeDeckIssue(deck.cardIds, profile)) return deck.cardIds;
-    return null;
-  }
-
-  function localDeckLaunchIssue(row) {
-    if (isMysteryMode(row)) {
-      return "Mystery deck not ready yet — wait a moment, then try again.";
-    }
-    const profile = getProfile();
-    const storedIds =
-      pvpService?.localColor === COLORS.RED ? row.host_deck_ids : row.guest_deck_ids;
-    if (Array.isArray(storedIds)) {
-      const storedIssue = describeDeckIssue(storedIds, profile);
-      if (storedIssue) return storedIssue;
-    }
-    const deck = getSelectedDeck();
-    if (!deck) {
-      return `No deck selected — open Decks and build a complete ${DECK_SIZE}-card deck.`;
-    }
-    return (
-      describeDeckIssue(deck.cardIds, profile) ||
-      `Deck not ready for PvP — open Decks and fix your deck.`
-    );
+    return deck?.cardIds?.length === DECK_SIZE ? deck.cardIds : null;
   }
 
   async function launchMatch(row, { resume = false } = {}) {
@@ -648,7 +619,12 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     }
     if (!deckIds) {
       matchLaunching = false;
-      setStatus(localDeckLaunchIssue(row), true);
+      setStatus(
+        isMysteryMode(row)
+          ? "Mystery deck not ready yet — try again in a moment."
+          : "Invalid deck.",
+        true
+      );
       if (!isMysteryMode(row)) renderLobby();
       return;
     }
@@ -755,11 +731,6 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
             if (winnerId) await pvpService.finishMatch(winnerId);
           },
           onPvpPendingRow: (pendingRow) => applyPvpMatchRow(pendingRow),
-          onPvpSyncError: (err) => {
-            if (!matchSession?._gameOverUiShown) {
-              matchSession.setMessage(formatPvpError(err, { context: "sync" }));
-            }
-          },
         }
       );
     } catch (err) {
@@ -795,7 +766,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     if (!pvpService) {
       pvpService = new PvpService();
       pvpService.onMatchRow = onMatchRow;
-      pvpService.onError = (e) => setStatus(formatPvpError(e), true);
+      pvpService.onError = (e) => setStatus(e.message || "Sync error", true);
     }
     return pvpService;
   }
@@ -808,12 +779,9 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
     const mystery = getSelectedMode() === PVP_MODE_MYSTERY;
     const deck = getSelectedDeck();
-    if (!mystery) {
-      const issue = describeDeckIssue(deck?.cardIds ?? [], getProfile());
-      if (issue) {
-        setStatus(issue, true);
-        return;
-      }
+    if (!mystery && (!deck || deck.cardIds.length !== DECK_SIZE)) {
+      setStatus(`Build a ${DECK_SIZE}-card deck in Decks first.`, true);
+      return;
     }
 
     pvpService?.dispose();
@@ -841,7 +809,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       onMatchRow(row);
       scheduleRefreshOpenRooms(row);
     } catch (e) {
-      setStatus(formatPvpError(e), true);
+      setStatus(e.message || "Could not host a room", true);
       pvpService?.dispose();
       pvpService = null;
     }
@@ -855,9 +823,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
     if (!mystery) {
       const deck = getSelectedDeck();
-      const issue = describeDeckIssue(deck?.cardIds ?? [], getProfile());
-      if (issue) {
-        setStatus(issue, true);
+      if (!deck || deck.cardIds.length !== DECK_SIZE) {
+        setStatus(`Build a ${DECK_SIZE}-card deck in Decks first.`, true);
         return;
       }
     }
@@ -877,7 +844,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       saveActivePvpMatchId(row.id);
       onMatchRow(row);
     } catch (e) {
-      setStatus(formatPvpError(e), true);
+      setStatus(e.message || "Could not join room", true);
       pvpService?.dispose();
       pvpService = null;
       startOpenRoomsSync();
@@ -924,7 +891,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       try {
         row = await svc.listActiveMatchForUser();
       } catch (e) {
-        setStatus(formatPvpError(e), true);
+        setStatus(e.message || "Could not check for active PvP match", true);
         return false;
       }
     }
@@ -986,7 +953,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       setStatus("");
       scheduleRefreshOpenRooms();
     } catch (e) {
-      setStatus(formatPvpError(e), true);
+      setStatus(e.message || "Could not cancel room", true);
     }
   }
 
