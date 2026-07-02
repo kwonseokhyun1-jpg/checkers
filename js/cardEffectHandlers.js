@@ -3,7 +3,7 @@
  */
 import {
   SIZE, COLORS, isDarkSquare, inBounds, displacePiece, resolveLandingTraps, removePiece, resolveCapture,
-  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
+  getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
   createPiece, grantAwokenBear, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
   tryPromoteOnFarRow,
@@ -286,7 +286,7 @@ function friendlySpellMove(state, color, r1, c1, r2, c2, message = "") {
 
 const EFFECTS = {
   backstep(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const allowed=getBackstepTarget(state.board,p,state); if(!allowed.some(([r,c])=>r===r2&&c===c2)) return fail("No square behind"); return friendlySpellMove(state,color,r1,c1,r2,c2,"Backstep!"); },
-  nudge(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!emptyDark(state,r2,c2)||!getAdjacentEmpty(state.board,p).some(([r,c])=>r===r2&&c===c2)) return fail(); return friendlySpellMove(state,color,r1,c1,r2,c2); },
+  nudge(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!getNudgeTarget(state.board,p,state).some(([r,c])=>r===r2&&c===c2)) return fail(); return friendlySpellMove(state,color,r1,c1,r2,c2); },
   shield_1(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,1); return ok(); },
   shield_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.shieldTurns=Math.max(p.shieldTurns,2); return ok(); },
   forward_bolt(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); if(!spellKill(state,r2,c2,color)) return fail(); return ok(); },
@@ -714,7 +714,7 @@ const EFFECTS = {
       const [r2, c2] = picks[i + 1];
       const p = at(state, r1, c1);
       if (!p || p.color !== color) return fail();
-      if (!getAdjacentEmpty(state.board, p).some(([r, c]) => r === r2 && c === c2) || !emptyDark(state, r2, c2)) {
+      if (!getNudgeTarget(state.board, p, state).some(([r, c]) => r === r2 && c === c2)) {
         return fail("Invalid destination");
       }
       displacePiece(state, r1, c1, r2, c2);

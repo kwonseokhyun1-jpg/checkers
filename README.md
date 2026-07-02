@@ -50,7 +50,7 @@ Regenerate after UI changes: `python3 -m http.server 8765 &` then `npm run scree
 
 | Card | Effect |
 |------|--------|
-| **Nudge** | Displace your piece 1 square to an adjacent empty dark square |
+| **Nudge** | Displace your piece 1 square forward-diagonal onto an empty dark square |
 | **Aegis** | Shield a piece from capture for 2 turns |
 | **Forward Bolt** | Destroy the first enemy along your piece's forward diagonal |
 | **Frost Bind** | Freeze an enemy — it skips its next move |

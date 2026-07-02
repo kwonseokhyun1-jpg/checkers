@@ -18,7 +18,7 @@
 - **Loading…** — Draw 1 card.
 - **Mirror Board** — Confuse the AI's targeting for its next turn.
 - **Backstep** — Move one of your pieces 1 square straight backward onto an empty dark square.
-- **Nudge** — Displace one of your pieces 1 square to an adjacent empty dark square.
+- **Nudge** — Displace one of your pieces 1 square forward-diagonal onto an empty dark square.
 - **Pawn's Zeal** — A non-king takes one extra forward step this turn after your main move.
 - **Prospect** — Gain 10 gems now and 10 more at the start of your next turn.
 - **Recycle** — Discard 1 card from hand, draw 2 cards.
