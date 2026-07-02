@@ -67,6 +67,7 @@ import {
 import { mobileConfirm } from "./mobileConfirm.js";
 import { createMatchAchievementTracker } from "./achievementTracker.js";
 import { recordSpellPlayed } from "./profileStats.js";
+import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { saveProfile } from "./storage.js";
 import {
   appendHistoryEntry,
@@ -174,6 +175,7 @@ export class MatchSession {
     this.onPvpWin = options.onPvpWin ?? null;
     this.onPvpForfeit = options.onPvpForfeit ?? null;
     this.onPvpPendingRow = options.onPvpPendingRow ?? null;
+    this.onPvpSyncError = options.onPvpSyncError ?? null;
     this.skipCheckpoint = !!options.skipCheckpoint;
     /** @type {import('./tutorialMatch.js').TutorialHooks | null} */
     this.tutorialHooks = options.tutorialHooks ?? null;
@@ -957,7 +959,10 @@ export class MatchSession {
     this._syncDirty = false;
     const state = this.state;
     this._syncPromise = Promise.resolve(this.onStateSync(state))
-      .catch((err) => console.error("PvP state sync failed:", err))
+      .catch((err) => {
+        console.error("PvP state sync failed:", err);
+        this.onPvpSyncError?.(err);
+      })
       .finally(() => {
         this._syncBusy = false;
         this._syncPromise = null;
@@ -1040,6 +1045,7 @@ export class MatchSession {
   recordSuccessfulSpellCast() {
     if (!this.profile) return;
     recordSpellPlayed(this.profile);
+    trackDailyQuestEvent(this.profile, "spells_played", 1);
     saveProfile(this.profile);
   }
 

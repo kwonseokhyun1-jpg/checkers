@@ -37,6 +37,16 @@ import {
 } from "./auth.js";
 import { saveProfile } from "./storage.js";
 import { getProfileStats } from "./profileStats.js";
+import {
+  canClaimDailyQuest,
+  claimDailyQuest,
+  dailyQuestProgressLabel,
+  dailyQuestProgressRatio,
+  dailyQuestRewardLabel,
+  getActiveDailyQuests,
+  getDailyQuestProgress,
+  getLocalDateKey,
+} from "./dailyQuests.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -269,16 +279,97 @@ function bindAchievementsGrid(profile, grid, { onTitleChanged } = {}) {
   }
 }
 
-export function renderQuestsTab(profile, root, { onTitleChanged } = {}) {
+/** @param {HTMLElement} grid */
+function bindDailyQuestsGrid(profile, grid, { onCurrencyChange } = {}) {
+  if (!grid) return;
+  grid.innerHTML = "";
+  const quests = [...getActiveDailyQuests(profile)].sort((a, b) => {
+    const sortKey = (entry) => {
+      if (entry.canClaim) return 0;
+      if (entry.claimed) return 2;
+      return 1;
+    };
+    const keyDiff = sortKey(a) - sortKey(b);
+    if (keyDiff !== 0) return keyDiff;
+    return dailyQuestProgressRatio(profile, b.templateId) - dailyQuestProgressRatio(profile, a.templateId);
+  });
+
+  for (const { template, templateId, complete, claimed, canClaim } of quests) {
+    const locked = !complete && !claimed;
+    const card = document.createElement("article");
+    card.className = [
+      "profile-achievement-card",
+      "daily-quest-card",
+      locked ? "profile-achievement-card--locked" : "",
+      complete ? "profile-achievement-card--complete" : "",
+      claimed ? "profile-achievement-card--claimed" : "",
+      canClaim ? "profile-achievement-card--claimable" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    const prog = dailyQuestProgressLabel(profile, templateId);
+    const pct = template.target
+      ? Math.min(100, Math.round((getDailyQuestProgress(profile, templateId) / template.target) * 100))
+      : 0;
+    const reward = dailyQuestRewardLabel(templateId);
+    const rewardClass =
+      template.reward.currency === "stars" ? "daily-quest-card__reward--stars" : "daily-quest-card__reward--gems";
+    const statusLabel = claimed ? "Claimed" : canClaim ? "Claim reward" : complete ? "Complete" : "In progress";
+    card.innerHTML = `
+      <div class="profile-achievement-card__head">
+        <h4 class="profile-achievement-card__title">${escapeHtml(template.title)}</h4>
+        <span class="daily-quest-card__reward ${rewardClass}">${escapeHtml(reward)}</span>
+      </div>
+      <p class="profile-achievement-card__desc">${escapeHtml(template.description)}</p>
+      <div class="profile-achievement-card__progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+        <div class="profile-achievement-card__progress-fill" style="width:${pct}%"></div>
+      </div>
+      <p class="profile-achievement-card__progress-text">${escapeHtml(prog)}</p>
+      <span class="profile-achievement-card__status">${statusLabel}</span>`;
+    if (canClaim) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn-primary profile-achievement-card__claim";
+      btn.textContent = template.reward.currency === "stars" ? "Claim stars" : "Claim gems";
+      btn.addEventListener("click", () => {
+        const res = claimDailyQuest(profile, templateId);
+        if (res.success) {
+          saveProfile(profile);
+          bindDailyQuestsGrid(profile, grid, { onCurrencyChange });
+          onCurrencyChange?.();
+        }
+      });
+      card.appendChild(btn);
+    }
+    grid.appendChild(card);
+  }
+}
+
+export function renderQuestsTab(profile, root, { onTitleChanged, onCurrencyChange } = {}) {
   if (!root) return;
+  const resetLabel = `Resets at midnight · ${getLocalDateKey()}`;
   root.innerHTML = `
     <section class="panel game-panel quests-panel">
       <header class="panel-head panel-head--compact">
         <h2 class="panel-head__title">Quests</h2>
-        <p class="panel-head__desc">Complete quests to unlock mage titles.</p>
+        <p class="panel-head__desc">Complete daily quests for gems and stars, or title quests for mage titles.</p>
       </header>
-      <div id="quests-grid" class="profile-achievement-grid"></div>
+      <div class="daily-quests-section">
+        <header class="daily-quests-section__head">
+          <h3 class="daily-quests-section__title">Daily quests</h3>
+          <p class="daily-quests-section__reset muted">${escapeHtml(resetLabel)}</p>
+        </header>
+        <div id="daily-quests-grid" class="profile-achievement-grid daily-quests-grid"></div>
+      </div>
+      <div class="title-quests-section">
+        <header class="title-quests-section__head">
+          <h3 class="title-quests-section__title">Title quests</h3>
+          <p class="title-quests-section__desc muted">Long-term goals that unlock mage titles.</p>
+        </header>
+        <div id="quests-grid" class="profile-achievement-grid"></div>
+      </div>
     </section>`;
+  bindDailyQuestsGrid(profile, root.querySelector("#daily-quests-grid"), { onCurrencyChange });
   bindAchievementsGrid(profile, root.querySelector("#quests-grid"), { onTitleChanged });
 }
 
