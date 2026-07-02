@@ -71,6 +71,19 @@ export function getLocalDateKey(date = new Date()) {
   return `${y}-${m}-${d}`;
 }
 
+export function getMsUntilLocalMidnight(date = new Date()) {
+  const next = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);
+  return next.getTime() - date.getTime();
+}
+
+export function formatDailyResetCountdown(ms) {
+  const totalSec = Math.max(0, Math.ceil(ms / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 function hashString(str) {
   let h = 2166136261;
   for (let i = 0; i < str.length; i++) {
