@@ -1530,11 +1530,12 @@ function getMapSceneryMarkup(theme) {
       <path d="M58 24 Q60 22 62 24 Q60 23 58 24Z"/>
     </g>
     <!-- ground -->
-    <rect x="0" y="86" width="100" height="34" fill="url(#${uid}-hill)"/>
-    <ellipse cx="50" cy="88" rx="48" ry="8" fill="rgba(0,0,0,0.35)"/>
+    <rect x="0" y="82" width="100" height="38" fill="url(#${uid}-hill)"/>
+    <ellipse cx="50" cy="86" rx="48" ry="8" fill="rgba(0,0,0,0.35)"/>
     <!-- tower foundation platform -->
     <path fill="url(#${uid}-foundation)" d="M10 88 L90 88 L94 96 L6 96 Z"/>
     <path fill="${p.rockDark}" d="M6 96 L94 96 L92 102 L8 102 Z"/>
+    <path fill="${p.rockDark}" opacity="0.85" d="M0 102 L100 102 L100 120 L0 120 Z"/>
     <path fill="none" stroke="${p.flag}" stroke-width="0.3" opacity="0.2" d="M12 90 L88 90"/>
     <!-- braziers flanking tower base -->
     <g opacity="0.9">
@@ -1594,6 +1595,59 @@ function getMapBannerMarkup(theme) {
     <path fill="url(#banner-cloth)" d="M13 4 C18 5 20 8 20 10 C20 12 18 14 13 15 Z"/>
     <path fill="none" stroke="${p.flag}" stroke-width="0.5" opacity="0.6" d="M14 7 L18 8 M14 10 L18 10 M14 13 L17 12"/>
   </svg>`;
+}
+
+
+function fitAdventureMapCanvasHeight(map) {
+  const tower = map?.querySelector(".adventure-map-tower");
+  if (!map || !tower) return;
+
+  const measureEls = () => [
+    tower,
+    ...tower.querySelectorAll(
+      ".adventure-map-tile, .adventure-map-tower__base, .adventure-map-tower__mist, .adventure-map-tower__beacon"
+    ),
+  ];
+
+  const sync = () => {
+    const mapRect = map.getBoundingClientRect();
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (const el of measureEls()) {
+      const rect = el.getBoundingClientRect();
+      if (!rect.height && !rect.width) continue;
+      minY = Math.min(minY, rect.top);
+      maxY = Math.max(maxY, rect.bottom);
+    }
+    if (!Number.isFinite(minY)) return;
+
+    const span = maxY - minY;
+    const topHeadroom = Math.max(Math.round(span * 0.12), 32);
+    const bottomOffset = parseFloat(getComputedStyle(tower).bottom) || 0;
+    const visualBottom = maxY - mapRect.top;
+    const height = Math.ceil(Math.max(visualBottom + bottomOffset, span + topHeadroom + bottomOffset));
+    map.style.minHeight = `${height}px`;
+    map.style.height = `${height}px`;
+
+    const scene = map.closest(".adventure-map-scene");
+    if (scene) {
+      const maxScrollTop = Math.max(0, map.offsetHeight - scene.clientHeight);
+      if (scene.scrollTop > maxScrollTop) scene.scrollTop = maxScrollTop;
+    }
+  };
+
+  requestAnimationFrame(() => {
+    sync();
+    requestAnimationFrame(sync);
+  });
+}
+
+function clampAdventureMapScroll() {
+  const map = $("adventure-map");
+  const scene = map?.closest(".adventure-map-scene");
+  if (!map || !scene) return;
+  const maxScrollTop = Math.max(0, map.offsetHeight - scene.clientHeight);
+  if (scene.scrollTop > maxScrollTop) scene.scrollTop = maxScrollTop;
 }
 
 
@@ -1788,7 +1842,12 @@ function renderAdventureMap() {
   }
 
   const nextTile = map.querySelector(".adventure-map-tile--next");
-  if (nextTile) requestAnimationFrame(() => nextTile.scrollIntoView({ behavior: "smooth", block: "center" }));
+  fitAdventureMapCanvasHeight(map);
+  if (nextTile) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => nextTile.scrollIntoView({ behavior: "smooth", block: "nearest" }));
+    });
+  }
 
   const nextRow = floorList?.querySelector(".adventure-floor-row--next");
   if (nextRow) {
@@ -2187,6 +2246,16 @@ function init() {
   bindCardPreviewModal();
   bindAdventureMapCapture();
   ensureFloorModalOnBody();
+  document.querySelector(".adventure-map-scene")?.addEventListener("scroll", clampAdventureMapScroll, { passive: true });
+  let adventureMapResizeTimer;
+  window.addEventListener("resize", () => {
+    clearTimeout(adventureMapResizeTimer);
+    adventureMapResizeTimer = setTimeout(() => {
+      if (!document.body.classList.contains("adventure-active")) return;
+      const map = $("adventure-map");
+      if (map) fitAdventureMapCanvasHeight(map);
+    }, 120);
+  });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeAdventurePrebattle();
   });

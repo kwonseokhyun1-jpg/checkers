@@ -258,12 +258,12 @@ body.match-active {
   }
 
   body.adventure-active:not(.adventure-floor-open):not(.match-active):not(.deck-editing) .adventure-map-scene {
-    padding-bottom: var(--nav-clearance);
+    padding-bottom: 0;
     scroll-padding-bottom: var(--nav-clearance);
   }
 
   body.install-banner-visible.adventure-active:not(.adventure-floor-open):not(.match-active):not(.deck-editing) .adventure-map-scene {
-    padding-bottom: calc(var(--nav-clearance) + 3.25rem);
+    padding-bottom: 0;
     scroll-padding-bottom: calc(var(--nav-clearance) + 3.25rem);
   }
 
@@ -1857,12 +1857,12 @@ body.install-banner-visible.deck-editing .game-shell {
 
   body.adventure-active:not(.adventure-floor-open) .adventure-map-scene {
     max-height: none;
-    padding-bottom: var(--nav-clearance);
+    padding-bottom: 0;
     scroll-padding-bottom: var(--nav-clearance);
   }
 
   body.install-banner-visible.adventure-active:not(.adventure-floor-open) .adventure-map-scene {
-    padding-bottom: calc(var(--nav-clearance) + 3.25rem);
+    padding-bottom: 0;
     scroll-padding-bottom: calc(var(--nav-clearance) + 3.25rem);
   }
 

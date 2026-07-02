@@ -6809,8 +6809,14 @@ body.adventure-active:not(.adventure-floor-open) .adventure-map-scene {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: var(--nav-clearance);
+  padding-bottom: 0;
   scroll-padding-bottom: var(--nav-clearance);
+}
+body.adventure-active:not(.adventure-floor-open) .adventure-map-tower {
+  bottom: var(--nav-clearance);
+}
+body.install-banner-visible.adventure-active:not(.adventure-floor-open) .adventure-map-tower {
+  bottom: calc(var(--nav-clearance) + 3.25rem);
 }
 body.adventure-active:not(.adventure-floor-open) .adventure-floor-list:not(.adventure-floor-list--sr) {
   flex: 1;
@@ -6864,8 +6870,8 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
   z-index: 2;
 }
 .adventure-map-canvas--iso {
-  aspect-ratio: 3 / 8;
-  min-height: min(96vh, 54rem);
+  aspect-ratio: auto;
+  min-height: 0;
   max-height: none;
   height: auto;
 }
@@ -6902,7 +6908,8 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
   position: relative;
   isolation: isolate;
   width: 100%;
-  min-height: min(96vh, 54rem);
+  min-height: 0;
+  padding-bottom: 1.25rem;
   overflow: visible;
   touch-action: manipulation;
   --map-accent: #58cc02;
@@ -6942,7 +6949,8 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
   inset: 0;
   background:
     radial-gradient(ellipse 90% 50% at 50% 15%, rgba(40, 60, 40, 0.25), transparent 70%),
-    radial-gradient(ellipse 100% 40% at 50% 100%, rgba(0, 0, 0, 0.55), transparent 60%);
+    radial-gradient(ellipse 100% 40% at 50% 100%, rgba(0, 0, 0, 0.55), transparent 60%),
+    linear-gradient(180deg, transparent 72%, rgba(10, 8, 8, 0.85) 88%, #0a0808 100%);
   pointer-events: none;
 }
 .adventure-map-scenery--frost {
@@ -7164,7 +7172,7 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
 .adventure-map-tower {
   position: absolute;
   left: 50%;
-  bottom: 3%;
+  bottom: 0;
   transform: translateX(-50%);
   z-index: 15;
   display: flex;
@@ -7324,8 +7332,8 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
   left: 50%;
   bottom: 0;
   transform: translateX(-50%);
-  width: 16rem;
-  height: 3.5rem;
+  width: 18rem;
+  height: 4.5rem;
   background: radial-gradient(ellipse 85% 100% at 50% 100%, rgba(180, 170, 200, 0.35) 0%, transparent 72%);
   z-index: 25;
   pointer-events: none;
@@ -7775,6 +7783,17 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
   inset: 0;
   min-height: 100%;
   pointer-events: none;
+}
+body.adventure-active:not(.adventure-floor-open) .adventure-map-canvas__bg::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: calc(var(--nav-clearance) + 2rem);
+  background: linear-gradient(180deg, transparent 0%, rgba(10, 8, 8, 0.55) 35%, #0a0808 100%);
+  pointer-events: none;
+  z-index: 2;
 }
 .adventure-map-canvas--verdant .adventure-map-canvas__bg {
   background: transparent;
