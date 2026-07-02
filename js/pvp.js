@@ -12,6 +12,8 @@ import {
   pieceSkinsConflict,
 } from "./cosmetics.js";
 
+export { formatPvpError } from "./pvpErrors.js";
+
 export const PVP_MODE_NORMAL = "normal";
 export const PVP_MODE_MYSTERY = "mystery";
 
@@ -310,7 +312,7 @@ export class PvpService {
       !mystery &&
       (!Array.isArray(hostDeckIds) || hostDeckIds.length !== DECK_SIZE)
     ) {
-      throw new Error(`Select a valid ${DECK_SIZE}-card deck first`);
+      throw new Error(`Your deck needs exactly ${DECK_SIZE} cards — open Decks and finish building it.`);
     }
 
     const withSkins = await probePieceSkinColumns(sb);
@@ -461,7 +463,7 @@ export class PvpService {
     }
 
     if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
-      throw new Error(`Select a valid ${DECK_SIZE}-card deck first`);
+      throw new Error(`Your deck needs exactly ${DECK_SIZE} cards — open Decks and finish building it.`);
     }
 
     const rpcArgs = {
