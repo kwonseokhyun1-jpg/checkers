@@ -1024,6 +1024,21 @@ export function getBackstepTarget(board, piece, state = null) {
   return targets;
 }
 
+/** One empty square forward-diagonal ahead of your piece (Nudge). */
+export function getNudgeTarget(board, piece, state = null) {
+  const forward =
+    piece.color === COLORS.RED ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]];
+  const targets = [];
+  for (const [dr, dc] of forward) {
+    const r = piece.row + dr;
+    const c = piece.col + dc;
+    if (!inBounds(r, c) || !isDarkSquare(r, c) || board[r][c]) continue;
+    if (state && squareBlocked(state, r, c, piece.color)) continue;
+    targets.push([r, c]);
+  }
+  return targets;
+}
+
 export function getAdjacentEmpty(board, piece) {
   const spots = [];
   for (let dr = -1; dr <= 1; dr++)
