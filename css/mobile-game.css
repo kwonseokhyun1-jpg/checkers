@@ -2089,6 +2089,15 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   /* Profile + quests — scrollable section tabs, denser titles */
+  .quests-section-tabs {
+    margin-bottom: 0.65rem;
+  }
+
+  .quests-section-tab {
+    padding: 0.45rem 0.55rem;
+    font-size: 0.82rem;
+  }
+
   .profile-section-tabs {
     overflow-x: auto;
     flex-wrap: nowrap;
