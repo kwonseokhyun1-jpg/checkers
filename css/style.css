@@ -2269,7 +2269,7 @@ body.panel-help-open {
 }
 
 .chest-card__tagline {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   margin: 0 0 0.65rem;
 }
