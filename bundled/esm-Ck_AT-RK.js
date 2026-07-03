@@ -1,0 +1,1 @@
+import{t as e}from"./preload-helper-CV77j2BA.js";import{registerPlugin as t}from"./dist-DM6qMOWp.js";var n=t(`SplashScreen`,{web:()=>e(()=>import(`./web-Cky6CnyW.js`).then(e=>new e.SplashScreenWeb),[],import.meta.url)});export{n as SplashScreen};

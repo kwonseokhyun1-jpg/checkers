@@ -1,0 +1,1 @@
+import{t as e}from"./preload-helper-CV77j2BA.js";import{registerPlugin as t}from"./dist-DM6qMOWp.js";var n=t(`ScreenOrientation`,{web:()=>e(()=>import(`./web-QGyLkY08.js`).then(e=>new e.ScreenOrientationWeb),[],import.meta.url)});export{n as ScreenOrientation};
