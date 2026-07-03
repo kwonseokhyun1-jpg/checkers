@@ -1,18 +1,41 @@
 # Arcane Checkers
 
-Classic checkers with a collectible spell-card layer. Earn **10 gems per win** to open chests and grow your collection. Spend **10 gems** to draw a random card, play effects on your turn, then make a normal checkers move.
+Classic checkers with a collectible spell-card layer. Build a **30-card deck**, battle through **Adventure** (50 floors across 5 worlds), open **Shop** chests to grow your collection, and challenge the AI or other players in **PvP**.
 
-## Game modes
+## App tabs
 
-1. **Chests** — Spend gems to open chests and grow your collection (economy spells are disabled).
-2. **Deck Builder** — Build a 30-card deck (max 4 copies for commons/uncommons, max 3 for rares/epics/legendaries) from cards you own.
-3. **Play** — Choose a deck and battle the AI (PvP planned).
+| Tab | What it does |
+|-----|----------------|
+| **Decks** | Build and save 30-card battle lists (max **3 copies** per spell). |
+| **Shop** | Spend **gems** on spell chests; cosmetic boxes unlock at Adventure floor 5; spend **stars** on mystery boxes. |
+| **Play** | Adventure map — clear floors for gems and stars. |
+| **PvP** | Host or join 1v1 rooms (sign-in required). |
+| **Quests** | Daily quests for gems and stars; title quests for mage titles (sign-in required). |
 
-### Match rules
+Profile and Settings are available from the header.
 
-- Start with **3 cards** in hand (max **5**)
-- Play **1 spell** per turn, then move
-- Draw **1 card every 2 turns** from your deck
+## Adventure
+
+- **5 worlds × 10 floors** (50 levels total). Worlds 4–5 unlock after clearing floor 30.
+- Each floor pits your deck against a themed AI opponent with its own spell deck.
+- **First clear:** +50 gems · **Repeat clear:** +20 gems. Stars are awarded for strong performances and feed the Shop's star mystery boxes.
+- Floor 50 unlocks **Challenge mode** on the final map.
+
+## Match rules
+
+- Start with **3 cards** in hand; draw **1 card every 2 turns** from your deck.
+- On your turn: optionally cast **1 spell** (some cards like **Parallel** grant an extra cast), then make a normal checkers move.
+- Mandatory jumps when available; multi-jump chains when possible.
+- Reach the far row to crown, or use spells such as **Royal Decree**.
+
+## Economy
+
+| Currency | How to earn | How to spend |
+|----------|-------------|--------------|
+| **Gems** | Adventure clears, daily quests, duplicate refunds | Spell chests (Bronze 25 · Silver 50 · Gold 100), buying extra card copies in Decks |
+| **Stars** | Adventure victories, daily quests | Star mystery boxes in Shop (cosmetics and spells) |
+
+New profiles start with **200 gems**. Extra copies bought in the deck editor cost **10 / 20 / 30 / 40 / 50 gems** by rarity (common → legendary). Chest rarity odds are shown on each chest card in the Shop.
 
 ## Play online
 
@@ -32,21 +55,34 @@ python3 -m http.server 8080
 
 Then visit http://localhost:8080
 
+For Capacitor / native builds: `npm install` then see **[MOBILE.md](MOBILE.md)**.
+
 ## Screenshots
 
-Mobile presentation (390×844):
+Store and marketing captures live in **`assets/store/`**:
 
-| Decks | Shop | Adventure | Match |
-|-------|------|-----------|-------|
-| ![Decks](screenshots/decks-mobile.png) | ![Shop](screenshots/shop-mobile.png) | ![Adventure](screenshots/adventure-mobile.png) | ![Match](screenshots/match-mobile.png) |
+| File | Scene |
+|------|--------|
+| `01-decks.png` | Deck list |
+| `02-adventure.png` | Adventure map |
+| `03-match.png` | In-match board + spell hand |
+| `04-shop.png` | Shop / chests |
+| `05-pvp.png` | PvP lobby |
 
-Cold-start splash:
+Regenerate after major UI changes:
 
-![Splash](screenshots/splash-mobile.png)
+```bash
+python3 -m http.server 8765 &
+node scripts/capture-store-screenshots.mjs
+```
 
-Regenerate after UI changes: `python3 -m http.server 8765 &` then `npm run screenshots`. See **[MOBILE.md](MOBILE.md)** for PWA install, animated splash, and Capacitor / App Store setup.
+See **[MOBILE.md](MOBILE.md)** for PWA install, animated splash, and Capacitor / App Store setup.
 
 ## Cards
+
+**85 spells** across common, uncommon, rare, epic, and legendary rarities. Full descriptions: **[SPELLS.md](SPELLS.md)**.
+
+A few highlights:
 
 | Card | Effect |
 |------|--------|
@@ -54,25 +90,20 @@ Regenerate after UI changes: `python3 -m http.server 8765 &` then `npm run scree
 | **Aegis** | Shield a piece from capture for 2 turns |
 | **Forward Bolt** | Destroy the first enemy along your piece's forward diagonal |
 | **Frost Bind** | Freeze an enemy — it skips its next move |
-| **Retreat** | Piece can move (and jump) backward for 3 turns |
 | **Knight's Sigil** | Piece moves like a chess knight permanently |
 | **Royal Decree** | Instantly crown a piece |
-| **Shadow Swap** | Swap two of your pieces |
-| **Bonus Step** | After your move, move the same piece again (non-capture) |
-| **Gem Cache** | Gain 20 gems |
-| **Shatter** | Destroy any unshielded enemy piece |
-| **Blink** | Teleport your piece to any empty dark square within 2 steps |
+| **Shatter** | Destroy any unshielded enemy piece (you skip spells next turn) |
+| **Chain Lightning** | Destroy up to 2 chained adjacent enemies from your piece |
 
-## Rules
+## Checkers rules
 
-- You play as **Ruby Legion** (red, bottom). **Shadow Court** (black, top) is the AI.
-- On your turn: play any number of cards (optional), tap **Done playing cards**, then move.
+- You play as **Ruby Legion** (red, bottom). **Shadow Court** (black, top) is the AI in Adventure.
 - Mandatory jumps when available; multi-jump chains when possible.
-- Reach the far row to crown, or use **Royal Decree**.
+- Reach the far row to crown, or use crown spells.
 
 ## Online accounts & PvP
 
-See **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)** for Supabase auth, cloud saves, and 1v1 PvP.
+See **[SUPABASE_SETUP.md](SUPABASE_SETUP.md)** for Supabase auth, cloud saves, and 1v1 PvP matchmaking. PvP and Quests require a signed-in account; guests can play Adventure and browse Decks/Shop locally.
 
 ## Mobile & App Store
 
