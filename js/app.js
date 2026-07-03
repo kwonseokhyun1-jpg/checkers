@@ -57,14 +57,6 @@ import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { openChest, CHESTS } from "./chests.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { smallMysteryBoxSvgMarkup, bigMysteryBoxSvgMarkup } from "./mysteryBoxArt.js";
-import { MatchSession } from "./match.js";
-import {
-  renderProfileTab,
-  renderCosmeticBoxes,
-  renderQuestsTab,
-  headerProfileAvatarHtml,
-  resolveDisplayUsername,
-} from "./profileUI.js";
 import {
   openMysteryBox,
   openBigMysteryBox,
@@ -72,8 +64,6 @@ import {
   BIG_MYSTERY_BOX_COST,
   SMALL_MYSTERY_BOX_COSMETIC_CHANCE,
 } from "./mysteryBox.js";
-import { playStarCollectAnimation } from "./starCollectAnimation.js";
-import { playCosmeticOpenAnimation } from "./cosmeticOpenAnimation.js";
 import { initAuthUI } from "./authUI.js";
 import { initAuthGate, requiresAuthGate, allowsAppAccess } from "./authGate.js";
 import {
@@ -85,13 +75,7 @@ import {
   prepareInteractiveTutorialForNewAccount,
   syncTutorialStorageWithProfile,
 } from "./tutorial.js";
-import { startInteractiveTutorial } from "./tutorialMatch.js";
-import { startMetaTutorial, notifyMetaTutorial } from "./tutorialMeta.js";
-import { startQuestsTutorial, startPvpTutorial, startCosmeticsTutorial, notifyUnlockTutorial } from "./tutorialUnlocks.js";
-import { initPvpUI } from "./pvpUI.js";
 import { initPanelHelp, openPanelHelpPopup } from "./panelHelp.js";
-import { clearAllWaitingRoomsOnce } from "./pvp.js";
-import { getMatchHtml } from "./matchView.js";
 import {
   bindMatchVisibilityHandlers,
   enterMatchMode,
@@ -115,16 +99,33 @@ import { getEquippedCosmetics } from "./cosmetics.js";
 import { renderSpellCardEl, escapeHtml } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardPreview.js";
 import { staggerCardReveal, onCardRevealed } from "./cardAnimations.js";
-import { playChestOpenAnimation } from "./chestOpenAnimation.js";
 import { getBuyCost, tryBuyCardCopy } from "./cardShop.js";
 import { initNavIcons } from "./navIcons.js";
 import { initSettings } from "./settings.js";
-import { renderSettingsTab } from "./settingsUI.js";
 import { initAudio, setAudioMode, AudioSfx } from "./audio.js";
 import { initOrientation, lockPortrait } from "./orientation.js";
 import { initNetworkBanner } from "./networkBanner.js";
 import { initCapacitor } from "./capacitorInit.js";
 import { hapticLight } from "./haptics.js";
+import { headerProfileAvatarHtml, resolveDisplayUsername } from "./profileHeader.js";
+import {
+  loadMatchChunk,
+  loadPvpChunk,
+  loadProfileUIChunk,
+  loadSettingsUIChunk,
+  loadAnimationsChunk,
+  loadTutorialMetaChunk,
+  loadTutorialUnlocksChunk,
+  loadTutorialMatchChunk,
+} from "./lazyChunks.js";
+
+function notifyMetaTutorial(event, data) {
+  void loadTutorialMetaChunk().then((m) => m.notifyMetaTutorial(event, data));
+}
+
+function notifyUnlockTutorial(event, data) {
+  void loadTutorialUnlocksChunk().then((m) => m.notifyUnlockTutorial(event, data));
+}
 
 let profile;
 
@@ -174,6 +175,29 @@ function sortCollectionCards(cards) {
 }
 let matchSession = null;
 let pvpController = null;
+/** @type {Promise<ReturnType<typeof import('./pvpUI.js').initPvpUI>> | null} */
+let pvpInitPromise = null;
+
+function ensurePvpUI() {
+  if (pvpController) return Promise.resolve(pvpController);
+  if (!pvpInitPromise) {
+    pvpInitPromise = loadPvpChunk().then(({ initPvpUI, clearAllWaitingRoomsOnce }) => {
+      void clearAllWaitingRoomsOnce();
+      pvpController = initPvpUI({
+        root: document.getElementById("view-pvp"),
+        getProfile: () => profile,
+        openAuthModal: () => authUI?.open("signin", { forced: true }),
+        onNavigateTab: showTab,
+        onPvpViewShown: () => {
+          activeTab = "pvp";
+          syncMainTabShellState();
+        },
+      });
+      return pvpController;
+    });
+  }
+  return pvpInitPromise;
+}
 /** @type {ReturnType<typeof initAuthGate> | null} */
 let authGate = null;
 /** @type {ReturnType<typeof initAuthUI> | null} */
@@ -381,11 +405,11 @@ async function showTab(tab) {
     deckSubview = "list";
     showDeckSubview("list");
   }
-  if (tab === "profile") renderProfile();
-  if (tab === "settings") renderSettings();
-  if (tab === "quests") renderQuests();
+  if (tab === "profile") void renderProfile();
+  if (tab === "settings") void renderSettings();
+  if (tab === "quests") void renderQuests();
   if (tab === "play") showAdventureMap();
-  if (tab === "pvp") pvpController?.render({ resume: true });
+  if (tab === "pvp") void ensurePvpUI().then((c) => c?.render({ resume: true }));
   if (!isMatchActive()) {
     setAudioMode(tab === "play" || tab === "pvp" ? "hub" : "hub");
     await lockPortrait();
@@ -487,7 +511,8 @@ function openProfileTab() {
   notifyUnlockTutorial("profile-opened");
 }
 
-function renderProfile() {
+async function renderProfile() {
+  const { renderProfileTab } = await loadProfileUIChunk();
   const root = $("view-profile");
   renderProfileTab(profile, root, {
     onGemsChange: updateGemHeader,
@@ -495,7 +520,8 @@ function renderProfile() {
   });
 }
 
-function renderSettings() {
+async function renderSettings() {
+  const { renderSettingsTab } = await loadSettingsUIChunk();
   const root = $("view-settings");
   renderSettingsTab(root, {
     onUsernameChanged: (name) => {
@@ -505,7 +531,8 @@ function renderSettings() {
   });
 }
 
-function renderQuests() {
+async function renderQuests() {
+  const { renderQuestsTab } = await loadProfileUIChunk();
   renderQuestsTab(profile, $("view-quests"), {
     onTitleChanged: () => updateHeaderProfileBtn(),
     onCurrencyChange: () => updateCurrencyHeader(),
@@ -693,6 +720,7 @@ function bindMysteryBoxCard(article, openFn) {
 }
 
 async function playMysteryResult(res, log) {
+  const { playChestOpenAnimation, playCosmeticOpenAnimation } = await loadAnimationsChunk();
   if (res.kind === "card") {
     await playChestOpenAnimation({
       tier: res.tier.id,
@@ -765,7 +793,7 @@ async function handleOpenMysteryBox({ big = false } = {}) {
   }
 
   renderChests({ clearPulls: false });
-  renderProfile();
+  void renderProfile();
 }
 
 function renderStarsShop() {
@@ -819,14 +847,16 @@ function showVaultTab(tab) {
 }
 
 function renderCosmeticsShop() {
-  renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
-    logEl: $("cosmetic-box-log"),
-    onGemsChange: updateGemHeader,
-    cosmeticsUnlocked: isCosmeticsUnlocked(profile),
-    onOpened: () => {
-      if (activeTab === "profile") renderProfile();
-      if (activeTab === "quests") renderQuests();
-    },
+  void loadProfileUIChunk().then(({ renderCosmeticBoxes }) => {
+    renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
+      logEl: $("cosmetic-box-log"),
+      onGemsChange: updateGemHeader,
+      cosmeticsUnlocked: isCosmeticsUnlocked(profile),
+      onOpened: () => {
+        if (activeTab === "profile") void renderProfile();
+        if (activeTab === "quests") void renderQuests();
+      },
+    });
   });
 }
 
@@ -888,6 +918,7 @@ function renderChests(options = {}) {
       updateCurrencyHeader();
       btn.disabled = true;
 
+      const { playChestOpenAnimation } = await loadAnimationsChunk();
       await playChestOpenAnimation({
         tier: chest.id,
         tierLabel: tier.label,
@@ -2035,6 +2066,7 @@ async function launchAdventureMatch(
   const root = $("view-match");
   if (!root) return;
 
+  const { MatchSession, getMatchHtml } = await loadMatchChunk();
   root.innerHTML = getMatchHtml(opponentName);
 
   const challengeMode =
@@ -2511,15 +2543,15 @@ function init() {
       renderStarsShop();
       authGate?.hide();
       void refreshHeaderIdentity().then(() => {
-        if (activeTab === "profile") renderProfile();
-        if (activeTab === "quests") renderQuests();
-        if (activeTab === "pvp") pvpController?.render({ resume: true });
+        if (activeTab === "profile") void renderProfile();
+        if (activeTab === "quests") void renderQuests();
+        if (activeTab === "pvp") void ensurePvpUI().then((c) => c?.render({ resume: true }));
       });
-      pvpController?.render({ resume: true });
-      maybeStartInteractiveTutorial();
-      maybeStartMetaTutorial();
-      maybeStartPostFloor1Tutorials();
-      maybeStartPostFloor5CosmeticsTutorial();
+      void ensurePvpUI().then((c) => c?.render({ resume: true }));
+      void maybeStartInteractiveTutorial();
+      void maybeStartMetaTutorial();
+      void maybeStartPostFloor1Tutorials();
+      void maybeStartPostFloor5CosmeticsTutorial();
       if (!tutorialRunning) {
         showTab(activeTab);
       }
@@ -2540,19 +2572,6 @@ function init() {
       renderStarsShop();
       authGate?.show();
       showTab("deck");
-    },
-  });
-
-  void clearAllWaitingRoomsOnce();
-
-  pvpController = initPvpUI({
-    root: document.getElementById("view-pvp"),
-    getProfile: () => profile,
-    openAuthModal: () => authUI?.open("signin", { forced: true }),
-    onNavigateTab: showTab,
-    onPvpViewShown: () => {
-      activeTab = "pvp";
-      syncMainTabShellState();
     },
   });
 
@@ -2629,17 +2648,19 @@ function maybeStartPvpTutorial() {
   if (!isQuestsAndPvpUnlocked(profile)) return false;
   if (!shouldShowPvpTutorial(profile)) return false;
   tutorialRunning = true;
-  startPvpTutorial({
-    profile,
-    saveProfile,
-    onComplete: () => {
-      tutorialRunning = false;
-      profile = loadProfile();
-      repairProfile(profile);
-      syncNavUnlockState();
-      showTab("play");
-      maybeStartPostFloor5CosmeticsTutorial();
-    },
+  void loadTutorialUnlocksChunk().then(({ startPvpTutorial }) => {
+    startPvpTutorial({
+      profile,
+      saveProfile,
+      onComplete: () => {
+        tutorialRunning = false;
+        profile = loadProfile();
+        repairProfile(profile);
+        syncNavUnlockState();
+        showTab("play");
+        maybeStartPostFloor5CosmeticsTutorial();
+      },
+    });
   });
   return true;
 }
@@ -2652,16 +2673,18 @@ function maybeStartPostFloor5CosmeticsTutorial() {
   if (!shouldShowCosmeticsTutorial(profile)) return false;
   tutorialRunning = true;
   showTab("play");
-  startCosmeticsTutorial({
-    profile,
-    saveProfile,
-    onComplete: () => {
-      tutorialRunning = false;
-      profile = loadProfile();
-      repairProfile(profile);
-      syncNavUnlockState();
-      showTab("play");
-    },
+  void loadTutorialUnlocksChunk().then(({ startCosmeticsTutorial }) => {
+    startCosmeticsTutorial({
+      profile,
+      saveProfile,
+      onComplete: () => {
+        tutorialRunning = false;
+        profile = loadProfile();
+        repairProfile(profile);
+        syncNavUnlockState();
+        showTab("play");
+      },
+    });
   });
   return true;
 }
@@ -2673,17 +2696,19 @@ function maybeStartPostFloor1Tutorials() {
   if (!shouldShowQuestsTutorial(profile)) return maybeStartPvpTutorial();
   tutorialRunning = true;
   showTab("play");
-  startQuestsTutorial({
-    profile,
-    saveProfile,
-    onComplete: () => {
-      tutorialRunning = false;
-      profile = loadProfile();
-      repairProfile(profile);
-      syncNavUnlockState();
-      maybeStartPvpTutorial();
-      maybeStartPostFloor5CosmeticsTutorial();
-    },
+  void loadTutorialUnlocksChunk().then(({ startQuestsTutorial }) => {
+    startQuestsTutorial({
+      profile,
+      saveProfile,
+      onComplete: () => {
+        tutorialRunning = false;
+        profile = loadProfile();
+        repairProfile(profile);
+        syncNavUnlockState();
+        maybeStartPvpTutorial();
+        maybeStartPostFloor5CosmeticsTutorial();
+      },
+    });
   });
   return true;
 }
@@ -2692,22 +2717,24 @@ function maybeStartInteractiveTutorial() {
   if (tutorialRunning || !allowsAppAccess()) return false;
   if (!shouldShowInteractiveTutorial(profile)) return false;
   tutorialRunning = true;
-  startInteractiveTutorial({
-    profile,
-    saveProfile,
-    onComplete: () => {
-      tutorialRunning = false;
-      profile = loadProfile();
-      repairProfile(profile);
-      updateCurrencyHeader();
-      renderDeckList();
-      renderStarsShop();
-      if (!maybeStartMetaTutorial()) {
-        showTab("deck");
-      }
-      maybeStartPostFloor1Tutorials();
-      maybeStartPostFloor5CosmeticsTutorial();
-    },
+  void loadTutorialMatchChunk().then(({ startInteractiveTutorial }) => {
+    startInteractiveTutorial({
+      profile,
+      saveProfile,
+      onComplete: () => {
+        tutorialRunning = false;
+        profile = loadProfile();
+        repairProfile(profile);
+        updateCurrencyHeader();
+        renderDeckList();
+        renderStarsShop();
+        if (!maybeStartMetaTutorial()) {
+          showTab("deck");
+        }
+        maybeStartPostFloor1Tutorials();
+        maybeStartPostFloor5CosmeticsTutorial();
+      },
+    });
   });
   return true;
 }
@@ -2717,20 +2744,22 @@ function maybeStartMetaTutorial() {
   if (!shouldShowMetaTutorial(profile)) return false;
   tutorialRunning = true;
   showTab("deck");
-  startMetaTutorial({
-    profile,
-    saveProfile,
-    onComplete: () => {
-      tutorialRunning = false;
-      profile = loadProfile();
-      repairProfile(profile);
-      updateCurrencyHeader();
-      renderDeckList();
-      renderStarsShop();
-      showTab("deck");
-      maybeStartPostFloor1Tutorials();
-      maybeStartPostFloor5CosmeticsTutorial();
-    },
+  void loadTutorialMetaChunk().then(({ startMetaTutorial }) => {
+    startMetaTutorial({
+      profile,
+      saveProfile,
+      onComplete: () => {
+        tutorialRunning = false;
+        profile = loadProfile();
+        repairProfile(profile);
+        updateCurrencyHeader();
+        renderDeckList();
+        renderStarsShop();
+        showTab("deck");
+        maybeStartPostFloor1Tutorials();
+        maybeStartPostFloor5CosmeticsTutorial();
+      },
+    });
   });
   return true;
 }
@@ -2768,7 +2797,7 @@ async function bootstrapAfterAuth() {
   }
   syncTutorialStorageWithProfile(profile);
   await refreshHeaderIdentity();
-  pvpController?.render();
+  if (pvpController) pvpController.render();
   reconcileMatchShellState();
 
   if (requiresAuthGate()) {

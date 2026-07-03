@@ -15,14 +15,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
       - name: Validate JavaScript
         run: bash scripts/validate-js.sh
 
       - name: Smoke test
         run: |
-          npm install playwright --no-save
           npx playwright install chromium
-          python3 -m http.server 8765 &
+          python3 -m http.server 8765 --directory dist &
           sleep 2
           node scripts/smoke-test.mjs http://127.0.0.1:8765/index.html
 
@@ -30,5 +35,5 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
+          publish_dir: dist
           exclude_assets: ".github"

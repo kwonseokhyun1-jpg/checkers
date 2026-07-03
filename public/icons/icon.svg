@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Arcane Checkers">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a2438"/>
+      <stop offset="100%" stop-color="#080a12"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <circle cx="180" cy="200" r="56" fill="#e85d5d" stroke="#c9a227" stroke-width="8"/>
+  <circle cx="332" cy="312" r="56" fill="#2d3748" stroke="#c9a227" stroke-width="8"/>
+  <path fill="#5ce1e6" d="M256 168l18 52h54l-44 32 17 52-45-34-45 34 17-52-44-32h54z"/>
+</svg>

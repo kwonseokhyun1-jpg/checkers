@@ -35,8 +35,8 @@ function scheduleDismiss() {
     window.setTimeout(dismissSplash, wait);
   };
 
-  if (document.readyState === "complete") run();
-  else window.addEventListener("load", run, { once: true });
+  if (document.readyState === "interactive" || document.readyState === "complete") run();
+  else document.addEventListener("DOMContentLoaded", run, { once: true });
 }
 
 document.body.classList.add("splash-active");
