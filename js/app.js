@@ -55,6 +55,7 @@ import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { syncExplorer } from "./achievements.js";
 import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { openChest, CHESTS } from "./chests.js";
+import { formatRarityOdds } from "./chestOdds.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { smallMysteryBoxSvgMarkup, bigMysteryBoxSvgMarkup } from "./mysteryBoxArt.js";
 import { MatchSession } from "./match.js";
@@ -856,7 +857,7 @@ function renderChests(options = {}) {
       <div class="chest-card__visual">${chestSvgMarkup(chest.id)}</div>
       <div class="chest-card__body">
         <h3 class="chest-card__name">${chest.name}</h3>
-        <p class="chest-card__tagline">${tier.tagline}</p>
+        <p class="chest-card__tagline">${formatRarityOdds(chest.weights)}</p>
         <ul class="chest-card__stats">
           <li><strong>${chest.cards}</strong> spells</li>
         </ul>
