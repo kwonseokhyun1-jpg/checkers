@@ -1899,7 +1899,9 @@ ${starLine}`;
       btn.textContent = action.label;
       btn.className = action.primary ? "btn-primary" : "btn-secondary";
       btn.dataset.action = action.id;
+      if (action.disabled) btn.disabled = true;
       btn.addEventListener("click", () => {
+        if (btn.disabled) return;
         if (this.onGameOverAction) {
           this.onGameOverAction(action.id);
         } else {

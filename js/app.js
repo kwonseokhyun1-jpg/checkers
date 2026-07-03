@@ -2550,6 +2550,7 @@ function init() {
     getProfile: () => profile,
     openAuthModal: () => authUI?.open("signin", { forced: true }),
     onNavigateTab: showTab,
+    onOpenDeckEdit: openDeckEdit,
     onPvpViewShown: () => {
       activeTab = "pvp";
       syncMainTabShellState();
