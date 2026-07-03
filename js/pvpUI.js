@@ -1,10 +1,4 @@
-import {
-  fetchProfileRow,
-  getCurrentUser,
-  initAuth,
-  isAuthAvailable,
-  onAuthChange,
-} from "./auth.js";
+import { GUEST_SIGN_IN_NUDGE_PVP } from "./guestMode.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { describeDeckIssue, validateDeck } from "./deckRules.js";
 import { COLORS } from "./board.js";
@@ -164,7 +158,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     if (!user) {
       root.innerHTML = `
         <section class="panel game-panel pvp-panel">
-          ${pvpPanelHead("Sign in to challenge other players in real-time 1v1 matches.")}
+          ${pvpPanelHead("Challenge other players in real-time 1v1 matches.")}
+          <p class="pvp-sign-in-nudge">${GUEST_SIGN_IN_NUDGE_PVP}</p>
           <button type="button" class="btn-primary btn-lg" id="pvp-sign-in">Sign in / Sign up</button>
         </section>`;
       root.querySelector("#pvp-sign-in")?.addEventListener("click", openAuthModal);
