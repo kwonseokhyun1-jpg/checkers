@@ -392,6 +392,17 @@ body.match-active {
   color: #b8f8ff;
 }
 
+.game-nav .tab-btn--sign-in-nudge .tab-btn__sign-in-badge {
+  top: 0.35rem;
+  right: 0.55rem;
+  font-size: 0.48rem;
+  padding: 0.12rem 0.3rem;
+}
+
+.game-nav .tab-btn--locked.tab-btn--sign-in-nudge:not(.active) {
+  opacity: 0.65;
+}
+
 .game-panel {
   border-radius: 18px;
   border-width: 2px;
