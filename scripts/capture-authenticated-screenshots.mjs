@@ -3,8 +3,13 @@
  * Capture store screenshots while signed in (real cloud profile).
  *
  * Usage:
- *   SCREENSHOT_EMAIL=you@example.com SCREENSHOT_PASSWORD=secret \
- *     node scripts/capture-authenticated-screenshots.mjs
+ *   SCREENSHOT_EMAIL=you@example.com SCREENSHOT_PASSWORD=secret npm run screenshots:auth
+ *   SCREENSHOT_EMAIL=... SCREENSHOT_PASSWORD=... npm run screenshots:tablet
+ *
+ * Env:
+ *   SCREENSHOT_SIZES — comma list: phone, tablet-7, tablet-10 (default: all)
+ *   SCREENSHOT_BASE_URL — skip local server (e.g. preview URL)
+ *   SCREENSHOT_PORT — local server port (default 8765)
  */
 import { chromium } from "playwright";
 import { spawn } from "node:child_process";
@@ -13,11 +18,28 @@ import path from "node:path";
 import { fileURLToPath } from "url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const outDir = path.join(root, "assets/store/phone");
+const distDir = path.join(root, "dist");
 const port = Number(process.env.SCREENSHOT_PORT || 8765);
 const baseUrl = process.env.SCREENSHOT_BASE_URL || `http://127.0.0.1:${port}/index.html`;
 const email = process.env.SCREENSHOT_EMAIL || "";
 const password = process.env.SCREENSHOT_PASSWORD || "";
+
+const VIEWPORTS = {
+  phone: { dir: "assets/store/phone", width: 390, height: 844, label: "phone" },
+  "tablet-7": { dir: "assets/store/tablet-7", width: 600, height: 1024, label: "7-inch tablet" },
+  "tablet-10": { dir: "assets/store/tablet-10", width: 1200, height: 1920, label: "10-inch tablet" },
+};
+
+function requestedSizes() {
+  const raw = (process.env.SCREENSHOT_SIZES || "phone,tablet-7,tablet-10").trim();
+  const keys = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  const sizes = keys.map((k) => VIEWPORTS[k]).filter(Boolean);
+  if (!sizes.length) {
+    console.error(`Unknown SCREENSHOT_SIZES: ${raw}. Use phone, tablet-7, tablet-10`);
+    process.exit(1);
+  }
+  return sizes;
+}
 
 if (!email || !password) {
   console.error("Set SCREENSHOT_EMAIL and SCREENSHOT_PASSWORD environment variables.");
@@ -25,9 +47,11 @@ if (!email || !password) {
 }
 
 async function startServer() {
+  const serveDir = process.env.SCREENSHOT_BASE_URL ? null : distDir;
+  if (!serveDir) return null;
   return new Promise((resolve, reject) => {
     const proc = spawn("python3", ["-m", "http.server", String(port)], {
-      cwd: root,
+      cwd: serveDir,
       stdio: "ignore",
     });
     proc.on("error", reject);
@@ -43,11 +67,27 @@ async function dismissSplash(page) {
 }
 
 async function dismissTutorials(page) {
-  for (let i = 0; i < 4; i++) {
-    const skip = page.locator("#tutorial-skip, [data-tutorial-skip], .tutorial-skip-btn");
+  for (let i = 0; i < 6; i++) {
+    const matchSkip = page.locator("#tutorial-match-skip, #btn-leave-match");
+    if (await matchSkip.first().isVisible().catch(() => false)) {
+      await matchSkip.first().click().catch(() => {});
+      await page.waitForTimeout(400);
+      const confirmSkip = page.locator("#mobile-confirm-ok");
+      if (await confirmSkip.isVisible().catch(() => false)) {
+        await confirmSkip.click().catch(() => {});
+        await page.waitForTimeout(1200);
+      }
+      continue;
+    }
+    const skip = page.locator("#tutorial-skip, #tutorial-meta-skip, [data-tutorial-skip], .tutorial-skip-btn");
     if (await skip.first().isVisible().catch(() => false)) {
       await skip.first().click().catch(() => {});
       await page.waitForTimeout(500);
+      const confirmSkip = page.locator("#mobile-confirm-ok");
+      if (await confirmSkip.isVisible().catch(() => false)) {
+        await confirmSkip.click().catch(() => {});
+        await page.waitForTimeout(800);
+      }
       continue;
     }
     const close = page.locator(".tutorial-modal__close, #tutorial-close");
@@ -99,20 +139,27 @@ async function signIn(page) {
   await page.waitForTimeout(800);
 }
 
-const serverProc = process.env.SCREENSHOT_BASE_URL ? null : await startServer();
-await mkdir(outDir, { recursive: true });
+async function leaveMatchIfNeeded(page) {
+  await page.locator("#btn-leave-match").click().catch(() => {});
+  await page.waitForTimeout(600);
+  const leaveOk = page.locator("#mobile-confirm-ok");
+  if (await leaveOk.isVisible().catch(() => false)) await leaveOk.click();
+  await page.waitForTimeout(1200);
+}
 
-const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+async function clickIfNeeded(page, selector) {
+  const el = page.locator(selector).first();
+  if (!(await el.count())) return false;
+  await el.evaluate((node) => node.click());
+  return true;
+}
 
-try {
-  await signIn(page);
-
-  await page.locator('[data-tab="play"]').click();
+async function captureScenes(page, outDir) {
+  await clickIfNeeded(page, '[data-tab="play"]');
   await page.waitForTimeout(1200);
   await dismissTutorials(page);
   await page.screenshot({ path: path.join(outDir, "02-adventure.png") });
-  console.log("captured 02-adventure.png");
+  console.log("  captured 02-adventure.png");
 
   const nextRow = page.locator("#adventure-floor-list .adventure-floor-row--next").first();
   const anyRow = page.locator("#adventure-floor-list .adventure-floor-row").last();
@@ -128,38 +175,73 @@ try {
   await page.waitForTimeout(700);
   const startBtn = page.locator("#btn-start-adventure");
   if (await startBtn.isVisible() && !(await startBtn.isDisabled())) {
-    await startBtn.click();
+    await startBtn.evaluate((el) => el.click());
     await page.waitForTimeout(3500);
     await dismissTutorials(page);
     await page.screenshot({ path: path.join(outDir, "01-match.png") });
-    console.log("captured 01-match.png");
-    await page.locator("#btn-leave-match").click().catch(() => {});
-    await page.waitForTimeout(600);
-    const leaveOk = page.locator("#mobile-confirm-ok");
-    if (await leaveOk.isVisible().catch(() => false)) await leaveOk.click();
-    await page.waitForTimeout(1200);
+    console.log("  captured 01-match.png");
+    await leaveMatchIfNeeded(page);
   }
 
-  await page.locator('[data-tab="chests"]').click();
+  await clickIfNeeded(page, '[data-tab="chests"]');
   await page.waitForTimeout(1000);
   const cardsTab = page.locator('.vault-tab[data-vault-tab="cards"]');
-  if (await cardsTab.count()) await cardsTab.click();
+  if ((await cardsTab.count()) && (await cardsTab.getAttribute("aria-selected")) !== "true") {
+    await cardsTab.evaluate((el) => el.click());
+  }
   await page.waitForTimeout(900);
   await page.screenshot({ path: path.join(outDir, "04-shop.png") });
-  console.log("captured 04-shop.png");
+  console.log("  captured 04-shop.png");
 
-  await page.locator('[data-tab="quests"]').click();
+  await clickIfNeeded(page, '[data-tab="quests"]');
   await page.waitForTimeout(1200);
   await dismissTutorials(page);
   await page.screenshot({ path: path.join(outDir, "05-quests.png") });
-  console.log("captured 05-quests.png");
-} catch (err) {
-  console.error("Screenshot capture failed:", err.message);
-  await page.screenshot({ path: path.join(outDir, "_error-state.png") }).catch(() => {});
-  process.exitCode = 1;
+  console.log("  captured 05-quests.png");
+}
+
+const sizes = requestedSizes();
+const serverProc = await startServer();
+
+if (!process.env.SCREENSHOT_BASE_URL) {
+  const { access } = await import("node:fs/promises");
+  try {
+    await access(path.join(distDir, "index.html"));
+  } catch {
+    console.error("dist/index.html not found. Run: npm run build");
+    serverProc?.kill("SIGTERM");
+    process.exit(1);
+  }
+}
+
+const browser = await chromium.launch();
+let failed = false;
+
+try {
+  for (const size of sizes) {
+    const outDir = path.join(root, size.dir);
+    await mkdir(outDir, { recursive: true });
+    console.log(`\n${size.label} (${size.width}×${size.height}) → ${size.dir}/`);
+
+    const page = await browser.newPage({
+      viewport: { width: size.width, height: size.height },
+    });
+
+    try {
+      await signIn(page);
+      await captureScenes(page, outDir);
+    } catch (err) {
+      failed = true;
+      console.error(`  failed: ${err.message}`);
+      await page.screenshot({ path: path.join(outDir, "_error-state.png") }).catch(() => {});
+    } finally {
+      await page.close();
+    }
+  }
 } finally {
   await browser.close();
   serverProc?.kill("SIGTERM");
 }
 
-console.log("Screenshots saved to", outDir);
+if (failed) process.exit(1);
+console.log("\nScreenshots saved.");
