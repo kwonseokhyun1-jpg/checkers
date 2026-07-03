@@ -1,4 +1,5 @@
 import { COSMETIC_BOXES, COSMETIC_BY_ID, COSMETIC_TYPES, equipCosmetic, getEquippedCosmetics, openCosmeticBox } from "./cosmetics.js";
+import { formatRarityOdds } from "./chestOdds.js";
 import { COSMETICS_UNLOCK_MESSAGE } from "./adventure.js";
 import { notifyUnlockTutorial } from "./tutorialUnlocks.js";
 import {
@@ -188,7 +189,7 @@ export function renderCosmeticBoxes(profile, listEl, { logEl, onGemsChange, onOp
       <div class="chest-card__body">
         <span class="chest-card__tier">${tier.label}</span>
         <h3 class="chest-card__name">${box.name}</h3>
-        <p class="chest-card__tagline">${tier.tagline}</p>
+        <p class="chest-card__tagline">${formatRarityOdds(box.weights)}</p>
         <ul class="chest-card__stats">
           <li><strong>${box.pulls}</strong> cosmetics</li>
           <li>Avatars · frames · banners · skins</li>
