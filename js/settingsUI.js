@@ -17,6 +17,7 @@ import {
   validateUsernameFormat,
 } from "./auth.js";
 import { mobileConfirm } from "./mobileConfirm.js";
+import { GUEST_SIGN_IN_NUDGE_PVP } from "./guestMode.js";
 
 export const PRIVACY_POLICY_URL = "https://sites.google.com/view/arcane-checkers/home";
 
@@ -85,7 +86,7 @@ function accountSectionHtml({ signedIn, username, email }) {
   if (!signedIn) {
     return `
       <div class="profile-account profile-account--guest">
-        <p class="muted">Sign in from the header to save progress and set a username.</p>
+        <p class="muted">Playing as guest — ${GUEST_SIGN_IN_NUDGE_PVP}.</p>
       </div>`;
   }
   return `

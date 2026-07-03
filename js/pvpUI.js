@@ -1,10 +1,4 @@
-import {
-  fetchProfileRow,
-  getCurrentUser,
-  initAuth,
-  isAuthAvailable,
-  onAuthChange,
-} from "./auth.js";
+import { GUEST_SIGN_IN_NUDGE_PVP } from "./guestMode.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { describeDeckIssue, validateDeck } from "./deckRules.js";
 import { COLORS } from "./board.js";
@@ -87,7 +81,7 @@ function pvpPanelHead(descHtml) {
  * @param {() => object} opts.getProfile
  * @param {() => void} opts.openAuthModal
  */
-export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPvpViewShown }) {
+export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPvpViewShown, onOpenDeckEdit }) {
   if (!root) return { render: () => {}, dispose: () => {} };
 
   function bindPvpPanelHelp() {
@@ -104,6 +98,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   let hostWaitingSync = false;
   let hostLaunchSync = false;
   let openRoomsRefreshInFlight = false;
+  let pvpGameOverCtx = null;
+  let rematchPollId = null;
 
   function stopOpenRoomsSync() {
     if (openRoomsPollId) {
@@ -164,7 +160,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     if (!user) {
       root.innerHTML = `
         <section class="panel game-panel pvp-panel">
-          ${pvpPanelHead("Sign in to challenge other players in real-time 1v1 matches.")}
+          ${pvpPanelHead("Challenge other players in real-time 1v1 matches.")}
+          <p class="pvp-sign-in-nudge">${GUEST_SIGN_IN_NUDGE_PVP}</p>
           <button type="button" class="btn-primary btn-lg" id="pvp-sign-in">Sign in / Sign up</button>
         </section>`;
       root.querySelector("#pvp-sign-in")?.addEventListener("click", openAuthModal);
@@ -553,7 +550,23 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   function onMatchRow(row) {
     if (!row) return;
 
-    if (row.status === "waiting" && pvpService?.role === "host") {
+    if (matchSession?._gameOverUiShown && pvpGameOverCtx) {
+      if (
+        row.status === "active" &&
+        row.state_json &&
+        (row.id === pvpGameOverCtx.localRematchRoomId || row.id === pvpGameOverCtx.opponentRematchRoomId)
+      ) {
+        void launchRematchFromGameOver(row);
+        return;
+      }
+      if (row.status === "waiting" && row.id === pvpGameOverCtx.localRematchRoomId) return;
+      if (row.status === "finished" && row.id === pvpGameOverCtx.finishedRow?.id) {
+        pvpGameOverCtx.finishedRow = row;
+        return;
+      }
+    }
+
+    if (row.status === "waiting" && pvpService?.role === "host" && !matchSession?._gameOverUiShown) {
       setStatus("Your room is open — waiting for an opponent…");
       showHosting();
       if (!hostWaitingSync) {
@@ -610,6 +623,228 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     const deck = getSelectedDeck();
     if (deck && !describeDeckIssue(deck.cardIds, profile)) return deck.cardIds;
     return null;
+  }
+
+  function stopRematchPoll() {
+    if (rematchPollId) {
+      clearInterval(rematchPollId);
+      rematchPollId = null;
+    }
+  }
+
+  function buildPvpGameOverActions(ctx, { isTie }) {
+    if (isTie) {
+      return [
+        { id: "rematch", label: "Rematch", primary: true },
+        { id: "back", label: "Back to PvP" },
+      ];
+    }
+
+    if (ctx?.opponentRematchRoomId) {
+      const actions = [{ id: "joinRematch", label: "Join rematch", primary: true }];
+      if (!isMysteryMode(ctx.finishedRow)) actions.push({ id: "editDeck", label: "Edit deck" });
+      actions.push({ id: "back", label: "Back to PvP" });
+      return actions;
+    }
+
+    const actions = [];
+    if (ctx?.localRematchRoomId) {
+      actions.push({ id: "rematch", label: "Waiting for opponent…", primary: true, disabled: true });
+    } else {
+      actions.push({ id: "rematch", label: "Rematch", primary: true });
+    }
+    if (!isMysteryMode(ctx?.finishedRow)) actions.push({ id: "editDeck", label: "Edit deck" });
+    actions.push({ id: "back", label: "Back to PvP" });
+    return actions;
+  }
+
+  function refreshPvpGameOverActions() {
+    if (!matchSession?._gameOverUiShown || !pvpGameOverCtx) return;
+    const title = matchSession.root.querySelector("#game-over-title")?.textContent || "";
+    const won = title.startsWith("Victory");
+    const isTie = title.startsWith("Tie");
+    matchSession.renderGameOverActions({ won, isTie, stars: 0 });
+  }
+
+  function rematchRoomCreatedAfter(room, sinceMs) {
+    if (!room?.created_at || !sinceMs) return true;
+    return new Date(room.created_at).getTime() >= sinceMs - 10_000;
+  }
+
+  async function findOpponentRematchRoom(opponentId, sinceMs) {
+    if (!opponentId || !pvpService) return null;
+    const others = await pvpService.listOthersWaitingRooms();
+    return (
+      others
+        .filter((r) => r.host_id === opponentId && rematchRoomCreatedAfter(r, sinceMs))
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null
+    );
+  }
+
+  async function pollRematchState(ctx) {
+    if (!matchSession?._gameOverUiShown || !ctx || !pvpService) return;
+
+    try {
+      if (ctx.localRematchRoomId) {
+        const localRoom = await pvpService.fetchMatch(ctx.localRematchRoomId);
+        if (localRoom?.status === "active" && localRoom.state_json) {
+          stopRematchPoll();
+          await launchRematchFromGameOver(localRoom);
+          return;
+        }
+        if (localRoom?.status !== "waiting") ctx.localRematchRoomId = null;
+      }
+
+      const opponentRoom = await findOpponentRematchRoom(ctx.opponentId, ctx.matchEndedAt);
+      if (opponentRoom && opponentRoom.id !== ctx.opponentRematchRoomId) {
+        ctx.opponentRematchRoomId = opponentRoom.id;
+        refreshPvpGameOverActions();
+        const textEl = matchSession.root.querySelector("#game-over-text");
+        if (textEl) {
+          textEl.textContent = `${ctx.opponentName} wants a rematch — join when you're ready.`;
+        }
+      }
+    } catch {
+      /* polling is best-effort */
+    }
+  }
+
+  function startRematchPoll(ctx) {
+    stopRematchPoll();
+    rematchPollId = setInterval(() => void pollRematchState(ctx), 2000);
+    void pollRematchState(ctx);
+  }
+
+  async function launchRematchFromGameOver(row) {
+    stopRematchPoll();
+    pvpGameOverCtx = null;
+    matchSession?.dispose();
+    matchSession = null;
+    matchLaunching = true;
+    try {
+      pvpService?.attachToMatch(row);
+      saveActivePvpMatchId(row.id);
+      await launchMatch(row);
+    } finally {
+      if (!matchSession) matchLaunching = false;
+    }
+  }
+
+  async function joinRematchRoom(matchId, ctx) {
+    const mystery = isMysteryMode(ctx.finishedRow);
+    if (!mystery) {
+      const deck = getProfile().decks.find((d) => d.id === ctx.deckId) || getSelectedDeck();
+      const issue = describeDeckIssue(deck?.cardIds ?? [], getProfile());
+      if (issue) {
+        const textEl = matchSession?.root.querySelector("#game-over-text");
+        if (textEl) textEl.textContent = issue;
+        return;
+      }
+    }
+
+    stopRematchPoll();
+    if (ctx.localRematchRoomId && ctx.localRematchRoomId !== matchId) {
+      await cancelHostedRoom(ctx.localRematchRoomId);
+      ctx.localRematchRoomId = null;
+    }
+
+    const guestDeckIds = mystery ? null : (getProfile().decks.find((d) => d.id === ctx.deckId) || getSelectedDeck())?.cardIds;
+    const svc = ensurePvpService();
+    const row = await svc.joinRoomById(matchId, guestDeckIds, await getDisplayName(), {
+      guestPieceSkin: getEquippedPieceSkin(getProfile()),
+    });
+    pvpGameOverCtx = null;
+    await launchRematchFromGameOver(row);
+  }
+
+  async function startRematchFlow(ctx, { joinOnly = false } = {}) {
+    if (!ctx || !pvpService) return;
+
+    try {
+      const opponentRoom =
+        joinOnly && ctx.opponentRematchRoomId
+          ? await pvpService.fetchMatch(ctx.opponentRematchRoomId)
+          : await findOpponentRematchRoom(ctx.opponentId, ctx.matchEndedAt);
+
+      if (opponentRoom?.status === "waiting" && !opponentRoom.guest_id) {
+        await joinRematchRoom(opponentRoom.id, ctx);
+        return;
+      }
+
+      if (joinOnly) return;
+
+      const mystery = isMysteryMode(ctx.finishedRow);
+      if (!mystery) {
+        const deck = getProfile().decks.find((d) => d.id === ctx.deckId) || getSelectedDeck();
+        const issue = describeDeckIssue(deck?.cardIds ?? [], getProfile());
+        if (issue) {
+          const textEl = matchSession?.root.querySelector("#game-over-text");
+          if (textEl) textEl.textContent = issue;
+          return;
+        }
+      }
+
+      const deck = getProfile().decks.find((d) => d.id === ctx.deckId) || getSelectedDeck();
+      const rematchRow = await pvpService.createRoom(
+        mystery ? null : deck.cardIds,
+        await getDisplayName(),
+        {
+          matchMode: ctx.finishedRow.match_mode || PVP_MODE_NORMAL,
+          hostPieceSkin: getEquippedPieceSkin(getProfile()),
+        }
+      );
+      ctx.localRematchRoomId = rematchRow.id;
+      ctx.opponentRematchRoomId = null;
+      pvpService.attachToMatch(rematchRow);
+      saveActivePvpMatchId(rematchRow.id);
+      pvpService.startPolling(2000);
+      startRematchPoll(ctx);
+      refreshPvpGameOverActions();
+      const textEl = matchSession?.root.querySelector("#game-over-text");
+      if (textEl) textEl.textContent = `Waiting for ${ctx.opponentName} to join rematch…`;
+    } catch (e) {
+      const textEl = matchSession?.root.querySelector("#game-over-text");
+      if (textEl) textEl.textContent = formatPvpError(e, { context: "rematch" });
+    }
+  }
+
+  async function handlePvpGameOverAction(actionId, ctx) {
+    if (actionId === "back") {
+      stopRematchPoll();
+      if (ctx?.localRematchRoomId) await cancelHostedRoom(ctx.localRematchRoomId);
+      pvpGameOverCtx = null;
+      matchSession?.onExit?.();
+      return;
+    }
+
+    if (actionId === "editDeck") {
+      stopRematchPoll();
+      if (ctx?.localRematchRoomId) await cancelHostedRoom(ctx.localRematchRoomId);
+      const deckId = ctx?.deckId || getProfile().selectedDeckId;
+      matchSession?.dispose();
+      matchSession = null;
+      matchLaunching = false;
+      pvpGameOverCtx = null;
+      exitMatchMode();
+      void lockPortrait();
+      setAudioMode("hub");
+      clearActivePvpMatchId();
+      pvpService?.dispose();
+      pvpService = null;
+      root.innerHTML = "";
+      onNavigateTab?.("deck");
+      if (deckId) onOpenDeckEdit?.(deckId);
+      return;
+    }
+
+    if (actionId === "rematch") {
+      await startRematchFlow(ctx);
+      return;
+    }
+
+    if (actionId === "joinRematch") {
+      await startRematchFlow(ctx, { joinOnly: true });
+    }
   }
 
   function localDeckLaunchIssue(row) {
@@ -672,6 +907,18 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     const localCosmetics = cosmeticsWithPieceSkin(localCosmeticsBase, localMatchSkin);
     const opponentCosmetics = cosmeticsWithPieceSkin(opponentCosmeticsBase, opponentMatchSkin);
 
+    const selectedDeck =
+      profile.decks.find((d) => d.id === profile.selectedDeckId) || profile.decks[0];
+    pvpGameOverCtx = {
+      finishedRow: row,
+      opponentId: opponentIdFromRow(row),
+      opponentName,
+      matchEndedAt: null,
+      localRematchRoomId: null,
+      opponentRematchRoomId: null,
+      deckId: selectedDeck?.id || profile.selectedDeckId,
+    };
+
     if (!resume) {
       await showPvpMatchLoading(root, {
         local: { username: localName, cosmetics: localCosmetics },
@@ -701,6 +948,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         () => {
           matchSession = null;
           matchLaunching = false;
+          stopRematchPoll();
+          pvpGameOverCtx = null;
           exitMatchMode();
           void lockPortrait();
           setAudioMode("hub");
@@ -740,25 +989,40 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
             if (!currentUser) return;
             if (won === null) {
               await pvpService.finishMatch(null);
-              return;
+            } else {
+              if (won) {
+                const profile = getProfile();
+                recordPvpWin(profile);
+                trackDailyQuestEvent(profile, "pvp_wins", 1);
+                syncChampion(profile);
+                saveProfile(profile);
+              }
+              const winnerId = won
+                ? currentUser.id
+                : localColor === COLORS.RED
+                  ? row.guest_id
+                  : row.host_id;
+              if (winnerId) await pvpService.finishMatch(winnerId);
             }
-            if (won) {
-              const profile = getProfile();
-              recordPvpWin(profile);
-              trackDailyQuestEvent(profile, "pvp_wins", 1);
-              syncChampion(profile);
-              saveProfile(profile);
+            if (pvpGameOverCtx) {
+              try {
+                const fresh = await pvpService.fetchMatch(pvpService.matchId);
+                if (fresh) pvpGameOverCtx.finishedRow = fresh;
+              } catch {
+                /* use existing row */
+              }
+              pvpGameOverCtx.matchEndedAt = new Date(
+                pvpGameOverCtx.finishedRow?.updated_at || Date.now()
+              ).getTime();
+              startRematchPoll(pvpGameOverCtx);
             }
-            const winnerId = won
-              ? currentUser.id
-              : localColor === COLORS.RED
-                ? row.guest_id
-                : row.host_id;
-            if (winnerId) await pvpService.finishMatch(winnerId);
           },
           onPvpPendingRow: (pendingRow) => applyPvpMatchRow(pendingRow),
-          buildGameOverActions: () => [{ id: "back", label: "Back to PvP", primary: true }],
-          onGameOverAction: () => matchSession?.onExit?.(),
+          buildGameOverActions: ({ won, isTie }) =>
+            buildPvpGameOverActions(pvpGameOverCtx, { won, isTie }),
+          onGameOverAction: (actionId) => {
+            void handlePvpGameOverAction(actionId, pvpGameOverCtx);
+          },
           onPvpSyncError: (err) => {
             if (!matchSession?._gameOverUiShown) {
               matchSession.setMessage(formatPvpError(err, { context: "sync" }));
@@ -1039,6 +1303,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       unsubAuth();
       window.removeEventListener("cc-match-shell-reconciled", onShellReconciled);
       stopOpenRoomsSync();
+      stopRematchPoll();
+      pvpGameOverCtx = null;
       matchSession = null;
       clearActivePvpMatchId();
       pvpService?.dispose();

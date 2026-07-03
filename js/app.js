@@ -55,6 +55,7 @@ import { validateDeck, canAddCardToDeck, countById } from "./deckRules.js";
 import { syncExplorer } from "./achievements.js";
 import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { openChest, CHESTS } from "./chests.js";
+import { formatRarityOdds } from "./chestOdds.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
 import { smallMysteryBoxSvgMarkup, bigMysteryBoxSvgMarkup } from "./mysteryBoxArt.js";
 import {
@@ -94,7 +95,13 @@ import { mobileConfirm } from "./mobileConfirm.js";
 import { enhanceAllSelectInputs, resolveNativeSelect } from "./customSelect.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
-import { enterGuestMode, clearGuestMode } from "./guestMode.js";
+import {
+  enterGuestMode,
+  clearGuestMode,
+  isGuestPlayer,
+  GUEST_SIGN_IN_NUDGE_PVP,
+  GUEST_SIGN_IN_NUDGE_SAVE,
+} from "./guestMode.js";
 import { getEquippedCosmetics } from "./cosmetics.js";
 import { renderSpellCardEl, escapeHtml } from "./cardArt.js";
 import { showCardPreview, bindCardPreviewModal, closeCardPreview } from "./cardPreview.js";
@@ -188,6 +195,7 @@ function ensurePvpUI() {
         getProfile: () => profile,
         openAuthModal: () => authUI?.open("signin", { forced: true }),
         onNavigateTab: showTab,
+        onOpenDeckEdit: openDeckEdit,
         onPvpViewShown: () => {
           activeTab = "pvp";
           syncMainTabShellState();
@@ -308,15 +316,48 @@ function syncMainTabShellState() {
   document.body.classList.toggle("adventure-active", activeTab === "play");
 }
 
+function syncTabSignInBadge(btn, visible, text) {
+  let badge = btn.querySelector(".tab-btn__sign-in-badge");
+  if (visible) {
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.className = "tab-btn__sign-in-badge";
+      badge.setAttribute("aria-hidden", "true");
+      btn.appendChild(badge);
+    }
+    badge.textContent = text;
+    btn.classList.add("tab-btn--sign-in-nudge");
+  } else {
+    badge?.remove();
+    btn.classList.remove("tab-btn--sign-in-nudge");
+  }
+}
+
 function syncNavUnlockState() {
   const unlocked = isQuestsAndPvpUnlocked(profile);
+  const guest = isGuestPlayer();
   for (const tab of ["quests", "pvp"]) {
     const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
     if (!btn) continue;
     const feature = tab === "pvp" ? "PvP" : "Quests";
-    btn.classList.toggle("tab-btn--locked", !unlocked);
-    btn.title = unlocked ? "" : questsPvpUnlockMessage(feature);
-    btn.setAttribute("aria-disabled", unlocked ? "false" : "true");
+    const progressionLocked = !unlocked;
+    const signInNudge = tab === "pvp" ? GUEST_SIGN_IN_NUDGE_PVP : GUEST_SIGN_IN_NUDGE_SAVE;
+
+    btn.classList.toggle("tab-btn--locked", progressionLocked);
+    btn.setAttribute("aria-disabled", progressionLocked ? "true" : "false");
+
+    if (progressionLocked) {
+      btn.title = guest
+        ? `${questsPvpUnlockMessage(feature)} ${signInNudge}.`
+        : questsPvpUnlockMessage(feature);
+      syncTabSignInBadge(btn, guest, "Sign in");
+    } else if (guest) {
+      btn.title = signInNudge;
+      syncTabSignInBadge(btn, tab === "pvp", "Sign in");
+    } else {
+      btn.title = "";
+      syncTabSignInBadge(btn, false);
+    }
   }
 
   const cosmeticsUnlocked = isCosmeticsUnlocked(profile);
@@ -339,15 +380,22 @@ async function showTab(tab) {
     !isQuestsAndPvpUnlocked(profile)
   ) {
     const feature = tab === "pvp" ? "PvP" : "Quests";
-    const goToAdventure = await mobileConfirm(questsPvpUnlockMessage(feature), {
+    const guest = isGuestPlayer();
+    const signInNudge = tab === "pvp" ? GUEST_SIGN_IN_NUDGE_PVP : GUEST_SIGN_IN_NUDGE_SAVE;
+    const message = guest
+      ? `${questsPvpUnlockMessage(feature)}\n\n${signInNudge}.`
+      : questsPvpUnlockMessage(feature);
+    const goToAdventure = await mobileConfirm(message, {
       title: `${feature} locked`,
       confirmLabel: "Go to Adventure",
-      cancelLabel: "Not now",
+      cancelLabel: guest ? "Sign in" : "Not now",
     });
     if (goToAdventure) {
       bypassQuestsPvpGate = true;
       showTab("play");
       bypassQuestsPvpGate = false;
+    } else if (guest) {
+      authUI?.open("signin", { forced: true });
     }
     return;
   }
@@ -886,7 +934,7 @@ function renderChests(options = {}) {
       <div class="chest-card__visual">${chestSvgMarkup(chest.id)}</div>
       <div class="chest-card__body">
         <h3 class="chest-card__name">${chest.name}</h3>
-        <p class="chest-card__tagline">${tier.tagline}</p>
+        <p class="chest-card__tagline">${formatRarityOdds(chest.weights)}</p>
         <ul class="chest-card__stats">
           <li><strong>${chest.cards}</strong> spells</li>
         </ul>

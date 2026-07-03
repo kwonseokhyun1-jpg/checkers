@@ -671,6 +671,25 @@ body {
 .tab-btn--locked:not(.active) {
   filter: grayscale(0.35);
 }
+.tab-btn--sign-in-nudge {
+  position: relative;
+}
+.tab-btn__sign-in-badge {
+  position: absolute;
+  top: 0.15rem;
+  right: 0.2rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-gold), #c9a227);
+  color: var(--bg-deep);
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  pointer-events: none;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
 .view.hidden { display: none; }
 .hidden { display: none !important; }
 .header-gems {
@@ -2269,7 +2288,7 @@ body.panel-help-open {
 }
 
 .chest-card__tagline {
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   color: var(--text-muted);
   margin: 0 0 0.65rem;
 }
@@ -6159,6 +6178,18 @@ body.public-profile-modal-open {
 
 /* PvP */
 .pvp-panel { max-width: 28rem; margin: 0 auto; }
+.pvp-sign-in-nudge {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: rgba(201, 162, 39, 0.12);
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  color: var(--accent-gold);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.4;
+}
 .pvp-actions {
   display: flex;
   flex-direction: column;
