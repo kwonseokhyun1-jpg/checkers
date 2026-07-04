@@ -234,6 +234,16 @@ function armedBombCanKillEnemy(state, color, row, col) {
   return moves.some((move) => enemyKillsFromMove(state, color, move, { assumeBombArmed: true }) >= 1);
 }
 
+/** True when this color can capture the enemy on (row, col) during the move phase this turn. */
+function enemyCapturableThisTurn(state, color, row, col) {
+  return getAllMovesForColor(state.board, color, state).some((m) =>
+    m.captures?.some(([cr, cc]) => cr === row && cc === col)
+  );
+}
+
+/** Attack spells the AI should not waste on enemies it can capture with a normal move. */
+const AI_SKIP_SPELL_ON_CAPTURABLE = new Set(["pyromancy", "snowball"]);
+
 function at(state, r, c) {
   return state.board[r]?.[c] ?? null;
 }
@@ -817,6 +827,9 @@ function getAiPickTargets(state, color, card) {
   if (card.effect === "barrier") {
     return prioritizeBarrierTargets(state, color, targets);
   }
+  if (AI_SKIP_SPELL_ON_CAPTURABLE.has(card.effect)) {
+    return targets.filter(([r, c]) => !enemyCapturableThisTurn(state, color, r, c));
+  }
   return targets;
 }
 
@@ -899,8 +912,9 @@ function* pickSequences(state, color, card, max = 24) {
       for (const a of t0) {
         const t1 = getValidTargets(state, color, card, [a]);
         for (const b of t1) {
-          if (berserkWouldDestroyAt(state, color, b[0], b[1])) destroySeqs.push([a, b]);
-          else otherSeqs.push([a, b]);
+          if (berserkWouldDestroyAt(state, color, b[0], b[1])) {
+            if (!enemyCapturableThisTurn(state, color, b[0], b[1])) destroySeqs.push([a, b]);
+          } else otherSeqs.push([a, b]);
         }
       }
       for (const seq of destroySeqs) {
