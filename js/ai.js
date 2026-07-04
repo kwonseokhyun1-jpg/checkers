@@ -1,11 +1,13 @@
 import {
   COLORS,
   getAllMovesForColor,
+  getJumpMoves,
   applyMove,
   countPieces,
   squareName,
   findPanicPiece,
   getBackwardStepMoves,
+  hasMandatoryJumps,
 } from "./board.js";
 import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, enemyKillsFromMove } from "./cardEffects.js";
 import { queueTrapHistoryReveal, isConfused, clearConfusion } from "./gameMeta.js";
@@ -188,6 +190,45 @@ function opponentCanCapture(board, victimColor, state) {
   return getAllMovesForColor(board, attacker, state).some((m) => m.captures?.length);
 }
 
+function getMandatoryJumpMoves(board, color, state) {
+  const jumps = [];
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+      if (!piece || piece.color !== color) continue;
+      jumps.push(...getJumpMoves(board, piece, color, state));
+    }
+  }
+  return jumps;
+}
+
+/** True when this capture move leaves the mover vulnerable to an opponent jump next turn. */
+function captureMoveEnablesCounterCapture(state, color, move) {
+  const sim = cloneMatchState(state);
+  sim.board = state.board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+  if (!applyMove(sim.board, move, sim)) return false;
+  return opponentCanCapture(sim.board, color, sim);
+}
+
+/**
+ * Play Ignore instead of capturing when every mandatory jump would let the opponent
+ * capture back and at least one non-capture move becomes available afterward.
+ */
+export function shouldAiPlayIgnore(state, color) {
+  if (!hasMandatoryJumps(state.board, color, state)) return false;
+
+  const jumpMoves = getMandatoryJumpMoves(state.board, color, state);
+  if (!jumpMoves.length) return false;
+
+  for (const move of jumpMoves) {
+    if (!captureMoveEnablesCounterCapture(state, color, move)) return false;
+  }
+
+  const withIgnore = cloneMatchState(state);
+  withIgnore.meta.optionalJumps[color] = true;
+  return getAllMovesForColor(withIgnore.board, color, withIgnore).some((m) => !m.captures?.length);
+}
+
 function scoreMove(board, color, state, move) {
   const sim = cloneMatchState(state);
   sim.board = board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
@@ -280,9 +321,17 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     log.push({ type: "message", text: `${opponentName} is confused — skips spells.` });
   } else if (!state.spellPlayed[aiColor] && hand.length) {
     while (!state.spellPlayed[aiColor] && hand.length) {
-      const playable = hand.filter((c) => canAiPlay(state, color, c));
+      let playable = hand.filter((c) => canAiPlay(state, color, c));
       if (!playable.length) break;
-      const card = playable[Math.floor(Math.random() * playable.length)];
+      const ignoreCard = playable.find((c) => c.effect === "ignore");
+      if (ignoreCard && !shouldAiPlayIgnore(state, color)) {
+        playable = playable.filter((c) => c.effect !== "ignore");
+        if (!playable.length) break;
+      }
+      const card =
+        ignoreCard && shouldAiPlayIgnore(state, color)
+          ? ignoreCard
+          : playable[Math.floor(Math.random() * playable.length)];
       const idx = hand.indexOf(card);
       const trapped = !!state.meta.counterspell?.[human];
       if (trapped) {
