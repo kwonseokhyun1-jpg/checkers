@@ -77,8 +77,8 @@
   }
 }
 
-/* 10″ tablets (portrait ~1000–1280 CSS px) — scale up phone layout to fill height */
-@media (min-width: 1000px) and (max-width: 1280px) {
+/* 10″ tablets (portrait ~1000–1400 CSS px) — scale up phone layout to fill height */
+@media (min-width: 1000px) and (max-width: 1400px) {
   :root {
     --board-max-size: 1080px;
     --board-v-chrome: 480px;

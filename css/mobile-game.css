@@ -335,6 +335,7 @@ nav.game-nav.tabs,
   max-width: none;
   margin: 0;
   margin-bottom: 0;
+  margin-inline: 0;
   transform: none;
   box-sizing: border-box;
   padding:
@@ -346,7 +347,7 @@ nav.game-nav.tabs,
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  justify-content: flex-start;
+  justify-content: stretch;
   background: linear-gradient(180deg, rgba(30, 40, 58, 0.98), rgba(12, 16, 24, 0.98));
   border: none;
   border-top: 1px solid rgba(201, 162, 39, 0.35);
@@ -354,6 +355,22 @@ nav.game-nav.tabs,
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   gap: 0;
+}
+
+/* Tablets and phones — never shrink nav into a left-aligned pill */
+@media (max-width: 1400px) {
+  nav.game-nav.tabs,
+  .game-nav.tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    transform: none;
+    border-radius: 0;
+  }
 }
 
 nav.game-nav.tabs .tab-btn,
@@ -558,7 +575,7 @@ nav.game-nav.tabs .game-nav__btn,
   }
 }
 
-@media (min-width: 1281px) {
+@media (min-width: 1401px) and (hover: hover) and (pointer: fine) {
   .game-shell {
     max-width: 1100px;
     padding-top: 1.25rem;
@@ -2350,17 +2367,11 @@ body.install-banner-visible.deck-editing .game-shell {
   .adventure-map-canvas {
     min-height: calc(var(--app-height) - 11rem - var(--nav-clearance));
   }
-
-  .adventure-map-tower {
-    left: 50%;
-    transform: translate(-50%, 0) scale(2.15);
-    transform-origin: bottom center;
-  }
 }
 
-/* ── Large tablet portrait (10″, ~1000–1280 CSS px) — scaled phone layout, fills height ── */
+/* ── Large tablet portrait (10″, ~1000–1400 CSS px) — scaled phone layout, fills height ── */
 
-@media (min-width: 1000px) and (max-width: 1280px) {
+@media (min-width: 1000px) and (max-width: 1400px) {
   .app.game-shell,
   .game-shell {
     max-width: 100%;
@@ -2559,13 +2570,6 @@ body.install-banner-visible.deck-editing .game-shell {
 
   .adventure-map-canvas {
     min-height: calc(var(--app-height) - 10rem - var(--nav-clearance));
-  }
-
-  .adventure-map-tower {
-    width: min(96%, 32rem);
-    left: 50%;
-    transform: translate(-50%, 0) scale(3.1);
-    transform-origin: bottom center;
   }
 
   .adventure-world-shields {

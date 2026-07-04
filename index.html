@@ -359,6 +359,12 @@
     </div>
   </div>
 
+  <script>
+    (function () {
+      var nav = document.querySelector("nav.game-nav.tabs");
+      if (nav && nav.parentElement !== document.body) document.body.appendChild(nav);
+    })();
+  </script>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>
