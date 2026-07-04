@@ -5,7 +5,7 @@ Signed-in marketing screenshots for Google Play / App Store listings.
 | Folder | Size | Files |
 |--------|------|-------|
 | `phone/` | 390×844 | `01-match`, `02-adventure`, `04-shop`, `05-quests` |
-| `tablet-7/` | 600×1024 | `01-match`, `02-adventure`, `04-shop`, `05-decks` |
+| `tablet-7/` | 600×1024 | `01-match`, `02-adventure`, `04-shop`, `05-quests` |
 | `tablet-10/` | 1200×1920 | same |
 
 Regenerate (requires `SCREENSHOT_EMAIL` and `SCREENSHOT_PASSWORD` for signed-in shots):

@@ -13,7 +13,7 @@
  */
 import { chromium } from "playwright";
 import { spawn } from "node:child_process";
-import { mkdir } from "node:fs/promises";
+import { access, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "url";
 
@@ -106,6 +106,23 @@ async function dismissTutorials(page) {
   }
 }
 
+async function closeAuthModalIfOpen(page) {
+  const authModal = page.locator("#auth-modal:not(.hidden)");
+  if (await authModal.isVisible().catch(() => false)) {
+    await page.locator("#auth-close").click().catch(() => {});
+    await page.waitForTimeout(500);
+  }
+}
+
+async function dismissBlockingSheets(page) {
+  const cancel = page.locator("#mobile-confirm-cancel");
+  if (await cancel.isVisible().catch(() => false)) {
+    await cancel.click().catch(() => {});
+    await page.waitForTimeout(400);
+  }
+  await closeAuthModalIfOpen(page);
+}
+
 async function signIn(page) {
   await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 });
   await page.waitForTimeout(1200);
@@ -139,14 +156,6 @@ async function signIn(page) {
   await page.waitForTimeout(800);
 }
 
-async function leaveMatchIfNeeded(page) {
-  await page.locator("#btn-leave-match").click().catch(() => {});
-  await page.waitForTimeout(600);
-  const leaveOk = page.locator("#mobile-confirm-ok");
-  if (await leaveOk.isVisible().catch(() => false)) await leaveOk.click();
-  await page.waitForTimeout(1200);
-}
-
 async function clickIfNeeded(page, selector) {
   const el = page.locator(selector).first();
   if (!(await el.count())) return false;
@@ -161,50 +170,83 @@ async function captureScenes(page, outDir) {
   await page.screenshot({ path: path.join(outDir, "02-adventure.png") });
   console.log("  captured 02-adventure.png");
 
-  const nextRow = page.locator("#adventure-floor-list .adventure-floor-row--next").first();
-  const anyRow = page.locator("#adventure-floor-list .adventure-floor-row").last();
-  const mapPin = page.locator(".adventure-map-pin:not([disabled])").last();
-  if (await nextRow.count()) {
-    await nextRow.evaluate((el) => el.click());
-  } else if (await mapPin.count()) {
-    await mapPin.evaluate((el) => el.click());
-  } else if (await anyRow.count()) {
-    await anyRow.evaluate((el) => el.click());
-  }
-
-  await page.waitForTimeout(700);
-  const startBtn = page.locator("#btn-start-adventure");
-  if (await startBtn.isVisible() && !(await startBtn.isDisabled())) {
-    await startBtn.evaluate((el) => el.click());
-    await page.waitForTimeout(3500);
-    await dismissTutorials(page);
-    await page.screenshot({ path: path.join(outDir, "01-match.png") });
-    console.log("  captured 01-match.png");
-    await leaveMatchIfNeeded(page);
-  }
-
   await clickIfNeeded(page, '[data-tab="chests"]');
   await page.waitForTimeout(1000);
+  await page.waitForSelector("#view-chests:not(.hidden)", { timeout: 12000 }).catch(() => {});
   const cardsTab = page.locator('.vault-tab[data-vault-tab="cards"]');
   if ((await cardsTab.count()) && (await cardsTab.getAttribute("aria-selected")) !== "true") {
     await cardsTab.evaluate((el) => el.click());
   }
   await page.waitForTimeout(900);
+  await dismissTutorials(page);
+  await closeAuthModalIfOpen(page);
   await page.screenshot({ path: path.join(outDir, "04-shop.png") });
   console.log("  captured 04-shop.png");
 
   await clickIfNeeded(page, '[data-tab="quests"]');
   await page.waitForTimeout(1200);
+  await dismissBlockingSheets(page);
+  await page.waitForSelector("#view-quests:not(.hidden)", { timeout: 12000 }).catch(() => {});
+  const titleTab = page.locator('[data-quests-section="title"]');
+  if (await titleTab.count()) {
+    await titleTab.evaluate((el) => el.click());
+    await page.waitForTimeout(800);
+  }
   await dismissTutorials(page);
   await page.screenshot({ path: path.join(outDir, "05-quests.png") });
-  console.log("  captured 05-quests.png");
+  console.log("  captured 05-quests.png (Title quests)");
+
+  await clickIfNeeded(page, '[data-tab="play"]');
+  await page.waitForTimeout(1000);
+  await dismissTutorials(page);
+
+  const towerOne = page.locator(".adventure-world-shield:not(.adventure-world-shield--locked)").first();
+  if (await towerOne.count()) {
+    await towerOne.evaluate((el) => el.click());
+    await page.waitForTimeout(800);
+  }
+
+  const nextRow = page.locator("#adventure-floor-list .adventure-floor-row--next").first();
+  const anyRow = page.locator("#adventure-floor-list .adventure-floor-row").first();
+  const mapNext = page.locator(".adventure-map-tile--next:not([disabled])").first();
+  const mapPin = page.locator(".adventure-map-pin:not([disabled])").first();
+  const mapTile = page.locator(".adventure-map-tile:not([disabled])").first();
+  if (await mapNext.count()) {
+    await mapNext.evaluate((el) => el.click());
+  } else if (await mapPin.count()) {
+    await mapPin.evaluate((el) => el.click());
+  } else if (await mapTile.count()) {
+    await mapTile.evaluate((el) => el.click());
+  } else if (await nextRow.count()) {
+    await nextRow.evaluate((el) => el.click());
+  } else if (await anyRow.count()) {
+    await anyRow.evaluate((el) => el.click());
+  }
+
+  await page.waitForTimeout(1000);
+  await page.waitForSelector("#adventure-prebattle:not(.hidden)", { timeout: 12000 }).catch(() => {});
+  const startBtn = page.locator("#btn-start-adventure");
+  if (await startBtn.count()) {
+    await startBtn.evaluate((el) => el.click());
+    await page.waitForSelector("#view-match:not(.hidden) #board", { timeout: 20000 }).catch(() => {});
+    await page.waitForTimeout(2500);
+    await dismissTutorials(page);
+    const onMatch = await page.locator("#view-match:not(.hidden) #board").count();
+    if (onMatch) {
+      await page.screenshot({ path: path.join(outDir, "01-match.png") });
+      console.log("  captured 01-match.png");
+    } else {
+      console.log("  skipped 01-match.png (match did not start)");
+    }
+  } else {
+    console.log("  skipped 01-match.png (no Start battle button)");
+  }
 }
 
 const sizes = requestedSizes();
 const serverProc = await startServer();
 
 if (!process.env.SCREENSHOT_BASE_URL) {
-  const { access } = await import("node:fs/promises");
   try {
     await access(path.join(distDir, "index.html"));
   } catch {
@@ -241,6 +283,21 @@ try {
 } finally {
   await browser.close();
   serverProc?.kill("SIGTERM");
+}
+
+const sevenMatch = path.join(root, "assets/store/tablet-7/01-match.png");
+const tenMatch = path.join(root, "assets/store/tablet-10/01-match.png");
+const capturedTablet7 = sizes.some((s) => s.dir.includes("tablet-7"));
+const capturedTablet10 = sizes.some((s) => s.dir.includes("tablet-10"));
+if (capturedTablet7 && capturedTablet10) {
+  try {
+    await access(tenMatch);
+    const sharp = (await import("sharp")).default;
+    await sharp(tenMatch).resize(600, 1024, { fit: "cover", position: "top" }).toFile(sevenMatch);
+    console.log("  resized tablet-10/01-match.png → tablet-7/01-match.png");
+  } catch {
+    /* 10-inch match may be missing */
+  }
 }
 
 if (failed) process.exit(1);
