@@ -1,3 +1,10 @@
+import {
+  fetchProfileRow,
+  getCurrentUser,
+  initAuth,
+  isAuthAvailable,
+  onAuthChange,
+} from "./auth.js";
 import { GUEST_SIGN_IN_NUDGE_PVP } from "./guestMode.js";
 import { DECK_SIZE } from "./cardCatalog.js";
 import { describeDeckIssue, validateDeck } from "./deckRules.js";
