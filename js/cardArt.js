@@ -303,9 +303,7 @@ export function renderSpellCardEl(def, opts = {}) {
   `;
 
   if (opts.onClick) {
-    el.addEventListener("click", (e) => {
-      if (!opts.disabled) opts.onClick(e, def);
-    });
+    el.addEventListener("click", (e) => opts.onClick(e, def));
   }
 
   fitSpellCardName(el);

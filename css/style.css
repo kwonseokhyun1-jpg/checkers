@@ -840,8 +840,7 @@ body {
 }
 .spell-card.disabled {
   opacity: 0.4;
-  cursor: not-allowed;
-  pointer-events: none;
+  cursor: pointer;
   filter: grayscale(0.9) brightness(0.72);
 }
 .spell-card.disabled .spell-card__frame {
