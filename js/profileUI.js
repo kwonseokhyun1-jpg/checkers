@@ -316,6 +316,7 @@ function bindDailyQuestsGrid(profile, grid, { onCurrencyChange } = {}) {
   });
 
   for (const { template, templateId, complete, claimed, canClaim } of quests) {
+    if (!template) continue;
     const locked = !complete && !claimed;
     const card = document.createElement("article");
     card.className = [

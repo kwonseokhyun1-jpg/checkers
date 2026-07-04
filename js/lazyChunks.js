@@ -37,6 +37,10 @@ export function loadProfileUIChunk() {
   return profileUIChunk;
 }
 
+export function resetProfileUIChunk() {
+  profileUIChunk = null;
+}
+
 /** @type {Promise<typeof import("./settingsUI.js")> | null} */
 let settingsUIChunk = null;
 
