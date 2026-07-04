@@ -25,7 +25,7 @@ export function createMatchMeta() {
     shatterSilenced: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     mirrorBoardTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     highlightTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
-    dominionTurn: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    dominionTurn: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     prospectPending: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     constitutionTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     forcedCapturePieceId: null,
@@ -119,6 +119,20 @@ export function consumeFreeDraw(state, color) {
   return false;
 }
 
+export const DOMINION_DURATION_TURNS = 2;
+
+/** Ensure dominion counter exists (older saves / partial meta). */
+export function ensureDominionTurns(meta) {
+  if (!meta.dominionTurn || typeof meta.dominionTurn !== "object") {
+    meta.dominionTurn = { [COLORS.RED]: 0, [COLORS.BLACK]: 0 };
+  }
+  for (const color of [COLORS.RED, COLORS.BLACK]) {
+    const v = meta.dominionTurn[color];
+    meta.dominionTurn[color] = typeof v === "number" ? v : v ? 1 : 0;
+  }
+  return meta.dominionTurn;
+}
+
 /** Ensure constitution counter exists (older saves / partial meta). */
 export function ensureConstitutionTurns(meta) {
   if (!meta.constitutionTurns || typeof meta.constitutionTurns !== "object") {
@@ -141,6 +155,7 @@ export function clearConfusion(meta, color) {
 
 export function startTurnMeta(state, color) {
   ensureConstitutionTurns(state.meta);
+  ensureDominionTurns(state.meta);
   state.meta.turnNumber += 1;
   const opp = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
   if (state.meta.prospectPending[color] > 0) {
@@ -152,7 +167,7 @@ export function startTurnMeta(state, color) {
   state.meta.parallelExtra[color] = false;
   state.meta.movementCardPlayed[color] = false;
   state.meta.optionalJumps[color] = false;
-  state.meta.dominionTurn[color] = false;
+  if (state.meta.dominionTurn[color] > 0) state.meta.dominionTurn[color]--;
   state.meta.extraSpellCast[color] = false;
   state.meta.bearBonusUsed = state.meta.bearBonusUsed || { [COLORS.RED]: false, [COLORS.BLACK]: false };
   state.meta.bearBonusUsed[color] = false;
