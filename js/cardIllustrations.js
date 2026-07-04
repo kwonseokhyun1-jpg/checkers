@@ -1756,7 +1756,7 @@ export const EFFECT_ILLUSTRATIONS = {
 
   quicksand: () => commonBleed("qs", "#a8a29e", "#292524", quicksandMotif()),
   landmine: () => uncommonBleed("lm", "#78716c", "#292524", landmineMotif()),
-  collapse: () => uncommonBleed("co", "#78716c", "#292524", collapseMotif()),
+  collapse: () => commonBleed("co", "#78716c", "#292524", collapseMotif()),
   darkness: () => rareBleed("dk", "#6d28d9", "#1e1b4b", darknessMotif()),
   scatter: () => uncommonBleed("st", "#7dd3fc", "#1e3a5f", scatterMotif()),
   call_forward: () => rareBleed("cfw", "#fca5a5", "#4c1d95", callForwardMotif()),
