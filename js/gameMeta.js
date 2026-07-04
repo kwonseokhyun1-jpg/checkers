@@ -288,6 +288,12 @@ export function isSquareCollapsed(meta, r, c) {
   return collapsedSquareKey(meta) === `${r},${c}`;
 }
 
+export function getCollapsedTurnsLeft(meta) {
+  const collapsed = meta?.collapsedSquare;
+  if (!collapsed || typeof collapsed !== "object") return 0;
+  return collapsed.turnsLeft ?? 0;
+}
+
 export const COLLAPSE_DURATION_TURNS = 3;
 
 export function setCollapsedSquare(meta, r, c, turnsLeft = COLLAPSE_DURATION_TURNS) {

@@ -18,7 +18,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, ensureConstitutionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, hasVengeanceArmed, isConfused, clearConfusion } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, hasVengeanceArmed, isConfused, clearConfusion } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -2922,6 +2922,26 @@ ${starLine}`;
         if (zonePreview.darkness.has(key)) cls += " darkness-zone-preview";
         if (isSquareCollapsed(s.meta, row, col)) cls += " square--collapsed";
         sq.className = cls;
+
+        if (isSquareCollapsed(s.meta, row, col)) {
+          const turnsLeft = getCollapsedTurnsLeft(s.meta);
+          const collapseEl = document.createElement("div");
+          collapseEl.className = "collapse-indicator";
+          collapseEl.setAttribute(
+            "aria-label",
+            `Collapsed — ${turnsLeft} turn${turnsLeft === 1 ? "" : "s"} left`
+          );
+          const mark = document.createElement("span");
+          mark.className = "collapse-indicator__mark";
+          mark.textContent = "✕";
+          mark.setAttribute("aria-hidden", "true");
+          const turns = document.createElement("span");
+          turns.className = "collapse-indicator__turns";
+          turns.textContent = String(turnsLeft);
+          collapseEl.appendChild(mark);
+          collapseEl.appendChild(turns);
+          sq.appendChild(collapseEl);
+        }
 
         if (terrain?.barrier?.turnsLeft > 0) {
           const barrierEl = document.createElement("div");
