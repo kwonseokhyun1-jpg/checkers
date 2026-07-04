@@ -323,18 +323,17 @@ body.match-active {
   font-weight: 700;
 }
 
-/* Bottom tab bar — full viewport width, always centered (override style.css .game-nav pill) */
+/* Bottom tab bar — viewport-fixed (lives outside .game-shell in index.html) */
 .game-nav.tabs {
   position: fixed;
-  left: 50%;
-  right: auto;
+  left: 0;
+  right: 0;
   bottom: 0;
   z-index: 200;
-  width: 100vw;
-  width: 100dvw;
+  width: 100%;
   max-width: none;
   margin: 0;
-  transform: translateX(-50%);
+  transform: none;
   box-sizing: border-box;
   padding: 0 0 var(--game-safe-bottom);
   min-height: calc(var(--nav-height) + var(--game-safe-bottom));
@@ -2319,14 +2318,12 @@ body.install-banner-visible.deck-editing .game-shell {
 
 @media (min-width: 600px) and (max-width: 999px) {
   .game-nav.tabs {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    width: 100vw;
-    width: 100dvw;
+    width: 100%;
     max-width: none;
+    left: 0;
+    right: 0;
     margin-inline: 0;
-    transform: translateX(-50%);
+    transform: none;
   }
 
   .game-nav .tab-btn,
@@ -2334,6 +2331,19 @@ body.install-banner-visible.deck-editing .game-shell {
     font-size: 0.75rem;
     gap: 0.22rem;
     padding: 0.35rem 0.2rem;
+  }
+
+  body.adventure-active:not(.adventure-floor-open):not(.match-active) .adventure-map-scene {
+    min-height: calc(var(--app-height) - 10rem - var(--nav-clearance));
+  }
+
+  .adventure-map-canvas {
+    min-height: calc(var(--app-height) - 11rem - var(--nav-clearance));
+  }
+
+  .adventure-map-tower {
+    transform: translateX(-50%) scale(2.15);
+    transform-origin: bottom center;
   }
 }
 
@@ -2377,14 +2387,12 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   .game-nav.tabs {
-    position: fixed;
-    left: 50%;
-    right: auto;
-    width: 100vw;
-    width: 100dvw;
+    width: 100%;
     max-width: none;
+    left: 0;
+    right: 0;
     margin-inline: 0;
-    transform: translateX(-50%);
+    transform: none;
   }
 
   .game-nav .tab-btn,
@@ -2402,10 +2410,6 @@ body.install-banner-visible.deck-editing .game-shell {
   /* Meta tabs — stretch scroll area to fill shell height */
   body.main-tab-active:not(.match-active):not(.deck-editing) .game-main > .view:not(.hidden) {
     min-height: calc(var(--app-height) - 7.5rem - var(--nav-clearance));
-  }
-
-  body.adventure-active:not(.adventure-floor-open):not(.match-active) .adventure-map-scene {
-    min-height: calc(var(--app-height) - 10rem - var(--nav-clearance));
   }
 
   #view-chests .vault-panel {
@@ -2544,14 +2548,23 @@ body.install-banner-visible.deck-editing .game-shell {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  /* Adventure — scale tower with layout-sized rem units (not transform) */
+  /* Adventure — scale tower to fill tablet height (tiles use rem, so use transform) */
+  body.adventure-active:not(.adventure-floor-open):not(.match-active) .adventure-map-scene {
+    min-height: calc(var(--app-height) - 9rem - var(--nav-clearance));
+  }
+
   .adventure-map-canvas {
-    min-height: calc(var(--app-height) - 11rem - var(--nav-clearance));
+    min-height: calc(var(--app-height) - 10rem - var(--nav-clearance));
   }
 
   .adventure-map-tower {
-    width: min(94%, 52rem);
-    font-size: 175%;
+    width: min(96%, 32rem);
+    transform: translateX(-50%) scale(3.1);
+    transform-origin: bottom center;
+  }
+
+  .adventure-world-shields {
+    margin-bottom: 0.35rem;
   }
 
   .adventure-floor-row {

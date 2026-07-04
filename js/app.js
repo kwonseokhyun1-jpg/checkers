@@ -1724,6 +1724,8 @@ function fitAdventureMapCanvasHeight(map) {
   const tower = map?.querySelector(".adventure-map-tower");
   if (!map || !tower) return;
 
+  const tabletMq = window.matchMedia("(min-width: 600px) and (max-width: 1280px)");
+
   const measureEls = () => [
     tower,
     ...tower.querySelectorAll(
@@ -1744,14 +1746,21 @@ function fitAdventureMapCanvasHeight(map) {
     if (!Number.isFinite(minY)) return;
 
     const span = maxY - minY;
-    const topHeadroom = Math.max(Math.round(span * 0.12), 32);
+    const topHeadroom = tabletMq.matches
+      ? Math.max(Math.round(span * 0.06), 24)
+      : Math.max(Math.round(span * 0.12), 32);
     const bottomOffset = parseFloat(getComputedStyle(tower).bottom) || 0;
     const visualBottom = maxY - mapRect.top;
-    const height = Math.ceil(Math.max(visualBottom + bottomOffset, span + topHeadroom + bottomOffset));
+    let height = Math.ceil(Math.max(visualBottom + bottomOffset, span + topHeadroom + bottomOffset));
+
+    const scene = map.closest(".adventure-map-scene");
+    if (scene && tabletMq.matches) {
+      height = Math.max(height, scene.clientHeight);
+    }
+
     map.style.minHeight = `${height}px`;
     map.style.height = `${height}px`;
 
-    const scene = map.closest(".adventure-map-scene");
     if (scene) {
       const maxScrollTop = Math.max(0, map.offsetHeight - scene.clientHeight);
       if (scene.scrollTop > maxScrollTop) scene.scrollTop = maxScrollTop;
