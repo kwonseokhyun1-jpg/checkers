@@ -13,8 +13,8 @@
   <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <title>Arcane Checkers</title>
-  <script type="module" crossorigin src="./bundled/index-jwHRxFWS.js"></script>
-  <link rel="stylesheet" crossorigin href="./bundled/index-BJfA7A9S.css">
+  <script type="module" crossorigin src="./bundled/index-B5i4idI0.js"></script>
+  <link rel="stylesheet" crossorigin href="./bundled/index-B-e2Dc6v.css">
 </head>
 <body>
   <div id="app-splash" class="app-splash" role="img" aria-label="Arcane Checkers loading">
@@ -56,29 +56,6 @@
         </div>
       </div>
     </header>
-
-    <nav class="game-nav tabs" role="tablist" aria-label="Game menu">
-      <button type="button" class="tab-btn game-nav__btn active" data-tab="deck" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">▣</span>
-        <span>Decks</span>
-      </button>
-      <button type="button" class="tab-btn game-nav__btn" data-tab="chests" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">◇</span>
-        <span>Shop</span>
-      </button>
-      <button type="button" class="tab-btn game-nav__btn game-nav__btn--play" data-tab="play" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">⚔</span>
-        <span>Play</span>
-      </button>
-      <button type="button" class="tab-btn game-nav__btn" data-tab="pvp" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">⚡</span>
-        <span>PvP</span>
-      </button>
-      <button type="button" class="tab-btn game-nav__btn" data-tab="quests" role="tab">
-        <span class="tab-btn__icon" aria-hidden="true">🏆</span>
-        <span>Quests</span>
-      </button>
-    </nav>
 
     <main class="game-main">
       <div id="view-profile" class="view view-panel hidden"></div>
@@ -269,6 +246,29 @@
     </footer>
   </div>
 
+  <nav class="game-nav tabs" role="tablist" aria-label="Game menu">
+    <button type="button" class="tab-btn game-nav__btn active" data-tab="deck" role="tab">
+      <span class="tab-btn__icon" aria-hidden="true">▣</span>
+      <span>Decks</span>
+    </button>
+    <button type="button" class="tab-btn game-nav__btn" data-tab="chests" role="tab">
+      <span class="tab-btn__icon" aria-hidden="true">◇</span>
+      <span>Shop</span>
+    </button>
+    <button type="button" class="tab-btn game-nav__btn game-nav__btn--play" data-tab="play" role="tab">
+      <span class="tab-btn__icon" aria-hidden="true">⚔</span>
+      <span>Play</span>
+    </button>
+    <button type="button" class="tab-btn game-nav__btn" data-tab="pvp" role="tab">
+      <span class="tab-btn__icon" aria-hidden="true">⚡</span>
+      <span>PvP</span>
+    </button>
+    <button type="button" class="tab-btn game-nav__btn" data-tab="quests" role="tab">
+      <span class="tab-btn__icon" aria-hidden="true">🏆</span>
+      <span>Quests</span>
+    </button>
+  </nav>
+
   <div id="auth-gate" class="auth-gate hidden" role="dialog" aria-modal="true" aria-labelledby="auth-gate-title">
     <div class="auth-gate__inner">
       <div class="auth-gate__brand">
@@ -361,5 +361,11 @@
     </div>
   </div>
 
+  <script>
+    (function () {
+      var nav = document.querySelector("nav.game-nav.tabs");
+      if (nav && nav.parentElement !== document.body) document.body.appendChild(nav);
+    })();
+  </script>
 </body>
 </html>
