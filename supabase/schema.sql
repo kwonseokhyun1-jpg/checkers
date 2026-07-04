@@ -50,6 +50,10 @@ create table if not exists public.pvp_matches (
 create index if not exists pvp_matches_status_idx on public.pvp_matches (status);
 create index if not exists pvp_matches_code_idx on public.pvp_matches (code);
 
+create unique index if not exists pvp_one_waiting_room_per_host_idx
+  on public.pvp_matches (host_id)
+  where status = 'waiting' and guest_id is null;
+
 alter table public.pvp_matches enable row level security;
 
 create policy "pvp_select_participant_or_open"

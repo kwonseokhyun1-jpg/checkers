@@ -308,13 +308,10 @@ function hideFloorModal() {
   document.body.classList.remove("adventure-floor-open");
 }
 
-function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
-  const btn = $("adventure-help-btn");
-  if (!btn) return;
+function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE, title = "Locked") {
   openPanelHelpPopup({
-    title: btn.getAttribute("aria-label") || "Help",
+    title,
     bodyHtml: message,
-    triggerBtn: btn,
     autoCloseMs: 4500,
   });
 }
@@ -465,7 +462,18 @@ async function showTab(tab) {
   if (tab === "settings") void renderSettings();
   if (tab === "quests") void renderQuests();
   if (tab === "play") showAdventureMap();
-  if (tab === "pvp") void ensurePvpUI().then((c) => c?.render({ resume: true }));
+  if (tab === "pvp") {
+    void ensurePvpUI()
+      .then((c) => c?.render({ resume: true }))
+      .catch((err) => {
+        console.error("[PvP] init failed", err);
+        const root = document.getElementById("view-pvp");
+        if (root && !root.innerHTML.trim()) {
+          root.innerHTML =
+            '<section class="panel game-panel pvp-panel"><p class="pvp-status pvp-status--error">Couldn\'t load PvP — please reload the page.</p></section>';
+        }
+      });
+  }
   if (!isMatchActive()) {
     setAudioMode(tab === "play" || tab === "pvp" ? "hub" : "hub");
     await lockPortrait();
@@ -882,7 +890,7 @@ function showVaultTab(tab) {
     tab === "cosmetics" &&
     !isCosmeticsUnlocked(profile)
   ) {
-    showUnlockHint(COSMETICS_UNLOCK_MESSAGE);
+    showUnlockHint(COSMETICS_UNLOCK_MESSAGE, "Cosmetics locked");
     bypassCosmeticsGate = true;
     showVaultTab("cards");
     bypassCosmeticsGate = false;
@@ -2450,7 +2458,10 @@ function openAdventureFloor(levelId) {
   const live = repairAdventureProgress(profile.adventure);
   profile.adventure = live;
   if (!isLevelUnlocked(live, levelId)) {
-    showUnlockHint(`Locked — beat global floor ${levelId - 1} first, then return here.`);
+    showUnlockHint(
+      `Locked — beat global floor ${levelId - 1} first, then return here.`,
+      "Floor locked",
+    );
     return;
   }
   saveProfile(profile);
