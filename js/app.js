@@ -2328,19 +2328,16 @@ function buildAdventureGameOverActions({ levelId }, { won, isTie }) {
     if (hasNextFloor) {
       actions.push({ id: "nextFloor", label: "Next floor", primary: true });
       actions.push({ id: "retry", label: "Retry floor" });
-      actions.push({ id: "editDeck", label: "Edit deck" });
       actions.push({ id: "backToAdventure", label: "Back to Adventure" });
     } else {
       actions.push({ id: "backToAdventure", label: "Back to Adventure", primary: true });
       actions.push({ id: "retry", label: "Retry floor" });
-      actions.push({ id: "editDeck", label: "Edit deck" });
     }
     return actions;
   }
 
   return [
     { id: "retry", label: "Retry floor", primary: true },
-    { id: "editDeck", label: "Edit deck" },
     { id: "backToAdventure", label: "Back to Adventure" },
   ];
 }
@@ -2350,19 +2347,6 @@ async function handleAdventureGameOverAction(actionId, { levelId, deckId, challe
 
   if (actionId === "backToAdventure") {
     matchSession?.onExit?.();
-    return;
-  }
-
-  if (actionId === "editDeck") {
-    matchSession?.dispose();
-    matchSession = null;
-    exitMatchMode();
-    void lockPortrait();
-    setAudioMode("hub");
-    root.innerHTML = "";
-    root.classList.add("hidden");
-    showTab("deck");
-    openDeckEdit(deckId);
     return;
   }
 
