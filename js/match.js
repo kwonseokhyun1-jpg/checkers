@@ -1365,31 +1365,31 @@ export class MatchSession {
       getValidTargets(s, this.localColor, card, []).length > 0;
     const canCast = canPlay && this.canPlaySpells() && hasTargets;
     el.classList.toggle("disabled", !canCast);
-    if (!canCast) {
-      el.title =
-        !this.ensureSpellPhaseOpen(this.localColor)
-          ? "Spells skipped — select a piece to move"
-          : s.meta.shatterSilenced?.[this.localColor]
-            ? "Spell backlash — no spells this turn"
-            : s.meta.blinded?.[this.localColor]
-              ? "Blinded — no spells this turn"
-              : isConfused(s.meta, this.localColor)
-                ? "Confused — no spells this turn"
+    const disabledReason = !canCast
+      ? !this.ensureSpellPhaseOpen(this.localColor)
+        ? "Spells skipped — select a piece to move"
+        : s.meta.shatterSilenced?.[this.localColor]
+          ? "Spell backlash — no spells this turn"
+          : s.meta.blinded?.[this.localColor]
+            ? "Blinded — no spells this turn"
+            : isConfused(s.meta, this.localColor)
+              ? "Confused — no spells this turn"
               : s.spellPlayed[this.localColor]
-              ? "Already cast a spell this turn"
-              : !hasTargets
-                ? getInstantCastBlockReason(s, this.localColor, card) || "No valid targets for this spell"
-                : "Spells unavailable";
-      return;
-    }
+                ? "Already cast a spell this turn"
+                : !hasTargets
+                  ? getInstantCastBlockReason(s, this.localColor, card) || "No valid targets for this spell"
+                  : "Spells unavailable"
+      : "";
     el.title = canCast
       ? "Tap to view · drag onto the board to cast"
-      : "Tap to view card";
+      : disabledReason
+        ? `${disabledReason} — tap to view card`
+        : "Tap to view card";
 
     el.addEventListener("click", () => {
       if (this._suppressClick) return;
       showCardPreview(card, {
-        meta: canCast ? "Cast this spell, then move a piece." : "Inspecting spell",
+        meta: canCast ? "Cast this spell, then move a piece." : disabledReason || "Inspecting spell",
         onPlay: canCast ? () => this.startCardPlay(card) : undefined,
       });
     });

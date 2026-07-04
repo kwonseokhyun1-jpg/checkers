@@ -1240,17 +1240,18 @@ function appendCollectionCard(parent, def, opts = {}) {
     compact: true,
     disabled: owned < 1 || atMaxCopies,
     onClick: (e) => {
-      if (e.shiftKey) {
+      if (e.shiftKey || owned < 1 || atMaxCopies) {
         openInspect();
         return;
       }
-      if (owned < 1 || atMaxCopies) return;
       buyOne();
     },
   });
   card.title = atMaxCopies
-    ? `${def.name} — max ${cap} copies owned. Shift+click to inspect.`
-    : `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
+    ? `${def.name} — max ${cap} copies owned. Tap to view full card.`
+    : owned < 1
+      ? `${def.name} — not owned. Tap to view full card.`
+      : `${def.name} — tap to buy (${cost} gems). Shift+click to inspect.`;
   wrap.appendChild(card);
 
   const ownedBadge = document.createElement("span");
