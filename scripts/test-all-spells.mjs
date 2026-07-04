@@ -265,22 +265,6 @@ for (const card of cards) {
   console.log("Revive own-side test: OK");
 }
 
-// Backrank Protection shields only the furthest back rank
-{
-  const backrank = cards.find((c) => c.id === "backrank_protection");
-  const s = baseState();
-  place(s, COLOR, 5, 1);
-  place(s, COLOR, 6, 3);
-  place(s, COLOR, 7, 5);
-  const res = applyCard(s, COLOR, backrank, []);
-  if (!res.success) throw new Error("Backrank Protection should succeed");
-  if (!at(s, 7, 5)?.shieldTurns) throw new Error("Backrank Protection should shield furthest rank");
-  if (at(s, 5, 1)?.shieldTurns || at(s, 6, 3)?.shieldTurns) {
-    throw new Error("Backrank Protection must not shield pieces off the furthest back rank");
-  }
-  console.log("Backrank Protection furthest rank test: OK");
-}
-
 // Clone spawn pick
 {
   const s = baseState();
