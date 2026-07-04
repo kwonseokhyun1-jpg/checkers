@@ -3,6 +3,30 @@
  * @param {unknown} error
  * @param {{ context?: "sync" | "lobby" }} [opts]
  */
+
+export const PVP_ONE_ROOM_HOST_MESSAGE =
+  "You already have a room open — cancel it before opening another.";
+
+export const PVP_ACTIVE_MATCH_BLOCK_MESSAGE =
+  "You're already in a match — finish it before opening another room.";
+
+export const PVP_JOIN_WHILE_HOSTING_MESSAGE =
+  "Cancel your open room before joining another match.";
+
+/** @returns {string | null} Player-facing block reason for hosting a new room. */
+export function resolveOpenRoomBlock({ waitingCount = 0, hasActiveMatch = false } = {}) {
+  if (hasActiveMatch) return PVP_ACTIVE_MATCH_BLOCK_MESSAGE;
+  if (waitingCount > 0) return PVP_ONE_ROOM_HOST_MESSAGE;
+  return null;
+}
+
+/** @returns {string | null} Player-facing block reason for joining someone else's room. */
+export function resolveJoinRoomBlock({ waitingCount = 0, hasActiveMatch = false } = {}) {
+  if (hasActiveMatch) return PVP_ACTIVE_MATCH_BLOCK_MESSAGE;
+  if (waitingCount > 0) return PVP_JOIN_WHILE_HOSTING_MESSAGE;
+  return null;
+}
+
 export function formatPvpError(error, { context = "lobby" } = {}) {
   if (!error) {
     return context === "sync"
