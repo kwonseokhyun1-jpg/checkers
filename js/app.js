@@ -298,8 +298,8 @@ function ensureBottomNavOnBody() {
 }
 
 function getAdventureMapTabletScale() {
-  if (window.matchMedia("(min-width: 1000px) and (max-width: 1400px)").matches) return 4;
-  if (window.matchMedia("(min-width: 600px) and (max-width: 999px)").matches) return 2.6;
+  if (window.matchMedia("(min-width: 1000px) and (max-width: 1400px)").matches) return 2.5;
+  if (window.matchMedia("(min-width: 600px) and (max-width: 999px)").matches) return 1.85;
   return 1;
 }
 
