@@ -323,18 +323,23 @@ body.match-active {
   font-weight: 700;
 }
 
-/* Bottom tab bar — flush to screen edge (override style.css .game-nav max-width) */
+/* Bottom tab bar — full viewport width, always centered (override style.css .game-nav pill) */
 .game-nav.tabs {
   position: fixed;
-  left: 0;
-  right: 0;
+  left: 50%;
+  right: auto;
   bottom: 0;
   z-index: 200;
-  width: 100%;
+  width: 100vw;
+  width: 100dvw;
   max-width: none;
   margin: 0;
+  transform: translateX(-50%);
+  box-sizing: border-box;
   padding: 0 0 var(--game-safe-bottom);
   min-height: calc(var(--nav-height) + var(--game-safe-bottom));
+  display: flex;
+  align-items: stretch;
   background: linear-gradient(180deg, rgba(30, 40, 58, 0.98), rgba(12, 16, 24, 0.98));
   border: none;
   border-top: 1px solid rgba(201, 162, 39, 0.35);
@@ -342,7 +347,6 @@ body.match-active {
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   gap: 0;
-  align-items: stretch;
 }
 
 .game-nav .tab-btn,
@@ -2315,11 +2319,14 @@ body.install-banner-visible.deck-editing .game-shell {
 
 @media (min-width: 600px) and (max-width: 999px) {
   .game-nav.tabs {
-    width: 100%;
+    position: fixed;
+    left: 50%;
+    right: auto;
+    width: 100vw;
+    width: 100dvw;
     max-width: none;
-    left: 0;
-    right: 0;
     margin-inline: 0;
+    transform: translateX(-50%);
   }
 
   .game-nav .tab-btn,
@@ -2370,11 +2377,14 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   .game-nav.tabs {
-    width: 100%;
+    position: fixed;
+    left: 50%;
+    right: auto;
+    width: 100vw;
+    width: 100dvw;
     max-width: none;
-    left: 0;
-    right: 0;
     margin-inline: 0;
+    transform: translateX(-50%);
   }
 
   .game-nav .tab-btn,
