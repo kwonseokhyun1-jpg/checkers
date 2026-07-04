@@ -443,6 +443,23 @@ function hostileSwapSensitiveRowForEnemy(enemyColor, row) {
   return row === ownBackRank(enemyColor) || row === promoRow;
 }
 
+/** True when backstep lands the friendly piece where it can capture next. */
+function backstepWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
+  const p = at(state, r1, c1);
+  if (!p || p.color !== color) return false;
+  if (!getBackstepTarget(state.board, p, state).some(([r, c]) => r === r2 && c === c2)) return false;
+  const board = state.board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+  const piece = board[r1][c1];
+  board[r1][c1] = null;
+  board[r2][c2] = piece;
+  piece.row = r2;
+  piece.col = c2;
+  tryPromoteOnFarRow(piece, r2);
+  return getAllMovesForColor(board, color, state).some(
+    (m) => m.from[0] === r2 && m.from[1] === c2 && m.captures?.length
+  );
+}
+
 /** True when hostile swap lands the friendly piece where it can capture next. */
 function hostileSwapWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
   const a = at(state, r1, c1);
@@ -942,6 +959,27 @@ function* pickSequences(state, color, card, max = 24) {
         if (++n >= max) return;
       }
       for (const seq of moveSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      return;
+    }
+    if (card.effect === "backstep") {
+      const captureSeqs = [];
+      const otherSeqs = [];
+      for (const a of t0) {
+        const t1 = getValidTargets(state, color, card, [a]);
+        for (const b of t1) {
+          const seq = [a, b];
+          if (backstepWouldCaptureAfter(state, color, a, b)) captureSeqs.push(seq);
+          else otherSeqs.push(seq);
+        }
+      }
+      for (const seq of captureSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      for (const seq of otherSeqs) {
         yield seq;
         if (++n >= max) return;
       }
