@@ -140,11 +140,20 @@ async function signIn(page) {
 }
 
 async function leaveMatchIfNeeded(page) {
-  await page.locator("#btn-leave-match").click().catch(() => {});
-  await page.waitForTimeout(600);
-  const leaveOk = page.locator("#mobile-confirm-ok");
-  if (await leaveOk.isVisible().catch(() => false)) await leaveOk.click();
-  await page.waitForTimeout(1200);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const leaveBtn = page.locator("#btn-leave-match");
+    if (!(await leaveBtn.isVisible().catch(() => false))) break;
+    await leaveBtn.click().catch(() => {});
+    await page.waitForTimeout(600);
+    const leaveOk = page.locator("#mobile-confirm-ok");
+    if (await leaveOk.isVisible().catch(() => false)) await leaveOk.click();
+    await page.waitForTimeout(1200);
+  }
+  await page.waitForFunction(
+    () => !document.body.classList.contains("match-active"),
+    { timeout: 15000 }
+  ).catch(() => {});
+  await page.waitForTimeout(800);
 }
 
 async function clickIfNeeded(page, selector) {
@@ -154,12 +163,50 @@ async function clickIfNeeded(page, selector) {
   return true;
 }
 
+async function waitForTabView(page, viewId) {
+  await page.waitForFunction(
+    (id) => {
+      const view = document.getElementById(id);
+      return view && !view.classList.contains("hidden");
+    },
+    viewId,
+    { timeout: 15000 }
+  );
+}
+
 async function captureScenes(page, outDir) {
   await clickIfNeeded(page, '[data-tab="play"]');
   await page.waitForTimeout(1200);
   await dismissTutorials(page);
   await page.screenshot({ path: path.join(outDir, "02-adventure.png") });
   console.log("  captured 02-adventure.png");
+
+  await clickIfNeeded(page, '[data-tab="chests"]');
+  await page.waitForTimeout(1000);
+  await waitForTabView(page, "view-chests");
+  const cardsTab = page.locator('.vault-tab[data-vault-tab="cards"]');
+  if ((await cardsTab.count()) && (await cardsTab.getAttribute("aria-selected")) !== "true") {
+    await cardsTab.evaluate((el) => el.click());
+  }
+  await page.waitForTimeout(900);
+  await page.screenshot({ path: path.join(outDir, "04-shop.png") });
+  console.log("  captured 04-shop.png");
+
+  await clickIfNeeded(page, '[data-tab="quests"]');
+  await page.waitForTimeout(1200);
+  await waitForTabView(page, "view-quests");
+  await dismissTutorials(page);
+  const titleQuestsTab = page.locator('[data-quests-section="title"]');
+  if (await titleQuestsTab.count()) {
+    await titleQuestsTab.evaluate((el) => el.click());
+    await page.waitForTimeout(800);
+  }
+  await page.screenshot({ path: path.join(outDir, "05-quests.png") });
+  console.log("  captured 05-quests.png");
+
+  await clickIfNeeded(page, '[data-tab="play"]');
+  await page.waitForTimeout(1000);
+  await waitForTabView(page, "view-play");
 
   const nextRow = page.locator("#adventure-floor-list .adventure-floor-row--next").first();
   const anyRow = page.locator("#adventure-floor-list .adventure-floor-row").last();
@@ -181,23 +228,9 @@ async function captureScenes(page, outDir) {
     await page.screenshot({ path: path.join(outDir, "01-match.png") });
     console.log("  captured 01-match.png");
     await leaveMatchIfNeeded(page);
+  } else {
+    console.log("  skipped 01-match.png (match did not start)");
   }
-
-  await clickIfNeeded(page, '[data-tab="chests"]');
-  await page.waitForTimeout(1000);
-  const cardsTab = page.locator('.vault-tab[data-vault-tab="cards"]');
-  if ((await cardsTab.count()) && (await cardsTab.getAttribute("aria-selected")) !== "true") {
-    await cardsTab.evaluate((el) => el.click());
-  }
-  await page.waitForTimeout(900);
-  await page.screenshot({ path: path.join(outDir, "04-shop.png") });
-  console.log("  captured 04-shop.png");
-
-  await clickIfNeeded(page, '[data-tab="quests"]');
-  await page.waitForTimeout(1200);
-  await dismissTutorials(page);
-  await page.screenshot({ path: path.join(outDir, "05-quests.png") });
-  console.log("  captured 05-quests.png");
 }
 
 const sizes = requestedSizes();

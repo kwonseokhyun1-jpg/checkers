@@ -69,13 +69,21 @@
   --nav-icon-idle: #8b9cb3;
 }
 
-/* 10″ tablets (portrait ~1000–1280 CSS px) — scale up phone layout to fill height */
-@media (min-width: 1000px) and (max-width: 1280px) {
+/* 7″ tablets (portrait ~600–999 CSS px) — taller bottom nav */
+@media (min-width: 600px) and (max-width: 999px) {
+  :root {
+    --nav-height: 4.25rem;
+    --nav-icon-size: 1.85rem;
+  }
+}
+
+/* 10″ tablets (portrait ~1000–1400 CSS px) — scale up phone layout to fill height */
+@media (min-width: 1000px) and (max-width: 1400px) {
   :root {
     --board-max-size: 1080px;
     --board-v-chrome: 480px;
-    --nav-height: 4.75rem;
-    --nav-icon-size: 2.1rem;
+    --nav-height: 5.5rem;
+    --nav-icon-size: 2.5rem;
   }
 }
 

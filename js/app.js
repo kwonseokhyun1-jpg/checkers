@@ -288,6 +288,20 @@ function ensureFloorModalOnBody() {
   }
 }
 
+/** Bottom nav must be a direct child of body so position:fixed spans the viewport. */
+function ensureBottomNavOnBody() {
+  const nav = document.querySelector("nav.game-nav.tabs");
+  if (nav && nav.parentElement !== document.body) {
+    document.body.appendChild(nav);
+  }
+}
+
+function getAdventureMapTabletScale() {
+  if (window.matchMedia("(min-width: 1000px) and (max-width: 1400px)").matches) return 4;
+  if (window.matchMedia("(min-width: 600px) and (max-width: 999px)").matches) return 2.6;
+  return 1;
+}
+
 function showFloorModal() {
   ensureFloorModalOnBody();
   const modal = document.getElementById("adventure-prebattle");
@@ -1732,6 +1746,8 @@ function fitAdventureMapCanvasHeight(map) {
   const tower = map?.querySelector(".adventure-map-tower");
   if (!map || !tower) return;
 
+  const tabletMq = window.matchMedia("(min-width: 600px) and (max-width: 1400px)");
+
   const measureEls = () => [
     tower,
     ...tower.querySelectorAll(
@@ -1752,14 +1768,21 @@ function fitAdventureMapCanvasHeight(map) {
     if (!Number.isFinite(minY)) return;
 
     const span = maxY - minY;
-    const topHeadroom = Math.max(Math.round(span * 0.12), 32);
+    const topHeadroom = tabletMq.matches
+      ? Math.max(Math.round(span * 0.06), 24)
+      : Math.max(Math.round(span * 0.12), 32);
     const bottomOffset = parseFloat(getComputedStyle(tower).bottom) || 0;
     const visualBottom = maxY - mapRect.top;
-    const height = Math.ceil(Math.max(visualBottom + bottomOffset, span + topHeadroom + bottomOffset));
+    let height = Math.ceil(Math.max(visualBottom + bottomOffset, span + topHeadroom + bottomOffset));
+
+    const scene = map.closest(".adventure-map-scene");
+    if (scene && tabletMq.matches) {
+      height = Math.max(height, scene.clientHeight);
+    }
+
     map.style.minHeight = `${height}px`;
     map.style.height = `${height}px`;
 
-    const scene = map.closest(".adventure-map-scene");
     if (scene) {
       const maxScrollTop = Math.max(0, map.offsetHeight - scene.clientHeight);
       if (scene.scrollTop > maxScrollTop) scene.scrollTop = maxScrollTop;
@@ -1878,8 +1901,10 @@ function renderAdventureMap() {
   const tower = map.querySelector(".adventure-map-tower");
   const levels = getLevelsForWorld(selectedAdventureWorldId);
   const nextId = getNextPlayableLevelId(progress);
+  const mapScale = getAdventureMapTabletScale();
 
   tower?.style.setProperty("--tower-top-ratio", "0.72");
+  tower?.style.setProperty("--adventure-map-scale", String(mapScale));
 
   levels.forEach((level, i) => {
     const unlocked = isLevelUnlocked(progress, level.id);
@@ -1887,9 +1912,10 @@ function renderAdventureMap() {
     const isNext = level.id === nextId && unlocked;
     const stars = getLevelStars(progress, level.id);
     const floorT = (level.floorInWorld - 1) / 9;
-    const floorScale = 1 - floorT * 0.26;
-    const floorHeightScale = 1 - floorT * 0.1;
-    const spiralOffset = Math.sin((level.floorInWorld - 1) * 0.62) * 0.32 * floorScale;
+    const taper = 1 - floorT * 0.26;
+    const floorScale = taper * mapScale;
+    const floorHeightScale = (1 - floorT * 0.1) * mapScale;
+    const spiralOffset = Math.sin((level.floorInWorld - 1) * 0.62) * 0.32 * taper * mapScale;
 
     const tile = document.createElement("button");
     tile.type = "button";
@@ -2452,6 +2478,9 @@ function openAdventureFloor(levelId) {
 }
 
 function init() {
+  ensureBottomNavOnBody();
+  window.addEventListener("orientationchange", ensureBottomNavOnBody);
+  window.addEventListener("resize", ensureBottomNavOnBody);
   syncMainTabShellState();
   initSettings();
   initNavIcons();

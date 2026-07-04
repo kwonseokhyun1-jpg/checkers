@@ -323,7 +323,8 @@ body.match-active {
   font-weight: 700;
 }
 
-/* Bottom tab bar — flush to screen edge */
+/* Bottom tab bar — viewport-fixed (direct child of body; see ensureBottomNavOnBody) */
+nav.game-nav.tabs,
 .game-nav.tabs {
   position: fixed;
   left: 0;
@@ -331,9 +332,22 @@ body.match-active {
   bottom: 0;
   z-index: 200;
   width: 100%;
+  max-width: none;
   margin: 0;
-  padding: 0 0 var(--game-safe-bottom);
+  margin-bottom: 0;
+  margin-inline: 0;
+  transform: none;
+  box-sizing: border-box;
+  padding:
+    0
+    max(0px, env(safe-area-inset-right, 0px))
+    var(--game-safe-bottom)
+    max(0px, env(safe-area-inset-left, 0px));
   min-height: calc(var(--nav-height) + var(--game-safe-bottom));
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: stretch;
   background: linear-gradient(180deg, rgba(30, 40, 58, 0.98), rgba(12, 16, 24, 0.98));
   border: none;
   border-top: 1px solid rgba(201, 162, 39, 0.35);
@@ -341,12 +355,31 @@ body.match-active {
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(12px);
   gap: 0;
-  align-items: stretch;
 }
 
+/* Tablets and phones — never shrink nav into a left-aligned pill */
+@media (max-width: 1400px) {
+  nav.game-nav.tabs,
+  .game-nav.tabs {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    transform: none;
+    border-radius: 0;
+  }
+}
+
+nav.game-nav.tabs .tab-btn,
+nav.game-nav.tabs .game-nav__btn,
 .game-nav .tab-btn,
 .game-nav .game-nav__btn {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -542,7 +575,7 @@ body.match-active {
   }
 }
 
-@media (min-width: 1281px) {
+@media (min-width: 1401px) and (hover: hover) and (pointer: fine) {
   .game-shell {
     max-width: 1100px;
     padding-top: 1.25rem;
@@ -2310,11 +2343,39 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 }
 
-/* ── Large tablet portrait (10″, ~1000–1280 CSS px) — scaled phone layout, fills height ── */
+/* ── 7″ tablet portrait (~600–999 CSS px) — full-width taller bottom nav ── */
 
-@media (min-width: 1000px) and (max-width: 1280px) {
+@media (min-width: 600px) and (max-width: 999px) {
+  .app.game-shell,
   .game-shell {
-    max-width: min(1140px, calc(100% - 1rem));
+    max-width: 100%;
+    width: 100%;
+    margin-inline: auto;
+  }
+
+  .game-nav .tab-btn,
+  .game-nav .game-nav__btn {
+    font-size: 0.75rem;
+    gap: 0.22rem;
+    padding: 0.35rem 0.2rem;
+  }
+
+  body.adventure-active:not(.adventure-floor-open):not(.match-active) .adventure-map-scene {
+    min-height: calc(var(--app-height) - 10rem - var(--nav-clearance));
+  }
+
+  .adventure-map-canvas {
+    min-height: calc(var(--app-height) - 11rem - var(--nav-clearance));
+  }
+}
+
+/* ── Large tablet portrait (10″, ~1000–1400 CSS px) — scaled phone layout, fills height ── */
+
+@media (min-width: 1000px) and (max-width: 1400px) {
+  .app.game-shell,
+  .game-shell {
+    max-width: 100%;
+    width: 100%;
     margin-inline: auto;
     padding-left: max(1.15rem, env(safe-area-inset-left));
     padding-right: max(1.15rem, env(safe-area-inset-right));
@@ -2351,17 +2412,19 @@ body.install-banner-visible.deck-editing .game-shell {
 
   .game-nav .tab-btn,
   .game-nav .game-nav__btn {
-    font-size: 0.82rem;
-    gap: 0.25rem;
+    font-size: 0.95rem;
+    gap: 0.35rem;
+    padding: 0.45rem 0.25rem;
+  }
+
+  .game-nav .tab-btn--sign-in-nudge .tab-btn__sign-in-badge {
+    font-size: 0.58rem;
+    padding: 0.15rem 0.35rem;
   }
 
   /* Meta tabs — stretch scroll area to fill shell height */
   body.main-tab-active:not(.match-active):not(.deck-editing) .game-main > .view:not(.hidden) {
     min-height: calc(var(--app-height) - 7.5rem - var(--nav-clearance));
-  }
-
-  body.adventure-active:not(.adventure-floor-open):not(.match-active) .adventure-map-scene {
-    min-height: calc(var(--app-height) - 10rem - var(--nav-clearance));
   }
 
   #view-chests .vault-panel {
@@ -2500,14 +2563,17 @@ body.install-banner-visible.deck-editing .game-shell {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  /* Adventure — scale tower with layout-sized rem units (not transform) */
-  .adventure-map-canvas {
-    min-height: calc(var(--app-height) - 11rem - var(--nav-clearance));
+  /* Adventure — scale tower to fill tablet height (tiles use rem, so use transform) */
+  body.adventure-active:not(.adventure-floor-open):not(.match-active) .adventure-map-scene {
+    min-height: calc(var(--app-height) - 9rem - var(--nav-clearance));
   }
 
-  .adventure-map-tower {
-    width: min(94%, 52rem);
-    font-size: 175%;
+  .adventure-map-canvas {
+    min-height: calc(var(--app-height) - 10rem - var(--nav-clearance));
+  }
+
+  .adventure-world-shields {
+    margin-bottom: 0.35rem;
   }
 
   .adventure-floor-row {
