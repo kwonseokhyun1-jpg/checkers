@@ -18,7 +18,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, hasVengeanceArmed, isConfused, clearConfusion } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, hasVengeanceArmed, isConfused, clearConfusion } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -3144,7 +3144,9 @@ ${starLine}`;
             el.classList.add("vengeance-armed");
           }
           const constitutionTurns = piece.king ? ensureConstitutionTurns(this.state.meta)[piece.color] : 0;
+          const dominionTurns = ensureDominionTurns(this.state.meta)[piece.color];
           if (constitutionTurns > 0) el.classList.add("constitution-mark");
+          if (dominionTurns > 0) el.classList.add("dominion-mark");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
           if (piece.bearAwakened) el.classList.add("bear-awoken");
           if (piece.linkedFateId) el.classList.add("linked-fate");
@@ -3453,6 +3455,24 @@ ${starLine}`;
             mark.innerHTML = BOUNTY_WANTED_SVG;
             bounty.appendChild(mark);
             sq.appendChild(bounty);
+          }
+          if (dominionTurns > 0) {
+            const dominion = document.createElement("div");
+            dominion.className = "dominion-indicator";
+            dominion.setAttribute(
+              "aria-label",
+              `Dominion — ${dominionTurns} turn${dominionTurns === 1 ? "" : "s"} left (backward movement)`
+            );
+            const mark = document.createElement("span");
+            mark.className = "dominion-indicator__mark";
+            mark.textContent = "⚜";
+            mark.setAttribute("aria-hidden", "true");
+            const turns = document.createElement("span");
+            turns.className = "dominion-indicator__turns";
+            turns.textContent = String(dominionTurns);
+            dominion.appendChild(mark);
+            dominion.appendChild(turns);
+            sq.appendChild(dominion);
           }
         } else if (
           this.cullAnimation &&

@@ -551,7 +551,7 @@ export function getStepMoves(board, piece, color, state = null) {
   const moves = [];
   if (piece.cloneNoCaptureThisTurn) return moves;
   if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
-  const dom = state?.meta?.dominionTurn?.[color];
+  const dom = (state?.meta?.dominionTurn?.[color] ?? 0) > 0;
 
   if (hasKnightSigil(piece))
     return getKnightMoves(board, piece, state, piece.knightCapture);
@@ -602,10 +602,10 @@ export function getJumpMoves(board, piece, color, state = null) {
 
   let dirs;
   if (piece.reverseOnlyTurns > 0) {
-    dirs = forwardDirs(piece, state?.meta?.dominionTurn?.[color]);
+    dirs = forwardDirs(piece, (state?.meta?.dominionTurn?.[color] ?? 0) > 0);
   } else {
     const treatKing = piece.king && !(piece.slowed > 0);
-    const dom = state?.meta?.dominionTurn?.[color];
+    const dom = (state?.meta?.dominionTurn?.[color] ?? 0) > 0;
     if (treatKing) dirs = [[-1,-1],[-1,1],[1,-1],[1,1]];
     else if (piece.color === COLORS.RED) {
       dirs = [[-1,-1],[-1,1]];

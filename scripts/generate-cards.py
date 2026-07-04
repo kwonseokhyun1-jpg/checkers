@@ -116,7 +116,7 @@ SPELLS = [
     ("chain_lightning", "Chain Lightning", "Destroy first enemy in a line; chains up to 3 times.", "epic", 2, "friendly", "chain_lightning"),
     ("vacuum", "Vacuum", "Pull all pieces 1 step toward a chosen empty dark square.", "rare", 3, "empty", "vacuum"),
     ("scatter", "Scatter", "Push every piece adjacent to a square 1 step away radially.", "rare", 3, "empty", "scatter"),
-    ("dominion", "Dominion", "All your men may move backward this turn.", "uncommon", 4, "instant", "dominion"),
+    ("dominion", "Dominion", "All your men may move backward for 2 turns.", "uncommon", 4, "instant", "dominion"),
     ("rally", "Rally", "All pieces adjacent to a friendly piece gain retreat for 1 turn.", "uncommon", 4, "friendly", "rally"),
     # === KINGS ===
     ("coronation_day", "Coronation Day", "All your men on the promotion row become kings.", "epic", 2, "instant", "coronation_day"),
