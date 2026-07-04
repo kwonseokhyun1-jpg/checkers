@@ -119,6 +119,7 @@ import {
   loadMatchChunk,
   loadPvpChunk,
   loadProfileUIChunk,
+  resetProfileUIChunk,
   loadSettingsUIChunk,
   loadAnimationsChunk,
   loadTutorialMetaChunk,
@@ -466,7 +467,10 @@ async function showTab(tab) {
   }
   if (tab === "profile") void renderProfile();
   if (tab === "settings") void renderSettings();
-  if (tab === "quests") void renderQuests();
+  if (tab === "quests") {
+    showQuestsLoading();
+    void renderQuests();
+  }
   if (tab === "play") showAdventureMap();
   if (tab === "pvp") {
     void ensurePvpUI()
@@ -601,12 +605,47 @@ async function renderSettings() {
   });
 }
 
-async function renderQuests() {
-  const { renderQuestsTab } = await loadProfileUIChunk();
-  renderQuestsTab(profile, $("view-quests"), {
-    onTitleChanged: () => updateHeaderProfileBtn(),
-    onCurrencyChange: () => updateCurrencyHeader(),
+const QUESTS_LOADING_HTML = `
+  <section class="panel game-panel quests-panel quests-panel--loading" aria-busy="true">
+    <p class="quests-status" role="status">Loading quests…</p>
+  </section>`;
+
+const QUESTS_ERROR_HTML = `
+  <section class="panel game-panel quests-panel quests-panel--error">
+    <p class="quests-status quests-status--error">Couldn't load Quests.</p>
+    <p class="quests-status-hint muted">Check your connection and try again, or reload the page.</p>
+    <button type="button" class="btn-secondary quests-retry-btn">Try again</button>
+  </section>`;
+
+function showQuestsLoading() {
+  const root = $("view-quests");
+  if (!root) return;
+  root.innerHTML = QUESTS_LOADING_HTML;
+}
+
+function showQuestsError(root = $("view-quests")) {
+  if (!root) return;
+  root.innerHTML = QUESTS_ERROR_HTML;
+  root.querySelector(".quests-retry-btn")?.addEventListener("click", () => {
+    resetProfileUIChunk();
+    showQuestsLoading();
+    void renderQuests();
   });
+}
+
+async function renderQuests() {
+  const root = $("view-quests");
+  if (!root) return;
+  try {
+    const { renderQuestsTab } = await loadProfileUIChunk();
+    renderQuestsTab(profile, root, {
+      onTitleChanged: () => updateHeaderProfileBtn(),
+      onCurrencyChange: () => updateCurrencyHeader(),
+    });
+  } catch (err) {
+    console.error("[Quests] render failed", err);
+    showQuestsError(root);
+  }
 }
 
 function updateCurrencyHeader() {
