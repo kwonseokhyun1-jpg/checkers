@@ -300,13 +300,10 @@ function hideFloorModal() {
   document.body.classList.remove("adventure-floor-open");
 }
 
-function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE) {
-  const btn = $("adventure-help-btn");
-  if (!btn) return;
+function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE, title = "Locked") {
   openPanelHelpPopup({
-    title: btn.getAttribute("aria-label") || "Help",
+    title,
     bodyHtml: message,
-    triggerBtn: btn,
     autoCloseMs: 4500,
   });
 }
@@ -885,7 +882,7 @@ function showVaultTab(tab) {
     tab === "cosmetics" &&
     !isCosmeticsUnlocked(profile)
   ) {
-    showUnlockHint(COSMETICS_UNLOCK_MESSAGE);
+    showUnlockHint(COSMETICS_UNLOCK_MESSAGE, "Cosmetics locked");
     bypassCosmeticsGate = true;
     showVaultTab("cards");
     bypassCosmeticsGate = false;
@@ -2444,7 +2441,10 @@ function openAdventureFloor(levelId) {
   const live = repairAdventureProgress(profile.adventure);
   profile.adventure = live;
   if (!isLevelUnlocked(live, levelId)) {
-    showUnlockHint(`Locked — beat global floor ${levelId - 1} first, then return here.`);
+    showUnlockHint(
+      `Locked — beat global floor ${levelId - 1} first, then return here.`,
+      "Floor locked",
+    );
     return;
   }
   saveProfile(profile);
