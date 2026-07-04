@@ -288,6 +288,14 @@ function ensureFloorModalOnBody() {
   }
 }
 
+/** Bottom nav must be a direct child of body so position:fixed spans the viewport. */
+function ensureBottomNavOnBody() {
+  const nav = document.querySelector("nav.game-nav.tabs");
+  if (nav && nav.parentElement !== document.body) {
+    document.body.appendChild(nav);
+  }
+}
+
 function showFloorModal() {
   ensureFloorModalOnBody();
   const modal = document.getElementById("adventure-prebattle");
@@ -2450,6 +2458,9 @@ function openAdventureFloor(levelId) {
 }
 
 function init() {
+  ensureBottomNavOnBody();
+  window.addEventListener("orientationchange", ensureBottomNavOnBody);
+  window.addEventListener("resize", ensureBottomNavOnBody);
   syncMainTabShellState();
   initSettings();
   initNavIcons();

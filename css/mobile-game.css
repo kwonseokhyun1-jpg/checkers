@@ -323,7 +323,8 @@ body.match-active {
   font-weight: 700;
 }
 
-/* Bottom tab bar — viewport-fixed (lives outside .game-shell in index.html) */
+/* Bottom tab bar — viewport-fixed (direct child of body; see ensureBottomNavOnBody) */
+nav.game-nav.tabs,
 .game-nav.tabs {
   position: fixed;
   left: 0;
@@ -333,12 +334,19 @@ body.match-active {
   width: 100%;
   max-width: none;
   margin: 0;
+  margin-bottom: 0;
   transform: none;
   box-sizing: border-box;
-  padding: 0 0 var(--game-safe-bottom);
+  padding:
+    0
+    max(0px, env(safe-area-inset-right, 0px))
+    var(--game-safe-bottom)
+    max(0px, env(safe-area-inset-left, 0px));
   min-height: calc(var(--nav-height) + var(--game-safe-bottom));
   display: flex;
+  flex-direction: row;
   align-items: stretch;
+  justify-content: flex-start;
   background: linear-gradient(180deg, rgba(30, 40, 58, 0.98), rgba(12, 16, 24, 0.98));
   border: none;
   border-top: 1px solid rgba(201, 162, 39, 0.35);
@@ -348,9 +356,13 @@ body.match-active {
   gap: 0;
 }
 
+nav.game-nav.tabs .tab-btn,
+nav.game-nav.tabs .game-nav__btn,
 .game-nav .tab-btn,
 .game-nav .game-nav__btn {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: none;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -2317,13 +2329,11 @@ body.install-banner-visible.deck-editing .game-shell {
 /* ── 7″ tablet portrait (~600–999 CSS px) — full-width taller bottom nav ── */
 
 @media (min-width: 600px) and (max-width: 999px) {
-  .game-nav.tabs {
+  .app.game-shell,
+  .game-shell {
+    max-width: 100%;
     width: 100%;
-    max-width: none;
-    left: 0;
-    right: 0;
-    margin-inline: 0;
-    transform: none;
+    margin-inline: auto;
   }
 
   .game-nav .tab-btn,
@@ -2342,7 +2352,8 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   .adventure-map-tower {
-    transform: translateX(-50%) scale(2.15);
+    left: 50%;
+    transform: translate(-50%, 0) scale(2.15);
     transform-origin: bottom center;
   }
 }
@@ -2350,8 +2361,10 @@ body.install-banner-visible.deck-editing .game-shell {
 /* ── Large tablet portrait (10″, ~1000–1280 CSS px) — scaled phone layout, fills height ── */
 
 @media (min-width: 1000px) and (max-width: 1280px) {
+  .app.game-shell,
   .game-shell {
-    max-width: min(1140px, calc(100% - 1rem));
+    max-width: 100%;
+    width: 100%;
     margin-inline: auto;
     padding-left: max(1.15rem, env(safe-area-inset-left));
     padding-right: max(1.15rem, env(safe-area-inset-right));
@@ -2384,15 +2397,6 @@ body.install-banner-visible.deck-editing .game-shell {
     min-height: 52px;
     padding: 0.4rem 0.65rem;
     font-size: 1rem;
-  }
-
-  .game-nav.tabs {
-    width: 100%;
-    max-width: none;
-    left: 0;
-    right: 0;
-    margin-inline: 0;
-    transform: none;
   }
 
   .game-nav .tab-btn,
@@ -2559,7 +2563,8 @@ body.install-banner-visible.deck-editing .game-shell {
 
   .adventure-map-tower {
     width: min(96%, 32rem);
-    transform: translateX(-50%) scale(3.1);
+    left: 50%;
+    transform: translate(-50%, 0) scale(3.1);
     transform-origin: bottom center;
   }
 
