@@ -13,6 +13,19 @@ import {
 } from "./cosmetics.js";
 
 export { formatPvpError } from "./pvpErrors.js";
+import {
+  PVP_ONE_ROOM_HOST_MESSAGE,
+  resolveOpenRoomBlock,
+  resolveJoinRoomBlock,
+} from "./pvpErrors.js";
+
+export {
+  PVP_ONE_ROOM_HOST_MESSAGE,
+  PVP_ACTIVE_MATCH_BLOCK_MESSAGE,
+  PVP_JOIN_WHILE_HOSTING_MESSAGE,
+  resolveOpenRoomBlock,
+  resolveJoinRoomBlock,
+} from "./pvpErrors.js";
 
 export const PVP_MODE_NORMAL = "normal";
 export const PVP_MODE_MYSTERY = "mystery";
@@ -298,6 +311,30 @@ export class PvpService {
     return data;
   }
 
+  async assertCanOpenRoom() {
+    const [waiting, active] = await Promise.all([
+      this.listMyWaitingRooms(),
+      this.listActiveMatchForUser(),
+    ]);
+    const block = resolveOpenRoomBlock({
+      waitingCount: waiting.length,
+      hasActiveMatch: !!active,
+    });
+    if (block) throw new Error(block);
+  }
+
+  async assertCanJoinRoom() {
+    const [waiting, active] = await Promise.all([
+      this.listMyWaitingRooms(),
+      this.listActiveMatchForUser(),
+    ]);
+    const block = resolveJoinRoomBlock({
+      waitingCount: waiting.length,
+      hasActiveMatch: !!active,
+    });
+    if (block) throw new Error(block);
+  }
+
   async createRoom(
     hostDeckIds,
     displayName,
@@ -314,6 +351,8 @@ export class PvpService {
     ) {
       throw new Error(`Your deck needs exactly ${DECK_SIZE} cards — open Decks and finish building it.`);
     }
+
+    await this.assertCanOpenRoom();
 
     const withSkins = await probePieceSkinColumns(sb);
     let code = randomCode();
@@ -339,6 +378,8 @@ export class PvpService {
       if (error?.code !== "23505") {
         throw error || new Error("Could not create room — try again");
       }
+      const existing = await this.listMyWaitingRooms();
+      if (existing.length) throw new Error(PVP_ONE_ROOM_HOST_MESSAGE);
       code = randomCode();
     }
     throw new Error("Could not create room — try again");
@@ -357,7 +398,7 @@ export class PvpService {
       .eq("status", "waiting")
       .is("guest_id", null)
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(1);
 
     if (error) throw error;
     return enrichRoomRowsWithHostSkins(sb, data, withSkins);
@@ -396,6 +437,8 @@ export class PvpService {
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
+    await this.assertCanJoinRoom();
+
     const { data: row, error: findErr } = await sb
       .from("pvp_matches")
       .select("*")
@@ -430,6 +473,8 @@ export class PvpService {
     const sb = getSupabase();
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
+
+    await this.assertCanJoinRoom();
 
     const normalized = code.trim().toUpperCase();
 

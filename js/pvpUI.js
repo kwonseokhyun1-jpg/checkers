@@ -209,7 +209,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         </div>
         <div class="pvp-room-section pvp-your-rooms">
           <h3 class="pvp-room-section__title">Your rooms</h3>
-          <p class="pvp-room-section__hint">Rooms you are hosting. Cancel anytime before someone joins.</p>
+          <p class="pvp-room-section__hint">You can host one room at a time. Cancel anytime before someone joins.</p>
           <ul id="pvp-your-list" class="pvp-open-list" aria-live="polite">
             <li class="pvp-open-empty meta-skeleton"><span class="meta-skeleton__row"></span></li>
           </ul>
@@ -269,6 +269,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       }
       const hostProfiles = await fetchHostProfilesMap([...mergedMine, ...others]);
       renderRoomLists(mergedMine, others, hostProfiles);
+      syncHostButtonState(mergedMine.length);
     } catch (e) {
       const err = `<li class="pvp-open-empty pvp-open-empty--error">${escapeHtml(formatPvpError(e))}</li>`;
       yourList.innerHTML = err;
@@ -347,6 +348,15 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     return map;
   }
 
+  function syncHostButtonState(hostingCount = 0) {
+    const hostBtn = root.querySelector("#pvp-host");
+    if (!hostBtn) return;
+    const blocked = hostingCount > 0;
+    hostBtn.disabled = blocked;
+    hostBtn.title = blocked ? "You already have a room open — cancel it first." : "";
+    hostBtn.setAttribute("aria-disabled", blocked ? "true" : "false");
+  }
+
   function renderRoomLists(mine, others, hostProfiles = new Map()) {
     const yourList = root.querySelector("#pvp-your-list");
     const openList = root.querySelector("#pvp-open-list");
@@ -373,6 +383,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         })
         .join("");
     }
+
+    syncHostButtonState(mine.length);
 
     if (!others.length) {
       const hint = mine.length
