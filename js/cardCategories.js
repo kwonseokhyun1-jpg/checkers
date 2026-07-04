@@ -16,7 +16,6 @@ const ID_TO_CATEGORY = {
   aegis: "defense",
   anchor: "defense",
   backpedal: "control",
-  backrank_protection: "defense",
   backstab: "attack",
   backstep: "movement",
   barrier: "defense",
