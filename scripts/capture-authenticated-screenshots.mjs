@@ -13,7 +13,7 @@
  */
 import { chromium } from "playwright";
 import { spawn } from "node:child_process";
-import { mkdir } from "node:fs/promises";
+import { access, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "url";
 
@@ -21,6 +21,33 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = path.join(root, "dist");
 const port = Number(process.env.SCREENSHOT_PORT || 8765);
 const baseUrl = process.env.SCREENSHOT_BASE_URL || `http://127.0.0.1:${port}/index.html`;
+
+async function loadDotEnvFile(filePath) {
+  try {
+    await access(filePath);
+  } catch {
+    return;
+  }
+  const text = await readFile(filePath, "utf8");
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq <= 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"'))
+      || (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
+await loadDotEnvFile(path.join(root, ".screenshot.env"));
+
 const email = process.env.SCREENSHOT_EMAIL || "";
 const password = process.env.SCREENSHOT_PASSWORD || "";
 

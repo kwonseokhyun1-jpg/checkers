@@ -1,6 +1,7 @@
 node_modules/
 www/
 dist/
+.screenshot.env
 android/.gradle/
 android/app/build/
 ios/App/Pods/
