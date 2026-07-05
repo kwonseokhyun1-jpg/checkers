@@ -2211,23 +2211,23 @@ body.install-banner-visible.deck-editing .game-shell {
     pointer-events: auto;
   }
 
-  .board-file-btn:not(:disabled),
-  .board-rank-btn:not(:disabled) {
+  .board-file-btn:not(:disabled) {
     pointer-events: auto;
     min-height: 44px;
     min-width: 0;
     width: 100%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     font-size: 0.85rem;
     border-radius: 8px;
   }
 
   .board-rank-btn:not(:disabled) {
-    width: auto;
+    pointer-events: auto;
+    width: 100%;
+    height: 100%;
     min-width: 0;
-    padding: 0 0.35rem;
+    min-height: 0;
+    font-size: 0.85rem;
+    border-radius: 8px;
   }
 
   /* Adventure prebattle — taller enemy spell rows */
