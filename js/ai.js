@@ -9,7 +9,7 @@ import {
   getBackwardStepMoves,
   hasMandatoryJumps,
 } from "./board.js";
-import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, enemyKillsFromMove } from "./cardEffects.js";
+import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, bombMoveWorthwhile } from "./cardEffects.js";
 import { queueTrapHistoryReveal, isConfused, clearConfusion } from "./gameMeta.js";
 import { getCardDef } from "./cardCatalog.js";
 
@@ -277,7 +277,7 @@ function movePulsesAdjacentEnemy(board, color, move) {
   return false;
 }
 
-/** After Bomb is armed, move that piece and prefer lines that kill at least one enemy. */
+/** After Bomb is armed, move that piece and prefer lines that trade favorably. */
 function pickBombFollowUpMove(board, color, state) {
   const armed = findArmedSquares(board, color, "bombArmed");
   if (!armed.length) return null;
@@ -286,8 +286,8 @@ function pickBombFollowUpMove(board, color, state) {
     armedKeys.has(`${m.from[0]},${m.from[1]}`)
   );
   if (!bombMoves.length) return null;
-  const lethal = bombMoves.filter((m) => enemyKillsFromMove(state, color, m) >= 1);
-  return pickBestMove(board, color, state, lethal.length ? lethal : bombMoves);
+  const worthwhile = bombMoves.filter((m) => bombMoveWorthwhile(state, color, m));
+  return pickBestMove(board, color, state, worthwhile.length ? worthwhile : bombMoves);
 }
 
 /** After Shockwave is armed, move that piece and prefer lines that pulse adjacent enemies. */
