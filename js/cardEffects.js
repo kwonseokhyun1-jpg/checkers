@@ -190,19 +190,39 @@ function cloneForMoveSim(state) {
   }
 }
 
-/** Enemy pieces removed by executing this move (captures + bomb blast, etc.). */
-export function enemyKillsFromMove(state, color, move, { assumeBombArmed = false } = {}) {
+function prepareBombMoveSim(state, color, move, { assumeBombArmed = false } = {}) {
   const sim = cloneForMoveSim(state);
   if (assumeBombArmed) {
     const [fr, fc] = move.from;
     const piece = sim.board[fr]?.[fc];
     if (piece) piece.bombArmed = true;
   }
+  return sim;
+}
+
+/** Enemy and friendly losses from executing this move (captures + bomb blast, etc.). */
+export function bombOutcomeFromMove(state, color, move, { assumeBombArmed = false } = {}) {
+  const sim = prepareBombMoveSim(state, color, move, { assumeBombArmed });
   const enemy = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
-  const before = countPieces(sim.board, enemy);
+  const enemyBefore = countPieces(sim.board, enemy);
+  const friendlyBefore = countPieces(sim.board, color);
   applyMove(sim.board, move, sim);
-  const after = countPieces(sim.board, enemy);
-  return before - after;
+  return {
+    enemyKills: enemyBefore - countPieces(sim.board, enemy),
+    friendlyKills: friendlyBefore - countPieces(sim.board, color),
+  };
+}
+
+/** Enemy pieces removed by executing this move (captures + bomb blast, etc.). */
+export function enemyKillsFromMove(state, color, move, options = {}) {
+  return bombOutcomeFromMove(state, color, move, options).enemyKills;
+}
+
+/** True when bomb blast kills more enemies than other friendly pieces (bomber sacrifice is expected). */
+export function bombMoveWorthwhile(state, color, move, { assumeBombArmed = false } = {}) {
+  const { enemyKills, friendlyKills } = bombOutcomeFromMove(state, color, move, { assumeBombArmed });
+  const otherFriendlyKills = Math.max(0, friendlyKills - 1);
+  return enemyKills >= 1 && enemyKills > otherFriendlyKills;
 }
 
 /** True when this piece has a legal move whose landing square pulses adjacent enemies (shockwave). */
@@ -225,13 +245,13 @@ function armedMoveEffectCanHitAdjacentEnemy(state, color, row, col) {
   return false;
 }
 
-/** True when this piece can move and its bomb blast kills at least one enemy. */
+/** True when this piece can move and its bomb blast is worth the friendly casualties. */
 function armedBombCanKillEnemy(state, color, row, col) {
   if (!pieceHasLegalMoves(state.board, color, state, row, col)) return false;
   const moves = getAllMovesForColor(state.board, color, state).filter(
     (m) => m.from[0] === row && m.from[1] === col
   );
-  return moves.some((move) => enemyKillsFromMove(state, color, move, { assumeBombArmed: true }) >= 1);
+  return moves.some((move) => bombMoveWorthwhile(state, color, move, { assumeBombArmed: true }));
 }
 
 /** True when this color can capture the enemy on (row, col) during the move phase this turn. */
