@@ -158,6 +158,31 @@ const plagueRes = tryAutoPlay(structuredClone(plagueState), COLORS.BLACK, plague
 assert.equal(plagueRes.success, true, "AI plague cast should succeed");
 assert.deepEqual(plagueRes.picks, [[3, 2]], "AI plague should infect the piece adjacent to an enemy");
 
+const plagueBehindBoard = emptyBoard();
+plagueBehindBoard[4][3] = createPiece(COLORS.BLACK, 4, 3);
+plagueBehindBoard[3][2] = createPiece(COLORS.BLACK, 3, 2);
+plagueBehindBoard[3][4] = createPiece(COLORS.BLACK, 3, 4);
+plagueBehindBoard[5][4] = createPiece(COLORS.RED, 5, 4);
+const plagueBehindState = makeState(plagueBehindBoard);
+assert.equal(
+  canAiPlay(plagueBehindState, COLORS.BLACK, plague),
+  false,
+  "plague should not be AI-playable when the only adjacent-enemy seed has two friendlies behind it"
+);
+
+const plagueBehindAltBoard = emptyBoard();
+plagueBehindAltBoard[4][3] = createPiece(COLORS.BLACK, 4, 3);
+plagueBehindAltBoard[3][2] = createPiece(COLORS.BLACK, 3, 2);
+plagueBehindAltBoard[3][4] = createPiece(COLORS.BLACK, 3, 4);
+plagueBehindAltBoard[5][4] = createPiece(COLORS.RED, 5, 4);
+plagueBehindAltBoard[3][1] = createPiece(COLORS.BLACK, 3, 1);
+plagueBehindAltBoard[2][0] = createPiece(COLORS.RED, 2, 0);
+const plagueBehindAltState = makeState(plagueBehindAltBoard);
+assert.equal(canAiPlay(plagueBehindAltState, COLORS.BLACK, plague), true, "plague should remain playable with a safer seed");
+const plagueBehindAltRes = tryAutoPlay(structuredClone(plagueBehindAltState), COLORS.BLACK, plague);
+assert.equal(plagueBehindAltRes.success, true, "AI plague should skip the suicidal seed");
+assert.deepEqual(plagueBehindAltRes.picks, [[3, 1]], "AI plague should prefer a seed without two friendlies behind it");
+
 const barrierCaptureBoard = emptyBoard();
 barrierCaptureBoard[3][2] = createPiece(COLORS.RED, 3, 2);
 barrierCaptureBoard[2][3] = createPiece(COLORS.BLACK, 2, 3);

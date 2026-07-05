@@ -182,6 +182,19 @@ function adjacentEnemiesTo(state, color, row, col) {
   return res;
 }
 
+/** Friendly pieces on backward diagonals behind this square (same sense as Backstab). */
+function countFriendlyBehind(state, color, row, col) {
+  const dir = color === COLORS.RED ? 1 : -1;
+  let count = 0;
+  for (const dc of [-1, 1]) {
+    const r = row + dir;
+    const c = col + dc;
+    const p = at(state, r, c);
+    if (p && p.color === color && !pieceCloakedByDarkness(state, r, c)) count++;
+  }
+  return count;
+}
+
 function cloneForMoveSim(state) {
   try {
     return structuredClone(state);
@@ -833,7 +846,10 @@ export function playInstant(state, color, card) {
 function getAiPickTargets(state, color, card) {
   const targets = getValidTargets(state, color, card, []);
   if (card.effect === "plague") {
-    return targets.filter(([r, c]) => adjacentEnemiesTo(state, color, r, c).length > 0);
+    return targets.filter(
+      ([r, c]) =>
+        adjacentEnemiesTo(state, color, r, c).length > 0 && countFriendlyBehind(state, color, r, c) < 2
+    );
   }
   if (card.effect === "bomb") {
     return targets.filter(([r, c]) => armedBombCanKillEnemy(state, color, r, c));
