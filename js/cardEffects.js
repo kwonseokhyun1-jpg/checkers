@@ -244,6 +244,9 @@ function enemyCapturableThisTurn(state, color, row, col) {
 /** Attack spells the AI should not waste on enemies it can capture with a normal move. */
 const AI_SKIP_SPELL_ON_CAPTURABLE = new Set(["pyromancy", "snowball"]);
 
+/** Spells that only pay off when the AI can jump-capture the target this turn. */
+const AI_REQUIRE_CAPTURABLE = new Set(["bounty"]);
+
 function at(state, r, c) {
   return state.board[r]?.[c] ?? null;
 }
@@ -846,6 +849,9 @@ function getAiPickTargets(state, color, card) {
   }
   if (AI_SKIP_SPELL_ON_CAPTURABLE.has(card.effect)) {
     return targets.filter(([r, c]) => !enemyCapturableThisTurn(state, color, r, c));
+  }
+  if (AI_REQUIRE_CAPTURABLE.has(card.effect)) {
+    return targets.filter(([r, c]) => enemyCapturableThisTurn(state, color, r, c));
   }
   return targets;
 }
