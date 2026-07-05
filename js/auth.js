@@ -44,6 +44,15 @@ export async function initAuth() {
 }
 
 export const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,24}$/;
+export const PASSWORD_MIN_LENGTH = 6;
+
+export function validatePasswordFormat(password) {
+  const value = String(password || "");
+  if (value.length < PASSWORD_MIN_LENGTH) {
+    return `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+  }
+  return null;
+}
 
 export function validateUsernameFormat(username) {
   const name = String(username || "").trim();
@@ -334,6 +343,34 @@ export async function signOut() {
   await sb.auth.signOut();
   currentUser = null;
   notify();
+}
+
+/** Change password for the signed-in account (verifies current password first). */
+export async function changePassword(currentPassword, newPassword) {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Sign in to change your password.");
+
+  const user = getCurrentUser();
+  if (!user?.email) throw new Error("Sign in to change your password.");
+
+  const current = String(currentPassword || "");
+  const next = String(newPassword || "");
+  if (!current) throw new Error("Enter your current password.");
+
+  const formatErr = validatePasswordFormat(next);
+  if (formatErr) throw new Error(formatErr);
+  if (current === next) {
+    throw new Error("New password must be different from your current password.");
+  }
+
+  const { error: verifyError } = await sb.auth.signInWithPassword({
+    email: user.email,
+    password: current,
+  });
+  if (verifyError) throw new Error("Current password is incorrect.");
+
+  const { error } = await sb.auth.updateUser({ password: next });
+  if (error) throw error;
 }
 
 /** Permanently delete the signed-in account and cloud save (requires delete_own_account RPC). */

@@ -6,6 +6,7 @@ import { getSettings, saveSettings } from "./settings.js";
 import { refreshAudioFromSettings } from "./audio.js";
 import {
   canChangeUsername,
+  changePassword,
   deleteAccount,
   fetchProfileRow,
   getCurrentUser,
@@ -14,6 +15,7 @@ import {
   signOut,
   suggestAvailableUsername,
   updateUsername,
+  validatePasswordFormat,
   validateUsernameFormat,
 } from "./auth.js";
 import { mobileConfirm } from "./mobileConfirm.js";
@@ -116,6 +118,42 @@ function accountSectionHtml({ signedIn, username, email }) {
         <button type="button" class="btn-text profile-username-cancel" id="settings-username-cancel">Cancel</button>
         <p id="settings-username-hint" class="auth-username-hint" aria-live="polite"></p>
         <p id="settings-username-status" class="profile-username-status" role="status"></p>
+      </div>
+      <div class="profile-password-summary">
+        <span class="label-sm">Password</span>
+        <button type="button" class="btn-text profile-password-change" id="settings-password-change">Change password</button>
+        <p id="settings-password-feedback" class="profile-username-status" role="status"></p>
+      </div>
+      <div id="settings-password-editor" class="profile-password-editor hidden" hidden>
+        <label class="label-sm" for="settings-password-current">Current password</label>
+        <input
+          type="password"
+          id="settings-password-current"
+          class="input-text"
+          autocomplete="current-password"
+          minlength="6"
+        />
+        <label class="label-sm" for="settings-password-new">New password</label>
+        <input
+          type="password"
+          id="settings-password-new"
+          class="input-text"
+          autocomplete="new-password"
+          minlength="6"
+        />
+        <label class="label-sm" for="settings-password-confirm">Confirm new password</label>
+        <input
+          type="password"
+          id="settings-password-confirm"
+          class="input-text"
+          autocomplete="new-password"
+          minlength="6"
+        />
+        <div class="profile-password-actions">
+          <button type="button" class="btn-primary" id="settings-password-save">Update password</button>
+          <button type="button" class="btn-text profile-password-cancel" id="settings-password-cancel">Cancel</button>
+        </div>
+        <p id="settings-password-status" class="profile-username-status" role="status"></p>
       </div>
       <button type="button" class="btn-text profile-sign-out" id="settings-sign-out">Sign out</button>
       <div class="profile-delete-account">
@@ -326,6 +364,83 @@ export function renderSettingsTab(root, { onUsernameChanged } = {}) {
       setStatus(e.message || "Could not save username", true);
     } finally {
       saveBtn.disabled = false;
+    }
+  });
+
+  const passwordEditor = root.querySelector("#settings-password-editor");
+  const passwordChangeBtn = root.querySelector("#settings-password-change");
+  const passwordCancelBtn = root.querySelector("#settings-password-cancel");
+  const passwordCurrentInput = root.querySelector("#settings-password-current");
+  const passwordNewInput = root.querySelector("#settings-password-new");
+  const passwordConfirmInput = root.querySelector("#settings-password-confirm");
+  const passwordSaveBtn = root.querySelector("#settings-password-save");
+  const passwordStatus = root.querySelector("#settings-password-status");
+  const passwordFeedback = root.querySelector("#settings-password-feedback");
+
+  const setPasswordStatus = (msg, isError = false) => {
+    if (!passwordStatus) return;
+    passwordStatus.textContent = msg || "";
+    passwordStatus.classList.toggle("profile-username-status--error", isError);
+  };
+
+  const setPasswordFeedback = (msg, isError = false) => {
+    if (!passwordFeedback) return;
+    passwordFeedback.textContent = msg || "";
+    passwordFeedback.classList.toggle("profile-username-status--error", isError);
+  };
+
+  const clearPasswordFields = () => {
+    if (passwordCurrentInput) passwordCurrentInput.value = "";
+    if (passwordNewInput) passwordNewInput.value = "";
+    if (passwordConfirmInput) passwordConfirmInput.value = "";
+  };
+
+  const showPasswordEditor = (show) => {
+    passwordEditor?.classList.toggle("hidden", !show);
+    if (passwordEditor) passwordEditor.hidden = !show;
+    passwordChangeBtn?.classList.toggle("hidden", show);
+    if (show) {
+      clearPasswordFields();
+      setPasswordStatus("");
+      passwordCurrentInput?.focus();
+    } else {
+      clearPasswordFields();
+      setPasswordStatus("");
+    }
+  };
+
+  passwordChangeBtn?.addEventListener("click", () => {
+    setPasswordFeedback("");
+    showPasswordEditor(true);
+  });
+  passwordCancelBtn?.addEventListener("click", () => showPasswordEditor(false));
+
+  passwordSaveBtn?.addEventListener("click", async () => {
+    const current = passwordCurrentInput?.value || "";
+    const next = passwordNewInput?.value || "";
+    const confirm = passwordConfirmInput?.value || "";
+    setPasswordStatus("");
+    setPasswordFeedback("");
+
+    const formatErr = validatePasswordFormat(next);
+    if (formatErr) {
+      setPasswordStatus(formatErr, true);
+      return;
+    }
+    if (next !== confirm) {
+      setPasswordStatus("New passwords do not match.", true);
+      return;
+    }
+
+    passwordSaveBtn.disabled = true;
+    try {
+      await changePassword(current, next);
+      showPasswordEditor(false);
+      setPasswordFeedback("Password updated.");
+    } catch (e) {
+      setPasswordStatus(e.message || "Could not update password", true);
+    } finally {
+      passwordSaveBtn.disabled = false;
     }
   });
 }

@@ -5050,6 +5050,30 @@ html:has(body.cosmetic-open-active) {
   margin: 0.35rem 0 0;
   font-size: 0.85rem;
 }
+.profile-password-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  margin-top: 1rem;
+}
+.profile-password-change {
+  margin-top: 0.15rem;
+  padding-left: 0;
+}
+.profile-password-editor {
+  margin-top: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.profile-password-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.35rem;
+}
 .profile-showcase {
   position: relative;
   border-radius: 14px;
