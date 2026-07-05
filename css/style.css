@@ -3595,7 +3595,7 @@ html:has(body.cosmetic-open-active) {
 .board-frame {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(1.15rem, auto) minmax(0, 1fr);
+  grid-template-columns: 1.65rem minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   width: min(100%, var(--board-max-size));
   max-width: 100%;
