@@ -1588,6 +1588,9 @@ body.install-banner-visible.deck-editing .game-shell {
   #view-settings .profile-username-change,
   #view-settings .profile-username-cancel,
   #view-settings .profile-username-save,
+  #view-settings .profile-password-change,
+  #view-settings .profile-password-cancel,
+  #view-settings #settings-password-save,
   #view-settings .profile-sign-out,
   #view-settings .profile-delete-account__btn {
     min-height: 44px;
@@ -1595,7 +1598,8 @@ body.install-banner-visible.deck-editing .game-shell {
     align-items: center;
   }
 
-  #view-settings .profile-username-row .input-text {
+  #view-settings .profile-username-row .input-text,
+  #view-settings .profile-password-editor .input-text {
     min-height: 44px;
   }
 
