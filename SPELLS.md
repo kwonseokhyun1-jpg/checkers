@@ -130,7 +130,7 @@
 - **Chain Lightning** — Destroy first enemy in a line; chains up to 3 times.
 - **Collapse** — Remove a dark square from play; piece on it moves to nearest empty dark square.
 - **Coronation Day** — All your men on the promotion row become kings.
-- **Demote** — Turn an enemy king back into a man.
+- **Demote** — Turn an enemy king back into a man (not on the back rank).
 - **Earthquake** — All pieces shift 1 square toward board center if possible.
 - **Exile King** — Teleport enemy king to a random empty square on their back row.
 - **Hostile Swap** — Swap one of your pieces with an enemy (both unshielded).

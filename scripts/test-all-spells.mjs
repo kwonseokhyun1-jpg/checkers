@@ -240,6 +240,22 @@ for (const card of cards) {
   console.log("Trickster back rank test: OK");
 }
 
+// Demote cannot target kings on the back rank
+{
+  const demote = cards.find((c) => c.id === "demote");
+  const s = baseState();
+  place(s, OPP, 0, 1, true);
+  place(s, OPP, 2, 3, true);
+  const targets = getValidTargets(s, COLOR, demote, []);
+  if (targets.some(([r]) => r === 0)) throw new Error("Demote must not target back-rank kings");
+  if (!targets.some(([r, c]) => r === 2 && c === 3)) throw new Error("Demote should target off-rank kings");
+  const failRes = applyCard(s, COLOR, demote, [[0, 1]]);
+  if (failRes.success) throw new Error("Demote should fail on back-rank king");
+  const okRes = applyCard(s, COLOR, demote, [[2, 3]]);
+  if (!okRes.success || at(s, 2, 3)?.king) throw new Error("Demote should succeed off back rank");
+  console.log("Demote back rank test: OK");
+}
+
 // Revive can only place on your side of the board (including back row)
 {
   const revive = cards.find((c) => c.id === "revive");

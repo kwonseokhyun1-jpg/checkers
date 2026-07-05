@@ -576,7 +576,7 @@ const EFFECTS = {
   bishop_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.bishopTurns=2; return ok(); },
   rook_3(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(!pieceHasLegalMoves(state.board,color,state,r,c)) return fail("That piece cannot move."); p.rookTurns=2; return ok(); },
   queen_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.queenTurns=2; return ok(); },
-  demote(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||!p.king||isFortified(p)) return fail(); p.king=false; return ok(); },
+  demote(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||!p.king||isFortified(p)) return fail(); if(r===ownBackRank(p.color)) return fail("Cannot demote a king on the back rank"); p.king=false; return ok(); },
   bounty(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);

@@ -34,7 +34,7 @@ export const CARD_REGISTRY = [
   { id: "coin_flip", name: "Coin Flip", desc: "50% destroy random enemy; 50% destroy random friendly.", rarity: "common", weight: 6, mode: "instant", effect: "coin_flip" },
   { id: "ignore", name: "Ignore", desc: "Jumps are optional for you this turn — only playable when capture is mandatory.", rarity: "common", weight: 6, mode: "instant", effect: "ignore" },
   { id: "iron_will", name: "Iron Will", desc: "A frozen or paralyzed friendly piece may move once (consumes debuff).", rarity: "common", weight: 5, mode: "friendly", effect: "iron_will" },
-  { id: "demote", name: "Demote", desc: "Turn an enemy king back into a man.", rarity: "common", weight: 6, mode: "enemy", effect: "demote" },
+  { id: "demote", name: "Demote", desc: "Turn an enemy king back into a man (not on the back rank).", rarity: "common", weight: 6, mode: "enemy", effect: "demote" },
   { id: "quicksand", name: "Quicksand", desc: "Hidden trap on an empty dark square — the next piece to end a turn there is frozen (trap invisible until it triggers).", rarity: "common", weight: 6, mode: "empty", effect: "quicksand" },
   { id: "collapse", name: "Collapse", desc: "Remove one dark square from play for 3 turns; piece on it relocates.", rarity: "common", weight: 6, mode: "empty", effect: "collapse" },
   { id: "create_foe", name: "Create Foe", desc: "Spawn an enemy man on any empty dark square.", rarity: "common", weight: 5, mode: "empty", effect: "create_foe" },
