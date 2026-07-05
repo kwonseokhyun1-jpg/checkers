@@ -2,7 +2,7 @@
  * Card targeting UI + AI auto-play
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
-import { collapsedSquareKey, ensureConstitutionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
+import { collapsedSquareKey, ensureConstitutionTurns, ensureDominionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, forwardBoltCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 import { friendlyHasDebuffs, pieceHasIronWillDebuff } from "./pieceStatus.js";
@@ -1098,8 +1098,41 @@ export function tryAutoPlay(state, color, card) {
   return { success: false, message: "No valid play" };
 }
 
+function moveKey(move) {
+  const caps = (move.captures || []).map(([r, c]) => `${r},${c}`).join(";");
+  return `${move.from[0]},${move.from[1]}->${move.to[0]},${move.to[1]}:${move.type}:${caps}`;
+}
+
+function isBackwardMove(move, color) {
+  const dr = move.to[0] - move.from[0];
+  return color === COLORS.RED ? dr > 0 : dr < 0;
+}
+
+/** True when Dominion would enable at least one new backward move this turn. */
+export function dominionWouldEnableBackwardMoves(state, color) {
+  ensureDominionTurns(state.meta);
+  const domActive = state.meta.dominionTurn[color] > 0;
+  const saved = state.meta.dominionTurn[color];
+  state.meta.dominionTurn[color] = domActive ? saved : 1;
+  const movesWithDom = getAllMovesForColor(state.board, color, state);
+  const backwardWithDom = movesWithDom.filter((m) => isBackwardMove(m, color));
+  state.meta.dominionTurn[color] = saved;
+
+  if (!backwardWithDom.length) return false;
+  if (domActive) return true;
+
+  const keysWithout = new Set(
+    getAllMovesForColor(state.board, color, state).map((m) => moveKey(m))
+  );
+  return backwardWithDom.some((m) => !keysWithout.has(moveKey(m)));
+}
+
 export function canAiPlay(state, color, card) {
-  if (isInstant(card)) return canCastInstant(state, color, card);
+  if (isInstant(card)) {
+    if (!canCastInstant(state, color, card)) return false;
+    if (card.effect === "dominion") return dominionWouldEnableBackwardMoves(state, color);
+    return true;
+  }
   for (const _ of pickSequences(state, color, card, 8)) return true;
   return false;
 }
