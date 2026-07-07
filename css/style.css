@@ -142,6 +142,18 @@ body {
   box-shadow: 0 0 8px rgba(167, 139, 250, 0.5);
   border-color: rgba(255, 255, 255, 0.4);
 }
+.piece-icon.piece-skin-clay {
+  background: radial-gradient(circle at 35% 30%, #e8c4a0, #a0522d 65%, #6b3a1a);
+  box-shadow: 0 1px 4px rgba(120, 70, 30, 0.35);
+}
+.piece-icon.piece-skin-slate {
+  background: radial-gradient(circle at 35% 30%, #cbd5e1, #64748b 60%, #334155);
+  box-shadow: 0 1px 4px rgba(71, 85, 105, 0.4);
+}
+.piece-icon.piece-skin-bronze {
+  background: radial-gradient(circle at 35% 30%, #fcd9a8, #cd7f32 55%, #8b4513);
+  box-shadow: 0 0 6px rgba(205, 127, 50, 0.45);
+}
 
 .stat {
   margin-bottom: 1rem;
@@ -4945,6 +4957,30 @@ html:has(body.cosmetic-open-active) {
   box-shadow: 0 0 14px rgba(149, 117, 205, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.35);
 }
+.piece.piece-skin-clay.red {
+  background: radial-gradient(circle at 35% 30%, #f0c8a8, #c2703a 65%, #8b4513);
+  box-shadow: 0 1px 6px rgba(160, 90, 40, 0.4);
+}
+.piece.piece-skin-clay.black {
+  background: radial-gradient(circle at 35% 30%, #8b6340, #5c3a20 70%, #3a2210);
+  box-shadow: 0 1px 6px rgba(60, 35, 15, 0.45);
+}
+.piece.piece-skin-slate.red {
+  background: radial-gradient(circle at 35% 30%, #e2e8f0, #94a3b8 55%, #64748b);
+  box-shadow: 0 1px 6px rgba(100, 116, 139, 0.4);
+}
+.piece.piece-skin-slate.black {
+  background: radial-gradient(circle at 35% 30%, #64748b, #475569 60%, #1e293b);
+  box-shadow: 0 1px 6px rgba(51, 65, 85, 0.45);
+}
+.piece.piece-skin-bronze.red {
+  background: radial-gradient(circle at 35% 30%, #fde68a, #d97706 55%, #92400e);
+  box-shadow: 0 0 10px rgba(217, 119, 6, 0.45);
+}
+.piece.piece-skin-bronze.black {
+  background: radial-gradient(circle at 35% 30%, #d4a574, #b45309 55%, #78350f);
+  box-shadow: 0 0 10px rgba(180, 83, 9, 0.4);
+}
 
 .piece.bounty-mark.red,
 .piece.bounty-mark.black,
@@ -4965,7 +5001,13 @@ html:has(body.cosmetic-open-active) {
 .piece.bounty-mark.piece-skin-solar.red,
 .piece.bounty-mark.piece-skin-solar.black,
 .piece.bounty-mark.piece-skin-prism.red,
-.piece.bounty-mark.piece-skin-prism.black {
+.piece.bounty-mark.piece-skin-prism.black,
+.piece.bounty-mark.piece-skin-clay.red,
+.piece.bounty-mark.piece-skin-clay.black,
+.piece.bounty-mark.piece-skin-slate.red,
+.piece.bounty-mark.piece-skin-slate.black,
+.piece.bounty-mark.piece-skin-bronze.red,
+.piece.bounty-mark.piece-skin-bronze.black {
   outline: 2px solid rgba(255, 196, 64, 0.95);
   outline-offset: 1px;
 }
@@ -4989,7 +5031,13 @@ html:has(body.cosmetic-open-active) {
 .piece.fortify-mark.piece-skin-solar.red,
 .piece.fortify-mark.piece-skin-solar.black,
 .piece.fortify-mark.piece-skin-prism.red,
-.piece.fortify-mark.piece-skin-prism.black {
+.piece.fortify-mark.piece-skin-prism.black,
+.piece.fortify-mark.piece-skin-clay.red,
+.piece.fortify-mark.piece-skin-clay.black,
+.piece.fortify-mark.piece-skin-slate.red,
+.piece.fortify-mark.piece-skin-slate.black,
+.piece.fortify-mark.piece-skin-bronze.red,
+.piece.fortify-mark.piece-skin-bronze.black {
   outline: 2px solid rgba(147, 197, 253, 0.95);
   outline-offset: 1px;
 }
@@ -5618,6 +5666,64 @@ html:has(body.cosmetic-open-active) {
   clip-path: polygon(50% 8%, 62% 18%, 74% 12%, 78% 28%, 92% 32%, 88% 48%, 92% 64%, 78% 68%, 74% 84%, 62% 78%, 50% 88%, 38% 78%, 26% 84%, 22% 68%, 8% 64%, 12% 48%, 8% 32%, 22% 28%, 26% 12%, 38% 18%);
 }
 
+.profile-frame--iron,
+.cosmetic-frame-preview.profile-frame--iron {
+  clip-path: polygon(12% 0%, 88% 0%, 100% 12%, 100% 88%, 88% 100%, 12% 100%, 0% 88%, 0% 12%);
+  background:
+    linear-gradient(135deg, rgba(203, 213, 225, 0.35) 0%, transparent 40%),
+    linear-gradient(145deg, #334155, #64748b 45%, #475569 80%, #1e293b);
+  box-shadow: 0 0 14px rgba(100, 116, 139, 0.35);
+  border: 2px solid rgba(148, 163, 184, 0.35);
+}
+.profile-frame--iron .profile-avatar-inner,
+.profile-frame--iron .cosmetic-frame-preview__inner {
+  clip-path: polygon(15% 4%, 85% 4%, 96% 15%, 96% 85%, 85% 96%, 15% 96%, 4% 85%, 4% 15%);
+}
+
+.profile-frame--woven,
+.cosmetic-frame-preview.profile-frame--woven {
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background:
+    repeating-linear-gradient(45deg, rgba(180, 130, 70, 0.2) 0 4px, transparent 4px 8px),
+    linear-gradient(160deg, #5c3a1e, #a67c1a 40%, #8b6914 75%, #3d2817);
+  box-shadow: 0 0 12px rgba(166, 124, 26, 0.35);
+}
+.profile-frame--woven::before,
+.cosmetic-frame-preview.profile-frame--woven::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 2px dashed rgba(212, 165, 116, 0.45);
+  clip-path: polygon(50% 5%, 95% 27%, 95% 73%, 50% 95%, 5% 73%, 5% 27%);
+  pointer-events: none;
+}
+.profile-frame--woven .profile-avatar-inner,
+.profile-frame--woven .cosmetic-frame-preview__inner {
+  clip-path: polygon(50% 6%, 94% 27%, 94% 73%, 50% 94%, 6% 73%, 6% 27%);
+}
+
+.profile-frame--copper,
+.cosmetic-frame-preview.profile-frame--copper {
+  clip-path: polygon(20% 0%, 80% 0%, 100% 20%, 100% 80%, 80% 100%, 20% 100%, 0% 80%, 0% 20%);
+  background:
+    linear-gradient(180deg, rgba(253, 230, 138, 0.4), transparent 35%),
+    linear-gradient(145deg, #78350f, #d97706 42%, #b45309 78%, #451a03);
+  box-shadow: 0 0 18px rgba(217, 119, 6, 0.4);
+}
+.profile-frame--copper::after,
+.cosmetic-frame-preview.profile-frame--copper::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 2px solid rgba(251, 191, 36, 0.35);
+  clip-path: polygon(22% 3%, 78% 3%, 97% 22%, 97% 78%, 78% 97%, 22% 97%, 3% 78%, 3% 22%);
+  pointer-events: none;
+}
+.profile-frame--copper .profile-avatar-inner,
+.profile-frame--copper .cosmetic-frame-preview__inner {
+  clip-path: polygon(22% 5%, 78% 5%, 95% 22%, 95% 78%, 78% 95%, 22% 95%, 5% 78%, 5% 22%);
+}
+
 .cosmetic-frame-preview {
   width: 100%;
   height: 100%;
@@ -5830,10 +5936,71 @@ html:has(body.cosmetic-open-active) {
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
+  flex: 1 1 auto;
   padding: 0.25rem;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.2);
+}
+.profile-cosmetic-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.profile-exclude-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+.profile-exclude-menu__btn {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+.profile-exclude-menu__btn:hover,
+.profile-exclude-menu__btn[aria-expanded="true"] {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.profile-exclude-menu__panel {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 20;
+  min-width: 11.5rem;
+  padding: 0.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(165deg, rgba(28, 36, 58, 0.98), rgba(12, 16, 28, 0.99));
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+.profile-exclude-menu__panel.hidden {
+  display: none;
+}
+.profile-exclude-menu__option {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  user-select: none;
+}
+.profile-exclude-menu__option:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.profile-exclude-menu__option input {
+  margin: 0;
+  accent-color: var(--accent-gold, #e8b86d);
 }
 .profile-filter-btn {
   font: inherit;
@@ -5880,6 +6047,17 @@ html:has(body.cosmetic-open-active) {
 .profile-cosmetic-card--equipped {
   border-color: var(--accent-gem, #5ce1e6);
   box-shadow: 0 0 16px rgba(92, 225, 230, 0.28);
+}
+.profile-cosmetic-card--locked {
+  opacity: 0.55;
+  cursor: default;
+}
+.profile-cosmetic-card--locked:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.profile-cosmetic-card--locked .profile-cosmetic-card__art {
+  filter: grayscale(0.35);
 }
 .profile-cosmetic-card.rarity-uncommon { border-color: rgba(143, 212, 168, 0.4); }
 .profile-cosmetic-card.rarity-rare { border-color: rgba(126, 200, 255, 0.45); }

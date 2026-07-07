@@ -20,6 +20,9 @@ export const COSMETIC_ITEMS = [
   { id: "avatar_moon", type: "avatar", name: "Moonlit", rarity: "rare", desc: "Silver moon portrait." },
   { id: "avatar_flame", type: "avatar", name: "Blaze", rarity: "epic", desc: "Fiery orange portrait." },
   { id: "avatar_cosmos", type: "avatar", name: "Cosmos", rarity: "legendary", desc: "Nebula swirl portrait." },
+  { id: "avatar_sage", type: "avatar", name: "Sage", rarity: "common", desc: "Muted sage green portrait." },
+  { id: "avatar_rookie", type: "avatar", name: "Rookie", rarity: "common", desc: "Sky blue cadet portrait." },
+  { id: "avatar_aurora", type: "avatar", name: "Aurora", rarity: "uncommon", desc: "Northern lights portrait." },
 
   { id: "frame_default", type: "frame", name: "Simple Frame", rarity: "common", desc: "Plain border." },
   { id: "frame_bronze", type: "frame", name: "Bronze Frame", rarity: "uncommon", desc: "Bronze border." },
@@ -31,6 +34,9 @@ export const COSMETIC_ITEMS = [
   { id: "frame_sapphire", type: "frame", name: "Sapphire Frame", rarity: "rare", desc: "Blue sapphire border." },
   { id: "frame_ruby", type: "frame", name: "Ruby Frame", rarity: "epic", desc: "Crimson gem border." },
   { id: "frame_crown", type: "frame", name: "Crown Frame", rarity: "legendary", desc: "Royal crown border." },
+  { id: "frame_iron", type: "frame", name: "Iron Frame", rarity: "common", desc: "Forged steel border." },
+  { id: "frame_woven", type: "frame", name: "Woven Frame", rarity: "common", desc: "Braided rope border." },
+  { id: "frame_copper", type: "frame", name: "Copper Frame", rarity: "uncommon", desc: "Warm copper border." },
 
   { id: "banner_default", type: "banner", name: "Classic Board", rarity: "common", desc: "Classic checkerboard colors." },
   { id: "banner_nebula", type: "banner", name: "Nebula", rarity: "uncommon", desc: "Purple gradient banner." },
@@ -42,6 +48,9 @@ export const COSMETIC_ITEMS = [
   { id: "banner_midnight", type: "banner", name: "Midnight", rarity: "rare", desc: "Dark blue night banner." },
   { id: "banner_ocean", type: "banner", name: "Ocean", rarity: "epic", desc: "Deep sea teal banner." },
   { id: "banner_eclipse", type: "banner", name: "Eclipse", rarity: "legendary", desc: "Solar eclipse banner." },
+  { id: "banner_sand", type: "banner", name: "Sand Dune", rarity: "common", desc: "Warm desert sand banner." },
+  { id: "banner_mist", type: "banner", name: "Mist", rarity: "common", desc: "Soft grey fog banner." },
+  { id: "banner_dawn", type: "banner", name: "Dawn", rarity: "uncommon", desc: "Pink sunrise banner." },
 
   { id: "skin_classic", type: "pieceSkin", name: "Classic Disc", rarity: "common", desc: "Traditional checker pieces." },
   { id: "skin_ember", type: "pieceSkin", name: "Ember Core", rarity: "uncommon", desc: "Glowing coal gradients." },
@@ -53,7 +62,18 @@ export const COSMETIC_ITEMS = [
   { id: "skin_jade", type: "pieceSkin", name: "Jade Disc", rarity: "rare", desc: "Polished jade pieces." },
   { id: "skin_solar", type: "pieceSkin", name: "Solar Flare", rarity: "epic", desc: "Radiant sunlit pieces." },
   { id: "skin_prism", type: "pieceSkin", name: "Prism Shard", rarity: "legendary", desc: "Iridescent rainbow marbles." },
+  { id: "skin_clay", type: "pieceSkin", name: "Clay Disc", rarity: "common", desc: "Terracotta clay pieces." },
+  { id: "skin_slate", type: "pieceSkin", name: "Slate Stone", rarity: "common", desc: "Cool grey slate pieces." },
+  { id: "skin_bronze", type: "pieceSkin", name: "Bronze Disc", rarity: "uncommon", desc: "Polished bronze pieces." },
 ];
+
+/** Default profile catalog exclude toggles. */
+export const DEFAULT_COSMETIC_EXCLUDE_OPTIONS = {
+  others: true,
+  unowned: false,
+  owned: false,
+  starters: false,
+};
 
 export const COSMETIC_BY_ID = Object.fromEntries(COSMETIC_ITEMS.map((c) => [c.id, c]));
 

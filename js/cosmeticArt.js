@@ -228,6 +228,36 @@ const AVATAR_ART = {
       <circle cx="44" cy="28" r="1" fill="#fff" opacity="0.6"/>
       <circle cx="38" cy="42" r="1.3" fill="#fff" opacity="0.7"/>`,
   },
+  avatar_sage: {
+    bg: ["#4a5d4a", "#1e2a1e"],
+    glow: "#a8c4a0",
+    svg: `<ellipse cx="32" cy="38" rx="14" ry="16" fill="#2a3a2a"/>
+      <circle cx="32" cy="24" r="11" fill="#d4e4cc"/>
+      <path d="M22 20 Q32 12 42 20 L40 26 Q32 22 24 26 Z" fill="#5a7a52"/>
+      <circle cx="28" cy="24" r="2" fill="#1e2a1e"/>
+      <circle cx="36" cy="24" r="2" fill="#1e2a1e"/>
+      <path d="M28 30 Q32 33 36 30" fill="none" stroke="#6b8a62" stroke-width="1.5"/>`,
+  },
+  avatar_rookie: {
+    bg: ["#1e4a6e", "#0f2840"],
+    glow: "#7ec8ff",
+    svg: `<ellipse cx="32" cy="38" rx="14" ry="16" fill="#1a3050"/>
+      <circle cx="32" cy="24" r="11" fill="#c5dff0"/>
+      <rect x="22" y="14" width="20" height="7" rx="2" fill="#3d7ab8"/>
+      <circle cx="28" cy="24" r="2" fill="#0f2840"/>
+      <circle cx="36" cy="24" r="2" fill="#0f2840"/>
+      <path d="M28 30 Q32 34 36 30" fill="none" stroke="#5ba3d9" stroke-width="1.5"/>`,
+  },
+  avatar_aurora: {
+    bg: ["#0a1628", "#1a0a30"],
+    glow: "#5ce1e6",
+    svg: `<path d="M6 50 Q18 18 32 34 Q46 50 58 22" fill="none" stroke="#5ce1e6" stroke-width="3" opacity="0.75"/>
+      <path d="M8 54 Q22 30 36 44 Q50 58 60 30" fill="none" stroke="#9f7aea" stroke-width="2" opacity="0.65"/>
+      <ellipse cx="32" cy="38" rx="12" ry="14" fill="#1a2040"/>
+      <circle cx="32" cy="26" r="10" fill="#c5d8f0"/>
+      <circle cx="28" cy="26" r="2" fill="#0a1628"/>
+      <circle cx="36" cy="26" r="2" fill="#0a1628"/>`,
+  },
 };
 
 export function bannerStyleFor(id) {
@@ -242,6 +272,9 @@ export function bannerStyleFor(id) {
     banner_midnight: "linear-gradient(135deg,#0f172a,#1e3a5f 50%,#020617)",
     banner_ocean: "linear-gradient(135deg,#042f2e,#0e7490 45%,#164e63 80%,#020617)",
     banner_eclipse: "linear-gradient(135deg,#0a0a0a,#1a1a2e 35%,#fbbf24 50%,#0a0a0a 65%,#312e81)",
+    banner_sand: "linear-gradient(135deg,#78350f,#d97706 45%,#fcd34d 75%,#451a03)",
+    banner_mist: "linear-gradient(135deg,#374151,#6b7280 50%,#9ca3af 80%,#1f2937)",
+    banner_dawn: "linear-gradient(135deg,#4a1942,#ec4899 40%,#fbbf24 70%,#1a0a20)",
   };
   return map[id] || map.banner_default;
 }
