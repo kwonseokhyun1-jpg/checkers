@@ -20,6 +20,7 @@ import {
   getEquippedTitleId,
   ownsTitle,
   titleTagHtml,
+  titleTagClasses,
 } from "./mageTitles.js";
 import {
   COSMETIC_BOX_TIERS,
@@ -273,7 +274,7 @@ function bindAchievementsGrid(profile, grid, { onTitleChanged } = {}) {
     card.innerHTML = `
       <div class="profile-achievement-card__head">
         <h4 class="profile-achievement-card__title">${escapeHtml(ach.title)}</h4>
-        ${reward ? `<span class="profile-achievement-card__reward mage-title-tag mage-title-tag--glow-${reward.glow} ${TITLE_RARITY_CLASS[reward.rarity] || ""}">[${escapeHtml(reward.display)}]</span>` : ""}
+        ${reward ? `<span class="profile-achievement-card__reward ${titleTagClasses(reward)}">[${escapeHtml(reward.display)}]</span>` : ""}
       </div>
       <p class="profile-achievement-card__desc">${escapeHtml(ach.description)}</p>
       <div class="profile-achievement-card__progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
@@ -549,7 +550,7 @@ export function renderProfileTab(profile, root, { onGemsChange, onTitleChanged }
         .filter(Boolean)
         .join(" ");
       card.innerHTML = `
-        <span class="profile-title-card__tag mage-title-tag mage-title-tag--glow-${title.glow} ${TITLE_RARITY_CLASS[title.rarity] || ""}">[${escapeHtml(title.display)}]</span>
+        <span class="profile-title-card__tag ${titleTagClasses(title)}">[${escapeHtml(title.display)}]</span>
         <span class="profile-title-card__rarity">${title.rarity}</span>
         <span class="profile-title-card__action">${equipped ? "Equipped" : unlocked ? "Equip" : "Locked"}</span>`;
       card.addEventListener("click", () => {
