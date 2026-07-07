@@ -9,7 +9,7 @@ import {
   getBackwardStepMoves,
   hasMandatoryJumps,
 } from "./board.js";
-import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, bombMoveWorthwhile } from "./cardEffects.js";
+import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, bombMoveWorthwhile, bestSnowballSetupScore } from "./cardEffects.js";
 import { queueTrapHistoryReveal, isConfused, clearConfusion } from "./gameMeta.js";
 import { getCardDef } from "./cardCatalog.js";
 
@@ -234,7 +234,11 @@ function scoreMove(board, color, state, move) {
   sim.board = board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
   if (!applyMove(sim.board, move, sim)) return { score: -Infinity, safe: false };
   const safe = !opponentCanCapture(sim.board, color, sim);
-  const score = scoreBoard(sim.board, color) + (move.captures?.length || 0) * 8 + Math.random() * 2;
+  let score = scoreBoard(sim.board, color) + (move.captures?.length || 0) * 8 + Math.random() * 2;
+  for (const [cr, cc] of move.captures || []) {
+    const victim = board[cr]?.[cc];
+    if (victim?.frozenTurns > 0 || victim?.paralyzedTurns > 0) score += 15;
+  }
   return { score, safe };
 }
 
@@ -290,6 +294,50 @@ function pickBombFollowUpMove(board, color, state) {
   return pickBestMove(board, color, state, worthwhile.length ? worthwhile : bombMoves);
 }
 
+function isAdjacentSquare(r1, c1, r2, c2) {
+  return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1 && (r1 !== r2 || c1 !== c2);
+}
+
+function jumpCapturesSquare(move, row, col) {
+  return move.captures?.some(([cr, cc]) => cr === row && cc === col) ?? false;
+}
+
+/** After Snowball, move adjacent to the frozen target to set up a jump capture. */
+function pickSnowballFollowUpMove(board, color, state, target) {
+  if (!target) return null;
+  const [er, ec] = target;
+  const approachMoves = getAllMovesForColor(board, color, state).filter((m) =>
+    isAdjacentSquare(m.to[0], m.to[1], er, ec)
+  );
+  if (!approachMoves.length) return null;
+
+  const rated = approachMoves.map((move) => {
+    let bonus = 0;
+    const simBoard = board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+    const piece = simBoard[move.from[0]][move.from[1]];
+    simBoard[move.from[0]][move.from[1]] = null;
+    simBoard[move.to[0]][move.to[1]] = piece;
+    piece.row = move.to[0];
+    piece.col = move.to[1];
+    if (
+      getAllMovesForColor(simBoard, color, state).some(
+        (m) =>
+          m.from[0] === move.to[0] &&
+          m.from[1] === move.to[1] &&
+          jumpCapturesSquare(m, er, ec)
+      )
+    ) {
+      bonus += 100;
+    }
+    if (move.captures?.length) bonus += 40;
+    return { move, bonus };
+  });
+  rated.sort((a, b) => b.bonus - a.bonus);
+  const bestBonus = rated[0].bonus;
+  const top = rated.filter((r) => r.bonus === bestBonus).map((r) => r.move);
+  return pickBestMove(board, color, state, top);
+}
+
 /** After Shockwave is armed, move that piece and prefer lines that pulse adjacent enemies. */
 function pickShockwaveFollowUpMove(board, color, state) {
   const armed = findArmedSquares(board, color, "shockwaveArmed");
@@ -312,6 +360,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
   const human = aiColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
   const hand = state.hands[aiColor];
   const log = [];
+  let snowballTarget = null;
 
   if (state.meta.shatterSilenced?.[color]) {
     log.push({ type: "message", text: `${opponentName} is reeling from spell backlash — no spells this turn.` });
@@ -328,10 +377,14 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
         playable = playable.filter((c) => c.effect !== "ignore");
         if (!playable.length) break;
       }
+      const snowballCard = playable.find((c) => c.effect === "snowball");
+      const snowballScore = snowballCard ? bestSnowballSetupScore(state, color) : 0;
       const card =
         ignoreCard && shouldAiPlayIgnore(state, color)
           ? ignoreCard
-          : playable[Math.floor(Math.random() * playable.length)];
+          : snowballCard && snowballScore >= 100
+            ? snowballCard
+            : playable[Math.floor(Math.random() * playable.length)];
       const idx = hand.indexOf(card);
       const trapped = !!state.meta.counterspell?.[human];
       if (trapped) {
@@ -353,6 +406,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
       }
       const res = tryAutoPlay(state, color, card);
       if (!res.success) break;
+      if (card.effect === "snowball" && res.picks?.[0]) snowballTarget = [...res.picks[0]];
       hand.splice(idx, 1);
       const bonusSpell = !!state.meta.extraSpellCast?.[aiColor];
       if (!bonusSpell) state.spellPlayed[aiColor] = true;
@@ -396,6 +450,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     if (!panicForced) {
       if (bombArmed.length) move = pickBombFollowUpMove(state.board, color, state);
       else if (shockwaveArmed.length) move = pickShockwaveFollowUpMove(state.board, color, state);
+      else if (snowballTarget) move = pickSnowballFollowUpMove(state.board, color, state, snowballTarget);
     }
     if (!move) move = pickBestMove(state.board, color, state);
     if (panicForced && move) log.push({ type: "message", text: "Panic — forced backward step!" });
