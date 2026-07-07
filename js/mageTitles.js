@@ -174,6 +174,14 @@ export const MAGE_TITLES = [
     glow: "rainbow",
     boxExclusive: true,
   },
+  {
+    id: "title_the_chosen_one",
+    name: "The Chosen One",
+    display: "The Chosen One",
+    rarity: "mythic",
+    glow: "gold",
+    boxExclusive: true,
+  },
 ];
 
 export const MAGE_TITLE_BY_ID = Object.fromEntries(MAGE_TITLES.map((t) => [t.id, t]));
