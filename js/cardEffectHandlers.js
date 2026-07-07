@@ -6,9 +6,9 @@ import {
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
   createPiece, grantAwokenBear, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
-  tryPromoteOnFarRow,
+  tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS,
 } from "./board.js";
-import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand } from "./gameMeta.js";
+import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
@@ -506,7 +506,7 @@ const EFFECTS = {
     }
     return ok("Sanctuary — protected zone placed.", { sanctuaryCells: cells });
   },
-  last_stand(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.lastStand=true; return ok("Last Stand armed — hidden."); },
+  last_stand(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.lastStand=true; p.lastStandTurns=LAST_STAND_TRAP_TURNS; return ok("Last Stand armed — hidden."); },
   magnet(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
@@ -527,8 +527,8 @@ const EFFECTS = {
   },
   press(state, color, picks) { state.meta.pendingPressMove[opp(color)] = true; return ok("Press — opponent must move again next turn."); },
   vengeance(state, color, picks) {
-    if (!state.meta.vengeance) state.meta.vengeance = { [COLORS.RED]: false, [COLORS.BLACK]: false };
-    state.meta.vengeance[color] = true;
+    ensureVengeanceTurns(state.meta);
+    state.meta.vengeance[color] = VENGEANCE_TRAP_TURNS;
     return ok("Vengeance armed — hidden.");
   },
   hibernation(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(p.hibernationTurns>0) return fail("Already hibernating."); p.hibernationTurns=2; p.bearAwakened=false; return ok("Hibernation — awakens with the Awoken Bear mark in 2 turns."); },

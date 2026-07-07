@@ -16,7 +16,7 @@ export function createMatchMeta() {
     pendingRegicide: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingConduct: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     counterspell: { [COLORS.RED]: false, [COLORS.BLACK]: false },
-    vengeance: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    vengeance: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blinded: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     confuseNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
@@ -86,6 +86,27 @@ export function tickMineDurability(state, ownerColor) {
       if (sq.mine.turnsLeft <= 0) delete sq.mine;
     }
   }
+}
+
+/** Ensure vengeance trap counters exist (older saves used booleans). */
+export function ensureVengeanceTurns(meta) {
+  if (!meta.vengeance || typeof meta.vengeance !== "object") {
+    meta.vengeance = { [COLORS.RED]: 0, [COLORS.BLACK]: 0 };
+  }
+  for (const color of [COLORS.RED, COLORS.BLACK]) {
+    const v = meta.vengeance[color];
+    meta.vengeance[color] = typeof v === "number" ? v : v ? 1 : 0;
+  }
+  return meta.vengeance;
+}
+
+/** Tick armed Vengeance at the start of the trap owner's turn. */
+export function tickVengeanceDurability(state, ownerColor) {
+  if (!state?.meta || !ownerColor) return;
+  ensureVengeanceTurns(state.meta);
+  const turns = state.meta.vengeance[ownerColor];
+  if (turns <= 0) return;
+  state.meta.vengeance[ownerColor] = turns - 1;
 }
 
 export function sk(r, c) {
@@ -258,17 +279,16 @@ export function hasCounterspellArmed(state, color) {
 }
 
 export function tryConsumeVengeance(state, capturerColor, victimColor) {
-  if (!state.meta.vengeance) {
-    state.meta.vengeance = { [COLORS.RED]: false, [COLORS.BLACK]: false };
-  }
+  ensureVengeanceTurns(state.meta);
   if (capturerColor === victimColor) return null;
-  if (!state.meta.vengeance[victimColor]) return null;
-  state.meta.vengeance[victimColor] = false;
+  if (state.meta.vengeance[victimColor] <= 0) return null;
+  state.meta.vengeance[victimColor] = 0;
   return { trapOwner: victimColor };
 }
 
 export function hasVengeanceArmed(state, color) {
-  return !!state.meta.vengeance?.[color];
+  ensureVengeanceTurns(state.meta);
+  return state.meta.vengeance[color] > 0;
 }
 
 export function payBountyOnCapture(state, victim, capturerColor) {
