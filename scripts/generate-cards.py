@@ -47,7 +47,7 @@ SPELLS = [
     ("backstab", "Backstab", "Destroy an enemy behind your piece on a backward diagonal if adjacent.", "uncommon", 4, "friendly", "backstab"),
     ("sacrifice", "Sacrifice", "Destroy one of your men to destroy any enemy man (not kings).", "uncommon", 4, "f_e", "sacrifice"),
     # === DEFENSE ===
-    ("bulwark", "Bulwark", "All your pieces on one diagonal line gain shield for 1 turn.", "rare", 3, "friendly", "bulwark"),
+    ("bulwark", "Bulwark", "All your pieces on one diagonal line gain shield for 2 turns.", "rare", 3, "friendly", "bulwark"),
     ("mirror_shield", "Mirror Shield", "Next enemy spell on this piece reflects to a random enemy.", "epic", 2, "friendly", "mirror_shield"),
     ("phalanx", "Phalanx", "Two adjacent friendly pieces share protection — both must be jumped together.", "rare", 3, "f_f_adj", "phalanx"),
     ("sanctuary", "Sanctuary", "Friendly pieces on the target dark square and its 6 surrounding dark squares cannot be captured for 1 turn.", "rare", 3, "empty", "sanctuary"),
