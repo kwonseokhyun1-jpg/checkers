@@ -482,7 +482,17 @@ const EFFECTS = {
   spear_thrust(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const p=at(state,r1,c1); if(!p||p.color!==color) return fail(); const dr=r1===r2?0:Math.sign(r2-r1), dc=c1===c2?0:Math.sign(c2-c1); if(dr&&dc) return fail(); let r=r1+dr,c=c1+dc; while(inBounds(r,c)){ const t=at(state,r,c); if(t){ if(t.color!==color) kill(state,r,c,color); break;} r+=dr; c+=dc;} markMove(state,color); return ok(); },
   backstab(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); const dir=p.color===COLORS.RED?1:-1; for(const dc of [-1,1]){ const t=at(state,r+dir,c+dc); if(t&&t.color!==color){ const hadLastStand=t.lastStand; if(spellKill(state,r+dir,c+dc,color)) return ok(hadLastStand&&!t.lastStand?'Last Stand — target survives with ultra shield.':undefined);}} return fail(); },
   sacrifice(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); const hadLastStand=b.lastStand; removePiece(state.board,r1,c1); if(!spellKill(state,r2,c2,color)) return fail(); if(hadLastStand&&!b.lastStand) return ok('Last Stand — target survives with ultra shield.'); return ok(); },
-  bulwark(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let i=0;i<SIZE;i++){ const q=at(state,i,c-i+(p.col-p.row)); if(q&&q.color===color) q.shieldTurns=Math.max(q.shieldTurns,2);} return ok(); },
+  bulwark(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color !== color) return fail();
+    const offset = p.col - p.row;
+    for (let i = 0; i < SIZE; i++) {
+      const q = at(state, i, i + offset);
+      if (q && q.color === color) q.shieldTurns = Math.max(q.shieldTurns, 2);
+    }
+    return ok();
+  },
   mirror_shield(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.mirrorShield=true; return ok(); },
   phalanx(state, color, picks) { if(picks.length<2) return fail(); const a=at(state,...p0(picks)),b=at(state,...p1(picks)); if(!a||!b||a.color!==color||b.color!==color) return fail(); const gid=Date.now(); a.phalanxId=gid; b.phalanxId=gid; return ok(); },
   sanctuary(state, color, picks) {

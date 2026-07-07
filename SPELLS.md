@@ -79,7 +79,7 @@
 - **Blind** — Opponent cannot play cards on their next turn.
 - **Blink** — Teleport your piece to any empty dark square within 2 steps (Chebyshev).
 - **Blizzard** — Freeze up to 3 enemy men along a diagonal line you choose.
-- **Bulwark** — All your pieces on one diagonal line gain shield for 1 turn.
+- **Bulwark** — All your pieces on one diagonal line gain shield for 2 turns.
 - **Chain Pull** — Pull an adjacent enemy piece 1 square toward you into an empty dark square behind it.
 - **Chameleon** — Copy any piece's movement tags on the board for 2 turns.
 - **Coin Flip** — 50% destroy random enemy; 50% destroy random friendly.
