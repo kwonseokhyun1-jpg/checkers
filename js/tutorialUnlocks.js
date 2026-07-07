@@ -120,9 +120,9 @@ const COSMETICS_STEPS = [
     title: "Equip a cosmetic",
     body: "Tap any unlocked item to equip it — your avatar, frame, banner, and piece skin show in battle and PvP.",
     hint: "Tap Equip on a cosmetic you unlocked.",
-    highlight: ".profile-cosmetic-card:not(.profile-cosmetic-card--equipped):not(.profile-cosmetic-card--locked)",
+    highlight: ".profile-cosmetic-card:not(.profile-cosmetic-card--equipped)",
     allowed: [".profile-cosmetic-card", ".profile-cosmetic-card *"],
-    actionSelector: ".profile-cosmetic-card:not(.profile-cosmetic-card--equipped):not(.profile-cosmetic-card--locked)",
+    actionSelector: ".profile-cosmetic-card:not(.profile-cosmetic-card--equipped)",
   },
   {
     id: "done",
