@@ -54,7 +54,7 @@ export function loadSettingsUIChunk() {
   return settingsUIChunk;
 }
 
-/** @type {Promise<{ playChestOpenAnimation: typeof import("./chestOpenAnimation.js").playChestOpenAnimation, playCosmeticOpenAnimation: typeof import("./cosmeticOpenAnimation.js").playCosmeticOpenAnimation }> | null} */
+/** @type {Promise<{ playChestOpenAnimation: typeof import("./chestOpenAnimation.js").playChestOpenAnimation, playCosmeticOpenAnimation: typeof import("./cosmeticOpenAnimation.js").playCosmeticOpenAnimation, playTitleOpenAnimation: typeof import("./titleOpenAnimation.js").playTitleOpenAnimation }> | null} */
 let animationsChunk = null;
 
 export function loadAnimationsChunk() {
@@ -62,9 +62,11 @@ export function loadAnimationsChunk() {
     animationsChunk = Promise.all([
       import("./chestOpenAnimation.js"),
       import("./cosmeticOpenAnimation.js"),
-    ]).then(([chest, cosmetic]) => ({
+      import("./titleOpenAnimation.js"),
+    ]).then(([chest, cosmetic, title]) => ({
       playChestOpenAnimation: chest.playChestOpenAnimation,
       playCosmeticOpenAnimation: cosmetic.playCosmeticOpenAnimation,
+      playTitleOpenAnimation: title.playTitleOpenAnimation,
     }));
   }
   return animationsChunk;

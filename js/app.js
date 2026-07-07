@@ -57,13 +57,14 @@ import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { openChest, CHESTS } from "./chests.js";
 import { formatRarityOdds } from "./chestOdds.js";
 import { CHEST_TIERS, chestSvgMarkup } from "./chestArt.js";
-import { smallMysteryBoxSvgMarkup, bigMysteryBoxSvgMarkup } from "./mysteryBoxArt.js";
+import { smallMysteryBoxSvgMarkup, titleBoxSvgMarkup } from "./mysteryBoxArt.js";
 import {
   openMysteryBox,
-  openBigMysteryBox,
+  openTitleBox,
   MYSTERY_BOX_COST,
-  BIG_MYSTERY_BOX_COST,
-  SMALL_MYSTERY_BOX_COSMETIC_CHANCE,
+  TITLE_BOX_COST,
+  MYSTERY_BOX_PULL_COUNT,
+  MYSTERY_BOX_MIX_COSMETIC_CHANCE,
 } from "./mysteryBox.js";
 import { initAuthUI } from "./authUI.js";
 import { initAuthGate, requiresAuthGate, allowsAppAccess } from "./authGate.js";
@@ -797,11 +798,11 @@ function showDeckSubview(sub) {
 }
 
 
-function mysteryBoxHtml({ id, title, desc, cost, big = false }) {
+function mysteryBoxHtml({ id, title, desc, cost, variant = "mystery" }) {
   const canAfford = (profile.stars ?? 0) >= cost;
-  const art = big ? bigMysteryBoxSvgMarkup() : smallMysteryBoxSvgMarkup();
+  const art = variant === "title" ? titleBoxSvgMarkup() : smallMysteryBoxSvgMarkup();
   return `
-    <article class="mystery-box ${big ? "mystery-box--big" : ""} ${canAfford ? "mystery-box--ready" : "mystery-box--locked"}" data-mystery-id="${id}" role="button" tabindex="0" aria-label="Open ${title} for ${cost} stars">
+    <article class="mystery-box ${variant === "title" ? "mystery-box--title" : ""} ${canAfford ? "mystery-box--ready" : "mystery-box--locked"}" data-mystery-id="${id}" role="button" tabindex="0" aria-label="Open ${title} for ${cost} stars">
       <div class="mystery-box__glow" aria-hidden="true"></div>
       <div class="mystery-box__visual" aria-hidden="true">${art}</div>
       <h3 class="mystery-box__title">${title}</h3>
@@ -836,45 +837,58 @@ function formatPullRefund({ bonusGems = 0, bonusStars = 0 } = {}) {
 }
 
 async function playMysteryResult(res, log) {
-  const { playChestOpenAnimation, playCosmeticOpenAnimation } = await loadAnimationsChunk();
+  const { playChestOpenAnimation, playCosmeticOpenAnimation, playTitleOpenAnimation } =
+    await loadAnimationsChunk();
   if (res.kind === "card") {
     await playChestOpenAnimation({
-      tier: res.tier.id,
-      tierLabel: `Small Mystery Box — ${res.tier.name}`,
-      pulls: res.pulls,
+      tier: "silver",
+      tierLabel: "Mystery Box",
+      pulls: res.cardPulls,
     });
     if (log) {
-      log.textContent = `Got ${res.pulls.length} spells from ${res.tier.name}.${formatPullRefund(res)}`;
+      log.textContent = `Got ${res.cardPulls.length} spells.${formatPullRefund(res)}`;
     }
   } else if (res.kind === "cosmetic") {
     await playCosmeticOpenAnimation({
-      boxId: res.tier?.id || "bronze",
-      boxLabel: "Small Mystery Box",
-      pulls: res.pulls,
+      boxId: "silver",
+      boxLabel: "Mystery Box",
+      pulls: res.cosPulls,
     });
     if (log) {
       log.textContent = res.message + formatPullRefund(res);
     }
-  } else if (res.kind === "both") {
-    await playChestOpenAnimation({
-      tier: res.cardTier.id,
-      tierLabel: `Big Mystery — ${res.cardTier.name}`,
-      pulls: res.cardPulls,
-    });
-    await playCosmeticOpenAnimation({
-      boxId: res.cosTier?.id || "gold",
-      boxLabel: "Big Mystery Box",
-      pulls: res.cosPulls,
-    });
+  } else if (res.kind === "mixed") {
+    if (res.cardPulls.length) {
+      await playChestOpenAnimation({
+        tier: "silver",
+        tierLabel: "Mystery Box — Spells",
+        pulls: res.cardPulls,
+      });
+    }
+    if (res.cosPulls.length) {
+      await playCosmeticOpenAnimation({
+        boxId: "silver",
+        boxLabel: "Mystery Box — Cosmetics",
+        pulls: res.cosPulls,
+      });
+    }
     if (log) {
       log.textContent = `${res.message}${formatPullRefund(res)}`;
+    }
+  } else if (res.kind === "title") {
+    await playTitleOpenAnimation({
+      boxLabel: "Title Box",
+      pulls: res.pulls,
+    });
+    if (log) {
+      log.textContent = res.message;
     }
   }
 }
 
-async function handleOpenMysteryBox({ big = false } = {}) {
+async function handleOpenMysteryBox() {
   const log = $("mystery-box-log");
-  const cost = big ? BIG_MYSTERY_BOX_COST : MYSTERY_BOX_COST;
+  const cost = MYSTERY_BOX_COST;
   const canAfford = (profile.stars ?? 0) >= cost;
   if (!canAfford) {
     if (log) {
@@ -884,7 +898,7 @@ async function handleOpenMysteryBox({ big = false } = {}) {
     return;
   }
 
-  const res = big ? openBigMysteryBox(profile) : openMysteryBox(profile);
+  const res = openMysteryBox(profile);
   if (!res.success) {
     if (log) {
       log.textContent = res.message;
@@ -913,28 +927,69 @@ async function handleOpenMysteryBox({ big = false } = {}) {
   void renderProfile();
 }
 
+async function handleOpenTitleBox() {
+  const log = $("mystery-box-log");
+  const cost = TITLE_BOX_COST;
+  const canAfford = (profile.stars ?? 0) >= cost;
+  if (!canAfford) {
+    if (log) {
+      log.textContent = `Need ${cost} ★ stars. Clear Adventure floors to earn stars.`;
+      log.classList.add("chest-log--error");
+    }
+    return;
+  }
+
+  const res = openTitleBox(profile);
+  if (!res.success) {
+    if (log) {
+      log.textContent = res.message;
+      log.classList.add("chest-log--error");
+    }
+    return;
+  }
+
+  saveProfile(profile);
+  updateCurrencyHeader();
+  if (log) log.classList.remove("chest-log--error");
+
+  const list = $("mystery-box-list");
+  list?.querySelectorAll(".mystery-box__btn").forEach((btn) => {
+    btn.disabled = true;
+  });
+
+  try {
+    await playMysteryResult(res, log);
+  } catch (err) {
+    console.error("Title box animation failed:", err);
+    if (log) log.textContent = res.message;
+  }
+
+  renderChests({ clearPulls: false });
+  void renderProfile();
+}
+
 function renderStarsShop() {
   const list = $("mystery-box-list");
   if (!list) return;
   list.innerHTML = `
     ${mysteryBoxHtml({
-      id: "standard",
-      title: "Small Mystery Box",
-      desc: `${Math.round(SMALL_MYSTERY_BOX_COSMETIC_CHANCE * 100)}% cosmetics · ${Math.round((1 - SMALL_MYSTERY_BOX_COSMETIC_CHANCE) * 100)}% spells — same tier odds as Shop chests.`,
+      id: "mystery",
+      title: "Mystery Box",
+      desc: `${MYSTERY_BOX_PULL_COUNT} random pulls — mix of spells and cosmetics (${Math.round(MYSTERY_BOX_MIX_COSMETIC_CHANCE * 100)}% cosmetic per slot when unlocked).`,
       cost: MYSTERY_BOX_COST,
     })}
     ${mysteryBoxHtml({
-      id: "big",
-      title: "Big Mystery Box",
-      desc: "Spells and cosmetics in one open — better tier odds (50% gold).",
-      cost: BIG_MYSTERY_BOX_COST,
-      big: true,
+      id: "title",
+      title: "Title Box",
+      desc: "Box-exclusive mage titles only — The Brave, Ruthless, Omnipotent, and more.",
+      cost: TITLE_BOX_COST,
+      variant: "title",
     })}
   `;
 
   const articles = list.querySelectorAll(".mystery-box");
-  bindMysteryBoxCard(articles[0], () => handleOpenMysteryBox({ big: false }));
-  bindMysteryBoxCard(articles[1], () => handleOpenMysteryBox({ big: true }));
+  bindMysteryBoxCard(articles[0], () => handleOpenMysteryBox());
+  bindMysteryBoxCard(articles[1], () => handleOpenTitleBox());
 }
 
 function showVaultTab(tab) {

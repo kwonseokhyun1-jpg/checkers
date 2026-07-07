@@ -4,7 +4,7 @@
 
 export const TITLE_RARITIES = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 
-/** @type {{ id: string, name: string, display: string, rarity: string, glow: string, achievementId: string }[]} */
+/** @type {{ id: string, name: string, display: string, rarity: string, glow: string, achievementId?: string, boxExclusive?: boolean }[]} */
 export const MAGE_TITLES = [
   {
     id: "title_stormborn",
@@ -110,10 +110,78 @@ export const MAGE_TITLES = [
     glow: "frost",
     achievementId: "explorer",
   },
+  {
+    id: "title_the_brave",
+    name: "The Brave",
+    display: "The Brave",
+    rarity: "rare",
+    glow: "ember",
+    boxExclusive: true,
+  },
+  {
+    id: "title_ruthless",
+    name: "Ruthless",
+    display: "Ruthless",
+    rarity: "epic",
+    glow: "crimson",
+    boxExclusive: true,
+  },
+  {
+    id: "title_the_eternal",
+    name: "The Eternal",
+    display: "The Eternal",
+    rarity: "legendary",
+    glow: "frost",
+    boxExclusive: true,
+  },
+  {
+    id: "title_dark_mage",
+    name: "Dark Mage",
+    display: "Dark Mage",
+    rarity: "epic",
+    glow: "violet",
+    boxExclusive: true,
+  },
+  {
+    id: "title_bloodthirsty",
+    name: "Bloodthirsty",
+    display: "Bloodthirsty",
+    rarity: "epic",
+    glow: "crimson",
+    boxExclusive: true,
+  },
+  {
+    id: "title_angelic",
+    name: "Angelic",
+    display: "Angelic",
+    rarity: "legendary",
+    glow: "cyan",
+    boxExclusive: true,
+  },
+  {
+    id: "title_the_brilliant",
+    name: "The Brilliant",
+    display: "The Brilliant",
+    rarity: "legendary",
+    glow: "gold",
+    boxExclusive: true,
+  },
+  {
+    id: "title_omnipotent",
+    name: "Omnipotent",
+    display: "Omnipotent",
+    rarity: "mythic",
+    glow: "rainbow",
+    boxExclusive: true,
+  },
 ];
 
 export const MAGE_TITLE_BY_ID = Object.fromEntries(MAGE_TITLES.map((t) => [t.id, t]));
-export const TITLE_BY_ACHIEVEMENT = Object.fromEntries(MAGE_TITLES.map((t) => [t.achievementId, t]));
+export const TITLE_BY_ACHIEVEMENT = Object.fromEntries(
+  MAGE_TITLES.filter((t) => t.achievementId).map((t) => [t.achievementId, t])
+);
+export const TITLE_BOX_TITLES = MAGE_TITLES.filter((t) => t.boxExclusive);
+export const TITLE_BOX_TITLE_IDS = new Set(TITLE_BOX_TITLES.map((t) => t.id));
 
 export const TITLE_RARITY_CLASS = {
   common: "mage-title--common",
@@ -154,6 +222,17 @@ export function unlockTitleForAchievement(profile, achievementId) {
   if (!profile.cosmetics.unlockedTitles.includes(title.id)) {
     profile.cosmetics.unlockedTitles.push(title.id);
     return title;
+  }
+  return null;
+}
+
+export function unlockTitleFromBox(profile, titleId) {
+  if (!TITLE_BOX_TITLE_IDS.has(titleId)) return null;
+  if (!profile.cosmetics) profile.cosmetics = { unlockedTitles: [], equippedTitle: null };
+  if (!profile.cosmetics.unlockedTitles) profile.cosmetics.unlockedTitles = [];
+  if (!profile.cosmetics.unlockedTitles.includes(titleId)) {
+    profile.cosmetics.unlockedTitles.push(titleId);
+    return MAGE_TITLE_BY_ID[titleId];
   }
   return null;
 }

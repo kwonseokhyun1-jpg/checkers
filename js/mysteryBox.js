@@ -1,16 +1,25 @@
 import { drawChestCard, grantChestCard } from "./chests.js";
 import { drawCosmeticItem } from "./cosmetics.js";
 import { isCosmeticsUnlocked } from "./adventure.js";
+import {
+  ownsTitle,
+  TITLE_BOX_TITLES,
+  unlockTitleFromBox,
+} from "./mageTitles.js";
 import { saveProfile } from "./storage.js";
 
 export const MYSTERY_BOX_COST = 10;
-export const BIG_MYSTERY_BOX_COST = 20;
+export const TITLE_BOX_COST = 10;
 
-/** Small Mystery Box (10★): chance each open grants cosmetics instead of spells. */
-export const SMALL_MYSTERY_BOX_COSMETIC_CHANCE = 0.5;
+/** Mystery Box: each of the 6 pulls is cosmetics vs spells (when cosmetics unlocked). */
+export const MYSTERY_BOX_PULL_COUNT = 6;
+export const MYSTERY_BOX_MIX_COSMETIC_CHANCE = 0.5;
 
 /** When a spell pull is a duplicate (3 copies owned), chance to refund stars instead of gems. */
 export const MYSTERY_BOX_DUPE_STAR_CHANCE = 0.1;
+
+/** Stars refunded when a Title Box pull is a duplicate. */
+export const TITLE_BOX_DUPE_STAR_REFUND = 3;
 
 const CARD_TIERS = [
   { id: "bronze", name: "Bronze Chest", cards: 3, weights: { common: 70, uncommon: 25, rare: 5, epic: 0 } },
@@ -36,37 +45,6 @@ function pickTier(tiers, { premium = false } = {}) {
   return tiers[0];
 }
 
-function grantCardTier(profile, tier, { starRefundChance = 0 } = {}) {
-  const pulls = [];
-  let bonusGems = 0;
-  let bonusStars = 0;
-  for (let i = 0; i < tier.cards; i++) {
-    const card = drawChestCard(profile, tier);
-    const pull = grantChestCard(profile, card, { starRefundChance });
-    pulls.push(pull);
-    if (pull.gemRefund) bonusGems += pull.gemRefund;
-    if (pull.starRefund) bonusStars += pull.starRefund;
-  }
-  if (bonusGems) profile.gems = (profile.gems || 0) + bonusGems;
-  if (bonusStars) profile.stars = (profile.stars ?? 0) + bonusStars;
-  return { pulls, bonusGems, bonusStars };
-}
-
-function grantCosmeticTier(profile, tier) {
-  profile.cosmetics = profile.cosmetics || {};
-  const pulls = [];
-  let bonusGems = 0;
-  for (let i = 0; i < tier.pulls; i++) {
-    const item = drawCosmeticItem(profile, tier.weights);
-    if (item) {
-      pulls.push(item);
-      if (item.duplicate) bonusGems += item.gemRefund || 5;
-    }
-  }
-  if (bonusGems) profile.gems = (profile.gems || 0) + bonusGems;
-  return { pulls, bonusGems };
-}
-
 export function openMysteryBox(profile) {
   if ((profile.stars ?? 0) < MYSTERY_BOX_COST) {
     return { success: false, message: "Not enough stars." };
@@ -74,62 +52,79 @@ export function openMysteryBox(profile) {
   profile.stars = (profile.stars ?? 0) - MYSTERY_BOX_COST;
 
   const cosmeticsAllowed = isCosmeticsUnlocked(profile);
-  const isCosmetic = cosmeticsAllowed && Math.random() < SMALL_MYSTERY_BOX_COSMETIC_CHANCE;
-  if (!isCosmetic) {
-    const tier = pickTier(CARD_TIERS);
-    const { pulls, bonusGems, bonusStars } = grantCardTier(profile, tier, {
-      starRefundChance: MYSTERY_BOX_DUPE_STAR_CHANCE,
-    });
-    saveProfile(profile);
-    return {
-      success: true,
-      kind: "card",
-      tier,
-      pulls,
-      bonusGems,
-      bonusStars,
-      message: `Cards from ${tier.name}`,
-    };
+  const cardPulls = [];
+  const cosPulls = [];
+  let bonusGems = 0;
+  let bonusStars = 0;
+
+  for (let i = 0; i < MYSTERY_BOX_PULL_COUNT; i++) {
+    const isCosmetic = cosmeticsAllowed && Math.random() < MYSTERY_BOX_MIX_COSMETIC_CHANCE;
+    if (isCosmetic) {
+      const tier = pickTier(COS_TIERS);
+      const item = drawCosmeticItem(profile, tier.weights);
+      if (item) {
+        cosPulls.push(item);
+        if (item.duplicate) bonusGems += item.gemRefund || 5;
+      }
+    } else {
+      const tier = pickTier(CARD_TIERS);
+      const card = drawChestCard(profile, tier);
+      const pull = grantChestCard(profile, card, {
+        starRefundChance: MYSTERY_BOX_DUPE_STAR_CHANCE,
+      });
+      cardPulls.push(pull);
+      if (pull.gemRefund) bonusGems += pull.gemRefund;
+      if (pull.starRefund) bonusStars += pull.starRefund;
+    }
   }
 
-  const tier = pickTier(COS_TIERS);
-  const { pulls, bonusGems } = grantCosmeticTier(profile, tier);
+  if (bonusGems) profile.gems = (profile.gems || 0) + bonusGems;
+  if (bonusStars) profile.stars = (profile.stars ?? 0) + bonusStars;
   saveProfile(profile);
-  return { success: true, kind: "cosmetic", tier, pulls, bonusGems, message: `Cosmetics from ${tier.name}` };
-}
 
-export function openBigMysteryBox(profile) {
-  if ((profile.stars ?? 0) < BIG_MYSTERY_BOX_COST) {
-    return { success: false, message: "Not enough stars." };
-  }
-  profile.stars = (profile.stars ?? 0) - BIG_MYSTERY_BOX_COST;
-
-  const cardTier = pickTier(CARD_TIERS, { premium: true });
-  const { pulls: cardPulls, bonusGems: cardBonusGems, bonusStars } = grantCardTier(profile, cardTier, {
-    starRefundChance: MYSTERY_BOX_DUPE_STAR_CHANCE,
-  });
-  let cosPulls = [];
-  let bonusGems = cardBonusGems;
-  let cosTier = null;
-  if (isCosmeticsUnlocked(profile)) {
-    cosTier = pickTier(COS_TIERS, { premium: true });
-    const cosResult = grantCosmeticTier(profile, cosTier);
-    cosPulls = cosResult.pulls;
-    bonusGems += cosResult.bonusGems;
-  }
-  saveProfile(profile);
+  const kind =
+    cardPulls.length && cosPulls.length ? "mixed" : cardPulls.length ? "card" : "cosmetic";
 
   return {
     success: true,
-    kind: cosPulls.length ? "both" : "card",
-    cardTier,
+    kind,
     cardPulls,
-    cosTier,
     cosPulls,
     bonusGems,
     bonusStars,
-    message: cosPulls.length
-      ? `Big haul: ${cardPulls.length} spells + ${cosPulls.length} cosmetics`
-      : `Cards from ${cardTier.name}`,
+    message: `Got ${cardPulls.length} spells and ${cosPulls.length} cosmetics`,
+  };
+}
+
+export function openTitleBox(profile) {
+  if ((profile.stars ?? 0) < TITLE_BOX_COST) {
+    return { success: false, message: "Not enough stars." };
+  }
+  profile.stars = (profile.stars ?? 0) - TITLE_BOX_COST;
+
+  const unowned = TITLE_BOX_TITLES.filter((t) => !ownsTitle(profile, t.id));
+  let pull;
+  let bonusStars = 0;
+
+  if (unowned.length) {
+    const title = unowned[Math.floor(Math.random() * unowned.length)];
+    unlockTitleFromBox(profile, title.id);
+    pull = { ...title, duplicate: false };
+  } else {
+    const title = TITLE_BOX_TITLES[Math.floor(Math.random() * TITLE_BOX_TITLES.length)];
+    bonusStars = TITLE_BOX_DUPE_STAR_REFUND;
+    profile.stars = (profile.stars ?? 0) + bonusStars;
+    pull = { ...title, duplicate: true, starRefund: bonusStars };
+  }
+
+  saveProfile(profile);
+  return {
+    success: true,
+    kind: "title",
+    pulls: [pull],
+    bonusStars,
+    message: pull.duplicate
+      ? `Duplicate ${pull.name} — +${bonusStars} ★ refunded`
+      : `Unlocked title: ${pull.name}`,
   };
 }
