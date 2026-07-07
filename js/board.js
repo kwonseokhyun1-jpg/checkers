@@ -141,9 +141,8 @@ export function createPiece(color, row, col, king = false) {
   };
 }
 
-/** King + Awoken Bear mark — extra move after each move with this piece (Hibernation wake / Fusion). */
+/** Awoken Bear mark — extra move after each move with this piece (Hibernation wake / Fusion). */
 export function grantAwokenBear(piece) {
-  piece.king = true;
   piece.bearAwakened = true;
   piece.superMan = 0;
   piece.hibernationTurns = 0;
