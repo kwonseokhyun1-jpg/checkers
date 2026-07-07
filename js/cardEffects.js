@@ -479,6 +479,80 @@ function hostileSwapSensitiveRowForEnemy(enemyColor, row) {
   return row === ownBackRank(enemyColor) || row === promoRow;
 }
 
+/** True when the opponent can jump-capture the piece on (row, col) on their next turn. */
+function opponentCanCaptureAt(state, victimColor, row, col) {
+  const attacker = opponentColor(victimColor);
+  return getAllMovesForColor(state.board, attacker, state).some((m) =>
+    m.captures?.some(([cr, cc]) => cr === row && cc === col)
+  );
+}
+
+/** True when moving a friendly piece to (r2, c2) enables a capture on the move phase. */
+function displacementWouldCaptureAfter(state, color, [r1, c1], [r2, c2], getDestinations) {
+  const p = at(state, r1, c1);
+  if (!p || p.color !== color) return false;
+  if (!getDestinations(state, r1, c1, p).some(([r, c]) => r === r2 && c === c2)) return false;
+  if (!emptyDark(state, r2, c2)) return false;
+  const board = cloneBoardCells(state.board);
+  const piece = board[r1][c1];
+  board[r1][c1] = null;
+  board[r2][c2] = piece;
+  piece.row = r2;
+  piece.col = c2;
+  tryPromoteOnFarRow(piece, r2);
+  return getAllMovesForColor(board, color, state).some(
+    (m) => m.from[0] === r2 && m.from[1] === c2 && m.captures?.length
+  );
+}
+
+/** True when moving a threatened friendly piece to (r2, c2) reaches safety. */
+function displacementWouldEscape(state, color, [r1, c1], [r2, c2], getDestinations) {
+  if (!opponentCanCaptureAt(state, color, r1, c1)) return false;
+  const p = at(state, r1, c1);
+  if (!p || p.color !== color) return false;
+  if (!getDestinations(state, r1, c1, p).some(([r, c]) => r === r2 && c === c2)) return false;
+  if (!emptyDark(state, r2, c2)) return false;
+  const board = cloneBoardCells(state.board);
+  const piece = board[r1][c1];
+  board[r1][c1] = null;
+  board[r2][c2] = piece;
+  piece.row = r2;
+  piece.col = c2;
+  tryPromoteOnFarRow(piece, r2);
+  return !opponentCanCaptureAt({ ...state, board }, color, r2, c2);
+}
+
+function getBlinkDestinations(state, _r1, _c1, piece) {
+  return getTeleportTargets(state.board, piece).filter(([r, c]) => emptyDark(state, r, c));
+}
+
+function getSidestepDestinations(state, r1, c1) {
+  return [
+    [r1, c1 - 2],
+    [r1, c1 + 2],
+  ].filter(([r, c]) => emptyDark(state, r, c));
+}
+
+/** True when blink lands the friendly piece where it can capture on the move phase. */
+function blinkWouldCaptureAfter(state, color, from, to) {
+  return displacementWouldCaptureAfter(state, color, from, to, getBlinkDestinations);
+}
+
+/** True when blink moves a threatened piece to safety (second priority after capture). */
+function blinkWouldEscape(state, color, from, to) {
+  return displacementWouldEscape(state, color, from, to, getBlinkDestinations);
+}
+
+/** True when sidestep lands the friendly piece where it can capture on the move phase. */
+function sidestepWouldCaptureAfter(state, color, from, to) {
+  return displacementWouldCaptureAfter(state, color, from, to, (s, r1, c1) => getSidestepDestinations(s, r1, c1));
+}
+
+/** True when sidestep moves a threatened piece to safety (second priority after capture). */
+function sidestepWouldEscape(state, color, from, to) {
+  return displacementWouldEscape(state, color, from, to, (s, r1, c1) => getSidestepDestinations(s, r1, c1));
+}
+
 /** True when backstep lands the friendly piece where it can capture next. */
 function backstepWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
   const p = at(state, r1, c1);
@@ -1198,6 +1272,30 @@ function* pickSequences(state, color, card, max = 24) {
         if (++n >= max) return;
       }
       for (const seq of otherSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      return;
+    }
+    if (card.effect === "blink_2" || card.effect === "teleport" || card.effect === "sidestep") {
+      const wouldCapture =
+        card.effect === "sidestep" ? sidestepWouldCaptureAfter : blinkWouldCaptureAfter;
+      const wouldEscape = card.effect === "sidestep" ? sidestepWouldEscape : blinkWouldEscape;
+      const captureSeqs = [];
+      const escapeSeqs = [];
+      for (const a of t0) {
+        const t1 = getValidTargets(state, color, card, [a]);
+        for (const b of t1) {
+          const seq = [a, b];
+          if (wouldCapture(state, color, a, b)) captureSeqs.push(seq);
+          else if (wouldEscape(state, color, a, b)) escapeSeqs.push(seq);
+        }
+      }
+      for (const seq of captureSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      for (const seq of escapeSeqs) {
         yield seq;
         if (++n >= max) return;
       }
