@@ -8784,6 +8784,14 @@ body.tutorial-match-active.card-preview-open .tutorial-match-card {
   border-color: rgba(255, 255, 255, 0.25);
   animation: mage-title-shimmer 3s ease-in-out infinite;
 }
+.mage-title-tag.mage-title--color-crimson {
+  color: #dc3246;
+  border-color: rgba(220, 50, 70, 0.45);
+}
+.mage-title-tag.mage-title--color-dark-purple {
+  color: #5a2d8a;
+  border-color: rgba(90, 45, 138, 0.45);
+}
 @keyframes mage-title-shimmer {
   0%, 100% { filter: brightness(1); }
   50% { filter: brightness(1.25); }

@@ -4,7 +4,7 @@
 
 export const TITLE_RARITIES = ["common", "uncommon", "rare", "epic", "legendary", "mythic"];
 
-/** @type {{ id: string, name: string, display: string, rarity: string, glow: string, achievementId?: string, boxExclusive?: boolean }[]} */
+/** @type {{ id: string, name: string, display: string, rarity: string, glow: string, color?: string, achievementId?: string, boxExclusive?: boolean }[]} */
 export const MAGE_TITLES = [
   {
     id: "title_stormborn",
@@ -140,6 +140,7 @@ export const MAGE_TITLES = [
     display: "Dark Mage",
     rarity: "epic",
     glow: "violet",
+    color: "dark-purple",
     boxExclusive: true,
   },
   {
@@ -148,6 +149,7 @@ export const MAGE_TITLES = [
     display: "Bloodthirsty",
     rarity: "epic",
     glow: "crimson",
+    color: "crimson",
     boxExclusive: true,
   },
   {
@@ -191,6 +193,23 @@ export const TITLE_RARITY_CLASS = {
   legendary: "mage-title--legendary",
   mythic: "mage-title--mythic",
 };
+
+export const TITLE_COLOR_CLASS = {
+  crimson: "mage-title--color-crimson",
+  "dark-purple": "mage-title--color-dark-purple",
+};
+
+export function titleTagClasses(title, { compact = false } = {}) {
+  return [
+    "mage-title-tag",
+    TITLE_RARITY_CLASS[title.rarity] || "",
+    TITLE_COLOR_CLASS[title.color] || "",
+    `mage-title-tag--glow-${title.glow}`,
+    compact ? "mage-title-tag--compact" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
 
 export function getUnlockedTitles(profile) {
   return profile?.cosmetics?.unlockedTitles || [];
@@ -240,15 +259,7 @@ export function unlockTitleFromBox(profile, titleId) {
 export function titleTagHtml(titleId, { compact = false } = {}) {
   const title = MAGE_TITLE_BY_ID[titleId];
   if (!title) return "";
-  const cls = [
-    "mage-title-tag",
-    TITLE_RARITY_CLASS[title.rarity] || "",
-    `mage-title-tag--glow-${title.glow}`,
-    compact ? "mage-title-tag--compact" : "",
-  ]
-    .filter(Boolean)
-    .join(" ");
-  return `<span class="${cls}" title="${title.name} Mage Title">[${title.display}]</span>`;
+  return `<span class="${titleTagClasses(title, { compact })}" title="${title.name} Mage Title">[${title.display}]</span>`;
 }
 
 export function equippedTitleTagHtml(profile, opts) {
