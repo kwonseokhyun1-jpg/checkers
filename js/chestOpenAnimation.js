@@ -118,6 +118,15 @@ export function playChestOpenAnimation({ tier, tierLabel, pulls }) {
           onClick: () => showCardPreview(def),
         });
         card.style.animationDelay = `${i * 0.14}s`;
+        if (def.duplicate) {
+          card.classList.add("spell-card--duplicate-pull");
+          const badge = document.createElement("span");
+          badge.className = "chest-pull-dup-badge";
+          badge.textContent = def.starRefund
+            ? `Duplicate · +${def.starRefund} ★`
+            : `Duplicate · +${def.gemRefund} ◆`;
+          card.appendChild(badge);
+        }
         grid.appendChild(card);
         onCardRevealed(card, def.rarity);
       });

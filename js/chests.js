@@ -1,4 +1,5 @@
 import { getPlayableCards, maxCopiesForCard } from "./cardCatalog.js";
+import { RARITY_GEM_DUPE } from "./cosmetics.js";
 import { addToCollection, collectionCount, saveProfile } from "./storage.js";
 
 export const CHESTS = [
@@ -23,16 +24,29 @@ function drawCardOfRarity(rarity) {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export function drawChestCard(profile, chest) {
-  const room = (card) => (profile.collection[card.id] || 0) < maxCopiesForCard(card);
-  for (let attempt = 0; attempt < 48; attempt++) {
-    const rarity = pickRarity(chest.weights);
-    const card = drawCardOfRarity(rarity);
-    if (room(card)) return card;
+export function drawChestCard(_profile, chest) {
+  const rarity = pickRarity(chest.weights);
+  return drawCardOfRarity(rarity);
+}
+
+/**
+ * Grant a pulled card to the collection, or convert to gems/stars when already at max copies.
+ * @param {{ starRefundChance?: number }} [options] — mystery boxes pass 0.1 for a star refund roll.
+ */
+export function grantChestCard(profile, card, options = {}) {
+  const { starRefundChance = 0 } = options;
+  const owned = collectionCount(profile, card.id);
+  if (owned < maxCopiesForCard(card)) {
+    addToCollection(profile, card.id, 1);
+    return { ...card, duplicate: false };
   }
-  const pool = getPlayableCards().filter(room);
-  if (pool.length) return pool[Math.floor(Math.random() * pool.length)];
-  return drawCardOfRarity(pickRarity(chest.weights));
+
+  const gemRefund = RARITY_GEM_DUPE[card.rarity] || 5;
+  if (starRefundChance > 0 && Math.random() < starRefundChance) {
+    const starRefund = Math.random() < 0.5 ? 1 : 2;
+    return { ...card, duplicate: true, starRefund };
+  }
+  return { ...card, duplicate: true, gemRefund };
 }
 
 export function openChest(profile, chestId) {
@@ -42,11 +56,14 @@ export function openChest(profile, chestId) {
 
   profile.gems -= chest.cost;
   const pulls = [];
+  let bonusGems = 0;
   for (let i = 0; i < chest.cards; i++) {
     const card = drawChestCard(profile, chest);
-    pulls.push(card);
-    addToCollection(profile, card.id, 1);
+    const pull = grantChestCard(profile, card);
+    pulls.push(pull);
+    if (pull.gemRefund) bonusGems += pull.gemRefund;
   }
+  if (bonusGems) profile.gems += bonusGems;
   saveProfile(profile);
-  return { success: true, pulls, chest };
+  return { success: true, pulls, chest, bonusGems };
 }
