@@ -1,4 +1,4 @@
-import { COSMETIC_BOXES, COSMETIC_BY_ID, COSMETIC_ITEMS, COSMETIC_TYPES, DEFAULT_COSMETIC_EXCLUDE_OPTIONS, STARTER_COSMETIC_IDS, equipCosmetic, getEquippedCosmetics, openCosmeticBox } from "./cosmetics.js";
+import { COSMETIC_BOXES, COSMETIC_BY_ID, COSMETIC_TYPES, equipCosmetic, getEquippedCosmetics, openCosmeticBox } from "./cosmetics.js";
 import { formatRarityOdds } from "./chestOdds.js";
 import { COSMETICS_UNLOCK_MESSAGE } from "./adventure.js";
 import { notifyUnlockTutorial } from "./tutorialUnlocks.js";
@@ -84,34 +84,6 @@ const RARITY_CLASS = {
   epic: "rarity-epic",
   legendary: "rarity-legendary",
 };
-
-const COSMETIC_RARITY_ORDER = { common: 0, uncommon: 1, rare: 2, epic: 3, legendary: 4 };
-
-const EXCLUDE_OPTION_LABELS = {
-  others: "Exclude others",
-  unowned: "Exclude unowned",
-  owned: "Exclude owned",
-  starters: "Exclude starters",
-};
-
-function filterCosmeticCatalog({ type, excludeOptions, profile }) {
-  const ownedByType = profile.cosmetics?.owned || {};
-  return COSMETIC_ITEMS.filter((item) => {
-    if (excludeOptions.others && item.type !== type) return false;
-    const owned = ownedByType[item.type]?.includes(item.id) ?? false;
-    if (excludeOptions.unowned && !owned) return false;
-    if (excludeOptions.owned && owned) return false;
-    if (excludeOptions.starters && STARTER_COSMETIC_IDS.has(item.id)) return false;
-    return true;
-  }).sort((a, b) => {
-    const ownedA = ownedByType[a.type]?.includes(a.id) ? 0 : 1;
-    const ownedB = ownedByType[b.type]?.includes(b.id) ? 0 : 1;
-    if (ownedA !== ownedB) return ownedA - ownedB;
-    const rarityDiff = (COSMETIC_RARITY_ORDER[a.rarity] ?? 9) - (COSMETIC_RARITY_ORDER[b.rarity] ?? 9);
-    if (rarityDiff) return rarityDiff;
-    return a.name.localeCompare(b.name);
-  });
-}
 
 function filterTabLabel(type) {
   if (type === "pieceSkin") return "Piece skins";
@@ -463,33 +435,10 @@ export function renderProfileTab(profile, root, { onGemsChange, onTitleChanged }
         <button type="button" class="profile-section-tab" role="tab" data-profile-section="titles">Titles</button>
       </div>
       <div id="profile-section-cosmetics" class="profile-section-panel">
-        <div class="profile-cosmetic-toolbar">
-          <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
-            ${COSMETIC_TYPES.map(
-              (t) => `<button type="button" class="profile-filter-btn" role="tab" data-cos-filter="${t}">${filterTabLabel(t)}</button>`
-            ).join("")}
-          </div>
-          <div class="profile-exclude-menu">
-            <button
-              type="button"
-              class="profile-exclude-menu__btn"
-              id="profile-exclude-menu-btn"
-              aria-haspopup="menu"
-              aria-expanded="false"
-              aria-controls="profile-exclude-menu-panel"
-            >Exclude options</button>
-            <div id="profile-exclude-menu-panel" class="profile-exclude-menu__panel hidden" role="menu" hidden>
-              ${Object.entries(EXCLUDE_OPTION_LABELS)
-                .map(
-                  ([key, label]) => `
-                <label class="profile-exclude-menu__option" role="menuitemcheckbox">
-                  <input type="checkbox" data-exclude-option="${key}" ${DEFAULT_COSMETIC_EXCLUDE_OPTIONS[key] ? "checked" : ""} />
-                  <span>${label}</span>
-                </label>`
-                )
-                .join("")}
-            </div>
-          </div>
+        <div class="profile-cosmetic-filters" role="tablist" aria-label="Cosmetic category">
+          ${COSMETIC_TYPES.map(
+            (t) => `<button type="button" class="profile-filter-btn" role="tab" data-cos-filter="${t}">${filterTabLabel(t)}</button>`
+          ).join("")}
         </div>
         <div id="profile-cosmetic-grid" class="profile-cosmetic-grid"></div>
       </div>
@@ -503,35 +452,6 @@ export function renderProfileTab(profile, root, { onGemsChange, onTitleChanged }
   const grid = root.querySelector("#profile-cosmetic-grid");
   let filter = "avatar";
   let savedUsername = "";
-  const excludeOptions = { ...DEFAULT_COSMETIC_EXCLUDE_OPTIONS };
-  const excludeMenuBtn = root.querySelector("#profile-exclude-menu-btn");
-  const excludeMenuPanel = root.querySelector("#profile-exclude-menu-panel");
-
-  const setExcludeMenuOpen = (open) => {
-    if (!excludeMenuBtn || !excludeMenuPanel) return;
-    excludeMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
-    excludeMenuPanel.classList.toggle("hidden", !open);
-    excludeMenuPanel.hidden = !open;
-  };
-
-  const closeExcludeMenu = () => setExcludeMenuOpen(false);
-
-  excludeMenuBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    setExcludeMenuOpen(excludeMenuPanel?.hidden ?? true);
-  });
-
-  excludeMenuPanel?.querySelectorAll("[data-exclude-option]").forEach((input) => {
-    input.addEventListener("change", () => {
-      const key = input.dataset.excludeOption;
-      if (!key || !(key in excludeOptions)) return;
-      excludeOptions[key] = input.checked;
-      renderGrid();
-    });
-  });
-
-  root.addEventListener("click", closeExcludeMenu);
-  excludeMenuPanel?.addEventListener("click", (e) => e.stopPropagation());
 
   const refreshShowcase = () => {
     const c = getEquippedCosmetics(profile);
@@ -566,44 +486,35 @@ export function renderProfileTab(profile, root, { onGemsChange, onTitleChanged }
   };
 
   const renderGrid = () => {
-    const items = filterCosmeticCatalog({ type: filter, excludeOptions, profile });
+    const owned = profile.cosmetics?.owned?.[filter] || [];
     grid.innerHTML = "";
-    for (const item of items) {
-      const { id, type: itemType } = item;
-      const owned = profile.cosmetics?.owned?.[itemType]?.includes(id) ?? false;
-      const equipped = profile.cosmetics.equipped[itemType] === id;
+    for (const id of owned) {
+      const item = COSMETIC_BY_ID[id];
+      if (!item) continue;
+      const equipped = profile.cosmetics.equipped[filter] === id;
       const card = document.createElement("button");
       card.type = "button";
-      card.disabled = !owned;
-      card.className = [
-        "profile-cosmetic-card",
-        RARITY_CLASS[item.rarity] || "",
-        equipped ? "profile-cosmetic-card--equipped" : "",
-        owned ? "" : "profile-cosmetic-card--locked",
-      ]
-        .filter(Boolean)
-        .join(" ");
+      card.className = `profile-cosmetic-card ${RARITY_CLASS[item.rarity] || ""} ${equipped ? "profile-cosmetic-card--equipped" : ""}`;
       const preview = renderCosmeticPreviewHtml(id, item.type);
-      const actionLabel = equipped ? "Equipped" : owned ? "Equip" : "Locked";
       card.innerHTML = `
         <span class="profile-cosmetic-card__rarity">${item.rarity}</span>
         <div class="profile-cosmetic-card__art">${preview}</div>
         <strong class="profile-cosmetic-card__name">${item.name}</strong>
-        <span class="profile-cosmetic-card__action">${actionLabel}</span>`;
+        <span class="profile-cosmetic-card__action">${equipped ? "Equipped" : "Equip"}</span>`;
       card.addEventListener("click", () => {
-        if (!owned || equipped) return;
-        const res = equipCosmetic(profile, itemType, id);
+        if (equipped) return;
+        const res = equipCosmetic(profile, filter, id);
         if (res.success) {
           saveProfile(profile);
           renderGrid();
           refreshShowcase();
-          notifyUnlockTutorial("cosmetic-equipped", { type: itemType, id });
+          notifyUnlockTutorial("cosmetic-equipped", { type: filter, id });
         }
       });
       grid.appendChild(card);
     }
-    if (!items.length) {
-      grid.innerHTML = '<p class="muted">No cosmetics match these filters. Try changing Exclude options.</p>';
+    if (!owned.length) {
+      grid.innerHTML = '<p class="muted">Open cosmetic boxes in the Shop to unlock items.</p>';
     }
   };
 

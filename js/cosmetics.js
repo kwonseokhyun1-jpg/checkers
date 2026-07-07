@@ -67,14 +67,6 @@ export const COSMETIC_ITEMS = [
   { id: "skin_bronze", type: "pieceSkin", name: "Bronze Disc", rarity: "uncommon", desc: "Polished bronze pieces." },
 ];
 
-/** Default profile catalog exclude toggles. */
-export const DEFAULT_COSMETIC_EXCLUDE_OPTIONS = {
-  others: true,
-  unowned: false,
-  owned: false,
-  starters: false,
-};
-
 export const COSMETIC_BY_ID = Object.fromEntries(COSMETIC_ITEMS.map((c) => [c.id, c]));
 
 export const COSMETIC_BOXES = [
