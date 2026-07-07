@@ -516,6 +516,89 @@ function hostileSwapWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
   );
 }
 
+function isAdjacentSquare(r1, c1, r2, c2) {
+  return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1 && (r1 !== r2 || c1 !== c2);
+}
+
+function cloneBoardCells(board) {
+  return board.map((row) => row.map((cell) => (cell ? { ...cell } : null)));
+}
+
+function applyApproachMove(board, move) {
+  const piece = board[move.from[0]][move.from[1]];
+  board[move.from[0]][move.from[1]] = null;
+  board[move.to[0]][move.to[1]] = piece;
+  piece.row = move.to[0];
+  piece.col = move.to[1];
+  tryPromoteOnFarRow(piece, move.to[0]);
+}
+
+/** True when freezing this enemy enables approach this turn and a jump capture next turn. */
+function snowballWouldSetupCapture(state, color, enemyR, enemyC) {
+  const enemy = at(state, enemyR, enemyC);
+  if (!enemy || enemy.color === color) return false;
+  if (enemyCapturableThisTurn(state, color, enemyR, enemyC)) return false;
+  if ((enemy.frozenTurns || 0) > 0 || (enemy.paralyzedTurns || 0) > 0) return false;
+
+  const board = cloneBoardCells(state.board);
+  const frozen = board[enemyR][enemyC];
+  frozen.frozenTurns = Math.max(frozen.frozenTurns || 0, 1);
+
+  for (const move of getAllMovesForColor(board, color, state)) {
+    const [tr, tc] = move.to;
+    if (!isAdjacentSquare(tr, tc, enemyR, enemyC)) continue;
+    const afterBoard = cloneBoardCells(board);
+    applyApproachMove(afterBoard, move);
+    if (
+      getAllMovesForColor(afterBoard, color, state).some(
+        (m) => m.from[0] === tr && m.from[1] === tc && jumpCapturesSquare(m, enemyR, enemyC)
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** True when this turn has a move that ends adjacent to the frozen target. */
+function snowballCanApproachAdjacent(state, color, enemyR, enemyC) {
+  return getAllMovesForColor(state.board, color, state).some((m) =>
+    isAdjacentSquare(m.to[0], m.to[1], enemyR, enemyC)
+  );
+}
+
+/** Score a Snowball target — higher values mirror the tutorial freeze → approach → capture line. */
+function scoreSnowballTarget(state, color, enemyR, enemyC) {
+  const enemy = at(state, enemyR, enemyC);
+  if (!enemy || enemy.color === color) return 0;
+  if (enemyCapturableThisTurn(state, color, enemyR, enemyC)) return 0;
+  if ((enemy.frozenTurns || 0) > 0 || (enemy.paralyzedTurns || 0) > 0) return 0;
+  if (enemy.isClone) return 45;
+
+  let score = 5;
+  const opponent = opponentColor(color);
+  const frontRow = frontRowRank(state, opponent);
+  if (frontRow != null && enemyR === frontRow) score += 8;
+  if (enemy.king) score += 12;
+
+  if (snowballWouldSetupCapture(state, color, enemyR, enemyC)) {
+    score += 100;
+    if (enemy.king) score += 25;
+    return score;
+  }
+  if (snowballCanApproachAdjacent(state, color, enemyR, enemyC)) score += 25;
+  return score;
+}
+
+/** Best Snowball setup value for AI spell selection. */
+export function bestSnowballSetupScore(state, color) {
+  let best = 0;
+  for (const [r, c] of getAiPickTargets(state, color, { effect: "snowball", mode: "any_piece" })) {
+    best = Math.max(best, scoreSnowballTarget(state, color, r, c));
+  }
+  return best;
+}
+
 function createFoeSpawnColor(color) {
   return color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
 }
@@ -885,6 +968,13 @@ function getAiPickTargets(state, color, card) {
   if (card.effect === "barrier") {
     return prioritizeBarrierTargets(state, color, targets);
   }
+  if (card.effect === "snowball") {
+    return targets.filter(([r, c]) => {
+      const p = at(state, r, c);
+      if (!p || (p.frozenTurns || 0) > 0 || (p.paralyzedTurns || 0) > 0) return false;
+      return !enemyCapturableThisTurn(state, color, r, c);
+    });
+  }
   if (AI_SKIP_SPELL_ON_CAPTURABLE.has(card.effect)) {
     return targets.filter(([r, c]) => !enemyCapturableThisTurn(state, color, r, c));
   }
@@ -1081,7 +1171,16 @@ function* pickSequences(state, color, card, max = 24) {
     return;
   }
   if (card.mode === "any_piece" && card.effect === "snowball") {
-    for (const p of t0.slice(0, max)) yield [p];
+    const scored = t0
+      .map((pos) => ({ pos, score: scoreSnowballTarget(state, color, pos[0], pos[1]) }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score || a.pos[0] - b.pos[0] || a.pos[1] - b.pos[1]);
+    let n = 0;
+    for (const { pos } of scored) {
+      yield [pos];
+      if (++n >= max) return;
+    }
+    return;
   }
 }
 
