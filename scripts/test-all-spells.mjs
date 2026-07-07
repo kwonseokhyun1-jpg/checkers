@@ -380,7 +380,7 @@ for (const card of cards) {
   if (!res.success) throw new Error("Fusion manual test failed: " + res.message);
   const survivor = at(s, 5, 0);
   if (!survivor || !survivor.bearAwakened) throw new Error("Fusion should grant bearAwokened on survivor");
-  if (!survivor.king) throw new Error("Fusion should grant king like hibernation bear");
+  if (survivor.king) throw new Error("Fusion should not crown the survivor");
   if (survivor.superMan) throw new Error("Fusion should not use superMan leap");
   if (at(s, 4, 1)) throw new Error("Fusion should remove second piece");
   console.log("Fusion test: OK (bearAwakened, second piece removed)");

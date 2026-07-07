@@ -531,7 +531,7 @@ const EFFECTS = {
     state.meta.vengeance[color] = true;
     return ok("Vengeance armed — hidden.");
   },
-  hibernation(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(p.hibernationTurns>0) return fail("Already hibernating."); p.hibernationTurns=2; p.bearAwakened=false; return ok("Hibernation — wakes as a king in 2 turns."); },
+  hibernation(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); if(p.hibernationTurns>0) return fail("Already hibernating."); p.hibernationTurns=2; p.bearAwakened=false; return ok("Hibernation — awakens with the Awoken Bear mark in 2 turns."); },
   barrier(state, color, picks) { const [r,c]=p0(picks); if(!darkSquare(state,r,c)) return fail(); const sq=getSq(state,r,c); sq.barrier={owner:color,turnsLeft:2}; return ok(); },
   iron_will(state, color, picks) {
     const [r, c] = p0(picks);
@@ -646,7 +646,7 @@ const EFFECTS = {
     if (Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col)) !== 1) return fail("Pick adjacent pieces");
     removePiece(state.board, b.row, b.col);
     grantAwokenBear(a);
-    return ok("Fusion — Awoken Bear king! Move again after each move with this piece.");
+    return ok("Fusion — Awoken Bear! Move again after each move with this piece.");
   },
   chameleon(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=2; return ok(); },
   wraith_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.wraithTurns=2; return ok(); },
