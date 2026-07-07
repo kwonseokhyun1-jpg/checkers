@@ -274,6 +274,32 @@ function enemyCapturableThisTurn(state, color, row, col) {
   );
 }
 
+/** True when this friendly piece can jump-capture during the move phase this turn. */
+function friendlyCanCaptureThisTurn(state, color, row, col) {
+  return getAllMovesForColor(state.board, color, state).some(
+    (m) => m.from[0] === row && m.from[1] === col && (m.captures?.length ?? 0) > 0
+  );
+}
+
+/** True when the opponent can capture this friendly piece on their next turn. */
+function friendlyCapturableNextTurn(state, color, row, col) {
+  const opponent = opponentColor(color);
+  return getAllMovesForColor(state.board, opponent, state).some((m) =>
+    m.captures?.some(([cr, cc]) => cr === row && cc === col)
+  );
+}
+
+/** Stall/Fortify — only protect a threatened piece that cannot capture, or the last man standing. */
+function shouldAiFortifyPiece(state, color, row, col) {
+  const piece = at(state, row, col);
+  if (!piece || piece.color !== color || isFortified(piece)) return false;
+  if (countPieces(state.board, color) === 1) return true;
+  return (
+    friendlyCapturableNextTurn(state, color, row, col) &&
+    !friendlyCanCaptureThisTurn(state, color, row, col)
+  );
+}
+
 /** Attack spells the AI should not waste on enemies it can capture with a normal move. */
 const AI_SKIP_SPELL_ON_CAPTURABLE = new Set(["pyromancy", "snowball"]);
 
@@ -1019,6 +1045,9 @@ function getAiPickTargets(state, color, card) {
   }
   if (card.effect === "scatter") {
     return targets.filter(([r, c]) => scoreScatterTarget(state, color, r, c) > 0);
+  }
+  if (card.effect === "fortify") {
+    return targets.filter(([r, c]) => shouldAiFortifyPiece(state, color, r, c));
   }
   if (AI_SKIP_SPELL_ON_CAPTURABLE.has(card.effect)) {
     return targets.filter(([r, c]) => !enemyCapturableThisTurn(state, color, r, c));
