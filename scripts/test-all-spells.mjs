@@ -399,12 +399,12 @@ for (const card of cards) {
 // Vengeance trap
 {
   const s = baseState();
-  s.meta.vengeance[COLOR] = true;
+  s.meta.vengeance[COLOR] = 2;
   const trapped = tryConsumeVengeance(s, OPP, COLOR);
   if (!trapped || trapped.trapOwner !== COLOR) throw new Error("Vengeance should trigger when enemy captures your piece");
-  if (s.meta.vengeance[COLOR]) throw new Error("Vengeance trap should be consumed");
+  if (s.meta.vengeance[COLOR] > 0) throw new Error("Vengeance trap should be consumed");
   const s2 = baseState();
-  s2.meta.vengeance[COLOR] = true;
+  s2.meta.vengeance[COLOR] = 2;
   if (tryConsumeVengeance(s2, COLOR, COLOR)) throw new Error("Vengeance should not trigger on friendly capture");
   console.log("Vengeance test: OK");
 }

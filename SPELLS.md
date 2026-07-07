@@ -33,7 +33,7 @@
 - **Bribery** — Steal up to 15 gems from opponent.
 - **Conduct** — If you played a movement card this turn, your checker step may be 2 squares.
 - **Counterspell** — Hidden trap: cancel the next enemy spell when they cast it.
-- **Vengeance** — Hidden trap: the next enemy capture of your piece destroys the capturer; your piece survives 2 turns (blood counters), then dies.
+- **Vengeance** — Hidden trap: the next enemy capture of your piece destroys the capturer; your piece survives 2 turns (blood counters), then dies. Expires after 2 of your turn cycles if unused.
 - **Deep Freeze** — Enemy cannot move for 2 of its owner's turns.
 - **Dominion** — All your men may move backward for 2 turns.
 - **Duel** — Choose your piece and an adjacent enemy; both are destroyed unless shielded. If the enemy is frozen or paralyzed, your piece survives.
@@ -43,7 +43,7 @@
 - **Frost Bind** — Freeze an enemy piece — it cannot move on its owner's next turn.
 - **Gamble** — Pay 15 gems; draw 2 cards.
 - **Interest** — Gain gems equal to half your total (max 25).
-- **Last Stand** — If this piece would be captured, it survives with an ultra shield for 3 turns instead.
+- **Last Stand** — If this piece would be captured, it survives with an ultra shield for 3 turns instead. Expires after 1 of your turn cycles if unused.
 - **Leapfrog** — Jump your piece over a friendly piece to land on the empty square beyond.
 - **Long Step** — Move one of your pieces 2 squares diagonally if the path is clear (no capture).
 - **Displacement** — Teleport one of your pieces to any empty dark square on your side of the board.

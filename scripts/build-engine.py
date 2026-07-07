@@ -47,6 +47,7 @@ function destroyAt(state, r, c, byColor, effectName = "") {
   }
   if (p.lastStand) {
     p.lastStand = false;
+    p.lastStandTurns = 0;
     p.shieldTurns = 3;
     return false;
   }

@@ -1,5 +1,5 @@
 /** Checkers board logic with card-effect modifiers */
-import { getMineOwner, tickMineDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance, payBountyOnCapture, ensureConstitutionTurns, queueTrapHistoryReveal } from "./gameMeta.js";
+import { getMineOwner, tickMineDurability, tickVengeanceDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance, payBountyOnCapture, ensureConstitutionTurns, queueTrapHistoryReveal } from "./gameMeta.js";
 import { queueBoardFx } from "./boardFx.js";
 
 function sk(r, c) {
@@ -59,7 +59,11 @@ export function inBounds(row, col) {
 export const SIGIL_MOVES = 2;
 /** Shield turns granted when Last Stand triggers on capture. */
 export const LAST_STAND_SHIELD_TURNS = 3;
+/** Armed Last Stand trap duration (owner turn cycles before it expires). */
+export const LAST_STAND_TRAP_TURNS = 1;
 export const VENGEANCE_BLOOD_TURNS = 2;
+/** Armed Vengeance trap duration (owner turn cycles before it expires). */
+export const VENGEANCE_TRAP_TURNS = 2;
 export const PLAGUE_TURNS = 2;
 
 export function hasKnightSigil(piece) {
@@ -111,6 +115,7 @@ export function createPiece(color, row, col, king = false) {
     blazeBy: null,
     superMan: 0,
     lastStand: false,
+    lastStandTurns: 0,
     mirrorShield: false,
     ghostGuard: false,
     phalanxId: 0,
@@ -326,6 +331,7 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
   if (!linkFate && p.king && state && ensureConstitutionTurns(state.meta)[p.color] > 0 && nonCap) return false;
   if (!linkFate && p.lastStand) {
     p.lastStand = false;
+    p.lastStandTurns = 0;
     p.shieldTurns = Math.max(p.shieldTurns, LAST_STAND_SHIELD_TURNS);
     queueTrapHistoryReveal(state, { effect: "last_stand", color: p.color, picks: [[r, c]] });
     return false;
@@ -856,6 +862,13 @@ export function tickEffects(board, color, state = null) {
         p.bloodTurns--;
         if (p.bloodTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
       }
+      if (p.lastStand && p.lastStandTurns > 0) {
+        p.lastStandTurns--;
+        if (p.lastStandTurns <= 0) {
+          p.lastStand = false;
+          p.lastStandTurns = 0;
+        }
+      }
       if (p.plagueTurns > 0) {
         tickDeferredTurnDebuff(p, "plagueTurns", "plagueDeferBeginTick");
         if (p.plagueTurns <= 0) removePiece(board, r, c, { state, force: p.isClone });
@@ -874,6 +887,7 @@ export function tickEffects(board, color, state = null) {
   }
   if (state?.squares) {
     tickMineDurability(state, color);
+    tickVengeanceDurability(state, color);
     for (const k of Object.keys(state.squares)) {
       const sq = state.squares[k];
       if (sq.ghostBlock > 0) sq.ghostBlock--;
