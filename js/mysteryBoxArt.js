@@ -153,26 +153,45 @@ export function mysteryBoxSvgMarkup() {
   return mysteryBoxSvg("small");
 }
 
-/** Static thumbnail for Title Box vault card */
-export function titleBoxSvgMarkup() {
-  return titleBoxSvg();
+const TITLE_BOX_PALETTE = {
+  accent: "#fde68a",
+  glow: "rgba(251, 191, 36, 0.55)",
+  body: "#2a1a10",
+  bodyHi: "#4a3020",
+  lid: "#92400e",
+  trim: "#fef3c7",
+  gold: "#fbbf24",
+  scroll: "#fff7ed",
+};
+
+function escapeSvgText(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
-function titleBoxSvg() {
-  const palette = {
-    accent: "#fde68a",
-    glow: "rgba(251, 191, 36, 0.55)",
-    body: "#2a1a10",
-    bodyHi: "#4a3020",
-    lid: "#92400e",
-    trim: "#fef3c7",
-    gold: "#fbbf24",
-    scroll: "#fff7ed",
-  };
-  const id = "titleBox";
-  const { body, bodyHi, lid, trim, gold, scroll, glow } = palette;
+function titleScrollFontSize(display) {
+  const len = display.length;
+  if (len > 12) return 4.2;
+  if (len > 9) return 4.8;
+  if (len > 7) return 5.4;
+  return 6.2;
+}
 
-  return `<svg class="mystery-box-svg mystery-box-svg--title" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+function titleScrollContent(display, bodyHi) {
+  if (!display) {
+    return `<path d="M44 32 H76 M44 36 H72 M44 40 H68" stroke="${bodyHi}" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>`;
+  }
+  const text = escapeSvgText(display);
+  const fontSize = titleScrollFontSize(display);
+  return `<text x="60" y="41" text-anchor="middle" font-size="${fontSize}" font-weight="700" fill="${bodyHi}" font-family="serif">${text}</text>`;
+}
+
+function titleBoxDefs(id, palette) {
+  const { body, bodyHi, lid, trim, gold, glow } = palette;
+  return `
     <defs>
       <linearGradient id="${id}-body" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="${bodyHi}"/>
@@ -188,6 +207,11 @@ function titleBoxSvg() {
         <stop offset="0%" stop-color="${glow}"/>
         <stop offset="100%" stop-color="transparent"/>
       </radialGradient>
+      <radialGradient id="${id}-inner" cx="50%" cy="35%" r="70%">
+        <stop offset="0%" stop-color="${gold}" stop-opacity="0.95"/>
+        <stop offset="60%" stop-color="${trim}" stop-opacity="0.35"/>
+        <stop offset="100%" stop-color="#0a0610" stop-opacity="0"/>
+      </radialGradient>
       <linearGradient id="${id}-band" x1="0%" y1="0%" x2="0%" y2="100%">
         <stop offset="0%" stop-color="${gold}"/>
         <stop offset="100%" stop-color="${bodyHi}"/>
@@ -196,22 +220,68 @@ function titleBoxSvg() {
         <feGaussianBlur stdDeviation="2.5" result="b"/>
         <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
-    </defs>
-    <ellipse cx="60" cy="92" rx="40" ry="8" fill="rgba(0,0,0,0.45)"/>
-    <circle cx="60" cy="52" r="46" fill="url(#${id}-aura)" opacity="0.55"/>
-    <g class="mystery-box-svg__float">
+    </defs>`;
+}
+
+function titleBoxBodyGroup(id, palette, { forStage = false, titleDisplay = "" } = {}) {
+  const { bodyHi, trim, gold, scroll } = palette;
+  const interior = forStage
+    ? `<g class="chest-stage__interior">
+        <rect x="28" y="48" width="64" height="32" rx="3" fill="url(#${id}-inner)" opacity="0"/>
+        <circle cx="60" cy="58" r="14" fill="url(#${id}-inner)" opacity="0"/>
+      </g>`
+    : "";
+  const lidClass = forStage ? ` class="chest-stage__lid"` : "";
+  const bodyClass = forStage ? ` class="chest-stage__body"` : "";
+
+  return `
+    ${interior}
+    <g${bodyClass}>
       <rect x="26" y="48" width="68" height="38" rx="6" fill="url(#${id}-body)" stroke="${trim}" stroke-width="2"/>
       <rect x="30" y="58" width="60" height="4" rx="1" fill="url(#${id}-band)" opacity="0.9"/>
       <rect x="52" y="54" width="16" height="16" rx="3" fill="url(#${id}-band)" stroke="${trim}" stroke-width="1"/>
       <circle cx="60" cy="62" r="3.5" fill="#1a0f08" stroke="${gold}" stroke-width="1"/>
+    </g>
+    <g${lidClass}>
       <path d="M18 48 L60 24 L102 48 Z" fill="url(#${id}-lid)" stroke="${trim}" stroke-width="2" filter="url(#${id}-glow)"/>
       <rect x="22" y="44" width="76" height="5" rx="1" fill="url(#${id}-band)" opacity="0.75"/>
       <rect x="42" y="28" width="36" height="22" rx="2" fill="${scroll}" stroke="${gold}" stroke-width="1.5" filter="url(#${id}-glow)"/>
-      <path d="M44 32 H76 M44 36 H72 M44 40 H68" stroke="${bodyHi}" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+      ${titleScrollContent(titleDisplay, bodyHi)}
       <text x="60" y="24" text-anchor="middle" font-size="7" font-weight="700" fill="${gold}" font-family="serif">T</text>
       ${starSparkle(34, 30, 4, gold, 0.7)}
       ${starSparkle(86, 32, 3.5, trim, 0.55)}
       ${starSparkle(60, 14, 3, gold, 0.85)}
+    </g>`;
+}
+
+/** Animated title box for opening cinematic */
+export function titleBoxStageSvg(titleDisplay = "") {
+  const id = "titleBoxStage";
+  const palette = TITLE_BOX_PALETTE;
+
+  return `<svg class="chest-stage-svg mystery-box-svg mystery-box-svg--title" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${titleBoxDefs(id, palette)}
+    <ellipse class="chest-stage__shadow" cx="60" cy="92" rx="40" ry="8" fill="rgba(0,0,0,0.45)"/>
+    <circle cx="60" cy="52" r="46" fill="url(#${id}-aura)" opacity="0.55"/>
+    ${titleBoxBodyGroup(id, palette, { forStage: true, titleDisplay })}
+  </svg>`;
+}
+
+/** Static thumbnail for Title Box vault card */
+export function titleBoxSvgMarkup() {
+  return titleBoxSvg();
+}
+
+function titleBoxSvg() {
+  const id = "titleBox";
+  const palette = TITLE_BOX_PALETTE;
+
+  return `<svg class="mystery-box-svg mystery-box-svg--title" viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${titleBoxDefs(id, palette)}
+    <ellipse cx="60" cy="92" rx="40" ry="8" fill="rgba(0,0,0,0.45)"/>
+    <circle cx="60" cy="52" r="46" fill="url(#${id}-aura)" opacity="0.55"/>
+    <g class="mystery-box-svg__float">
+      ${titleBoxBodyGroup(id, palette)}
     </g>
   </svg>`;
 }

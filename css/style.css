@@ -5958,10 +5958,18 @@ html:has(body.cosmetic-open-active) {
 .title-reveal-card {
   display: flex;
   justify-content: center;
-  animation: chest-card-deal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  opacity: 0;
+  transform: translateY(24px) scale(0.92);
+  animation: title-reveal-deal 0.55s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
 }
 .title-reveal-card--deal {
-  opacity: 0;
+  animation-name: title-reveal-deal;
+}
+@keyframes title-reveal-deal {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 .title-reveal-card__frame {
   display: flex;

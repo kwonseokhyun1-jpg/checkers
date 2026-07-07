@@ -1,10 +1,26 @@
 /**
  * Fullscreen Title Box opening — reuses chest-open overlay beats.
  */
+import { titleBoxStageSvg } from "./mysteryBoxArt.js";
 import { TITLE_RARITY_CLASS } from "./mageTitles.js";
 import { lockBodyScroll, unlockBodyScroll } from "./scrollLock.js";
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function spawnParticles(container) {
+  const colors = ["#ffd87a", "#ff9de2", "#fff8e7", "#fbbf24"];
+  for (let i = 0; i < 26; i++) {
+    const p = document.createElement("span");
+    p.className = "chest-open-particle title-open-particle";
+    const angle = (i / 26) * Math.PI * 2 + Math.random() * 0.4;
+    const dist = 45 + Math.random() * 130;
+    p.style.setProperty("--px", `${Math.cos(angle) * dist}px`);
+    p.style.setProperty("--py", `${Math.sin(angle) * dist - 40}px`);
+    p.style.background = colors[i % colors.length];
+    p.style.animationDelay = `${Math.random() * 0.25}s`;
+    container.appendChild(p);
+  }
+}
 
 function renderTitleRevealEl(title) {
   const el = document.createElement("article");
@@ -40,6 +56,7 @@ function renderTitleRevealEl(title) {
  */
 export function playTitleOpenAnimation({ boxLabel, pulls }) {
   return new Promise((resolve) => {
+    const pulledTitle = pulls[0];
     const overlay = document.createElement("div");
     overlay.className = "chest-open-overlay title-open-overlay chest-open-overlay--gold";
     overlay.setAttribute("role", "dialog");
@@ -50,13 +67,19 @@ export function playTitleOpenAnimation({ boxLabel, pulls }) {
       <div class="chest-open-backdrop"></div>
       <div class="chest-open-scene">
         <p class="chest-open-label">${boxLabel}</p>
-        <div class="chest-open-glow title-open-glow chest-open-glow--on" aria-hidden="true"></div>
-        <p class="chest-open-status">Revealing title…</p>
-        <div class="chest-open-cards title-open-reveals">
+        <div class="chest-open-glow title-open-glow" aria-hidden="true"></div>
+        <div class="chest-open-stage-wrap">
+          <div class="chest-open-stage" data-phase="idle">
+            ${titleBoxStageSvg(pulledTitle?.display || pulledTitle?.name || "")}
+          </div>
+          <div class="chest-open-particles" aria-hidden="true"></div>
+        </div>
+        <p class="chest-open-status">Opening…</p>
+        <div class="chest-open-cards title-open-reveals" hidden>
           <p class="chest-open-cards__title">You got</p>
           <div class="chest-open-cards__grid title-open-reveals__grid"></div>
         </div>
-        <button type="button" class="btn-primary chest-open-collect">Done</button>
+        <button type="button" class="btn-primary chest-open-collect" disabled>Done</button>
       </div>
     `;
 
@@ -64,7 +87,11 @@ export function playTitleOpenAnimation({ boxLabel, pulls }) {
     document.body.classList.add("chest-open-active", "title-open-active");
     lockBodyScroll();
 
+    const stage = overlay.querySelector(".chest-open-stage");
     const status = overlay.querySelector(".chest-open-status");
+    const glow = overlay.querySelector(".chest-open-glow");
+    const particleHost = overlay.querySelector(".chest-open-particles");
+    const cardsWrap = overlay.querySelector(".chest-open-cards");
     const grid = overlay.querySelector(".chest-open-cards__grid");
     const collectBtn = overlay.querySelector(".chest-open-collect");
 
@@ -85,8 +112,23 @@ export function playTitleOpenAnimation({ boxLabel, pulls }) {
     });
 
     (async () => {
-      await delay(500);
+      await delay(350);
+      stage.dataset.phase = "rumble";
+      if (status) status.textContent = "Opening…";
+      await delay(900);
+
+      stage.dataset.phase = "open";
+      overlay.classList.add("chest-open-overlay--burst");
+      glow?.classList.add("chest-open-glow--on");
+      spawnParticles(particleHost);
+      if (status) status.textContent = pulledTitle ? `Unlocked ${pulledTitle.name}!` : "Opened!";
+      await delay(750);
+
       if (status) status.textContent = "";
+      cardsWrap.hidden = false;
+      cardsWrap.classList.add("chest-open-cards--in");
+      stage.classList.add("chest-open-stage--dim");
+
       pulls.forEach((title, i) => {
         const card = renderTitleRevealEl(title);
         card.classList.add("title-reveal-card--deal");
@@ -94,6 +136,7 @@ export function playTitleOpenAnimation({ boxLabel, pulls }) {
         grid.appendChild(card);
       });
       await delay(400 + pulls.length * 200);
+
       collectBtn.disabled = false;
       collectBtn.focus();
     })();
