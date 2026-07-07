@@ -3603,6 +3603,28 @@ html:has(body.cosmetic-open-active) {
   display: none;
 }
 
+.spell-card--duplicate-pull {
+  position: relative;
+}
+
+.chest-pull-dup-badge {
+  position: absolute;
+  left: 50%;
+  bottom: 0.35rem;
+  transform: translateX(-50%);
+  z-index: 3;
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  color: #f8e8b8;
+  background: rgba(12, 10, 24, 0.82);
+  border: 1px solid rgba(240, 208, 96, 0.45);
+  pointer-events: none;
+}
+
 /* Board coordinate labels (a–h, 1–8) */
 .board-frame {
   position: relative;

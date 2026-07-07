@@ -828,6 +828,13 @@ function bindMysteryBoxCard(article, openFn) {
   });
 }
 
+function formatPullRefund({ bonusGems = 0, bonusStars = 0 } = {}) {
+  const parts = [];
+  if (bonusGems) parts.push(`+${bonusGems} gem refund`);
+  if (bonusStars) parts.push(`+${bonusStars} ★ from duplicates`);
+  return parts.length ? ` (${parts.join(", ")})` : "";
+}
+
 async function playMysteryResult(res, log) {
   const { playChestOpenAnimation, playCosmeticOpenAnimation } = await loadAnimationsChunk();
   if (res.kind === "card") {
@@ -836,7 +843,9 @@ async function playMysteryResult(res, log) {
       tierLabel: `Small Mystery Box — ${res.tier.name}`,
       pulls: res.pulls,
     });
-    if (log) log.textContent = `Got ${res.pulls.length} spells from ${res.tier.name}.`;
+    if (log) {
+      log.textContent = `Got ${res.pulls.length} spells from ${res.tier.name}.${formatPullRefund(res)}`;
+    }
   } else if (res.kind === "cosmetic") {
     await playCosmeticOpenAnimation({
       boxId: res.tier?.id || "bronze",
@@ -844,7 +853,7 @@ async function playMysteryResult(res, log) {
       pulls: res.pulls,
     });
     if (log) {
-      log.textContent = res.message + (res.bonusGems ? ` (+${res.bonusGems} gem refund)` : "");
+      log.textContent = res.message + formatPullRefund(res);
     }
   } else if (res.kind === "both") {
     await playChestOpenAnimation({
@@ -858,8 +867,7 @@ async function playMysteryResult(res, log) {
       pulls: res.cosPulls,
     });
     if (log) {
-      const refund = res.bonusGems ? ` (+${res.bonusGems} gem refund)` : "";
-      log.textContent = `${res.message}${refund}`;
+      log.textContent = `${res.message}${formatPullRefund(res)}`;
     }
   }
 }
@@ -1037,7 +1045,8 @@ function renderChests(options = {}) {
       notifyMetaTutorial("chest-opened", { chestId: chest.id });
 
       if (log) {
-        log.textContent = `Got ${res.pulls.length} new cards from ${chest.name}.`;
+        const refund = res.bonusGems ? ` (+${res.bonusGems} gems from duplicates)` : "";
+        log.textContent = `Got ${res.pulls.length} spells from ${chest.name}.${refund}`;
         log.classList.remove("chest-log--error");
       }
 
@@ -1054,6 +1063,15 @@ function renderChests(options = {}) {
             onClick: () => showCardPreview(def),
           });
           pulled.style.animationDelay = `${i * 0.12}s`;
+          if (def.duplicate) {
+            pulled.classList.add("spell-card--duplicate-pull");
+            const badge = document.createElement("span");
+            badge.className = "chest-pull-dup-badge";
+            badge.textContent = def.starRefund
+              ? `Duplicate · +${def.starRefund} ★`
+              : `Duplicate · +${def.gemRefund} ◆`;
+            pulled.appendChild(badge);
+          }
           grid.appendChild(pulled);
           onCardRevealed(pulled, def.rarity);
         });
