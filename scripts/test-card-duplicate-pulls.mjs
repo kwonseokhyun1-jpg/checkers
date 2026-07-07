@@ -8,7 +8,6 @@ import { grantChestCard, openChest } from "../js/chests.js";
 import { RARITY_GEM_DUPE } from "../js/cosmetics.js";
 import {
   MYSTERY_BOX_DUPE_STAR_CHANCE,
-  openBigMysteryBox,
   openMysteryBox,
 } from "../js/mysteryBox.js";
 import { DEFAULT_COSMETICS } from "../js/cosmetics.js";
@@ -74,8 +73,8 @@ for (let i = 0; i < trials; i++) {
   profile.collection = { [sampleCard.id]: 3 };
   profile.gems = 0;
   const res = openMysteryBox(profile);
-  assert(res.success && res.kind === "card", "Expected spell mystery open");
-  for (const pull of res.pulls) {
+  assert(res.success && res.cardPulls.length > 0, "Expected spell mystery open");
+  for (const pull of res.cardPulls) {
     if (!pull.duplicate) continue;
     if (pull.starRefund) starRefunds += 1;
     if (pull.gemRefund) gemRefunds += 1;
@@ -84,13 +83,6 @@ for (let i = 0; i < trials; i++) {
 Math.random = originalRandom;
 
 assert(MYSTERY_BOX_DUPE_STAR_CHANCE === 0.1, "Expected 10% star refund chance constant");
-
-profile.stars = 1_000_000;
-profile.collection = { [sampleCard.id]: 3 };
-profile.gems = 0;
-const bigRes = openBigMysteryBox(profile);
-assert(bigRes.success, bigRes.message);
-assert(Array.isArray(bigRes.cardPulls) && bigRes.cardPulls.length > 0, "Big box should grant spell pulls");
 
 console.log("Card duplicate pulls OK");
 console.log(`Mystery duplicate refunds over ${trials} trials: ${starRefunds} star, ${gemRefunds} gem`);
