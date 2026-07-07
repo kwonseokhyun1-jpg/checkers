@@ -2,7 +2,7 @@
  * Fullscreen Title Box opening — reuses chest-open overlay beats.
  */
 import { titleBoxStageSvg } from "./mysteryBoxArt.js";
-import { TITLE_RARITY_CLASS } from "./mageTitles.js";
+import { TITLE_RARITY_CLASS, titleTagClasses } from "./mageTitles.js";
 import { lockBodyScroll, unlockBodyScroll } from "./scrollLock.js";
 
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -36,7 +36,7 @@ function renderTitleRevealEl(title) {
   el.innerHTML = `
     <div class="title-reveal-card__frame">
       <span class="title-reveal-card__rarity">${title.rarity}</span>
-      <span class="title-reveal-card__tag mage-title-tag mage-title-tag--glow-${title.glow} ${TITLE_RARITY_CLASS[title.rarity] || ""}">[${title.display}]</span>
+      <span class="title-reveal-card__tag ${titleTagClasses(title)}">[${title.display}]</span>
       <strong class="title-reveal-card__name">${title.name}</strong>
       <span class="title-reveal-card__type">Mage Title</span>
       ${
