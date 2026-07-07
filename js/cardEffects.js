@@ -599,6 +599,48 @@ export function bestSnowballSetupScore(state, color) {
   return best;
 }
 
+/** Score a Scatter square — higher when the push enables an immediate capture this turn. */
+function scoreScatterTarget(state, color, scatterR, scatterC) {
+  if (!emptyDark(state, scatterR, scatterC)) return 0;
+  if (getAllMovesForColor(state.board, color, state).some((m) => m.captures?.length)) return 0;
+
+  const sim = cloneForMoveSim(state);
+  const scatterCard = { effect: "scatter", mode: "empty" };
+  if (!applyCard(sim, color, scatterCard, [[scatterR, scatterC]]).success) return 0;
+
+  const captureMoves = getAllMovesForColor(sim.board, color, sim).filter((m) => m.captures?.length);
+  if (!captureMoves.length) return 0;
+
+  let score = 100;
+  let bestDepth = 0;
+  let kingBonus = 0;
+  for (const move of captureMoves) {
+    const simBoard = cloneBoardCells(sim.board);
+    const jumpState = { ...sim, board: simBoard };
+    applyMove(simBoard, move, jumpState);
+    const depth =
+      (move.captures?.length || 0) +
+      maxChainCapturesFromSquare(simBoard, color, jumpState, move.to[0], move.to[1]);
+    if (depth > bestDepth) bestDepth = depth;
+    for (const [cr, cc] of move.captures || []) {
+      const victim = sim.board[cr]?.[cc];
+      if (victim?.king) kingBonus = 25;
+    }
+  }
+  if (bestDepth >= 2) score += 40 * (bestDepth - 1);
+  score += kingBonus;
+  return score;
+}
+
+/** Best Scatter capture value for AI spell selection. */
+export function bestScatterCaptureScore(state, color) {
+  let best = 0;
+  for (const [r, c] of getValidTargets(state, color, { effect: "scatter", mode: "empty" }, [])) {
+    best = Math.max(best, scoreScatterTarget(state, color, r, c));
+  }
+  return best;
+}
+
 function createFoeSpawnColor(color) {
   return color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
 }
@@ -975,6 +1017,9 @@ function getAiPickTargets(state, color, card) {
       return !enemyCapturableThisTurn(state, color, r, c);
     });
   }
+  if (card.effect === "scatter") {
+    return targets.filter(([r, c]) => scoreScatterTarget(state, color, r, c) > 0);
+  }
   if (AI_SKIP_SPELL_ON_CAPTURABLE.has(card.effect)) {
     return targets.filter(([r, c]) => !enemyCapturableThisTurn(state, color, r, c));
   }
@@ -1015,6 +1060,18 @@ function* pickSequences(state, color, card, max = 24) {
       if (++n >= max) return;
     }
     for (const pos of otherTargets) {
+      yield [pos];
+      if (++n >= max) return;
+    }
+    return;
+  }
+  if (card.effect === "scatter") {
+    const scored = t0
+      .map((pos) => ({ pos, score: scoreScatterTarget(state, color, pos[0], pos[1]) }))
+      .filter((entry) => entry.score > 0)
+      .sort((a, b) => b.score - a.score || a.pos[0] - b.pos[0] || a.pos[1] - b.pos[1]);
+    let n = 0;
+    for (const { pos } of scored) {
       yield [pos];
       if (++n >= max) return;
     }

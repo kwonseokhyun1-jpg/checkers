@@ -9,7 +9,7 @@ import {
   getBackwardStepMoves,
   hasMandatoryJumps,
 } from "./board.js";
-import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, bombMoveWorthwhile, bestSnowballSetupScore } from "./cardEffects.js";
+import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, bombMoveWorthwhile, bestSnowballSetupScore, bestScatterCaptureScore } from "./cardEffects.js";
 import { queueTrapHistoryReveal, isConfused, clearConfusion } from "./gameMeta.js";
 import { getCardDef } from "./cardCatalog.js";
 
@@ -351,6 +351,13 @@ function pickShockwaveFollowUpMove(board, color, state) {
   return pickBestMove(board, color, state, effective.length ? effective : shockMoves);
 }
 
+/** After Scatter, capture immediately when the push opened a jump line. */
+function pickScatterFollowUpMove(board, color, state) {
+  const captureMoves = getAllMovesForColor(board, color, state).filter((m) => m.captures?.length);
+  if (!captureMoves.length) return null;
+  return pickBestMove(board, color, state, captureMoves);
+}
+
 /**
  * Run AI turn; returns a replay log for the UI.
  * @returns {Array<{type: string, [key: string]: unknown}>}
@@ -361,6 +368,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
   const hand = state.hands[aiColor];
   const log = [];
   let snowballTarget = null;
+  let scatterCast = false;
 
   if (state.meta.shatterSilenced?.[color]) {
     log.push({ type: "message", text: `${opponentName} is reeling from spell backlash — no spells this turn.` });
@@ -379,12 +387,16 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
       }
       const snowballCard = playable.find((c) => c.effect === "snowball");
       const snowballScore = snowballCard ? bestSnowballSetupScore(state, color) : 0;
+      const scatterCard = playable.find((c) => c.effect === "scatter");
+      const scatterScore = scatterCard ? bestScatterCaptureScore(state, color) : 0;
       const card =
         ignoreCard && shouldAiPlayIgnore(state, color)
           ? ignoreCard
-          : snowballCard && snowballScore >= 100
-            ? snowballCard
-            : playable[Math.floor(Math.random() * playable.length)];
+          : scatterCard && scatterScore >= 100
+            ? scatterCard
+            : snowballCard && snowballScore >= 100
+              ? snowballCard
+              : playable[Math.floor(Math.random() * playable.length)];
       const idx = hand.indexOf(card);
       const trapped = !!state.meta.counterspell?.[human];
       if (trapped) {
@@ -407,6 +419,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
       const res = tryAutoPlay(state, color, card);
       if (!res.success) break;
       if (card.effect === "snowball" && res.picks?.[0]) snowballTarget = [...res.picks[0]];
+      if (card.effect === "scatter") scatterCast = true;
       hand.splice(idx, 1);
       const bonusSpell = !!state.meta.extraSpellCast?.[aiColor];
       if (!bonusSpell) state.spellPlayed[aiColor] = true;
@@ -450,6 +463,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     if (!panicForced) {
       if (bombArmed.length) move = pickBombFollowUpMove(state.board, color, state);
       else if (shockwaveArmed.length) move = pickShockwaveFollowUpMove(state.board, color, state);
+      else if (scatterCast) move = pickScatterFollowUpMove(state.board, color, state);
       else if (snowballTarget) move = pickSnowballFollowUpMove(state.board, color, state, snowballTarget);
     }
     if (!move) move = pickBestMove(state.board, color, state);
