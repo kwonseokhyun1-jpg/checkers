@@ -33,7 +33,7 @@ const TAGS = {
   bomb: ["Arm friendly piece", "On next move: explodes", "Kills all adjacent pieces"],
   shockwave: ["Arm friendly piece", "On next move: paralyzes all adjacent pieces", "1 turn — does not kill"],
   plague: ["Infect your piece + adjacent pieces", "Seed spreads plague on every move", "All infected die in 2 owner turns"],
-  press: ["Opponent must move again after their normal move on their next turn"],
+  press: ["Opponent must move again after their normal move on their next turn", "Extra step cannot capture"],
   mind_control: ["Convert an enemy man to your color for 2 of your turns", "Reverts to the enemy afterward"],
   barrier: ["Place on any dark square", "Blocks enemies for 2 turn cycles"],
   vengeance: ["Hidden trap — destroys the next enemy who captures your piece", "Expires after 2 of your turn cycles if unused", "Your piece survives 2 turns (blood counters), then dies"],

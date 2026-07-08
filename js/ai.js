@@ -556,7 +556,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     if (state.meta.pendingPressMove?.[color]) {
       state.meta.pendingPressMove[color] = false;
       const pressMoves = getAllMovesForColor(state.board, color, state).filter(
-        (m) => m.from[0] === br && m.from[1] === bc
+        (m) => m.from[0] === br && m.from[1] === bc && !m.captures?.length
       );
       if (pressMoves.length) {
         const bestPress = pickBestMove(state.board, color, state, pressMoves);
@@ -569,7 +569,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
           captures: bestPress.captures ? bestPress.captures.map((c) => [...c]) : [],
           moveKind: bestPress.type,
           pressExtra: true,
-          text: `Press — extra move ${squareName(bestPress.from[0], bestPress.from[1])} → ${squareName(bestPress.to[0], bestPress.to[1])}`,
+          text: `Press — extra step (no capture) ${squareName(bestPress.from[0], bestPress.from[1])} → ${squareName(bestPress.to[0], bestPress.to[1])}`,
         });
       }
     }

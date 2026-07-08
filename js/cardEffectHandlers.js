@@ -525,7 +525,7 @@ const EFFECTS = {
     markMove(state, color);
     return ok(n > 1 ? `Magnet — ${n} pulled.` : undefined);
   },
-  press(state, color, picks) { state.meta.pendingPressMove[opp(color)] = true; return ok("Press — opponent must move again next turn."); },
+  press(state, color, picks) { state.meta.pendingPressMove[opp(color)] = true; return ok("Press — opponent must step again next turn (no capture)."); },
   vengeance(state, color, picks) {
     ensureVengeanceTurns(state.meta);
     state.meta.vengeance[color] = VENGEANCE_TRAP_TURNS;
