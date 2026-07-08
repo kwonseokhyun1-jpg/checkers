@@ -225,6 +225,7 @@ export class MatchSession {
     this.historyViewIndex = null;
     this._pendingHistoryMove = null;
     this._pendingHistoryLabel = null;
+    this._pressExtraFrom = null;
     this._onKeyDown = (e) => this.onKeyDown(e);
     this.achievementTracker =
       this.profile && !this.isPvp
@@ -797,7 +798,7 @@ export class MatchSession {
         }
       });
     } else if (color === this.localColor && s.meta.pendingPressMove?.[color]) {
-      this.setMessage("Press — you'll move again after your normal move. Select a piece.");
+      this.setMessage("Press — you'll step again after your normal move (no capture).");
     } else if (
       color === this.localColor &&
       this.canEndSpellPhase() &&
@@ -1495,9 +1496,17 @@ export class MatchSession {
         s.phase = PHASE.CARDS;
       }
       this.selectedSquare = [row, col];
-      this.validMoves = getAllMovesForColor(s.board, this.localColor, s).filter(
+      let moves = getAllMovesForColor(s.board, this.localColor, s).filter(
         (m) => m.from[0] === row && m.from[1] === col
       );
+      if (
+        this._pressExtraFrom &&
+        this._pressExtraFrom[0] === row &&
+        this._pressExtraFrom[1] === col
+      ) {
+        moves = moves.filter((m) => !m.captures?.length);
+      }
+      this.validMoves = moves;
       if (!this.validMoves.length) {
         this.setMessage(
           piece.paralyzedTurns > 0
@@ -1682,6 +1691,7 @@ export class MatchSession {
     s.boardFx = null;
 
     const finishTurn = () => {
+      this._pressExtraFrom = null;
       if (bountyMsg) this.setMessage(bountyMsg);
       if (this.tutorialHooks?.beforeEndHumanTurn) {
         const verdict = this.tutorialHooks.beforeEndHumanTurn(this, move);
@@ -1733,13 +1743,14 @@ export class MatchSession {
     if (!s.meta.pendingPressMove?.[color]) return false;
     s.meta.pendingPressMove[color] = false;
     const moves = getAllMovesForColor(s.board, color, s).filter(
-      (m) => m.from[0] === landR && m.from[1] === landC
+      (m) => m.from[0] === landR && m.from[1] === landC && !m.captures?.length
     );
     if (!moves.length) return false;
     s.phase = PHASE.MOVE;
+    this._pressExtraFrom = [landR, landC];
     this.validMoves = moves;
     this.selectedSquare = [landR, landC];
-    this.setMessage("Press — move again!");
+    this.setMessage("Press — step again (no capture)!");
     this.render();
     return true;
   }
