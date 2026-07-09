@@ -2423,8 +2423,27 @@ async function handleAdventureGameOverAction(actionId, { levelId, deckId, challe
     return;
   }
 
-  if (actionId === "retry" || actionId === "nextFloor") {
-    const targetLevelId = actionId === "nextFloor" ? levelId + 1 : levelId;
+  if (actionId === "nextFloor") {
+    const targetLevelId = levelId + 1;
+    const level = getLevel(targetLevelId);
+    if (!level || !isLevelUnlocked(profile.adventure, targetLevelId)) {
+      matchSession?.onExit?.();
+      return;
+    }
+    matchSession?.dispose();
+    matchSession = null;
+    exitMatchMode({ clearCheckpoint: true });
+    void lockPortrait();
+    setAudioMode("hub");
+    if (root) root.innerHTML = "";
+    $("view-match")?.classList.add("hidden");
+    await showTab("play");
+    openAdventurePrebattle(targetLevelId);
+    return;
+  }
+
+  if (actionId === "retry") {
+    const targetLevelId = levelId;
     const level = getLevel(targetLevelId);
     if (!deck || deck.cardIds.length !== DECK_SIZE || !level) {
       matchSession?.onExit?.();
@@ -2441,7 +2460,7 @@ async function handleAdventureGameOverAction(actionId, { levelId, deckId, challe
       targetLevelId,
       null,
       false,
-      actionId === "retry" ? challengeMode : undefined,
+      challengeMode,
     );
   }
 }
