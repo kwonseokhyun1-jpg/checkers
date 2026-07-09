@@ -303,6 +303,9 @@ function shouldAiFortifyPiece(state, color, row, col) {
 /** Attack spells the AI should not waste on enemies it can capture with a normal move. */
 const AI_SKIP_SPELL_ON_CAPTURABLE = new Set(["pyromancy", "snowball"]);
 
+/** Friendly sacrifice spells — AI must never destroy its own kings. */
+const AI_NEVER_SACRIFICE_KING = new Set(["sacrifice", "offering"]);
+
 /** Spells that only pay off when the AI can jump-capture the target this turn. */
 const AI_REQUIRE_CAPTURABLE = new Set(["bounty"]);
 
@@ -1128,6 +1131,9 @@ function getAiPickTargets(state, color, card) {
   }
   if (AI_REQUIRE_CAPTURABLE.has(card.effect)) {
     return targets.filter(([r, c]) => enemyCapturableThisTurn(state, color, r, c));
+  }
+  if (AI_NEVER_SACRIFICE_KING.has(card.effect)) {
+    return targets.filter(([r, c]) => !at(state, r, c)?.king);
   }
   return targets;
 }
