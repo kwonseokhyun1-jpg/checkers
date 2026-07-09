@@ -1,7 +1,7 @@
 /**
  * Card targeting UI + AI auto-play
  */
-import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
+import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, getStepMoves, getJumpMoves, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, ensureDominionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, forwardBoltCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
@@ -1126,6 +1126,9 @@ function getAiPickTargets(state, color, card) {
   if (card.effect === "fortify") {
     return targets.filter(([r, c]) => shouldAiFortifyPiece(state, color, r, c));
   }
+  if (card.effect === "retreat_3") {
+    return targets.filter(([r, c]) => retreatWouldEnableBackwardMoves(state, color, r, c));
+  }
   if (AI_SKIP_SPELL_ON_CAPTURABLE.has(card.effect)) {
     return targets.filter(([r, c]) => !enemyCapturableThisTurn(state, color, r, c));
   }
@@ -1395,6 +1398,37 @@ function moveKey(move) {
 function isBackwardMove(move, color) {
   const dr = move.to[0] - move.from[0];
   return color === COLORS.RED ? dr > 0 : dr < 0;
+}
+
+function getPieceMoves(board, piece, color, state) {
+  return [
+    ...getJumpMoves(board, piece, color, state),
+    ...getStepMoves(board, piece, color, state),
+  ];
+}
+
+/** True when Retreat on this piece would enable at least one new backward move. */
+export function retreatWouldEnableBackwardMoves(state, color, row, col) {
+  const piece = at(state, row, col);
+  if (!piece || piece.color !== color) return false;
+
+  const treatKing = piece.king && !(piece.slowed > 0);
+  if (treatKing || piece.retreatTurns > 0) return false;
+
+  ensureDominionTurns(state.meta);
+  if ((state.meta.dominionTurn[color] ?? 0) > 0) return false;
+
+  const movesWithout = getPieceMoves(state.board, piece, color, state);
+  const savedRetreat = piece.retreatTurns;
+  piece.retreatTurns = 3;
+  const movesWith = getPieceMoves(state.board, piece, color, state);
+  piece.retreatTurns = savedRetreat;
+
+  const backwardWith = movesWith.filter((m) => isBackwardMove(m, color));
+  if (!backwardWith.length) return false;
+
+  const keysWithout = new Set(movesWithout.map((m) => moveKey(m)));
+  return backwardWith.some((m) => !keysWithout.has(moveKey(m)));
 }
 
 /** True when Dominion would enable at least one new backward move this turn. */
