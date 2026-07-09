@@ -143,6 +143,16 @@ export function pieceHasDebuffs(piece) {
   return CURSE_RULES.some((rule) => lineForRule(piece, rule) !== null);
 }
 
+export function pieceHasBuffs(piece) {
+  if (!piece) return false;
+  if (piece.isKnight && !(piece.knightTurns > 0)) return true;
+  return BUFF_RULES.some((rule) => lineForRule(piece, rule) !== null);
+}
+
+export function pieceHasBuffOrDebuff(piece) {
+  return pieceHasBuffs(piece) || pieceHasDebuffs(piece);
+}
+
 export function friendlyHasDebuffs(board, color) {
   for (let r = 0; r < board.length; r++) {
     for (let c = 0; c < board[r].length; c++) {
