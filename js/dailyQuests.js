@@ -51,6 +51,14 @@ export const DAILY_QUEST_TEMPLATES = [
     target: 2,
     reward: { currency: "stars", amount: 3 },
   },
+  {
+    templateId: "box_open_1",
+    kind: "boxes_opened",
+    title: "Treasure Hunter",
+    description: "Open 1 box of any type today.",
+    target: 1,
+    reward: { currency: "gems", amount: 15 },
+  },
 ];
 
 export const DAILY_QUEST_BY_ID = Object.fromEntries(DAILY_QUEST_TEMPLATES.map((q) => [q.templateId, q]));

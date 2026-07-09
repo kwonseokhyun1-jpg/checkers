@@ -1,5 +1,6 @@
 import { getPlayableCards, maxCopiesForCard } from "./cardCatalog.js";
 import { RARITY_GEM_DUPE } from "./cosmetics.js";
+import { trackDailyQuestEvent } from "./dailyQuests.js";
 import { addToCollection, collectionCount, saveProfile } from "./storage.js";
 
 export const CHESTS = [
@@ -64,6 +65,7 @@ export function openChest(profile, chestId) {
     if (pull.gemRefund) bonusGems += pull.gemRefund;
   }
   if (bonusGems) profile.gems += bonusGems;
+  trackDailyQuestEvent(profile, "boxes_opened", 1);
   saveProfile(profile);
   return { success: true, pulls, chest, bonusGems };
 }
