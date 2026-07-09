@@ -5,7 +5,11 @@ import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAd
 import { collapsedSquareKey, ensureConstitutionTurns, ensureDominionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
 import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, forwardBoltCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
-import { friendlyHasDebuffs, pieceHasIronWillDebuff } from "./pieceStatus.js";
+import {
+  friendlyHasDebuffs,
+  pieceHasBuffOrDebuff,
+  pieceHasIronWillDebuff,
+} from "./pieceStatus.js";
 
 export { applyCard, applyEffect };
 export { findCullTarget, cullVictimSnapshot, CULL_ANIMATION_MS } from "./cullAnimation.js";
@@ -597,6 +601,63 @@ function backstepWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
   return getAllMovesForColor(board, color, state).some(
     (m) => m.from[0] === r2 && m.from[1] === c2 && m.captures?.length
   );
+}
+
+function pieceIsImmobilized(piece) {
+  return (piece?.frozenTurns || 0) > 0 || (piece?.paralyzedTurns || 0) > 0;
+}
+
+/** True when at least one swapped friendly has a buff or debuff. */
+function shadowSwapHasStatusPiece(state, [r1, c1], [r2, c2]) {
+  const a = at(state, r1, c1);
+  const b = at(state, r2, c2);
+  return pieceHasBuffOrDebuff(a) || pieceHasBuffOrDebuff(b);
+}
+
+/** True when shadow swap lands a friendly where it can capture on the move phase. */
+function shadowSwapWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
+  const a = at(state, r1, c1);
+  const b = at(state, r2, c2);
+  if (!a || !b || a.color !== color || b.color !== color) return false;
+  const board = cloneBoardCells(state.board);
+  const simA = board[r1][c1];
+  const simB = board[r2][c2];
+  board[r1][c1] = simB;
+  board[r2][c2] = simA;
+  simA.row = r2;
+  simA.col = c2;
+  simB.row = r1;
+  simB.col = c1;
+  tryPromoteOnFarRow(simA, r2);
+  tryPromoteOnFarRow(simB, r1);
+  return getAllMovesForColor(board, color, state).some(
+    (m) =>
+      (m.from[0] === r2 && m.from[1] === c2) || (m.from[0] === r1 && m.from[1] === c1)
+        ? !!m.captures?.length
+        : false
+  );
+}
+
+/** Best case: swap a frozen/paralyzed piece with a mobile one to capture right away. */
+function shadowSwapIsDebuffCaptureLine(state, color, [r1, c1], [r2, c2]) {
+  const a = at(state, r1, c1);
+  const b = at(state, r2, c2);
+  if (!a || !b || a.color !== color || b.color !== color) return false;
+  if (!shadowSwapWouldCaptureAfter(state, color, [r1, c1], [r2, c2])) return false;
+  const aImmobilized = pieceIsImmobilized(a);
+  const bImmobilized = pieceIsImmobilized(b);
+  return (aImmobilized && !bImmobilized) || (bImmobilized && !aImmobilized);
+}
+
+/** Higher scores prefer swapping an immobilized piece with a normal mobile piece. */
+function shadowSwapDebuffCaptureScore(state, color, [r1, c1], [r2, c2]) {
+  if (!shadowSwapIsDebuffCaptureLine(state, color, [r1, c1], [r2, c2])) return 0;
+  const a = at(state, r1, c1);
+  const b = at(state, r2, c2);
+  const mobile = pieceIsImmobilized(a) ? b : a;
+  let score = 100;
+  if (!pieceHasBuffOrDebuff(mobile)) score += 50;
+  return score;
 }
 
 /** True when hostile swap lands the friendly piece where it can capture next. */
@@ -1195,6 +1256,39 @@ function* pickSequences(state, color, card, max = 24) {
   }
   if (card.mode === "f_f" || card.mode === "e_e" || card.mode === "e_e_adj" || card.mode === "f_f_adj" || card.mode === "f_e_adj") {
     let n = 0;
+    if (card.effect === "swap_friendly") {
+      const debuffCaptureSeqs = [];
+      const captureSeqs = [];
+      const statusSeqs = [];
+      for (const a of t0) {
+        const t1 = getValidTargets(state, color, card, [a]);
+        for (const b of t1) {
+          if (a[0] === b[0] && a[1] === b[1]) continue;
+          const seq = [a, b];
+          if (!shadowSwapHasStatusPiece(state, a, b)) continue;
+          const debuffScore = shadowSwapDebuffCaptureScore(state, color, a, b);
+          if (debuffScore > 0) debuffCaptureSeqs.push({ seq, score: debuffScore });
+          else if (shadowSwapWouldCaptureAfter(state, color, a, b)) captureSeqs.push(seq);
+          else statusSeqs.push(seq);
+        }
+      }
+      debuffCaptureSeqs.sort(
+        (a, b) => b.score - a.score || a.seq[0][0] - b.seq[0][0] || a.seq[0][1] - b.seq[0][1]
+      );
+      for (const { seq } of debuffCaptureSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      for (const seq of captureSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      for (const seq of statusSeqs) {
+        yield seq;
+        if (++n >= max) return;
+      }
+      return;
+    }
     for (const a of t0) {
       const t1 = getValidTargets(state, color, card, [a]);
       for (const b of t1) {
