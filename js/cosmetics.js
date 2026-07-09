@@ -2,6 +2,8 @@
  * Profile cosmetics: avatars, frames, banners, piece skins — catalog, boxes, equip helpers.
  */
 
+import { trackDailyQuestEvent } from "./dailyQuests.js";
+
 export const COSMETIC_TYPES = ["avatar", "frame", "banner", "pieceSkin"];
 
 export const COSMETIC_RARITIES = ["common", "uncommon", "rare", "epic", "legendary"];
@@ -210,6 +212,7 @@ export function openCosmeticBox(profile, boxId) {
   }
 
   if (bonusGems) profile.gems += bonusGems;
+  trackDailyQuestEvent(profile, "boxes_opened", 1);
   return { success: true, box, pulls, bonusGems };
 }
 

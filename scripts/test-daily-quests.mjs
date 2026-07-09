@@ -8,6 +8,7 @@ import {
   canClaimDailyQuest,
   claimDailyQuest,
   getActiveDailyQuests,
+  getLocalDateKey,
   getMsUntilLocalMidnight,
   formatDailyResetCountdown,
   DAILY_QUEST_COUNT,
@@ -43,12 +44,15 @@ function testOneQuestPerKind() {
   assert(new Set(kinds).size === kinds.length, "daily quests should cover different kinds");
 }
 
+function pinDailyQuests(profile, activeIds, dateKey = getLocalDateKey()) {
+  profile.dailyQuests = { dateKey, activeIds, progress: {}, claimed: [] };
+  refreshDailyQuests(profile, dateKey);
+}
+
 function testProgressAndClaimGems() {
   const profile = makeProfile();
-  refreshDailyQuests(profile, "2026-07-02");
-  const active = profile.dailyQuests.activeIds;
-  const spellQuest = active.find((id) => DAILY_QUEST_BY_ID[id].kind === "spells_played");
-  assert(spellQuest, "should have a spell quest today");
+  pinDailyQuests(profile, ["spells_5", "pvp_wins_1", "adventure_floor_1"]);
+  const spellQuest = "spells_5";
 
   trackDailyQuestEvent(profile, "spells_played", 1);
   assert(!canClaimDailyQuest(profile, spellQuest), "partial progress should not be claimable");
@@ -66,6 +70,18 @@ function testProgressAndClaimGems() {
     assert(profile.stars === 5 + reward.amount, "stars should increase");
   }
   assert(!canClaimDailyQuest(profile, spellQuest), "claimed quest should not be claimable again");
+}
+
+function testBoxOpenProgress() {
+  const profile = makeProfile();
+  pinDailyQuests(profile, ["box_open_1", "pvp_wins_1", "spells_5"]);
+
+  trackDailyQuestEvent(profile, "boxes_opened", 1);
+  assert(canClaimDailyQuest(profile, "box_open_1"), "opening a box should complete the quest");
+
+  const res = claimDailyQuest(profile, "box_open_1");
+  assert(res.success, "box quest claim should succeed");
+  assert(profile.gems === 115, "box quest should award 15 gems");
 }
 
 function testDailyReset() {
@@ -109,6 +125,7 @@ function testResetCountdownHelpers() {
 testDeterministicRotation();
 testOneQuestPerKind();
 testProgressAndClaimGems();
+testBoxOpenProgress();
 testDailyReset();
 testActiveDailyQuestsShape();
 testResetCountdownHelpers();

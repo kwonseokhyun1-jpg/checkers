@@ -1,6 +1,7 @@
 import { drawChestCard, grantChestCard } from "./chests.js";
 import { drawCosmeticItem } from "./cosmetics.js";
 import { isCosmeticsUnlocked } from "./adventure.js";
+import { trackDailyQuestEvent } from "./dailyQuests.js";
 import {
   ownsTitle,
   TITLE_BOX_TITLES,
@@ -80,6 +81,7 @@ export function openMysteryBox(profile) {
 
   if (bonusGems) profile.gems = (profile.gems || 0) + bonusGems;
   if (bonusStars) profile.stars = (profile.stars ?? 0) + bonusStars;
+  trackDailyQuestEvent(profile, "boxes_opened", 1);
   saveProfile(profile);
 
   const kind =
@@ -117,6 +119,7 @@ export function openTitleBox(profile) {
     pull = { ...title, duplicate: true, starRefund: bonusStars };
   }
 
+  trackDailyQuestEvent(profile, "boxes_opened", 1);
   saveProfile(profile);
   return {
     success: true,
