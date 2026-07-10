@@ -51,6 +51,7 @@ const ID_TO_CATEGORY = {
   duel: "attack",
   earthquake: "special",
   execution: "attack",
+  extract: "control",
   pyromancy: "attack",
   fusion: "special",
   hibernation: "special",

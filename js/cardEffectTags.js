@@ -48,6 +48,7 @@ const TAGS = {
   deport: ["Send an enemy back to its game-start square", "Destroys any piece already on that square"],
   bounty: ["Mark an enemy piece", "When you jump-capture it, draw 2 cards", "Spell destroys do not count"],
   link_fate: ["Link two enemies — when one is destroyed, the other dies too"],
+  extract: ["Opponent discards 1 random card from hand"],
 };
 
 const MODE_TAGS = {

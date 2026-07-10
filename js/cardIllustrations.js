@@ -360,6 +360,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "chain_lightning",
   "clone",
   "confusion",
+  "extract",
   "constitution",
   "counterspell",
   "cull",
@@ -709,6 +710,25 @@ function confusionMotif() {
     <path d="M24 32 L30 26 M34 32 L40 36 M30 40 L24 46" stroke="#f0e6ff" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
     <path d="M28 20 C32 24 36 20 40 24" stroke="#fde68a" stroke-width="1.4" fill="none" opacity="0.5"/>
     ${sparkles([[16, 20, 0.8], [48, 38, 0.7], [32, 10, 0.9]], "#e9d5ff", 0.6)}`;
+}
+
+/** Opponent hand with one card ripped away at random. */
+function extractMotif() {
+  return `${groundShadow(32, 54, 22, 4)}
+    <rect x="14" y="34" width="13" height="20" rx="2" fill="#4c1d95" stroke="#0f172a" stroke-width="1.6" transform="rotate(-14 20 44)"/>
+    <rect x="14" y="34" width="13" height="20" rx="2" fill="none" stroke="#7c3aed" stroke-width="1" transform="rotate(-14 20 44)"/>
+    <rect x="27" y="32" width="13" height="20" rx="2" fill="#5b21b6" stroke="#0f172a" stroke-width="1.6"/>
+    <rect x="27" y="32" width="13" height="20" rx="2" fill="none" stroke="#a78bfa" stroke-width="1"/>
+    <rect x="40" y="34" width="13" height="20" rx="2" fill="#4c1d95" stroke="#0f172a" stroke-width="1.6" transform="rotate(14 46 44)"/>
+    <rect x="40" y="34" width="13" height="20" rx="2" fill="none" stroke="#7c3aed" stroke-width="1" transform="rotate(14 46 44)"/>
+    <rect x="22" y="4" width="16" height="24" rx="2.5" fill="#6d28d9" stroke="#0f172a" stroke-width="2" transform="rotate(-20 30 16)"/>
+    <rect x="22" y="4" width="16" height="24" rx="2.5" fill="none" stroke="#c4b5fd" stroke-width="1.4" transform="rotate(-20 30 16)"/>
+    <path d="M24 10 H36 M24 14 H34" stroke="#e9d5ff" stroke-width="1.2" opacity="0.65"/>
+    <path d="M16 12 L28 20" stroke="#f87171" stroke-width="2.8" stroke-linecap="round"/>
+    <path d="M12 8 L20 16" stroke="#fca5a5" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+    <path d="M10 6 L18 14" stroke="#fca5a5" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+    <text x="8" y="22" font-size="10" fill="#fca5a5" opacity="0.9" font-weight="700">✕</text>
+    ${sparkles([[30, 6, 0.9], [12, 18, 0.6], [50, 36, 0.5]], "#e9d5ff", 0.55)}`;
 }
 
 /** Hidden trap rune cancelling an incoming spell. */
@@ -1745,6 +1765,7 @@ export const EFFECT_ILLUSTRATIONS = {
   tangle: () => rareBleed("tg", "#93c5fd", "#312e81", tangleMotif()),
   blind: () => rareBleed("bl", "#a78bfa", "#4c1d95", blindMotif()),
   confusion: () => epicBleed("cf", "#c4b5fd", "#4c1d95", confusionMotif()),
+  extract: () => epicBleed("ex", "#c4b5fd", "#4c1d95", extractMotif()),
   fog_2: () => wrap(`${piece(32, 34, 6)}<ellipse cx="32" cy="24" rx="16" ry="8" fill="currentColor" opacity="0.22"/>`),
 
   crown: () => uncommonBleed("cr", "#fbbf24", "#451a03", crownMotif()),
