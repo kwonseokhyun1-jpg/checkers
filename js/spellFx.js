@@ -102,6 +102,7 @@ export const META_SPELL_OVERLAY = {
   ignore: "ignore",
   quick_march: "march",
   mind_control: "possess",
+  zombify: "curse",
   constitution: "constitution",
   dominion: "dominion",
   last_king: "crown-burst",

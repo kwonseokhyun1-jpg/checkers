@@ -13,7 +13,7 @@ const META_EFFECTS = new Set([
   "quick_march", "trickster", "ricochet", "blind", "confusion", "extract", "counterspell", "vengeance", "dominion",
   "deflect_1",
   "conduct", "mirror_move", "roulette", "ignore", "mirror_board", "highlight_path",
-  "pocket", "mind_control", "chameleon", "identity_theft", "succession",
+  "pocket", "mind_control", "zombify", "chameleon", "identity_theft", "succession",
   "twin_soul", "last_king", "constitution", "sanctuary_pulse", "parallel", "echo",
 ]);
 

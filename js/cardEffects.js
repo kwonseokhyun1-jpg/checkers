@@ -958,6 +958,8 @@ export function getValidTargets(state, color, card, picks) {
               if (!pieceHasIntrinsicMoves(state.board, o, state, r, c)) res.push([r, c]);
             } else if (card.effect === "demote") {
               if (p.king && !isFortified(p) && r !== ownBackRank(p.color)) res.push([r, c]);
+            } else if (card.effect === "zombify") {
+              if (!p.king && !(p.anchored > 0) && !isFortified(p)) res.push([r, c]);
             } else res.push([r, c]);
           }
         }

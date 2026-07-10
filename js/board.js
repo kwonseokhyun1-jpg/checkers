@@ -135,6 +135,8 @@ export function createPiece(color, row, col, king = false) {
     bearAwakened: false,
     linkedFateId: null,
     bountyBy: null,
+    zombifyOwner: null,
+    zombifiedNoCapture: false,
     isClone: false,
     cloneNoCaptureThisTurn: false,
     freezeDeferEndTick: false,
@@ -369,8 +371,15 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
       if (mates.length) mates[0].king = true;
     }
   }
+  const zombifyOwner = !linkFate && p.zombifyOwner && !p.king ? p.zombifyOwner : null;
   const partnerId = p.linkedFateId;
   removePiece(board, r, c);
+  if (zombifyOwner) {
+    const ally = createPiece(zombifyOwner, r, c, false);
+    ally.zombifiedNoCapture = true;
+    board[r][c] = ally;
+    if (state) queueBoardFx(state, "zombify", r, c, [[r, c]]);
+  }
   if (p.ghostGuard && state) getSq(state, r, c).ghostBlock = 2;
   if (partnerId && !linkFate && state) {
     const hit = findPieceById(board, partnerId);
@@ -506,7 +515,7 @@ function squareBlocked(state, r, c, moverColor = null) {
 const KNIGHT_OFFSETS = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
 
 export function getKnightMoves(board, piece, state, canCapture = false) {
-  if (piece.revivedNoCapture || piece.cloneNoCaptureThisTurn || piece.berserkNoCapture) canCapture = false;
+  if (piece.revivedNoCapture || piece.zombifiedNoCapture || piece.cloneNoCaptureThisTurn || piece.berserkNoCapture) canCapture = false;
   if (canCapture && state && isInDarknessZone(state, piece.row, piece.col)) canCapture = false;
   const moves = [];
   for (const [dr, dc] of KNIGHT_OFFSETS) {
@@ -598,7 +607,7 @@ export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
   if (state && isInDarknessZone(state, piece.row, piece.col)) return moves;
   if (piece.cloneNoCaptureThisTurn) return moves;
-  if (piece.revivedNoCapture || piece.berserkNoCapture) return moves;
+  if (piece.revivedNoCapture || piece.zombifiedNoCapture || piece.berserkNoCapture) return moves;
   if (piece.reverseOnlyTurns > 0 || piece.noCaptureTurns > 0) return moves;
   if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.rooted > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
   if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
@@ -882,6 +891,7 @@ export function tickEffects(board, color, state = null) {
         }
       }
       if (p.revivedNoCapture) p.revivedNoCapture = false;
+      if (p.zombifiedNoCapture) p.zombifiedNoCapture = false;
       if (p.berserkNoCapture) p.berserkNoCapture = false;
     }
   }
