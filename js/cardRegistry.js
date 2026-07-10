@@ -93,6 +93,7 @@ export const CARD_REGISTRY = [
   { id: "backstab", name: "Backstab", desc: "Destroy an enemy behind your piece on a backward diagonal if adjacent.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "backstab" },
   { id: "blind", name: "Blind", desc: "Opponent cannot play cards on their next turn.", rarity: "rare", weight: 3, mode: "instant", effect: "blind" },
   { id: "confusion", name: "Confusion", desc: "On opponent's next turn, their move is chosen randomly.", rarity: "epic", weight: 2, mode: "instant", effect: "confusion" },
+  { id: "extract", name: "Extract", desc: "Force your opponent to discard a random card from their hand.", rarity: "epic", weight: 2, mode: "instant", effect: "extract" },
   { id: "counterspell", name: "Counterspell", desc: "Hidden trap: the next enemy spell is cancelled when they cast it.", rarity: "epic", weight: 2, mode: "instant", effect: "counterspell" },
   { id: "deep_freeze", name: "Deep Freeze", desc: "Freeze every enemy on one diagonal through your piece for 2 turns.", rarity: "epic", weight: 2, mode: "diagonal", effect: "deep_freeze" },
   { id: "earthquake", name: "Earthquake", desc: "All pieces shift 1 square toward board center if possible.", rarity: "legendary", weight: 1, mode: "instant", effect: "earthquake" },

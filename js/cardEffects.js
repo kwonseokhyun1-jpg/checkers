@@ -36,6 +36,10 @@ export function getInstantCastBlockReason(state, color, card) {
   if (card.effect === "purify" && !friendlyHasDebuffs(state.board, color)) {
     return "Purify requires at least one debuffed friendly piece.";
   }
+  const enemy = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  if (card.effect === "extract" && !state.hands[enemy]?.length) {
+    return "Opponent has no cards in hand.";
+  }
   return null;
 }
 
