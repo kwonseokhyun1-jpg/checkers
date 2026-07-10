@@ -635,7 +635,9 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     const profile = getProfile();
     const storedIds =
       pvpService?.localColor === COLORS.RED ? row.host_deck_ids : row.guest_deck_ids;
-    if (Array.isArray(storedIds) && !describeDeckIssue(storedIds, profile)) {
+    // Mystery decks include spells outside the player's collection — skip ownership checks.
+    const deckProfile = isMysteryMode(row) ? null : profile;
+    if (Array.isArray(storedIds) && !describeDeckIssue(storedIds, deckProfile)) {
       return storedIds;
     }
     if (isMysteryMode(row)) return null;
