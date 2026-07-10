@@ -38,6 +38,7 @@ export const BOARD_FX_MS = {
   mine: 1000,
   vengeance: 1100,
   deflect: 1200,
+  zombify: 1100,
 };
 
 export function boardFxDuration(kind) {

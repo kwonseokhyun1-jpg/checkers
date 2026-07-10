@@ -27,6 +27,7 @@ const BUFF_RULES = [
 const CURSE_RULES = [
   { key: "linkedFateId", label: "Linked Fate", bool: true },
   { key: "bountyBy", label: "Bounty (jump-capture to reward)", bool: true },
+  { key: "zombifyOwner", label: "Zombify (rises as ally on death)", bool: true },
   { key: "frozenTurns", label: "Frozen", turns: true },
   { key: "paralyzedTurns", label: "Paralyzed", turns: true },
   { key: "rooted", label: "Rooted", turns: true },
@@ -40,6 +41,7 @@ const CURSE_RULES = [
   { key: "anchored", label: "Anchored", turns: true },
   { key: "panicTurn", label: "Panic", bool: true },
   { key: "revivedNoCapture", label: "Revived (no capture)", bool: true },
+  { key: "zombifiedNoCapture", label: "Zombified (no capture)", bool: true },
   { key: "berserkNoCapture", label: "Berserk (no capture)", bool: true },
   { key: "isClone", label: "Clone (fragile)", bool: true },
   { key: "cloneNoCaptureThisTurn", label: "Clone (no move/capture)", bool: true },

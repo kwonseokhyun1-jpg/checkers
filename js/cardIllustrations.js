@@ -374,6 +374,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "link_fate",
   "magnet",
   "mind_control",
+  "zombify",
   "purify",
   "pyromancy",
   "quick_march",
@@ -694,6 +695,26 @@ function mindControlMotif() {
     <path d="M28 24 C34 28 34 36 28 40" stroke="#fde68a" stroke-width="2.2" fill="none" opacity="0.8"/>
     <path d="M48 32 L40 32" stroke="#fca5a5" stroke-width="2" stroke-dasharray="3 2" opacity="0.65"/>
     ${sparkles([[22, 20, 0.8], [36, 28, 0.7], [36, 36, 0.7]], "#e9d5ff", 0.6)}`;
+}
+
+/** Necrotic curse — enemy marked to rise as your ally on death. */
+function zombifyMotif() {
+  return `${groundShadow(32, 54, 22, 4)}
+    ${tokenPro(48, 34, 6)}
+    <circle cx="48" cy="34" r="11" fill="none" stroke="#0f172a" stroke-width="2" opacity="0.2"/>
+    <circle cx="48" cy="34" r="11" fill="none" stroke="#f87171" stroke-width="1.8" opacity="0.55"/>
+    <path d="M18 28 C22 24 26 24 30 28 L30 40 C26 44 22 44 18 40 Z" fill="#14532d" opacity="0.35" stroke="#4ade80" stroke-width="1.6"/>
+    <circle cx="24" cy="32" r="8" fill="#166534" opacity="0.55" stroke="#86efac" stroke-width="1.8"/>
+    <circle cx="21.5" cy="30.5" r="1.4" fill="#dcfce7"/>
+    <circle cx="26.5" cy="30.5" r="1.4" fill="#dcfce7"/>
+    <path d="M22 35 Q24 37 26 35" stroke="#bbf7d0" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    <path d="M24 18 L24 24" stroke="#86efac" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
+    <path d="M20 20 C24 16 28 16 32 20" stroke="#4ade80" stroke-width="1.8" fill="none" opacity="0.7"/>
+    <path d="M34 34 L40 34" stroke="#0f172a" stroke-width="4" stroke-linecap="round" opacity="0.2"/>
+    <path d="M34 34 L40 34" stroke="#86efac" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="4 2"/>
+    <path d="M30 28 C36 30 38 36 34 42" stroke="#bbf7d0" stroke-width="2" fill="none" opacity="0.65"/>
+    <text x="23" y="26" font-size="7" fill="#86efac" font-weight="700">☠</text>
+    ${sparkles([[24, 18, 0.75], [36, 30, 0.65], [40, 38, 0.55]], "#86efac", 0.55)}`;
 }
 
 /** Dizzy enemy with chaotic random paths. */
@@ -1795,6 +1816,7 @@ export const EFFECT_ILLUSTRATIONS = {
   last_king: () => uncommonBleed("lk", "#fbbf24", "#1e3a5f", lastKingMotif()),
   revive: () => legendaryBleed("rv", "#15803d", "#052e16", reviveMotif()),
   mind_control: () => epicBleed("mc", "#c4b5fd", "#3b0764", mindControlMotif()),
+  zombify: () => epicBleed("zb", "#4ade80", "#14532d", zombifyMotif()),
   bounty: () => epicBleed("bo", "#4ade80", "#14532d", bountyMotif()),
   link_fate: () => epicBleed("lf", "#a78bfa", "#2e1065", linkFateMotif()),
   bishop_2: () => rareBleed("bp", "#b794f4", "#4c1d95", bishopMarkMotif()),

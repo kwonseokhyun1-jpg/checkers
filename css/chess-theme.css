@@ -328,6 +328,35 @@
     0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
+.piece.zombify-mark {
+  box-shadow:
+    0 0 0 2px rgba(74, 222, 128, 0.85),
+    0 0 12px rgba(34, 197, 94, 0.45),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.piece.zombified-mark {
+  box-shadow:
+    0 0 0 2px rgba(134, 239, 172, 0.75),
+    0 0 10px rgba(74, 222, 128, 0.35),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.zombify-indicator {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  z-index: 6;
+  pointer-events: none;
+  display: flex;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
+}
+
+.zombify-indicator__mark {
+  font-size: clamp(11px, 3.2vw, 16px);
+  line-height: 1;
+}
+
 .piece.poisoned {
   box-shadow:
     0 0 0 2px rgba(124, 252, 0, 0.65),

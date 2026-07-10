@@ -708,6 +708,20 @@ const EFFECTS = {
     p.mindControlTurns = 2;
     return ok("Mind Control — enemy converted to your piece for 2 turns.");
   },
+  zombify(state, color, picks) {
+    const [r, c] = p0(picks);
+    const p = at(state, r, c);
+    if (!p || p.color === color || p.king) return fail();
+    if (!enemyCardCanMove(p)) return fail("Anchored");
+    for (let rr = 0; rr < SIZE; rr++) {
+      for (let cc = 0; cc < SIZE; cc++) {
+        const ep = state.board[rr][cc];
+        if (ep?.zombifyOwner === color) ep.zombifyOwner = null;
+      }
+    }
+    p.zombifyOwner = color;
+    return ok("Zombify — when this enemy dies, it rises as your man (no capture the turn it rises).");
+  },
   identity_theft(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=3; return ok(); },
   call_forward(state, color, picks) {
     if (picks.length < 2) return fail();
