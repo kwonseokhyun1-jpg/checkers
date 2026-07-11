@@ -18,7 +18,7 @@ import {
   findPanicPiece,
   getBackwardStepMoves,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, hasVengeanceArmed, isConfused, clearConfusion } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, hasVengeanceArmed, isConfused, clearConfusion } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -1684,6 +1684,8 @@ export class MatchSession {
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
     this.achievementTracker?.onMoveAfter(s);
     const bountyMsg = flushPendingBountyMessage(s.meta, this.localColor);
+    const martyrMsg = flushPendingMartyrMessage(s.meta, this.localColor);
+    const rewardMsg = [bountyMsg, martyrMsg].filter(Boolean).join(" ");
     this.tutorialHooks?.onHumanMove?.(move);
 
     const [landR, landC] = move.to;
@@ -1692,7 +1694,7 @@ export class MatchSession {
 
     const finishTurn = () => {
       this._pressExtraFrom = null;
-      if (bountyMsg) this.setMessage(bountyMsg);
+      if (rewardMsg) this.setMessage(rewardMsg);
       if (this.tutorialHooks?.beforeEndHumanTurn) {
         const verdict = this.tutorialHooks.beforeEndHumanTurn(this, move);
         if (verdict === "block" && preMoveSnap) {
@@ -1711,7 +1713,7 @@ export class MatchSession {
     };
 
     const tryFollowUpMoves = () => {
-      if (move.captures?.length && this.continueMultiJump(landR, landC, bountyMsg)) return true;
+      if (move.captures?.length && this.continueMultiJump(landR, landC, rewardMsg)) return true;
       this.selectedSquare = null;
       this.validMoves = [];
       if (this.tryQuickMarchMove(s, this.localColor, landR, landC)) return true;
@@ -2036,6 +2038,17 @@ ${starLine}`;
     if (banner) banner.className = "turn-banner";
   }
 
+  async runHiddenMartyrCast() {
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = "Martyr armed — hidden.";
+      banner.className = "turn-banner spell-anim-instant";
+    }
+    this.render();
+    await delay(450 + SPELL_BANNER_EXTRA_MS);
+    if (banner) banner.className = "turn-banner";
+  }
+
   async runHiddenBoardTrapCast(card) {
     const banner = this.$("turn-banner");
     const label = card?.name || (card?.effect === "quicksand" ? "Quicksand" : "Landmine");
@@ -2234,6 +2247,12 @@ ${starLine}`;
       return finishSpellTrack(res);
     }
 
+    if (card.effect === "martyr") {
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (res.success) await this.runHiddenMartyrCast();
+      return finishSpellTrack(res);
+    }
+
     if (card.effect === "deflect_1") {
       const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success) await this.runHiddenDeflectCast();
@@ -2396,6 +2415,8 @@ ${starLine}`;
           moveMsg = "Vengeance armed (hidden) — select a piece to move.";
         } else if (card.effect === "last_stand") {
           moveMsg = "Last Stand armed (hidden) — select a piece to move.";
+        } else if (card.effect === "martyr") {
+          moveMsg = "Martyr armed (hidden) — select a piece to move.";
         } else if (card.effect === "deflect_1") {
           moveMsg = "Deflect armed (hidden) — select a piece to move.";
         } else if (card.effect === "quick_march") {
@@ -3138,6 +3159,7 @@ ${starLine}`;
               : "";
           el.className = `piece ${piece.color}${piece.king ? " king" : ""}${skinClass}`;
           const showArmedLastStand = piece.lastStand && piece.color === this.localColor;
+          const showArmedMartyr = piece.martyr && piece.color === this.localColor;
           if (piece.shieldTurns >= LAST_STAND_SHIELD_TURNS || showArmedLastStand) {
             el.classList.add("ultra-shielded");
           } else if (piece.shieldTurns > 0) {
@@ -3154,6 +3176,7 @@ ${starLine}`;
           if (piece.color === this.localColor && hasVengeanceArmed(this.state, piece.color)) {
             el.classList.add("vengeance-armed");
           }
+          if (showArmedMartyr) el.classList.add("martyr-armed");
           const constitutionTurns = piece.king ? ensureConstitutionTurns(this.state.meta)[piece.color] : 0;
           const dominionTurns = ensureDominionTurns(this.state.meta)[piece.color];
           if (constitutionTurns > 0) el.classList.add("constitution-mark");

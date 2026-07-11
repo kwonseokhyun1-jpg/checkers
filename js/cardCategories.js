@@ -63,6 +63,7 @@ const ID_TO_CATEGORY = {
   bounty: "special",
   link_fate: "special",
   last_stand: "trap",
+  martyr: "trap",
   leapfrog: "movement",
   long_step: "movement",
   magnet: "movement",
@@ -112,7 +113,7 @@ export function getCardCategory(def) {
   if (mapped) return mapped;
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
-  if (/trap|mine|quicksand|counterspell|vengeance|last.?stand/.test(blob)) return "trap";
+  if (/trap|mine|quicksand|counterspell|vengeance|last.?stand|martyr/.test(blob)) return "trap";
   if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|rally|darkness/.test(blob)) {
     return "defense";
   }

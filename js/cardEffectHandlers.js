@@ -6,7 +6,7 @@ import {
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
   createPiece, grantAwokenBear, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified, clearPlayerZombieChain,
-  tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS,
+  tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS, MARTYR_TRAP_TURNS,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
@@ -507,6 +507,7 @@ const EFFECTS = {
     return ok("Sanctuary — protected zone placed.", { sanctuaryCells: cells });
   },
   last_stand(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.lastStand=true; p.lastStandTurns=LAST_STAND_TRAP_TURNS; return ok("Last Stand armed — hidden."); },
+  martyr(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.martyr=true; p.martyrTurns=MARTYR_TRAP_TURNS; return ok("Martyr armed — hidden."); },
   magnet(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);

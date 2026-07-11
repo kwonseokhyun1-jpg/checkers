@@ -56,7 +56,8 @@ export function isHiddenTrapSpell(card) {
     effect === "landmine" ||
     effect === "quicksand" ||
     effect === "last_stand" ||
-    effect === "deflect_1"
+    effect === "deflect_1" ||
+    effect === "martyr"
   );
 }
 
@@ -96,6 +97,9 @@ export function getCardHint(card) {
   }
   if (card.effect === "deflect_1" || card.id === "deflect") {
     return "Hidden trap — next spell hit within 2 turns reflects to the closest enemy.";
+  }
+  if (card.effect === "martyr" || card.id === "martyr") {
+    return "Hidden trap — if this piece dies within 2 turns, you draw 2 cards.";
   }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
   if (card.effect === "snowball") return hints.snowball_hint;
