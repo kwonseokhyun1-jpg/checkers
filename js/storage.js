@@ -197,6 +197,17 @@ export function repairProfile(profile) {
     changed = true;
   }
 
+  if (!Array.isArray(profile.friends)) {
+    profile.friends = [];
+    changed = true;
+  } else {
+    const cleaned = [...new Set(profile.friends.filter((id) => typeof id === "string" && id.length > 0))];
+    if (cleaned.length !== profile.friends.length) {
+      profile.friends = cleaned;
+      changed = true;
+    }
+  }
+
   return changed;
 }
 

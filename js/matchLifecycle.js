@@ -29,7 +29,7 @@ export function isLiveMatchUiVisible() {
   // PvP/adventure match may still be mounted in a hidden tab until the view is revealed.
   if (!isMatchActive()) return false;
   const matchView = document.getElementById("view-match");
-  const pvpView = document.getElementById("view-pvp");
+  const pvpView = document.getElementById("play-arena-root");
   if (matchView?.contains(leaveBtn) || pvpView?.contains(leaveBtn)) return true;
   return false;
 }
@@ -63,11 +63,11 @@ function cleanupOrphanMatchDom() {
   if (matchView?.classList.contains("hidden") && matchView.innerHTML.trim()) {
     matchView.innerHTML = "";
   }
-  const pvpRoot = document.getElementById("pvp-match-root");
+  const pvpRoot = document.getElementById("play-arena-root");
   if (pvpRoot) {
     const leaveBtn = pvpRoot.querySelector("#btn-leave-match");
     if (!isVisibleShellElement(leaveBtn)) {
-      pvpRoot.remove();
+      pvpRoot.querySelector("#pvp-match-root")?.remove();
     }
   }
 }

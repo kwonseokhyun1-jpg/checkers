@@ -92,7 +92,7 @@ const STEPS = [
   {
     id: "done",
     title: "You are ready!",
-    body: "Your deck is saved. Head to Play when you want your first Adventure battle — good luck!",
+    body: "Your deck is saved. Open Play → Adventure when you want your first tower battle — good luck!",
     autoAdvance: true,
   },
 ];

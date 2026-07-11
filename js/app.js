@@ -126,6 +126,7 @@ import {
   loadTutorialMetaChunk,
   loadTutorialUnlocksChunk,
   loadTutorialMatchChunk,
+  loadSocialChunk,
 } from "./lazyChunks.js";
 
 function notifyMetaTutorial(event, data) {
@@ -151,12 +152,17 @@ const TAB_LABELS = {
   deck: "Decks",
   chests: "Shop",
   play: "Play",
-  pvp: "PvP",
+  social: "Social",
   quests: "Quests",
   profile: "Profile",
   settings: "Settings",
 };
 const MAIN_TABS = new Set(Object.keys(TAB_LABELS));
+/** @type {'adventure'|'arena'|'leaderboard'} */
+let activePlayTab = "adventure";
+/** @type {'adventure'|'arena'|'leaderboard'|null} */
+let pendingPlaySubTab = null;
+let bypassPlayPvpGate = false;
 /** @type {'cards'|'cosmetics'|'star'} */
 let activeVaultTab = "cards";
 /** @type {'list'|'edit'|'view'} */
@@ -186,6 +192,10 @@ let matchSession = null;
 let pvpController = null;
 /** @type {Promise<ReturnType<typeof import('./pvpUI.js').initPvpUI>> | null} */
 let pvpInitPromise = null;
+/** @type {{ render: () => void } | null} */
+let socialController = null;
+/** @type {Promise<ReturnType<typeof import('./socialUI.js').initSocialUI>> | null} */
+let socialInitPromise = null;
 
 function ensurePvpUI() {
   if (pvpController) return Promise.resolve(pvpController);
@@ -193,13 +203,15 @@ function ensurePvpUI() {
     pvpInitPromise = loadPvpChunk().then(({ initPvpUI, clearAllWaitingRoomsOnce }) => {
       void clearAllWaitingRoomsOnce();
       pvpController = initPvpUI({
-        root: document.getElementById("view-pvp"),
+        arenaRoot: document.getElementById("play-arena-root"),
+        leaderboardRoot: document.getElementById("play-leaderboard-root"),
         getProfile: () => profile,
         openAuthModal: () => authUI?.open("signin", { forced: true }),
         onNavigateTab: showTab,
+        onNavigatePlayTab: showPlayTab,
         onOpenDeckEdit: openDeckEdit,
         onPvpViewShown: () => {
-          activeTab = "pvp";
+          activeTab = "play";
           syncMainTabShellState();
         },
       });
@@ -207,6 +219,22 @@ function ensurePvpUI() {
     });
   }
   return pvpInitPromise;
+}
+
+function ensureSocialUI() {
+  if (socialController) return Promise.resolve(socialController);
+  if (!socialInitPromise) {
+    socialInitPromise = loadSocialChunk().then(({ initSocialUI }) => {
+      socialController = initSocialUI({
+        root: document.getElementById("view-social"),
+        getProfile: () => profile,
+        saveProfile,
+        openAuthModal: () => authUI?.open("signin", { forced: true }),
+      });
+      return socialController;
+    });
+  }
+  return socialInitPromise;
 }
 /** @type {ReturnType<typeof initAuthGate> | null} */
 let authGate = null;
@@ -326,7 +354,73 @@ function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE, title = "Locked") {
 
 function syncMainTabShellState() {
   document.body.classList.toggle("main-tab-active", MAIN_TABS.has(activeTab));
-  document.body.classList.toggle("adventure-active", activeTab === "play");
+  document.body.classList.toggle("adventure-active", activeTab === "play" && activePlayTab === "adventure");
+}
+
+function syncPlaySubtabUnlockState() {
+  const unlocked = isQuestsAndPvpUnlocked(profile);
+  for (const tab of ["arena", "leaderboard"]) {
+    const btn = document.querySelector(`.play-tab[data-play-tab="${tab}"]`);
+    if (!btn) continue;
+    btn.classList.toggle("play-tab--locked", !unlocked);
+    btn.setAttribute("aria-disabled", unlocked ? "false" : "true");
+    btn.title = unlocked ? "" : questsPvpUnlockMessage("PvP");
+  }
+}
+
+async function showPlayTab(tab) {
+  if (
+    !bypassPlayPvpGate &&
+    (tab === "arena" || tab === "leaderboard") &&
+    !isQuestsAndPvpUnlocked(profile)
+  ) {
+    const guest = isGuestPlayer();
+    const signInNudge = GUEST_SIGN_IN_NUDGE_PVP;
+    const message = guest
+      ? `${questsPvpUnlockMessage("PvP")}\n\n${signInNudge}.`
+      : questsPvpUnlockMessage("PvP");
+    const goToAdventure = await mobileConfirm(message, {
+      title: "PvP locked",
+      confirmLabel: "Go to Adventure",
+      cancelLabel: guest ? "Sign in" : "Not now",
+    });
+    if (goToAdventure) {
+      bypassPlayPvpGate = true;
+      showPlayTab("adventure");
+      bypassPlayPvpGate = false;
+    } else if (guest) {
+      authUI?.open("signin", { forced: true });
+    }
+    return;
+  }
+
+  activePlayTab = tab;
+  document.querySelectorAll(".play-tab").forEach((btn) => {
+    const on = btn.dataset.playTab === tab;
+    btn.classList.toggle("active", on);
+    btn.setAttribute("aria-selected", on ? "true" : "false");
+  });
+  document.querySelectorAll(".play-tab-panel").forEach((panel) => {
+    const on = panel.id === `play-tab-${tab}`;
+    panel.classList.toggle("hidden", !on);
+    panel.hidden = !on;
+  });
+  syncMainTabShellState();
+  notifyUnlockTutorial("play-tab-changed", { tab });
+
+  if (tab === "adventure") {
+    showAdventureMap();
+  } else if (tab === "arena") {
+    void ensurePvpUI().then((c) => {
+      c?.setScreen?.("arena");
+      c?.render({ resume: true });
+    });
+  } else if (tab === "leaderboard") {
+    void ensurePvpUI().then((c) => {
+      c?.setScreen?.("leaderboard");
+      c?.render();
+    });
+  }
 }
 
 function syncTabSignInBadge(btn, visible, text) {
@@ -349,27 +443,38 @@ function syncTabSignInBadge(btn, visible, text) {
 function syncNavUnlockState() {
   const unlocked = isQuestsAndPvpUnlocked(profile);
   const guest = isGuestPlayer();
-  for (const tab of ["quests", "pvp"]) {
-    const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
-    if (!btn) continue;
-    const feature = tab === "pvp" ? "PvP" : "Quests";
-    const progressionLocked = !unlocked;
-    const signInNudge = tab === "pvp" ? GUEST_SIGN_IN_NUDGE_PVP : GUEST_SIGN_IN_NUDGE_SAVE;
+  syncPlaySubtabUnlockState();
 
-    btn.classList.toggle("tab-btn--locked", progressionLocked);
-    btn.setAttribute("aria-disabled", progressionLocked ? "true" : "false");
+  const questsBtn = document.querySelector('.tab-btn[data-tab="quests"]');
+  if (questsBtn) {
+    const progressionLocked = !unlocked;
+    const signInNudge = GUEST_SIGN_IN_NUDGE_SAVE;
+
+    questsBtn.classList.toggle("tab-btn--locked", progressionLocked);
+    questsBtn.setAttribute("aria-disabled", progressionLocked ? "true" : "false");
 
     if (progressionLocked) {
-      btn.title = guest
-        ? `${questsPvpUnlockMessage(feature)} ${signInNudge}.`
-        : questsPvpUnlockMessage(feature);
-      syncTabSignInBadge(btn, guest, "Sign in");
+      questsBtn.title = guest
+        ? `${questsPvpUnlockMessage("Quests")} ${signInNudge}.`
+        : questsPvpUnlockMessage("Quests");
+      syncTabSignInBadge(questsBtn, guest, "Sign in");
     } else if (guest) {
-      btn.title = signInNudge;
-      syncTabSignInBadge(btn, tab === "pvp", "Sign in");
+      questsBtn.title = signInNudge;
+      syncTabSignInBadge(questsBtn, false);
     } else {
-      btn.title = "";
-      syncTabSignInBadge(btn, false);
+      questsBtn.title = "";
+      syncTabSignInBadge(questsBtn, false);
+    }
+  }
+
+  const socialBtn = document.querySelector('.tab-btn[data-tab="social"]');
+  if (socialBtn) {
+    if (guest) {
+      socialBtn.title = GUEST_SIGN_IN_NUDGE_SAVE;
+      syncTabSignInBadge(socialBtn, true, "Sign in");
+    } else {
+      socialBtn.title = "";
+      syncTabSignInBadge(socialBtn, false);
     }
   }
 
@@ -389,17 +494,16 @@ async function showTab(tab) {
   }
   if (
     !bypassQuestsPvpGate &&
-    (tab === "quests" || tab === "pvp") &&
+    tab === "quests" &&
     !isQuestsAndPvpUnlocked(profile)
   ) {
-    const feature = tab === "pvp" ? "PvP" : "Quests";
     const guest = isGuestPlayer();
-    const signInNudge = tab === "pvp" ? GUEST_SIGN_IN_NUDGE_PVP : GUEST_SIGN_IN_NUDGE_SAVE;
+    const signInNudge = GUEST_SIGN_IN_NUDGE_SAVE;
     const message = guest
-      ? `${questsPvpUnlockMessage(feature)}\n\n${signInNudge}.`
-      : questsPvpUnlockMessage(feature);
+      ? `${questsPvpUnlockMessage("Quests")}\n\n${signInNudge}.`
+      : questsPvpUnlockMessage("Quests");
     const goToAdventure = await mobileConfirm(message, {
-      title: `${feature} locked`,
+      title: "Quests locked",
       confirmLabel: "Go to Adventure",
       cancelLabel: guest ? "Sign in" : "Not now",
     });
@@ -415,7 +519,7 @@ async function showTab(tab) {
   reconcileMatchShellState();
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
-    const switchingToActivePvpMatch = tab === "pvp" && document.getElementById("pvp-match-root");
+    const switchingToActivePvpMatch = tab === "play" && document.getElementById("pvp-match-root");
     if (!switchingToActivePvpMatch) {
       const label = TAB_LABELS[tab] || tab;
       if (
@@ -429,6 +533,7 @@ async function showTab(tab) {
         return;
       }
       setPendingNavigationTab(tab);
+      if (tab === "play") pendingPlaySubTab = "arena";
       armLeaveConfirmSkip();
       document.querySelector("#btn-leave-match")?.click();
       return;
@@ -472,21 +577,25 @@ async function showTab(tab) {
     showQuestsLoading();
     void renderQuests();
   }
-  if (tab === "play") showAdventureMap();
-  if (tab === "pvp") {
-    void ensurePvpUI()
-      .then((c) => c?.render({ resume: true }))
+  if (tab === "play") {
+    const sub = pendingPlaySubTab || activePlayTab || "adventure";
+    pendingPlaySubTab = null;
+    showPlayTab(sub);
+  }
+  if (tab === "social") {
+    void ensureSocialUI()
+      .then((c) => c?.render())
       .catch((err) => {
-        console.error("[PvP] init failed", err);
-        const root = document.getElementById("view-pvp");
+        console.error("[Social] init failed", err);
+        const root = document.getElementById("view-social");
         if (root && !root.innerHTML.trim()) {
           root.innerHTML =
-            '<section class="panel game-panel pvp-panel"><p class="pvp-status pvp-status--error">Couldn\'t load PvP — please reload the page.</p></section>';
+            '<section class="panel game-panel"><p class="pvp-status pvp-status--error">Could not load Social — please reload the page.</p></section>';
         }
       });
   }
   if (!isMatchActive()) {
-    setAudioMode(tab === "play" || tab === "pvp" ? "hub" : "hub");
+    setAudioMode(tab === "play" ? "hub" : "hub");
     await lockPortrait();
   }
 }
@@ -2628,6 +2737,18 @@ function init() {
     });
   });
 
+  document.querySelectorAll(".play-tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      reconcileMatchShellState();
+      if (activeTab !== "play") {
+        pendingPlaySubTab = btn.dataset.playTab;
+        void showTab("play");
+        return;
+      }
+      void showPlayTab(btn.dataset.playTab);
+    });
+  });
+
   document.querySelectorAll(".vault-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
       reconcileMatchShellState();
@@ -2717,6 +2838,7 @@ function init() {
   const authModal = document.getElementById("auth-modal");
   const authBtn = document.getElementById("auth-header-btn");
   initHeaderProfileMenu();
+  initPanelHelp("play-help-btn", "play-help-desc");
   initPanelHelp("adventure-help-btn", "adventure-help-desc");
   initPanelHelp("shop-help-btn", "shop-help-desc");
   initPanelHelp("deck-help-btn", "deck-help-desc");
@@ -2749,7 +2871,8 @@ function init() {
       void refreshHeaderIdentity().then(() => {
         if (activeTab === "profile") void renderProfile();
         if (activeTab === "quests") void renderQuests();
-        if (activeTab === "pvp") void ensurePvpUI().then((c) => c?.render({ resume: true }));
+        if (activeTab === "play") void ensurePvpUI().then((c) => c?.render({ resume: true }));
+        if (activeTab === "social") void ensureSocialUI().then((c) => c?.render());
       });
       void ensurePvpUI().then((c) => c?.render({ resume: true }));
       void maybeStartInteractiveTutorial();
@@ -2852,6 +2975,7 @@ function maybeStartPvpTutorial() {
   if (!isQuestsAndPvpUnlocked(profile)) return false;
   if (!shouldShowPvpTutorial(profile)) return false;
   tutorialRunning = true;
+  showTab("play");
   void loadTutorialUnlocksChunk().then(({ startPvpTutorial }) => {
     startPvpTutorial({
       profile,
@@ -3001,7 +3125,9 @@ async function bootstrapAfterAuth() {
   }
   syncTutorialStorageWithProfile(profile);
   await refreshHeaderIdentity();
-  if (pvpController) pvpController.render();
+  if (pvpController && activeTab === "play" && (activePlayTab === "arena" || activePlayTab === "leaderboard")) {
+    pvpController.render();
+  }
   reconcileMatchShellState();
 
   if (requiresAuthGate()) {
