@@ -53,6 +53,8 @@ function baseTutorialState(overrides = {}) {
     gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     pvpSpellSeq: 0,
     pvpLastSpell: null,
+    pvpTurnSeq: 0,
+    pvpLastTurnMoves: null,
     moveHistory: [],
     drawPile: { red: [], black: [] },
     discardPile: { red: [], black: [] },

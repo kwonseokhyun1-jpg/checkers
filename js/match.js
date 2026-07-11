@@ -4,6 +4,7 @@
 import {
   SIZE,
   COLORS,
+  squareName,
   squareNameLabeled,
   LAST_STAND_SHIELD_TURNS,
   VENGEANCE_BLOOD_TURNS,
@@ -107,6 +108,14 @@ const AI_PACE = {
   replayTimeout: 14000,
 };
 
+/** Faster pacing for live PvP opponent move replay */
+const PVP_PACE = {
+  moveAnnounce: 280,
+  moveSettle: 220,
+  afterSpellBeforeMove: 500,
+  message: 400,
+};
+
 export function isMutualElimination(state) {
   if (!state?.board) return false;
   return countPieces(state.board, COLORS.RED) === 0 && countPieces(state.board, COLORS.BLACK) === 0;
@@ -134,6 +143,8 @@ export function createMatchState(playerDeckIds, aiDeckIds = null, options = {}) 
     gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     pvpSpellSeq: 0,
     pvpLastSpell: null,
+    pvpTurnSeq: 0,
+    pvpLastTurnMoves: null,
     moveHistory: [],
   };
   initCardState(state);
@@ -191,6 +202,9 @@ export class MatchSession {
     /** Last server turn key we ran beginPlayerTurn for in PvP (`${turn}_${turnNumber[local]}_${moveHistory.length}`). */
     this._pvpLocalTurnKey = null;
     this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
+    this._lastPvpTurnSeq = options.initialState?.pvpLastTurnMoves?.seq ?? 0;
+    this._pvpTurnMoveLog = [];
+    this._pvpPendingMoveFlags = null;
     if (options.initialState) {
       this.state = options.initialState;
       this.state.meta = { ...createMatchMeta(), ...this.state.meta };
@@ -854,6 +868,26 @@ export class MatchSession {
       incomingSpell &&
       incomingSpell.seq > prevSpellSeq &&
       incomingSpell.caster === this.opponentColor;
+    const prevTurnSeq = this.state?.pvpLastTurnMoves?.seq ?? this._lastPvpTurnSeq ?? 0;
+    const incomingTurnMoves = nextState.pvpLastTurnMoves;
+    const replayTurnMoves =
+      this.isPvp &&
+      incomingTurnMoves &&
+      incomingTurnMoves.seq > prevTurnSeq &&
+      incomingTurnMoves.mover === this.opponentColor &&
+      incomingTurnMoves.moves?.length > 0;
+    const preMoveReplay = replayTurnMoves
+      ? {
+          board: cloneMatchState({ board: this.state.board }).board,
+          captured: cloneMatchState({ captured: this.state.captured }).captured,
+          meta: {
+            bearBonusUsed: { ...(this.state.meta?.bearBonusUsed || {}) },
+            pendingDouble: { ...(this.state.meta?.pendingDouble || {}) },
+            pendingPressMove: { ...(this.state.meta?.pendingPressMove || {}) },
+          },
+        }
+      : null;
+    const finalState = nextState;
     const prevLocalPvpDeck = this.isPvp
       ? {
           turnNumber: this.state?.turnNumber?.[this.localColor] ?? 0,
@@ -883,6 +917,7 @@ export class MatchSession {
       }
     }
     if (incomingSpell?.seq) this._lastPvpSpellSeq = incomingSpell.seq;
+    if (incomingTurnMoves?.seq) this._lastPvpTurnSeq = incomingTurnMoves.seq;
     if (this.isPvp) ensureStartHistory(this.state);
     this.historyViewIndex = null;
     this.aiHighlight = null;
@@ -899,8 +934,16 @@ export class MatchSession {
     this.updateSpellCastUI();
     this.applyPvpOutcomeFromBoard();
     this.updateHistoryNavUI();
+    if (preMoveReplay) {
+      this.state.board = preMoveReplay.board;
+      this.state.captured = preMoveReplay.captured;
+      this.state.meta.bearBonusUsed = preMoveReplay.meta.bearBonusUsed;
+      this.state.meta.pendingDouble = preMoveReplay.meta.pendingDouble;
+      this.state.meta.pendingPressMove = preMoveReplay.meta.pendingPressMove;
+    }
     this.render();
     if (replaySpell) void this.replayOpponentPvpSpell(incomingSpell);
+    else if (replayTurnMoves) void this.replayOpponentPvpTurnMoves(incomingTurnMoves, finalState);
     return true;
   }
 
@@ -925,6 +968,32 @@ export class MatchSession {
         ],
         { applyEntries: false }
       );
+    } finally {
+      this.actionBusy = false;
+      const pendingRow = this.flushPendingPvpRow();
+      if (pendingRow && this.onPvpPendingRow) {
+        this.onPvpPendingRow(pendingRow);
+      } else if (pendingRow?.state_json) {
+        this.importState(pendingRow.state_json);
+      } else {
+        this.render();
+      }
+    }
+  }
+
+  async replayOpponentPvpTurnMoves(turnMoves, finalState) {
+    if (this.actionBusy) return;
+    this.actionBusy = true;
+    try {
+      await this.playAiTurnPresentation(turnMoves.moves || [], {
+        applyEntries: true,
+        pvpReplay: true,
+      });
+      if (finalState) {
+        this.state.board = finalState.board;
+        this.state.captured = finalState.captured;
+      }
+      this.render();
     } finally {
       this.actionBusy = false;
       const pendingRow = this.flushPendingPvpRow();
@@ -1040,6 +1109,69 @@ export class MatchSession {
       ...this.pvpSpellReplayFields(extras),
     };
     this._lastPvpSpellSeq = seq;
+  }
+
+  recordPvpTurnMove(move, tags = {}) {
+    if (!this.isPvp || !move) return;
+    const s = this.state;
+    const last = this._pvpTurnMoveLog[this._pvpTurnMoveLog.length - 1];
+    const isChain =
+      last?.type === "move" && last.to[0] === move.from[0] && last.to[1] === move.from[1];
+    const cap = move.captures?.length || 0;
+    const fromLabel = squareName(move.from[0], move.from[1]);
+    const toLabel = squareName(move.to[0], move.to[1]);
+    let text;
+    if (tags.bearBonus) {
+      const piece = s.board[move.from[0]]?.[move.from[1]];
+      const prefix = isZombieBear(piece) ? "Zombie Bear" : "Awoken Bear";
+      text = `${prefix} — ${fromLabel} → ${toLabel}`;
+    } else if (tags.quickMarch) {
+      text = `Quick follow-up ${fromLabel} → ${toLabel}`;
+    } else if (tags.pressExtra) {
+      text = `Press — ${fromLabel} → ${toLabel}`;
+    } else if (tags.confused) {
+      text = cap
+        ? `Confusion — ${fromLabel} → ${toLabel} (captured ${cap})`
+        : `Confusion — ${fromLabel} → ${toLabel}`;
+    } else if (isChain) {
+      text = cap
+        ? `Continued ${fromLabel} → ${toLabel} (captured ${cap})`
+        : `Continued ${fromLabel} → ${toLabel}`;
+    } else {
+      text = cap
+        ? `Moved ${fromLabel} → ${toLabel} (captured ${cap})`
+        : `Moved ${fromLabel} → ${toLabel}`;
+    }
+    this._pvpTurnMoveLog.push({
+      type: "move",
+      from: [...move.from],
+      to: [...move.to],
+      captures: move.captures?.map((c) => [...c]) ?? [],
+      moveKind: move.type,
+      confused: !!tags.confused,
+      bearBonus: !!tags.bearBonus,
+      quickMarch: !!tags.quickMarch,
+      pressExtra: !!tags.pressExtra,
+      text,
+    });
+  }
+
+  flushPvpTurnMoves() {
+    if (!this.isPvp || !this._pvpTurnMoveLog.length) return;
+    const seq = (this.state.pvpTurnSeq || 0) + 1;
+    this.state.pvpTurnSeq = seq;
+    this.state.pvpLastTurnMoves = {
+      seq,
+      mover: this.localColor,
+      moves: this._pvpTurnMoveLog.map((entry) => ({
+        ...entry,
+        from: [...entry.from],
+        to: [...entry.to],
+        captures: entry.captures?.map((c) => [...c]) ?? [],
+      })),
+    };
+    this._lastPvpTurnSeq = seq;
+    this._pvpTurnMoveLog = [];
   }
 
   removeCardFromHand(card) {
@@ -1647,6 +1779,7 @@ export class MatchSession {
     s.phase = PHASE.MOVE;
     this.validMoves = extras;
     this.selectedSquare = [landR, landC];
+    this._pvpPendingMoveFlags = { quickMarch: true };
     this.setMessage("Bonus Step — move again!");
     this.render();
     return true;
@@ -1663,6 +1796,7 @@ export class MatchSession {
     s.phase = PHASE.MOVE;
     this.validMoves = extras;
     this.selectedSquare = [landR, landC];
+    this._pvpPendingMoveFlags = { bearBonus: true };
     this.setMessage(isZombieBear(landed) ? "Zombie Bear — move again!" : "Awoken Bear — move again!");
     this.render();
     return true;
@@ -1677,6 +1811,7 @@ export class MatchSession {
     const preMoveSnap = this.tutorialHooks ? cloneMatchState(s) : null;
     this._pendingHistoryMove = move;
     this._pendingHistoryLabel = formatPieceMoveLabel(s.board, move);
+    let confusedMove = false;
     if (s.turn === this.localColor && isConfused(s.meta, this.localColor)) {
       const forced = this.pickConfusedMove(this.localColor);
       if (!forced) {
@@ -1686,6 +1821,7 @@ export class MatchSession {
         return;
       }
       move = forced;
+      confusedMove = true;
     }
     this.cancelCardPlay();
     this.closeSpellPhase(this.localColor);
@@ -1697,6 +1833,11 @@ export class MatchSession {
     const capAfter = s.captured[this.localColor]?.length ?? 0;
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
     this.achievementTracker?.onMoveAfter(s);
+    if (this.isPvp) {
+      const tags = { ...(this._pvpPendingMoveFlags || {}), ...(confusedMove ? { confused: true } : {}) };
+      this._pvpPendingMoveFlags = null;
+      this.recordPvpTurnMove(move, tags);
+    }
     const bountyMsg = flushPendingBountyMessage(s.meta, this.localColor);
     const martyrMsg = flushPendingMartyrMessage(s.meta, this.localColor);
     const rewardMsg = [bountyMsg, martyrMsg].filter(Boolean).join(" ");
@@ -1766,6 +1907,7 @@ export class MatchSession {
     this._pressExtraFrom = [landR, landC];
     this.validMoves = moves;
     this.selectedSquare = [landR, landC];
+    this._pvpPendingMoveFlags = { pressExtra: true };
     this.setMessage("Press — step again (no capture)!");
     this.render();
     return true;
@@ -1794,6 +1936,7 @@ export class MatchSession {
       this._pendingHistoryLabel = null;
     }
     if (this.isPvp) {
+      this.flushPvpTurnMoves();
       this.setMessage("Waiting for opponent…");
       this.render();
       await this.pushPvpState();
@@ -2562,9 +2705,10 @@ ${starLine}`;
   }
 
   /** Replay AI log: announce + apply each step (PvP can pass applyEntries: false). */
-  async playAiTurnPresentation(log, { applyEntries = true } = {}) {
+  async playAiTurnPresentation(log, { applyEntries = true, pvpReplay = false } = {}) {
     const aiLog = this.$("ai-action-log");
     const oc = this.opponentColor;
+    const pace = pvpReplay ? PVP_PACE : AI_PACE;
     let afterSpell = false;
     for (const entry of log) {
       if (entry.type === "spell") {
@@ -2691,7 +2835,7 @@ ${starLine}`;
       } else if (entry.type === "move") {
         this.hideAiSpellBanner();
         if (afterSpell) {
-          await delay(AI_PACE.afterSpellBeforeMove);
+          await delay(pace.afterSpellBeforeMove);
           afterSpell = false;
         }
         if (aiLog) {
@@ -2699,7 +2843,7 @@ ${starLine}`;
           aiLog.scrollTop = aiLog.scrollHeight;
         }
         this.setMessage(entry.text);
-        if (entry.confused) {
+        if (pvpReplay || entry.confused) {
           await this.playPieceMoveAnimation(entry, { message: entry.text });
         } else {
           this.aiHighlight = {
@@ -2708,7 +2852,7 @@ ${starLine}`;
             captures: entry.captures || [],
           };
           this.render();
-          await delay(AI_PACE.moveAnnounce);
+          await delay(pace.moveAnnounce);
         }
         if (applyEntries) {
           applyAiReplayEntry(this.state, entry, oc);
@@ -2719,7 +2863,7 @@ ${starLine}`;
         if (this.state.boardFx) {
           await new Promise((resolve) => this.playBoardFx(this.state, resolve));
         }
-        await delay(AI_PACE.moveSettle);
+        await delay(pace.moveSettle);
       } else if (entry.type === "message") {
         if (aiLog) {
           aiLog.innerHTML += `<div class="ai-log-entry">${entry.text}</div>`;
