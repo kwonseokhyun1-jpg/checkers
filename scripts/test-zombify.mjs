@@ -85,4 +85,27 @@ assert.equal(hordeSpread?.isZombie, true, "non-king zombie capture should zombif
 assert.equal(hordeSpread?.isMainZombie, false);
 assert.equal(hordeSpread?.zombieMasterId, main.zombieMasterId);
 
+// A second zombify should create an independent horde without clearing the first.
+const board3 = Array.from({ length: 8 }, () => Array(8).fill(null));
+const state3 = emptyState(board3);
+place(board3, 5, 0, COLORS.RED);
+place(board3, 5, 2, COLORS.RED);
+const firstCurse = applyEffect(state3, COLORS.RED, "zombify", [[5, 0]]);
+assert.equal(firstCurse.success, true, firstCurse.message || "first zombify should succeed");
+const firstKing = board3[5][0];
+tickEffects(board3, COLORS.RED, state3);
+assert.equal(firstKing.king, true, "first zombie king should crown on wake");
+
+const secondCurse = applyEffect(state3, COLORS.RED, "zombify", [[5, 2]]);
+assert.equal(secondCurse.success, true, secondCurse.message || "second zombify should succeed");
+const secondKing = board3[5][2];
+assert.equal(firstKing.isZombie, true, "first zombie king should remain cursed");
+assert.equal(firstKing.isMainZombie, true, "first zombie king should stay a main zombie");
+assert.equal(secondKing.isMainZombie, true, "second piece should become a main zombie");
+assert.notEqual(
+  firstKing.zombieMasterId,
+  secondKing.zombieMasterId,
+  "each zombie king should lead its own horde"
+);
+
 console.log("Zombify mechanic test: OK");

@@ -5,7 +5,7 @@ import {
   SIZE, COLORS, isDarkSquare, inBounds, displacePiece, resolveLandingTraps, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
   createPiece, grantAwokenBear, copyMarksToClone, stripZombieBearMarks, absorbZombieIntoPiece, isZombieBearStack, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
-  applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified, clearPlayerZombieChain,
+  applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
   tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS, MARTYR_TRAP_TURNS,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns } from "./gameMeta.js";
@@ -742,7 +742,6 @@ const EFFECTS = {
     if (isFortified(p)) return fail("Fortified");
     if (p.isZombie) return fail("Already a zombie");
     const hadBear = p.bearAwakened;
-    clearPlayerZombieChain(state.board, color);
     p.isZombie = true;
     p.isMainZombie = true;
     p.zombieMasterId = p.id;
