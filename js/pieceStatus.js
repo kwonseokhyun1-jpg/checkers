@@ -1,7 +1,7 @@
 /**
  * Piece buff/curse labels, inspection UI copy, and Purify cleanse logic.
  */
-import { squareNameLabeled } from "./board.js";
+import { squareNameLabeled, isZombieBearStack } from "./board.js";
 
 const BUFF_RULES = [
   { key: "shieldTurns", label: "Shield", turns: true },
@@ -72,11 +72,16 @@ export function getPieceStatus(piece) {
     buffs.push({ label: "Knight" });
   }
   for (const rule of BUFF_RULES) {
+    if (isZombieBearStack(piece) && rule.key === "bearAwakened") continue;
     const line = lineForRule(piece, rule);
     if (line) buffs.push(line);
   }
+  if (isZombieBearStack(piece)) {
+    buffs.push({ label: "Zombie Bear" });
+  }
   for (const rule of CURSE_RULES) {
     if (rule.key === "isZombie" && piece.isMainZombie) continue;
+    if (isZombieBearStack(piece) && (rule.key === "isZombie" || rule.key === "isMainZombie")) continue;
     const line = lineForRule(piece, rule);
     if (line) curses.push(line);
   }
