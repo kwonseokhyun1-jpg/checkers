@@ -8,7 +8,7 @@ export const COSMETIC_TYPES = ["avatar", "frame", "banner", "pieceSkin"];
 
 export const COSMETIC_RARITIES = ["common", "uncommon", "rare", "epic", "legendary"];
 
-export const RARITY_GEM_DUPE = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
+export const RARITY_GEM_DUPE = { common: 3, uncommon: 4, rare: 5, epic: 7, legendary: 10 };
 
 /** @type {{ id: string, type: string, name: string, rarity: string, desc: string }[]} */
 export const COSMETIC_ITEMS = [
@@ -188,7 +188,7 @@ export function drawCosmeticItem(profile, weightsOrBox) {
     const ownedPool = poolOfRarity(rarity, { excludeStarters: true });
     if (!ownedPool.length) continue;
     const pick = ownedPool[Math.floor(Math.random() * ownedPool.length)];
-    const gemRefund = RARITY_GEM_DUPE[pick.rarity] || 5;
+    const gemRefund = RARITY_GEM_DUPE[pick.rarity] || 10;
     return { ...pick, duplicate: true, gemRefund };
   }
   return null;
@@ -208,7 +208,7 @@ export function openCosmeticBox(profile, boxId) {
     const item = drawCosmeticItem(profile, box);
     if (!item) continue;
     pulls.push(item);
-    if (item.duplicate) bonusGems += item.gemRefund || RARITY_GEM_DUPE[item.rarity] || 5;
+    if (item.duplicate) bonusGems += item.gemRefund || RARITY_GEM_DUPE[item.rarity] || 10;
   }
 
   if (bonusGems) profile.gems += bonusGems;
