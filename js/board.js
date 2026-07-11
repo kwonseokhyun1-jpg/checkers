@@ -358,16 +358,6 @@ export function clearPlayerZombieChain(board, color) {
   for (const masterId of masterIds) clearZombieChain(board, masterId);
 }
 
-function cascadeKillZombieHorde(board, state, masterId, byColor) {
-  const victims = [];
-  forEachZombieInChain(board, masterId, (p, r, c) => {
-    victims.push([r, c]);
-  });
-  for (const [r, c] of victims) {
-    resolveCapture(board, state, r, c, byColor, { nonCap: true, zombieCascade: true });
-  }
-}
-
 function spawnSpreadZombie(board, state, color, row, col, masterId) {
   if (!inBounds(row, col) || !isDarkSquare(row, col) || board[row][col]) return null;
   if (state && squareBlocked(state, row, col, color)) return null;
@@ -385,7 +375,7 @@ function spawnSpreadZombie(board, state, color, row, col, masterId) {
  * Resolve killing or capturing a piece (shields, Last Stand, deflect, etc.).
  * @returns {boolean} true if the piece was removed
  */
-export function resolveCapture(board, state, r, c, byColor, { nonCap = true, berserkSlam = false, linkFate = false, zombieCascade = false } = {}) {
+export function resolveCapture(board, state, r, c, byColor, { nonCap = true, berserkSlam = false, linkFate = false } = {}) {
   const p = board[r]?.[c];
   if (!p) return false;
   if (!linkFate && state && isInDarknessZone(state, r, c)) return false;
@@ -436,10 +426,8 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
       if (mates.length) mates[0].king = true;
     }
   }
-  const mainZombieMasterId = !linkFate && !zombieCascade && p.isMainZombie ? p.zombieMasterId : null;
   const partnerId = p.linkedFateId;
   removePiece(board, r, c);
-  if (mainZombieMasterId) cascadeKillZombieHorde(board, state, mainZombieMasterId, byColor);
   if (p.ghostGuard && state) getSq(state, r, c).ghostBlock = 2;
   if (partnerId && !linkFate && state) {
     const hit = findPieceById(board, partnerId);

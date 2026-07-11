@@ -58,6 +58,7 @@ assert.equal(spread?.zombieMasterId, main.zombieMasterId);
 
 resolveCapture(board, state, 3, 2, COLORS.BLACK, { nonCap: false });
 assert.equal(board[3][2], null);
-assert.equal(board[5][0], null);
+assert.equal(board[5][0]?.isZombie, true, "spread zombie should persist after zombie king dies");
+assert.equal(board[5][0]?.isMainZombie, false);
 
 console.log("Zombify mechanic test: OK");
