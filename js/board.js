@@ -981,7 +981,13 @@ export function tickEffects(board, color, state = null) {
         sq.sanctuaryTurns--;
         if (sq.sanctuaryTurns <= 0) delete sq.sanctuary;
       }
-      if (sq.darkness > 0) sq.darkness--;
+      if (sq.darkness > 0 && (!sq.darknessOwner || sq.darknessOwner === color)) {
+        sq.darkness--;
+        if (sq.darkness <= 0) {
+          delete sq.darkness;
+          delete sq.darknessOwner;
+        }
+      }
       if (sq.fireTurns > 0) {
         sq.fireTurns--;
         if (sq.fireTurns <= 0) {

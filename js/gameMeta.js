@@ -376,18 +376,36 @@ export function getDarknessZoneCellsAround(r, c) {
   return cells;
 }
 
-/** True when (r,c) is a dark square cloaked by an active darkness core. */
-export function isInDarknessZone(state, r, c) {
-  if (!state?.squares) return false;
+/** Caster color for the darkness zone covering (r,c), or null. */
+export function getDarknessCasterForCell(state, r, c) {
+  if (!state?.squares) return null;
   for (const key of Object.keys(state.squares)) {
     const sq = state.squares[key];
     if (!(sq?.darkness > 0)) continue;
     const [cr, cc] = key.split(",").map(Number);
     for (const [dr, dc] of DARKNESS_ZONE_OFFSETS) {
-      if (cr + dr === r && cc + dc === c) return true;
+      if (cr + dr === r && cc + dc === c) return sq.darknessOwner ?? null;
     }
   }
-  return false;
+  return null;
+}
+
+/** True when (r,c) is a dark square cloaked by an active darkness core (ring only; excludes core). */
+export function isInDarknessZone(state, r, c) {
+  return getDarknessCasterForCell(state, r, c) != null;
+}
+
+/** True when (r,c) is an active darkness spell core. */
+export function isDarknessCore(state, r, c) {
+  const sq = state?.squares?.[`${r},${c}`];
+  return (sq?.darkness ?? 0) > 0;
+}
+
+/** Opponent of the darkness caster cannot see pieces inside the cloaked zone. */
+export function isPieceHiddenByDarknessFromViewer(state, r, c, viewerColor) {
+  if (!viewerColor) return false;
+  const caster = getDarknessCasterForCell(state, r, c);
+  return !!caster && caster !== viewerColor;
 }
 
 export function isSanctuaryProtected(state, r, c, pieceColor) {
