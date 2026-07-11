@@ -44,7 +44,7 @@ export default defineConfig({
             urlPattern: /\/bundled\/.*\.(js|css)$/,
             handler: "CacheFirst",
             options: {
-              cacheName: "js-chunks",
+              cacheName: "js-chunks-v2",
               expiration: { maxEntries: 48, maxAgeSeconds: 60 * 60 * 24 * 30 },
             },
           },

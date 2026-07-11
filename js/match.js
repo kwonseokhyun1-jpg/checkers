@@ -2928,13 +2928,9 @@ ${starLine}`;
   syncBoardPerspectiveLabels() {
     const ranks = this.root.querySelector("#board-ranks-left");
     if (!ranks) return;
-    const buttons = [...ranks.querySelectorAll(".board-rank-btn")];
-    buttons.sort((a, b) => {
-      const ar = Number(a.dataset.row);
-      const br = Number(b.dataset.row);
-      return this.boardFlipped ? br - ar : ar - br;
+    ranks.querySelectorAll(".board-rank-btn").forEach((btn) => {
+      btn.style.gridRow = "";
     });
-    for (const btn of buttons) ranks.appendChild(btn);
   }
 
   renderBoard() {
@@ -2947,13 +2943,14 @@ ${starLine}`;
     const s = this.getViewState();
     const zonePreview = this.getZonePreviewSets();
 
-    for (let visRow = 0; visRow < SIZE; visRow++) {
+    for (let row = 0; row < SIZE; row++) {
       for (let col = 0; col < SIZE; col++) {
-        const row = this.boardFlipped ? SIZE - 1 - visRow : visRow;
         const sq = document.createElement("button");
         sq.type = "button";
         sq.dataset.row = String(row);
         sq.dataset.col = String(col);
+        sq.style.gridRow = String(this.visualRow(row) + 1);
+        sq.style.gridColumn = String(col + 1);
         const key = `${row},${col}`;
         const terrain = s.squares[key];
         let cls = `square ${isDarkSquare(row, col) ? "dark" : "light"}`;

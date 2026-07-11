@@ -1,8 +1,13 @@
 /* Board gameplay, PvP perspective, and status indicators.
  * Shell / nav / typography: css/tokens.css + style.css + mobile-game.css */
 
-/* PvP: guest (black) sees rows reversed so their pieces sit at the bottom.
- * Square order is remapped in renderBoard(); rank labels follow via syncBoardPerspectiveLabels(). */
+/* PvP guest (black): squares remap via grid-row in renderBoard(); rank labels mirror here. */
+.board-frame--local-flipped .board-ranks {
+  transform: scaleY(-1);
+}
+.board-frame--local-flipped .board-rank-btn {
+  transform: scaleY(-1);
+}
 
 .board-frame {
   background: #262421;
