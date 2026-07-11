@@ -3,7 +3,7 @@
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, getStepMoves, getJumpMoves, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, ensureDominionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, forwardBoltCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, forwardBoltCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, promoRow, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 import {
   friendlyHasDebuffs,
@@ -960,7 +960,7 @@ export function getValidTargets(state, color, card, picks) {
             } else if (card.effect === "execution") {
               if (!pieceHasIntrinsicMoves(state.board, o, state, r, c)) res.push([r, c]);
             } else if (card.effect === "demote") {
-              if (p.king && !isFortified(p) && r !== ownBackRank(p.color)) res.push([r, c]);
+              if (p.king && !isFortified(p) && r !== promoRow(p.color)) res.push([r, c]);
             } else res.push([r, c]);
           }
         }
