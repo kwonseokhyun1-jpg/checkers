@@ -98,7 +98,7 @@ SPELLS = [
     ("bankrupt", "Bankrupt", "Both players lose half their gems.", "rare", 3, "instant", "bankrupt"),
     ("coupon", "Coupon", "Your next card draw is free.", "common", 5, "instant", "coupon"),
     ("hand_expand", "Hand Expand", "Your hand limit becomes 8 for the rest of the game.", "rare", 3, "instant", "hand_expand"),
-    ("mulligan", "Mulligan", "Discard your hand and draw the same number of new cards.", "uncommon", 4, "instant", "mulligan"),
+    ("mulligan", "Mulligan", "Discard your hand, then draw that many cards; you may cast another spell this turn.", "rare", 3, "instant", "mulligan"),
     # === SWAPS / TRICKS ===
     ("hostile_swap", "Hostile Swap", "Swap one of your pieces with an enemy (both unshielded).", "epic", 2, "f_e", "hostile_swap"),
     ("identity_theft", "Identity Theft", "Your piece copies an enemy's movement tags for 3 turns.", "rare", 3, "f_e", "identity_theft"),

@@ -72,6 +72,7 @@ const ID_TO_CATEGORY = {
   panic: "control",
   poison: "attack",
   mind_control: "special",
+  mulligan: "special",
   zombify: "special",
   press: "control",
   purify: "special",

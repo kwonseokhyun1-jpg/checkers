@@ -385,6 +385,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "bishop_2",
   "rook_2",
   "offering",
+  "mulligan",
   "tangle",
   "call_forward",
   "dash",
@@ -961,6 +962,25 @@ function deportMotif() {
     <rect x="10" y="50" width="20" height="5" rx="1.5" fill="#57534e" opacity="0.5" stroke="#44403c" stroke-width="1"/>
     <text x="12" y="49" font-size="5.5" fill="#d6d3d1" opacity="0.8" font-weight="600">start</text>
     ${sparkles([[18, 32, 0.8], [28, 28, 0.6]], "#e9d5ff", 0.55)}`;
+}
+
+/** Hand of cards cycling out and back in with a bonus spark. */
+function mulliganMotif() {
+  return `${groundShadow(32, 54, 22, 4)}
+    <rect x="10" y="30" width="13" height="20" rx="2" fill="#4c1d95" stroke="#0f172a" stroke-width="1.6" transform="rotate(-18 16 40)" opacity="0.45"/>
+    <rect x="18" y="28" width="13" height="20" rx="2" fill="#5b21b6" stroke="#0f172a" stroke-width="1.6" transform="rotate(-6 24 38)" opacity="0.55"/>
+    <rect x="26" y="26" width="13" height="20" rx="2" fill="#6d28d9" stroke="#0f172a" stroke-width="1.6" opacity="0.65"/>
+    <path d="M32 8 C44 8 52 16 52 28 C52 40 44 48 32 48 C24 48 18 42 16 34" stroke="#0f172a" stroke-width="3.4" fill="none" opacity="0.2"/>
+    <path d="M32 8 C44 8 52 16 52 28 C52 40 44 48 32 48 C24 48 18 42 16 34" stroke="#c4b5fd" stroke-width="2.6" fill="none"/>
+    <path d="M14 30 L8 24 M14 30 L20 24" stroke="#a78bfa" stroke-width="2.2" stroke-linecap="round"/>
+    <rect x="34" y="8" width="13" height="20" rx="2" fill="#4c1d95" stroke="#0f172a" stroke-width="1.6" transform="rotate(8 40 18)"/>
+    <rect x="34" y="8" width="13" height="20" rx="2" fill="none" stroke="#a78bfa" stroke-width="1.2" transform="rotate(8 40 18)"/>
+    <rect x="42" y="10" width="13" height="20" rx="2" fill="#5b21b6" stroke="#0f172a" stroke-width="1.6" transform="rotate(16 48 20)"/>
+    <rect x="42" y="10" width="13" height="20" rx="2" fill="none" stroke="#c4b5fd" stroke-width="1.2" transform="rotate(16 48 20)"/>
+    <path d="M38 14 H48 M38 18 H50 M38 22 H46" stroke="#e9d5ff" stroke-width="1.1" opacity="0.65"/>
+    <circle cx="32" cy="28" r="6" fill="#a78bfa" opacity="0.22" stroke="#c4b5fd" stroke-width="1.2"/>
+    <text x="28" y="31" font-size="9" fill="#f0e6ff" font-weight="700">+1</text>
+    ${sparkles([[12, 18, 0.8], [50, 8, 0.75], [32, 44, 0.6]], "#e9d5ff", 0.6)}`;
 }
 
 /** Ally piece dissolving into two drawn cards. */
@@ -1825,9 +1845,10 @@ export const EFFECT_ILLUSTRATIONS = {
   coin_flip: () => coinFlipMotif(),
   ignore: () => commonBleed("ig", "#94a3b8", "#1f2937", ignoreMotif()),
   counterspell: () => epicBleed("cs", "#a78bfa", "#2e1065", counterspellMotif()),
-  purify: () => epicBleed("pu", "#6ee7b7", "#14532d", purifyMotif()),
+  purify: () => uncommonBleed("pu", "#6ee7b7", "#14532d", purifyMotif()),
   trickster: () => rareBleed("tr", "#c4b5fd", "#553c7a", tricksterMotif()),
   offering: () => rareBleed("of", "#d8b4fe", "#553c7a", offeringMotif()),
+  mulligan: () => rareBleed("mu", "#c4b5fd", "#4c1d95", mulliganMotif()),
   quick_march: () => epicBleed("qm", "#60a5fa", "#1e3a5f", quickMarchMotif()),
   constitution: () => epicBleed("co", "#4ade80", "#14532d", constitutionMotif()),
   last_king: () => uncommonBleed("lk", "#fbbf24", "#1e3a5f", lastKingMotif()),

@@ -18,7 +18,6 @@ export const ECONOMY_CARD_IDS = new Set([
   "bankrupt",
   "coupon",
   "hand_expand",
-  "mulligan",
   "regicide",
   "krabby_patty",
   "loading",
