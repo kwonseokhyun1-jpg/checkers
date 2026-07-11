@@ -815,7 +815,10 @@ export function applyMove(board, move, state = null) {
     const captured = resolveCapture(board, state, cr, cc, piece.color, { nonCap: false });
     if (captured && bountyVictim) payBountyOnCapture(state, bountyVictim, piece.color);
     if (captured && wasAwakeZombie && zombieMasterId && zombieColor && !cap.king) {
-      spawnSpreadZombie(board, state, zombieColor, fr, fc, zombieMasterId);
+      // Rise on the square where the enemy fell (skip when landing on that square — e.g. knight capture).
+      if (cr !== tr || cc !== tc) {
+        spawnSpreadZombie(board, state, zombieColor, cr, cc, zombieMasterId);
+      }
     }
   }
   if (!piece) return null;
