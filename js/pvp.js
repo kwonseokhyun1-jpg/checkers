@@ -31,7 +31,8 @@ export const PVP_MODE_NORMAL = "normal";
 export const PVP_MODE_MYSTERY = "mystery";
 
 export function isMysteryMode(row) {
-  return row?.match_mode === PVP_MODE_MYSTERY;
+  const mode = row?.match_mode ?? row?.mode;
+  return mode === PVP_MODE_MYSTERY;
 }
 
 
@@ -498,13 +499,21 @@ export class PvpService {
     const user = getCurrentUser();
     if (!sb || !user) throw new Error("Sign in to play PvP");
 
+    const { data: freshRow, error: freshErr } = await sb
+      .from("pvp_matches")
+      .select("*")
+      .eq("id", row.id)
+      .maybeSingle();
+    if (freshErr) throw freshErr;
+    if (freshRow) row = freshRow;
+
     const withSkins = await probePieceSkinColumns(sb);
     const mystery = isMysteryMode(row);
     const resolvedHostSkin = await this.resolveEffectiveHostPieceSkin(sb, row);
     row = { ...row, host_piece_skin: resolvedHostSkin };
     this.assertDistinctPieceSkins(resolvedHostSkin, guestPieceSkin);
     if (mystery) {
-      return this.joinMysteryRow(row, displayName, { guestPieceSkin, withSkins });
+      return this.joinMysteryRow(row, displayName, { guestPieceSkin, withSkins, guestMainDeckIds: guestDeckIds });
     }
 
     if (!Array.isArray(guestDeckIds) || guestDeckIds.length !== DECK_SIZE) {
@@ -545,7 +554,7 @@ export class PvpService {
   async joinMysteryRow(
     row,
     displayName,
-    { guestPieceSkin = DEFAULT_PIECE_SKIN, withSkins = null } = {}
+    { guestPieceSkin = DEFAULT_PIECE_SKIN, withSkins = null, guestMainDeckIds = null } = {}
   ) {
     const sb = getSupabase();
     const user = getCurrentUser();
@@ -556,7 +565,11 @@ export class PvpService {
     this.assertDistinctPieceSkins(resolvedHostSkin, guestPieceSkin);
 
     const hostDeckIds = buildMysteryDeck();
-    const guestDeckIds = buildMysteryDeck();
+    const guestDeckIds = buildMysteryDeck(
+      Array.isArray(guestMainDeckIds) && guestMainDeckIds.length === DECK_SIZE
+        ? { excludeDeckIds: guestMainDeckIds }
+        : {}
+    );
     const state = createMatchState(hostDeckIds, guestDeckIds);
     state.turn = COLORS.RED;
     const stateJson = serializeMatchState(state);
@@ -597,7 +610,13 @@ export class PvpService {
     const sb = getSupabase();
     const mystery = isMysteryMode(data);
     const hostDeckIds = mystery ? buildMysteryDeck() : data.host_deck_ids;
-    const resolvedGuestDeckIds = mystery ? buildMysteryDeck() : guestDeckIds;
+    const resolvedGuestDeckIds = mystery
+      ? buildMysteryDeck(
+          Array.isArray(guestDeckIds) && guestDeckIds.length === DECK_SIZE
+            ? { excludeDeckIds: guestDeckIds }
+            : {}
+        )
+      : guestDeckIds;
     const state = createMatchState(hostDeckIds, resolvedGuestDeckIds);
     state.turn = COLORS.RED;
     const stateJson = serializeMatchState(state);
