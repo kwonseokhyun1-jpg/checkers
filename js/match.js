@@ -1634,6 +1634,21 @@ export class MatchSession {
       return;
     }
 
+    const forcedFrom = this.forcedFollowUpFrom(s);
+    if (forcedFrom && (row !== forcedFrom[0] || col !== forcedFrom[1])) {
+      const forcedPiece = s.board[forcedFrom[0]]?.[forcedFrom[1]];
+      if (this._pressExtraFrom) {
+        this.setMessage("Press — step again (no capture)!");
+      } else {
+        this.setMessage(
+          forcedPiece && isZombieBear(forcedPiece)
+            ? "Zombie Bear — move again!"
+            : "Awoken Bear — move again!"
+        );
+      }
+      return;
+    }
+
     const piece = s.board[row][col];
     if (piece) this.showPieceInfo(piece, row, col);
 
@@ -1785,6 +1800,13 @@ export class MatchSession {
     return true;
   }
 
+  /** Square that must move during an in-turn follow-up (bear bonus, press extra). */
+  forcedFollowUpFrom(s) {
+    if (this._pressExtraFrom) return this._pressExtraFrom;
+    if (s.meta.bearBonusUsed?.[this.localColor] && this.selectedSquare) return this.selectedSquare;
+    return null;
+  }
+
   tryBearBonusMove(s, color, landR, landC) {
     const landed = s.board[landR]?.[landC];
     if (!landed?.bearAwakened || s.meta.bearBonusUsed?.[color]) return false;
@@ -1888,6 +1910,10 @@ export class MatchSession {
 
     if (tryFollowUpMoves()) {
       playPendingBoardFx(() => this.render());
+      if (this.isPvp && s.meta.bearBonusUsed?.[this.localColor]) {
+        this.flushPvpTurnMoves();
+        void this.pushPvpState();
+      }
       return;
     }
 
