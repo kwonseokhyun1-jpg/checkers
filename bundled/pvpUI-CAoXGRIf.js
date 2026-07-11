@@ -1,4 +1,4 @@
-import"./cardCatalog-AnvdLb5p.js";import{c as e,o as t,s as n,u as r}from"./deckRules-B0ev_ycV.js";import{B as i,E as a,G as o,I as s,K as c,M as l,O as u,V as ee,Z as te,k as d,m as ne,ot as re,q as f}from"./storage-D2Si7hWe.js";import{s as p}from"./mageTitles-BPvsmJqw.js";import{a as m,b as h,c as ie,d as ae,o as g,s as oe}from"./auth-4a6NLrPe.js";import{A as se,B as _,D as ce,E as le,M as ue,O as v,S as de,c as fe,f as y,i as pe,k as me,l as b,m as x}from"./index-B6wHtF66.js";import{t as S}from"./board-CRMGY2kg.js";import{MatchSession as he,isMutualElimination as ge,isPvpTerminalBoard as _e}from"./match-djDvMsi-.js";import{getMatchHtml as ve}from"./matchView--iXVUxGr.js";import{PVP_MODE_MYSTERY as ye,PVP_MODE_NORMAL as be,PvpService as xe,clearActivePvpMatchId as C,formatPvpError as w,isMysteryMode as T,matchRowFingerprint as Se,probePvpBackend as Ce,readActivePvpMatchId as we,saveActivePvpMatchId as E,shouldApplyPvpRow as Te,subscribeOpenRooms as Ee}from"./pvp-BClhwXlF.js";function D(e){let t=e?.code||``,n=String(e?.message||``);return t===`PGRST202`||n.includes(`Could not find the function`)}function O(e){return e?.username&&String(e.username).trim()||e?.display_name&&String(e.display_name).trim()||`Player`}async function De(e=50){let t=h();if(!t)return[];let n=await t.rpc(`pvp_leaderboard`,{p_limit:e});if(!n.error&&Array.isArray(n.data))return n.data.map((e,t)=>({id:e.id,username:O(e),pvpWins:Math.max(0,Number(e.pvp_wins)||0),rank:t+1}));if(n.error&&!D(n.error))throw n.error;let{data:r,error:i}=await t.from(`profiles`).select(`id, username, display_name, profile_json`).limit(200);if(i)throw i;return(r||[]).map(e=>({id:e.id,username:O(e),pvpWins:d(e.profile_json||{})})).filter(e=>e.pvpWins>0).sort((e,t)=>t.pvpWins-e.pvpWins||e.username.localeCompare(t.username)).slice(0,e).map((e,t)=>({...e,rank:t+1}))}async function Oe(e=20){let t=h(),n=g();if(!t||!n)return[];let{data:r,error:i}=await t.from(`pvp_matches`).select(`id, host_id, guest_id, host_display_name, guest_display_name, turn, match_mode, updated_at, version`).eq(`status`,`active`).not(`guest_id`,`is`,null).order(`updated_at`,{ascending:!1}).limit(e);if(i)throw i;return r||[]}function ke(e){let t=h();if(!t)return()=>{};let n=t.channel(`pvp-live-matches`).on(`postgres_changes`,{event:`*`,schema:`public`,table:`pvp_matches`,filter:`status=eq.active`},()=>e?.()).subscribe();return()=>{t.removeChannel(n)}}var k=4e3;function A(e){return String(e??``).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`)}function j(e,{label:t}={}){let{username:n,cosmetics:r}=e,i=r?.equipped||{},a=p({cosmetics:r},{compact:!0});return`
+import"./cardCatalog-AnvdLb5p.js";import{c as e,o as t,s as n,u as r}from"./deckRules-B0ev_ycV.js";import{B as i,E as a,G as o,I as s,K as c,M as l,O as u,V as ee,Z as te,k as d,m as ne,ot as re,q as f}from"./storage-u8SpemGn.js";import{s as p}from"./mageTitles-BPvsmJqw.js";import{a as m,b as h,c as ie,d as ae,o as g,s as oe}from"./auth-DEgFsLgy.js";import{A as se,B as _,D as ce,E as le,M as ue,O as v,S as de,c as fe,f as y,i as pe,k as me,l as b,m as x}from"./index-DbV1_WB1.js";import{t as S}from"./board-CRMGY2kg.js";import{MatchSession as he,isMutualElimination as ge,isPvpTerminalBoard as _e}from"./match-BJk96usU.js";import{getMatchHtml as ve}from"./matchView--iXVUxGr.js";import{PVP_MODE_MYSTERY as ye,PVP_MODE_NORMAL as be,PvpService as xe,clearActivePvpMatchId as C,formatPvpError as w,isMysteryMode as T,matchRowFingerprint as Se,probePvpBackend as Ce,readActivePvpMatchId as we,saveActivePvpMatchId as E,shouldApplyPvpRow as Te,subscribeOpenRooms as Ee}from"./pvp-IQgUKeb8.js";function D(e){let t=e?.code||``,n=String(e?.message||``);return t===`PGRST202`||n.includes(`Could not find the function`)}function O(e){return e?.username&&String(e.username).trim()||e?.display_name&&String(e.display_name).trim()||`Player`}async function De(e=50){let t=h();if(!t)return[];let n=await t.rpc(`pvp_leaderboard`,{p_limit:e});if(!n.error&&Array.isArray(n.data))return n.data.map((e,t)=>({id:e.id,username:O(e),pvpWins:Math.max(0,Number(e.pvp_wins)||0),rank:t+1}));if(n.error&&!D(n.error))throw n.error;let{data:r,error:i}=await t.from(`profiles`).select(`id, username, display_name, profile_json`).limit(200);if(i)throw i;return(r||[]).map(e=>({id:e.id,username:O(e),pvpWins:d(e.profile_json||{})})).filter(e=>e.pvpWins>0).sort((e,t)=>t.pvpWins-e.pvpWins||e.username.localeCompare(t.username)).slice(0,e).map((e,t)=>({...e,rank:t+1}))}async function Oe(e=20){let t=h(),n=g();if(!t||!n)return[];let{data:r,error:i}=await t.from(`pvp_matches`).select(`id, host_id, guest_id, host_display_name, guest_display_name, turn, match_mode, updated_at, version`).eq(`status`,`active`).not(`guest_id`,`is`,null).order(`updated_at`,{ascending:!1}).limit(e);if(i)throw i;return r||[]}function ke(e){let t=h();if(!t)return()=>{};let n=t.channel(`pvp-live-matches`).on(`postgres_changes`,{event:`*`,schema:`public`,table:`pvp_matches`,filter:`status=eq.active`},()=>e?.()).subscribe();return()=>{t.removeChannel(n)}}var k=4e3;function A(e){return String(e??``).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`)}function j(e,{label:t}={}){let{username:n,cosmetics:r}=e,i=r?.equipped||{},a=p({cosmetics:r},{compact:!0});return`
     <article class="pvp-loading__card">
       <div class="profile-showcase pvp-loading__showcase">
         <div class="profile-showcase__banner" style="background:${pe(i.banner)}"></div>
@@ -85,113 +85,103 @@ import"./cardCatalog-AnvdLb5p.js";import{c as e,o as t,s as n,u as r}from"./deck
         <feGaussianBlur stdDeviation="2.2" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
-    </defs>`}function V(){let e=`pvp-arena`,t=R;return`<svg class="pvp-scenery-svg" viewBox="0 0 320 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    </defs>`}function V(){let e=`pvp-tile-arena`,t=R;return`<svg class="pvp-hub-tile-scenery-svg" viewBox="0 0 320 140" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
     ${B(e,t.gold,{sky:t.sky,stone:t.stone,stoneDark:t.stoneDark})}
-    <rect width="320" height="200" fill="url(#${e}-sky)"/>
-    <rect width="320" height="200" fill="url(#${e}-glow)"/>
-    <!-- distant arena arches -->
-    <g opacity="0.55" fill="${t.stone}">
-      <path d="M20 90 Q20 55 40 55 Q60 55 60 90 L60 120 L20 120 Z"/>
-      <path d="M70 90 Q70 50 95 50 Q120 50 120 90 L120 120 L70 120 Z"/>
-      <path d="M130 90 Q130 48 160 48 Q190 48 190 90 L190 120 L130 120 Z"/>
-      <path d="M200 90 Q200 50 225 50 Q250 50 250 90 L250 120 L200 120 Z"/>
-      <path d="M260 90 Q260 55 280 55 Q300 55 300 90 L300 120 L260 120 Z"/>
+    <rect width="320" height="140" fill="url(#${e}-sky)"/>
+    <rect width="320" height="140" fill="url(#${e}-glow)"/>
+    <!-- arena arches -->
+    <g opacity="0.5" fill="${t.stone}">
+      <path d="M10 72 Q10 48 28 48 Q46 48 46 72 L46 96 L10 96 Z"/>
+      <path d="M52 72 Q52 42 78 42 Q104 42 104 72 L104 96 L52 96 Z"/>
+      <path d="M110 72 Q110 40 160 40 Q210 40 210 72 L210 96 L110 96 Z"/>
+      <path d="M216 72 Q216 42 242 42 Q268 42 268 72 L268 96 L216 96 Z"/>
+      <path d="M274 72 Q274 48 292 48 Q310 48 310 72 L310 96 L274 96 Z"/>
     </g>
-    <g opacity="0.35" fill="${t.stoneDark}">
-      <rect x="0" y="118" width="320" height="6"/>
-      <rect x="0" y="124" width="320" height="76"/>
-    </g>
-    <!-- arena floor -->
-    <ellipse cx="160" cy="138" rx="130" ry="18" fill="rgba(0,0,0,0.35)"/>
-    <ellipse cx="160" cy="136" rx="100" ry="12" fill="${t.stoneDark}" opacity="0.6"/>
-    <!-- pillars -->
-    <rect x="28" y="72" width="10" height="52" fill="url(#${e}-pillar)" opacity="0.7"/>
-    <rect x="282" y="72" width="10" height="52" fill="url(#${e}-pillar)" opacity="0.7"/>
-    <!-- crossed swords centerpiece -->
-    <g transform="translate(160 108)" opacity="0.85" filter="url(#${e}-glow-filter)">
+    <rect x="0" y="94" width="320" height="46" fill="${t.stoneDark}" opacity="0.45"/>
+    <ellipse cx="160" cy="98" rx="120" ry="14" fill="rgba(0,0,0,0.4)"/>
+    <!-- crossed swords -->
+    <g transform="translate(160 72)" opacity="0.9" filter="url(#${e}-glow-filter)">
       <g transform="rotate(-38)">
-        <rect x="-3" y="-28" width="6" height="36" rx="1.5" fill="${t.goldDim}"/>
-        <rect x="-5" y="6" width="10" height="4" rx="1" fill="${t.gold}"/>
-        <circle cx="0" cy="12" r="3.5" fill="${t.gold}" opacity="0.9"/>
-        <polygon points="0,-32 -4,-24 4,-24" fill="${t.gold}"/>
+        <rect x="-2.5" y="-22" width="5" height="28" rx="1.2" fill="${t.goldDim}"/>
+        <rect x="-4" y="4" width="8" height="3.5" rx="0.8" fill="${t.gold}"/>
+        <circle cx="0" cy="9" r="3" fill="${t.gold}" opacity="0.9"/>
+        <polygon points="0,-26 -3.5,-19 3.5,-19" fill="${t.gold}"/>
       </g>
       <g transform="rotate(38)">
-        <rect x="-3" y="-28" width="6" height="36" rx="1.5" fill="${t.goldDim}"/>
-        <rect x="-5" y="6" width="10" height="4" rx="1" fill="${t.gold}"/>
-        <circle cx="0" cy="12" r="3.5" fill="${t.gold}" opacity="0.9"/>
-        <polygon points="0,-32 -4,-24 4,-24" fill="${t.gold}"/>
+        <rect x="-2.5" y="-22" width="5" height="28" rx="1.2" fill="${t.goldDim}"/>
+        <rect x="-4" y="4" width="8" height="3.5" rx="0.8" fill="${t.gold}"/>
+        <circle cx="0" cy="9" r="3" fill="${t.gold}" opacity="0.9"/>
+        <polygon points="0,-26 -3.5,-19 3.5,-19" fill="${t.gold}"/>
       </g>
     </g>
     <!-- torches -->
-    <g opacity="0.9">
-      <rect x="42" y="88" width="3" height="14" fill="${t.stoneDark}"/>
-      <ellipse cx="43.5" cy="86" rx="4" ry="5" fill="${t.ember}" filter="url(#${e}-glow-filter)" opacity="0.85"/>
-      <ellipse cx="43.5" cy="85" rx="2" ry="2.5" fill="#fff8e0" opacity="0.55"/>
-      <rect x="275" y="88" width="3" height="14" fill="${t.stoneDark}"/>
-      <ellipse cx="276.5" cy="86" rx="4" ry="5" fill="${t.ember}" filter="url(#${e}-glow-filter)" opacity="0.85"/>
-      <ellipse cx="276.5" cy="85" rx="2" ry="2.5" fill="#fff8e0" opacity="0.55"/>
+    <g opacity="0.85">
+      <rect x="36" y="68" width="2.5" height="12" fill="${t.stoneDark}"/>
+      <ellipse cx="37.2" cy="66" rx="3.5" ry="4.5" fill="${t.ember}" filter="url(#${e}-glow-filter)"/>
+      <ellipse cx="37.2" cy="65" rx="1.8" ry="2.2" fill="#fff8e0" opacity="0.55"/>
+      <rect x="281" y="68" width="2.5" height="12" fill="${t.stoneDark}"/>
+      <ellipse cx="282.2" cy="66" rx="3.5" ry="4.5" fill="${t.ember}" filter="url(#${e}-glow-filter)"/>
+      <ellipse cx="282.2" cy="65" rx="1.8" ry="2.2" fill="#fff8e0" opacity="0.55"/>
     </g>
-    <!-- floating embers -->
-    <circle cx="90" cy="70" r="1.2" fill="${t.gold}" opacity="0.5" filter="url(#${e}-glow-filter)"/>
-    <circle cx="230" cy="64" r="1" fill="${t.ember}" opacity="0.45" filter="url(#${e}-glow-filter)"/>
-    <circle cx="160" cy="58" r="0.8" fill="${t.gold}" opacity="0.35" filter="url(#${e}-glow-filter)"/>
-    <!-- banner pennants -->
-    <g opacity="0.5">
-      <path d="M55 62 L55 78 L68 70 Z" fill="${t.goldDim}"/>
-      <path d="M252 60 L252 76 L265 68 Z" fill="${t.goldDim}"/>
+    <!-- pennants -->
+    <g opacity="0.45">
+      <path d="M48 52 L48 64 L58 58 Z" fill="${t.goldDim}"/>
+      <path d="M262 50 L262 62 L272 56 Z" fill="${t.goldDim}"/>
     </g>
-  </svg>`}function Pe(){let e=`pvp-lb`,t=z;return`<svg class="pvp-scenery-svg" viewBox="0 0 320 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <!-- embers -->
+    <circle cx="100" cy="48" r="1.2" fill="${t.gold}" opacity="0.5" filter="url(#${e}-glow-filter)"/>
+    <circle cx="220" cy="44" r="1" fill="${t.ember}" opacity="0.45" filter="url(#${e}-glow-filter)"/>
+    <circle cx="160" cy="36" r="0.8" fill="${t.gold}" opacity="0.35" filter="url(#${e}-glow-filter)"/>
+  </svg>`}function Pe(){let e=`pvp-tile-lb`,t=z;return`<svg class="pvp-hub-tile-scenery-svg" viewBox="0 0 320 140" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
     ${B(e,t.gem,{sky:t.sky,stone:t.stone,stoneDark:t.stoneDark})}
-    <rect width="320" height="200" fill="url(#${e}-sky)"/>
-    <rect width="320" height="200" fill="url(#${e}-glow)"/>
-    <!-- hall columns -->
+    <rect width="320" height="140" fill="url(#${e}-sky)"/>
+    <rect width="320" height="140" fill="url(#${e}-glow)"/>
+    <!-- vaulted ceiling -->
+    <path d="M0 36 Q160 12 320 36 L320 48 Q160 24 0 48 Z" fill="${t.stone}" opacity="0.35"/>
+    <!-- columns -->
     <g opacity="0.45" fill="url(#${e}-pillar)">
-      <rect x="24" y="50" width="12" height="90" rx="1"/>
-      <rect x="284" y="50" width="12" height="90" rx="1"/>
-      <rect x="68" y="62" width="8" height="78" rx="1" opacity="0.7"/>
-      <rect x="244" y="62" width="8" height="78" rx="1" opacity="0.7"/>
+      <rect x="20" y="44" width="10" height="68" rx="1"/>
+      <rect x="290" y="44" width="10" height="68" rx="1"/>
+      <rect x="58" y="54" width="7" height="58" rx="1" opacity="0.7"/>
+      <rect x="255" y="54" width="7" height="58" rx="1" opacity="0.7"/>
     </g>
-    <!-- vaulted ceiling hint -->
-    <path d="M0 40 Q160 10 320 40 L320 55 Q160 28 0 55 Z" fill="${t.stone}" opacity="0.35"/>
-    <!-- podium tiers -->
+    <!-- podium -->
     <g opacity="0.7">
-      <rect x="118" y="118" width="84" height="10" rx="2" fill="${t.stone}"/>
-      <rect x="128" y="108" width="64" height="10" rx="2" fill="${t.stone}"/>
-      <rect x="142" y="98" width="36" height="10" rx="2" fill="${t.gemDim}" opacity="0.6"/>
+      <rect x="112" y="96" width="96" height="8" rx="2" fill="${t.stone}"/>
+      <rect x="124" y="88" width="72" height="8" rx="2" fill="${t.stone}"/>
+      <rect x="138" y="80" width="44" height="8" rx="2" fill="${t.gemDim}" opacity="0.6"/>
     </g>
     <!-- central trophy -->
-    <g transform="translate(160 88)" filter="url(#${e}-glow-filter)" opacity="0.9">
-      <path d="M-14 0 Q-14 -18 -6 -22 Q0 -24 6 -22 Q14 -18 14 0 L10 4 L-10 4 Z" fill="${t.gem}" opacity="0.85"/>
-      <rect x="-8" y="4" width="16" height="6" rx="1" fill="${t.gemDim}"/>
-      <rect x="-10" y="10" width="20" height="4" rx="1" fill="${t.gem}"/>
-      <ellipse cx="0" cy="-14" rx="5" ry="3" fill="#fff" opacity="0.25"/>
-      <!-- handles -->
-      <path d="M-14 -6 Q-22 -4 -20 2 Q-18 6 -14 2" fill="none" stroke="${t.gem}" stroke-width="2" opacity="0.7"/>
-      <path d="M14 -6 Q22 -4 20 2 Q18 6 14 2" fill="none" stroke="${t.gem}" stroke-width="2" opacity="0.7"/>
+    <g transform="translate(160 68)" filter="url(#${e}-glow-filter)" opacity="0.92">
+      <path d="M-12 0 Q-12 -16 -5 -19 Q0 -21 5 -19 Q12 -16 12 0 L9 4 L-9 4 Z" fill="${t.gem}" opacity="0.85"/>
+      <rect x="-7" y="4" width="14" height="5" rx="1" fill="${t.gemDim}"/>
+      <rect x="-9" y="9" width="18" height="4" rx="1" fill="${t.gem}"/>
+      <ellipse cx="0" cy="-12" rx="4" ry="2.5" fill="#fff" opacity="0.28"/>
+      <path d="M-12 -4 Q-18 -2 -16 4 Q-14 8 -12 4" fill="none" stroke="${t.gem}" stroke-width="1.8" opacity="0.7"/>
+      <path d="M12 -4 Q18 -2 16 4 Q14 8 12 4" fill="none" stroke="${t.gem}" stroke-width="1.8" opacity="0.7"/>
     </g>
-    <!-- side trophies (smaller) -->
-    <g transform="translate(108 100)" opacity="0.55">
-      <path d="M-8 0 Q-8 -10 -3 -12 Q0 -13 3 -12 Q8 -10 8 0 L6 3 L-6 3 Z" fill="${t.violet}"/>
-      <rect x="-5" y="3" width="10" height="4" rx="1" fill="${t.violet}" opacity="0.7"/>
+    <!-- side trophies -->
+    <g transform="translate(104 78)" opacity="0.5">
+      <path d="M-7 0 Q-7 -9 -2.5 -11 Q0 -12 2.5 -11 Q7 -9 7 0 L5 2.5 L-5 2.5 Z" fill="${t.violet}"/>
+      <rect x="-4" y="2.5" width="8" height="3.5" rx="1" fill="${t.violet}" opacity="0.7"/>
     </g>
-    <g transform="translate(212 100)" opacity="0.55">
-      <path d="M-8 0 Q-8 -10 -3 -12 Q0 -13 3 -12 Q8 -10 8 0 L6 3 L-6 3 Z" fill="${t.violet}"/>
-      <rect x="-5" y="3" width="10" height="4" rx="1" fill="${t.violet}" opacity="0.7"/>
+    <g transform="translate(216 78)" opacity="0.5">
+      <path d="M-7 0 Q-7 -9 -2.5 -11 Q0 -12 2.5 -11 Q7 -9 7 0 L5 2.5 L-5 2.5 Z" fill="${t.violet}"/>
+      <rect x="-4" y="2.5" width="8" height="3.5" rx="1" fill="${t.violet}" opacity="0.7"/>
     </g>
-    <!-- laurel wreaths -->
+    <!-- laurel wreath -->
     <g opacity="0.4" stroke="${t.gem}" stroke-width="1.2" fill="none">
-      <ellipse cx="160" cy="72" rx="22" ry="10"/>
-      <ellipse cx="160" cy="72" rx="18" ry="8" opacity="0.6"/>
+      <ellipse cx="160" cy="54" rx="20" ry="9"/>
+      <ellipse cx="160" cy="54" rx="16" ry="7" opacity="0.6"/>
     </g>
     <!-- star sparkles -->
     <g fill="${t.gem}" opacity="0.55" filter="url(#${e}-glow-filter)">
-      <polygon points="160,42 161,46 165,46 162,48 163,52 160,50 157,52 158,48 155,46 159,46"/>
-      <polygon points="80,55 80.6,57 83,57 81,58.4 81.6,60.5 80,59.2 78.4,60.5 79,58.4 77,57 79.4,57" opacity="0.7"/>
-      <polygon points="240,52 240.6,54 243,54 241,55.4 241.6,57.5 240,56.2 238.4,57.5 239,55.4 237,54 239.4,54" opacity="0.7"/>
+      <polygon points="160,30 161,34 165,34 162,36 163,40 160,38 157,40 158,36 155,34 159,34"/>
+      <polygon points="78,46 78.6,48 81,48 79,49.4 79.6,51.5 78,50.2 76.4,51.5 77,49.4 75,48 77.4,48" opacity="0.7"/>
+      <polygon points="242,44 242.6,46 245,46 243,47.4 243.6,49.5 242,48.2 240.4,49.5 241,47.4 239,46 241.4,46" opacity="0.7"/>
     </g>
-    <!-- floor reflection -->
-    <ellipse cx="160" cy="142" rx="110" ry="14" fill="rgba(92,225,230,0.06)"/>
-  </svg>`}function Fe(){let e=`pvp-hub-arena`,t=R;return`<svg class="pvp-hub-icon-svg" viewBox="0 0 64 64" aria-hidden="true">
+    <ellipse cx="160" cy="108" rx="100" ry="12" fill="rgba(92,225,230,0.06)"/>
+  </svg>`}function Fe(e){return`<span class="pvp-hub-tile__scenery pvp-hub-tile__scenery--${e}">${e===`leaderboard`?Pe():V()}</span>`}function Ie(){let e=`pvp-hub-arena`,t=R;return`<svg class="pvp-hub-icon-svg" viewBox="0 0 64 64" aria-hidden="true">
     <defs>
       <radialGradient id="${e}-bg" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="${t.goldGlow}"/>
@@ -216,7 +206,7 @@ import"./cardCatalog-AnvdLb5p.js";import{c as e,o as t,s as n,u as r}from"./deck
       </g>
     </g>
     <circle cx="32" cy="34" r="4" fill="${t.gold}" opacity="0.35"/>
-  </svg>`}function Ie(){let e=`pvp-hub-lb`,t=z;return`<svg class="pvp-hub-icon-svg" viewBox="0 0 64 64" aria-hidden="true">
+  </svg>`}function Le(){let e=`pvp-hub-lb`,t=z;return`<svg class="pvp-hub-icon-svg" viewBox="0 0 64 64" aria-hidden="true">
     <defs>
       <radialGradient id="${e}-bg" cx="50%" cy="50%" r="50%">
         <stop offset="0%" stop-color="${t.gemGlow}"/>
@@ -236,7 +226,7 @@ import"./cardCatalog-AnvdLb5p.js";import{c as e,o as t,s as n,u as r}from"./deck
       <path d="M-12 -4 Q-18 -2 -16 4 Q-14 8 -12 4" fill="none" stroke="${t.gem}" stroke-width="1.8" opacity="0.75"/>
       <path d="M12 -4 Q18 -2 16 4 Q14 8 12 4" fill="none" stroke="${t.gem}" stroke-width="1.8" opacity="0.75"/>
     </g>
-  </svg>`}function Le(e){return`<div class="pvp-scenery pvp-scenery--${e}" aria-hidden="true">${e===`leaderboard`?Pe():V()}</div>`}function H(e){return String(e??``).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`)}function Re(){return`<span class="pvp-mode-badge pvp-mode-badge--mystery">Mystery</span>`}function ze(e){return T(e)?Re():``}function Be(e){return`
+  </svg>`}function H(e){return String(e??``).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`)}function Re(){return`<span class="pvp-mode-badge pvp-mode-badge--mystery">Mystery</span>`}function ze(e){return T(e)?Re():``}function Be(e){return`
     <header class="panel-head panel-head--compact">
       <div class="panel-head-title-row">
         <h2 class="panel-head__title">PvP Arena</h2>
@@ -249,7 +239,6 @@ import"./cardCatalog-AnvdLb5p.js";import{c as e,o as t,s as n,u as r}from"./deck
               <a href="https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/api" target="_blank" rel="noopener">API settings</a>, run <code>supabase/schema.sql</code>, then reload.`)}
         </section>`,b();return}let n=g();u.innerHTML=`
       <section class="panel game-panel pvp-hub-panel">
-        ${Le(`arena`)}
         <div class="pvp-panel-content">
         <header class="panel-head panel-head--compact">
           <div class="panel-head-title-row">
@@ -260,14 +249,20 @@ import"./cardCatalog-AnvdLb5p.js";import{c as e,o as t,s as n,u as r}from"./deck
         </header>
         <div class="pvp-hub" role="group" aria-label="PvP destinations">
           <button type="button" class="pvp-hub-tile pvp-hub-tile--arena" id="pvp-go-arena">
-            <span class="pvp-hub-tile__icon" aria-hidden="true">${Fe()}</span>
-            <span class="pvp-hub-tile__title">Arena</span>
-            <span class="pvp-hub-tile__desc">Host or join live matches</span>
+            ${Fe(`arena`)}
+            <span class="pvp-hub-tile__content">
+              <span class="pvp-hub-tile__icon" aria-hidden="true">${Ie()}</span>
+              <span class="pvp-hub-tile__title">Arena</span>
+              <span class="pvp-hub-tile__desc">Host or join live matches</span>
+            </span>
           </button>
           <button type="button" class="pvp-hub-tile pvp-hub-tile--leaderboard" id="pvp-go-leaderboard">
-            <span class="pvp-hub-tile__icon" aria-hidden="true">${Ie()}</span>
-            <span class="pvp-hub-tile__title">Leaderboard</span>
-            <span class="pvp-hub-tile__desc">Global ranks &amp; spectate live games</span>
+            ${Fe(`leaderboard`)}
+            <span class="pvp-hub-tile__content">
+              <span class="pvp-hub-tile__icon" aria-hidden="true">${Le()}</span>
+              <span class="pvp-hub-tile__title">Leaderboard</span>
+              <span class="pvp-hub-tile__desc">Global ranks &amp; spectate live games</span>
+            </span>
           </button>
         </div>
         ${n?``:`<p class="pvp-sign-in-nudge">${_}</p>`}
@@ -285,7 +280,6 @@ import"./cardCatalog-AnvdLb5p.js";import{c as e,o as t,s as n,u as r}from"./deck
           ${s}
         </li>`}).join(``):`<li class="pvp-leaderboard-empty">No live matches right now.</li>`}async function Je(){let e=u.querySelector(`#pvp-rank-list`),t=u.querySelector(`#pvp-live-list`),n=g();if(!(!e||!t||!n||O||V)&&!Pe){Pe=!0;try{let[r,i]=await Promise.all([De(50),Oe(20)]);e.innerHTML=Ke(r,n.id),t.innerHTML=qe(i,n.id),t.querySelectorAll(`[data-spectate-match]`).forEach(e=>{e.addEventListener(`click`,()=>{let t=e.getAttribute(`data-spectate-match`);t&&Ze(t)})})}catch(n){let r=`<li class="pvp-leaderboard-empty pvp-open-empty--error">${H(w(n))}</li>`;e.innerHTML=r,t.innerHTML=r}finally{Pe=!1}}}function Ye(){U(),Je(),z=setInterval(()=>void Je(),8e3),B=ke(()=>void Je())}function Xe(e=``,t=!1){if(G(),!g()){R=`hub`,W();return}u.innerHTML=`
       <section class="panel game-panel pvp-leaderboard-panel">
-        ${Le(`leaderboard`)}
         <div class="pvp-panel-content">
         ${Ve()}
         <header class="panel-head panel-head--compact">
@@ -316,7 +310,6 @@ import"./cardCatalog-AnvdLb5p.js";import{c as e,o as t,s as n,u as r}from"./deck
               <a href="https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/api" target="_blank" rel="noopener">API settings</a>, run <code>supabase/schema.sql</code>, then reload.`)}
         </section>`,b();return}if(!n){R=`hub`,W();return}u.innerHTML=`
       <section class="panel game-panel pvp-panel pvp-panel--arena">
-        ${Le(`arena`)}
         <div class="pvp-panel-content">
         ${Ve()}
         ${Be(`Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.`)}
