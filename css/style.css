@@ -401,7 +401,6 @@ body {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  grid-template-rows: repeat(8, 1fr);
   width: min(100%, 440px);
   aspect-ratio: 1;
   border: 5px solid #2a1810;

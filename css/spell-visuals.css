@@ -302,11 +302,11 @@
 }
 
 .square.has-darkness-core {
-  box-shadow: inset 0 0 0 3px rgba(120, 80, 200, 0.8);
+  box-shadow: inset 0 0 0 3px rgba(167, 139, 250, 0.95);
 }
 
 .square.has-darkness-zone {
-  box-shadow: inset 0 0 0 2px rgba(120, 80, 200, 0.45);
+  box-shadow: inset 0 0 0 2px rgba(167, 139, 250, 0.75);
 }
 
 .square.has-darkness-core::after,
@@ -315,7 +315,15 @@
   position: absolute;
   inset: 2px;
   border-radius: 4px;
-  background: radial-gradient(circle at 50% 50%, rgba(90, 50, 160, 0.28), transparent 72%);
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(139, 92, 246, 0.14) 0,
+      rgba(139, 92, 246, 0.14) 4px,
+      transparent 4px,
+      transparent 8px
+    ),
+    radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.38), transparent 72%);
   pointer-events: none;
   z-index: 1;
 }
@@ -323,10 +331,27 @@
 .darkness-indicator {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 2px 4px;
   border-radius: 4px;
-  background: radial-gradient(circle at 50% 50%, rgba(60, 30, 110, 0.35), transparent 75%);
+  background: radial-gradient(circle at 50% 50%, rgba(76, 29, 149, 0.42), transparent 78%);
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
+}
+
+.darkness-indicator__mark {
+  font-size: 0.62rem;
+  color: rgba(221, 214, 254, 0.95);
+  text-shadow: 0 0 6px rgba(139, 92, 246, 0.85);
+}
+
+.darkness-indicator__turns {
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: rgba(237, 233, 254, 0.92);
+  margin-left: 1px;
 }
 
 .square.darkness-zone-preview {
