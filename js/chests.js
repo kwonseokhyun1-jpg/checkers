@@ -42,7 +42,7 @@ export function grantChestCard(profile, card, options = {}) {
     return { ...card, duplicate: false };
   }
 
-  const gemRefund = RARITY_GEM_DUPE[card.rarity] || 5;
+  const gemRefund = RARITY_GEM_DUPE[card.rarity] || 10;
   if (starRefundChance > 0 && Math.random() < starRefundChance) {
     const starRefund = Math.random() < 0.5 ? 1 : 2;
     return { ...card, duplicate: true, starRefund };

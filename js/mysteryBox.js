@@ -65,7 +65,7 @@ export function openMysteryBox(profile) {
       const item = drawCosmeticItem(profile, tier.weights);
       if (item) {
         cosPulls.push(item);
-        if (item.duplicate) bonusGems += item.gemRefund || 5;
+        if (item.duplicate) bonusGems += item.gemRefund || 10;
       }
     } else {
       const tier = pickTier(CARD_TIERS);
