@@ -130,7 +130,9 @@ import {
 } from "./lazyChunks.js";
 
 function notifyMetaTutorial(event, data) {
-  void loadTutorialMetaChunk().then((m) => m.notifyMetaTutorial(event, data));
+  void loadTutorialMetaChunk()
+    .then((m) => m.notifyMetaTutorial(event, data))
+    .catch((err) => console.warn("[Tutorial] meta notify failed", err));
 }
 
 function notifyUnlockTutorial(event, data) {
@@ -557,8 +559,6 @@ async function showTab(tab) {
   document.querySelectorAll(".view").forEach((v) => {
     v.classList.toggle("hidden", v.id !== `view-${tab}`);
   });
-  notifyMetaTutorial("tab-changed", { tab });
-  notifyUnlockTutorial("tab-changed", { tab });
   if (tab === "chests") {
     showVaultTab(activeVaultTab);
     renderChests();
@@ -579,17 +579,16 @@ async function showTab(tab) {
     showPlayTab(sub);
   }
   if (tab === "social") {
+    showSocialLoading();
     void ensureSocialUI()
       .then((c) => c?.render())
       .catch((err) => {
         console.error("[Social] init failed", err);
-        const root = document.getElementById("view-social");
-        if (root && !root.innerHTML.trim()) {
-          root.innerHTML =
-            '<section class="panel game-panel"><p class="pvp-status pvp-status--error">Could not load Social — please reload the page.</p></section>';
-        }
+        showSocialError();
       });
   }
+  notifyMetaTutorial("tab-changed", { tab });
+  notifyUnlockTutorial("tab-changed", { tab });
   if (!isMatchActive()) {
     setAudioMode(tab === "play" ? "hub" : "hub");
     await lockPortrait();
@@ -723,6 +722,18 @@ const QUESTS_ERROR_HTML = `
     <button type="button" class="btn-secondary quests-retry-btn">Try again</button>
   </section>`;
 
+const SOCIAL_LOADING_HTML = `
+  <section class="panel game-panel social-panel social-panel--loading" aria-busy="true">
+    <p class="social-status" role="status">Loading social…</p>
+  </section>`;
+
+const SOCIAL_ERROR_HTML = `
+  <section class="panel game-panel social-panel social-panel--error">
+    <p class="social-status social-status--error">Couldn't load Social.</p>
+    <p class="social-status-hint muted">Check your connection and try again, or reload the page.</p>
+    <button type="button" class="btn-secondary social-retry-btn">Try again</button>
+  </section>`;
+
 function showQuestsLoading() {
   const root = $("view-quests");
   if (!root) return;
@@ -736,6 +747,28 @@ function showQuestsError(root = $("view-quests")) {
     resetProfileUIChunk();
     showQuestsLoading();
     void renderQuests();
+  });
+}
+
+function showSocialLoading() {
+  const root = $("view-social");
+  if (!root) return;
+  root.innerHTML = SOCIAL_LOADING_HTML;
+}
+
+function showSocialError(root = $("view-social")) {
+  if (!root) return;
+  root.innerHTML = SOCIAL_ERROR_HTML;
+  root.querySelector(".social-retry-btn")?.addEventListener("click", () => {
+    socialController = null;
+    socialInitPromise = null;
+    showSocialLoading();
+    void ensureSocialUI()
+      .then((c) => c?.render())
+      .catch((err) => {
+        console.error("[Social] retry failed", err);
+        showSocialError(root);
+      });
   });
 }
 
@@ -1124,17 +1157,26 @@ function showVaultTab(tab) {
 }
 
 function renderCosmeticsShop() {
-  void loadProfileUIChunk().then(({ renderCosmeticBoxes }) => {
-    renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
-      logEl: $("cosmetic-box-log"),
-      onGemsChange: updateGemHeader,
-      cosmeticsUnlocked: isCosmeticsUnlocked(profile),
-      onOpened: () => {
-        if (activeTab === "profile") void renderProfile();
-        if (activeTab === "quests") void renderQuests();
-      },
+  void loadProfileUIChunk()
+    .then(({ renderCosmeticBoxes }) => {
+      renderCosmeticBoxes(profile, $("cosmetic-box-list"), {
+        logEl: $("cosmetic-box-log"),
+        onGemsChange: updateGemHeader,
+        cosmeticsUnlocked: isCosmeticsUnlocked(profile),
+        onOpened: () => {
+          if (activeTab === "profile") void renderProfile();
+          if (activeTab === "quests") void renderQuests();
+        },
+      });
+    })
+    .catch((err) => {
+      console.error("[Shop] cosmetics render failed", err);
+      const log = $("cosmetic-box-log");
+      if (log) {
+        log.textContent = "Couldn't load cosmetic boxes — try again from the Shop tab.";
+        log.classList.add("chest-log--error");
+      }
     });
-  });
 }
 
 function renderChests(options = {}) {

@@ -80,6 +80,8 @@ export function loadSocialChunk() {
   return socialChunk;
 }
 
+/** @type {Promise<typeof import("./tutorialMeta.js")> | null} */
+let tutorialMetaChunk = null;
 
 export function loadTutorialMetaChunk() {
   if (!tutorialMetaChunk) tutorialMetaChunk = import("./tutorialMeta.js");
