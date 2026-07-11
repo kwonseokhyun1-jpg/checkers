@@ -5,7 +5,7 @@ import {
   SIZE, COLORS, isDarkSquare, inBounds, displacePiece, resolveLandingTraps, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
   createPiece, grantAwokenBear, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
-  applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
+  applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified, clearPlayerZombieChain,
   tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns } from "./gameMeta.js";
@@ -711,16 +711,15 @@ const EFFECTS = {
   zombify(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
-    if (!p || p.color === color || p.king) return fail();
-    if (!enemyCardCanMove(p)) return fail("Anchored");
-    for (let rr = 0; rr < SIZE; rr++) {
-      for (let cc = 0; cc < SIZE; cc++) {
-        const ep = state.board[rr][cc];
-        if (ep?.zombifyOwner === color) ep.zombifyOwner = null;
-      }
-    }
-    p.zombifyOwner = color;
-    return ok("Zombify — when this enemy dies, it rises as your man (no capture the turn it rises).");
+    if (!p || p.color !== color || p.king) return fail();
+    if (isFortified(p)) return fail("Fortified");
+    if (p.isZombie) return fail("Already a zombie");
+    clearPlayerZombieChain(state.board, color);
+    p.isZombie = true;
+    p.isMainZombie = true;
+    p.zombieMasterId = p.id;
+    p.zombieSleepTurns = 2;
+    return ok("Zombify — your piece sleeps in a gravestone for 2 turns, then rises as a zombie king.");
   },
   identity_theft(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=3; return ok(); },
   call_forward(state, color, picks) {

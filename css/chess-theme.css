@@ -328,18 +328,37 @@
     0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
-.piece.zombify-mark {
+.piece.zombie-main {
+  box-shadow:
+    0 0 0 2px rgba(22, 163, 74, 0.95),
+    0 0 14px rgba(21, 128, 61, 0.65),
+    0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.piece.zombie-spread {
   box-shadow:
     0 0 0 2px rgba(74, 222, 128, 0.85),
     0 0 12px rgba(34, 197, 94, 0.45),
     0 3px 8px rgba(0, 0, 0, 0.4);
 }
 
-.piece.zombified-mark {
+.piece.zombie-sleeping {
+  opacity: 0.55;
+  filter: saturate(0.45) brightness(0.75);
   box-shadow:
-    0 0 0 2px rgba(134, 239, 172, 0.75),
-    0 0 10px rgba(74, 222, 128, 0.35),
-    0 3px 8px rgba(0, 0, 0, 0.4);
+    0 0 0 2px rgba(22, 101, 52, 0.75),
+    0 0 10px rgba(20, 83, 45, 0.35),
+    0 3px 8px rgba(0, 0, 0, 0.5);
+}
+
+.piece.zombie-sleeping::after {
+  content: "🪦";
+  position: absolute;
+  top: -8px;
+  right: -6px;
+  font-size: 0.75rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.8));
 }
 
 .zombify-indicator {
@@ -349,12 +368,21 @@
   z-index: 6;
   pointer-events: none;
   display: flex;
+  align-items: center;
+  gap: 2px;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.7));
 }
 
 .zombify-indicator__mark {
   font-size: clamp(11px, 3.2vw, 16px);
   line-height: 1;
+}
+
+.zombify-indicator__turns {
+  font-size: clamp(9px, 2.4vw, 12px);
+  font-weight: 700;
+  color: #bbf7d0;
+  text-shadow: 0 0 4px rgba(34, 197, 94, 0.85);
 }
 
 .piece.poisoned {
