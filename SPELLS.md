@@ -137,7 +137,7 @@
 - **Last King** — If you have only 1 piece, it becomes a king with shield for 2 turns.
 - **Mirror Shield** — Next enemy spell on this piece reflects to a random enemy.
 - **Mind Control** — Convert an enemy man to your color for 2 of your turns; it then reverts to the enemy.
-- **Zombify** — Curse an enemy man; when it dies, it rises as your man on that square. The risen man cannot capture the turn it rises.
+- **Zombify** — Curse one of your men; it sleeps in a gravestone for 2 turns, then rises as a zombie. Any piece it captures becomes zombified. When the main zombie dies, all zombies in its horde die.
 - **Plague** — Infect one of your pieces and all adjacent pieces (both sides). Wherever that seed moves, adjacent pieces become infected. All infected pieces die after 2 of their owner's turns.
 - **Queen's Crown** — Piece has king + knight movement for 2 turns.
 - **Revive** — Return a captured man to any empty dark square on your side of the board.

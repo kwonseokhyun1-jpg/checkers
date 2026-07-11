@@ -3163,8 +3163,9 @@ ${starLine}`;
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.fortifyTurns > 0) el.classList.add("fortify-mark");
           if (piece.mindControlTurns > 0) el.classList.add("mind-controlled");
-          if (piece.zombifyOwner) el.classList.add("zombify-mark");
-          if (piece.zombifiedNoCapture) el.classList.add("zombified-mark");
+          if (piece.isZombie && piece.zombieSleepTurns > 0) el.classList.add("zombie-sleeping");
+          else if (piece.isMainZombie) el.classList.add("zombie-main");
+          else if (piece.isZombie) el.classList.add("zombie-spread");
           if (piece.bountyBy) el.classList.add("bounty-mark");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
           if (piece.isClone) el.classList.add("clone-mark");
@@ -3469,20 +3470,29 @@ ${starLine}`;
             bounty.appendChild(mark);
             sq.appendChild(bounty);
           }
-          if (piece.zombifyOwner) {
+          if (piece.isZombie) {
             const zombify = document.createElement("div");
             zombify.className = "zombify-indicator";
+            const sleeping = piece.zombieSleepTurns > 0;
             zombify.setAttribute(
               "aria-label",
-              piece.zombifyOwner === this.localColor
-                ? "Zombify — when this enemy dies, it rises as your man"
-                : "Zombify — enemy cursed this piece to rise as their man on death"
+              piece.isMainZombie
+                ? sleeping
+                  ? `Main zombie — sleeping in gravestone (${piece.zombieSleepTurns} turn${piece.zombieSleepTurns === 1 ? "" : "s"} left)`
+                  : "Main zombie — captures spread the curse"
+                : "Zombified — part of the horde"
             );
             const mark = document.createElement("span");
             mark.className = "zombify-indicator__mark";
-            mark.textContent = "🧟";
+            mark.textContent = sleeping ? "🪦" : "🧟";
             mark.setAttribute("aria-hidden", "true");
             zombify.appendChild(mark);
+            if (sleeping) {
+              const turns = document.createElement("span");
+              turns.className = "zombify-indicator__turns";
+              turns.textContent = String(piece.zombieSleepTurns);
+              zombify.appendChild(turns);
+            }
             sq.appendChild(zombify);
           }
           if (dominionTurns > 0) {

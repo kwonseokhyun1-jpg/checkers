@@ -929,6 +929,9 @@ export function getValidTargets(state, color, card, picks) {
           if (card.effect === "magnet" && !magnetHasPull(state, color, r, c)) continue;
           if (card.effect === "random_teleport" && !randomTeleportHasDestination(state, r, c)) continue;
           if (card.effect === "iron_will" && !pieceHasIronWillDebuff(p)) continue;
+          if (card.effect === "zombify") {
+            if (p.king || isFortified(p) || p.isZombie) continue;
+          }
           res.push([r, c]);
         }
       return res;
@@ -958,8 +961,6 @@ export function getValidTargets(state, color, card, picks) {
               if (!pieceHasIntrinsicMoves(state.board, o, state, r, c)) res.push([r, c]);
             } else if (card.effect === "demote") {
               if (p.king && !isFortified(p) && r !== ownBackRank(p.color)) res.push([r, c]);
-            } else if (card.effect === "zombify") {
-              if (!p.king && !(p.anchored > 0) && !isFortified(p)) res.push([r, c]);
             } else res.push([r, c]);
           }
         }

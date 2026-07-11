@@ -135,8 +135,10 @@ export function createPiece(color, row, col, king = false) {
     bearAwakened: false,
     linkedFateId: null,
     bountyBy: null,
-    zombifyOwner: null,
-    zombifiedNoCapture: false,
+    isZombie: false,
+    isMainZombie: false,
+    zombieMasterId: null,
+    zombieSleepTurns: 0,
     isClone: false,
     cloneNoCaptureThisTurn: false,
     freezeDeferEndTick: false,
@@ -316,11 +318,74 @@ function findPieceById(board, id) {
   return null;
 }
 
+export function isZombieSleeping(piece) {
+  return !!(piece?.isZombie && piece.zombieSleepTurns > 0);
+}
+
+export function isAwakeZombie(piece) {
+  return !!(piece?.isZombie && piece.zombieSleepTurns <= 0);
+}
+
+function forEachZombieInChain(board, masterId, fn) {
+  if (!masterId) return;
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = board[r][c];
+      if (p?.zombieMasterId === masterId) fn(p, r, c);
+    }
+  }
+}
+
+function clearZombieChain(board, masterId) {
+  forEachZombieInChain(board, masterId, (p) => {
+    p.isZombie = false;
+    p.isMainZombie = false;
+    p.zombieMasterId = null;
+    p.zombieSleepTurns = 0;
+  });
+}
+
+export function clearPlayerZombieChain(board, color) {
+  const masterIds = new Set();
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = board[r][c];
+      if (p?.isMainZombie && p.color === color && p.zombieMasterId) {
+        masterIds.add(p.zombieMasterId);
+      }
+    }
+  }
+  for (const masterId of masterIds) clearZombieChain(board, masterId);
+}
+
+function cascadeKillZombieHorde(board, state, masterId, byColor) {
+  const victims = [];
+  forEachZombieInChain(board, masterId, (p, r, c) => {
+    victims.push([r, c]);
+  });
+  for (const [r, c] of victims) {
+    resolveCapture(board, state, r, c, byColor, { nonCap: true, zombieCascade: true });
+  }
+}
+
+function spawnSpreadZombie(board, state, color, row, col, masterId) {
+  if (!inBounds(row, col) || !isDarkSquare(row, col) || board[row][col]) return null;
+  if (state && squareBlocked(state, row, col, color)) return null;
+  const zombie = createPiece(color, row, col, false);
+  zombie.isZombie = true;
+  zombie.isMainZombie = false;
+  zombie.zombieMasterId = masterId;
+  zombie.zombieSleepTurns = 0;
+  board[row][col] = zombie;
+  if (state) queueBoardFx(state, "zombify", row, col, [[row, col]]);
+  return zombie;
+}
+
 /**
  * Resolve killing or capturing a piece (shields, Last Stand, deflect, etc.).
  * @returns {boolean} true if the piece was removed
  */
-export function resolveCapture(board, state, r, c, byColor, { nonCap = true, berserkSlam = false, linkFate = false } = {}) {
+export function resolveCapture(board, state, r, c, byColor, { nonCap = true, berserkSlam = false, linkFate = false, zombieCascade = false } = {}) {
   const p = board[r]?.[c];
   if (!p) return false;
   if (!linkFate && state && isInDarknessZone(state, r, c)) return false;
@@ -371,15 +436,10 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
       if (mates.length) mates[0].king = true;
     }
   }
-  const zombifyOwner = !linkFate && p.zombifyOwner && !p.king ? p.zombifyOwner : null;
+  const mainZombieMasterId = !linkFate && !zombieCascade && p.isMainZombie ? p.zombieMasterId : null;
   const partnerId = p.linkedFateId;
   removePiece(board, r, c);
-  if (zombifyOwner) {
-    const ally = createPiece(zombifyOwner, r, c, false);
-    ally.zombifiedNoCapture = true;
-    board[r][c] = ally;
-    if (state) queueBoardFx(state, "zombify", r, c, [[r, c]]);
-  }
+  if (mainZombieMasterId) cascadeKillZombieHorde(board, state, mainZombieMasterId, byColor);
   if (p.ghostGuard && state) getSq(state, r, c).ghostBlock = 2;
   if (partnerId && !linkFate && state) {
     const hit = findPieceById(board, partnerId);
@@ -515,7 +575,7 @@ function squareBlocked(state, r, c, moverColor = null) {
 const KNIGHT_OFFSETS = [[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
 
 export function getKnightMoves(board, piece, state, canCapture = false) {
-  if (piece.revivedNoCapture || piece.zombifiedNoCapture || piece.cloneNoCaptureThisTurn || piece.berserkNoCapture) canCapture = false;
+  if (piece.revivedNoCapture || piece.cloneNoCaptureThisTurn || piece.berserkNoCapture) canCapture = false;
   if (canCapture && state && isInDarknessZone(state, piece.row, piece.col)) canCapture = false;
   const moves = [];
   for (const [dr, dc] of KNIGHT_OFFSETS) {
@@ -564,7 +624,7 @@ export function forwardDirs(piece, dominion = false) {
 export function getStepMoves(board, piece, color, state = null) {
   const moves = [];
   if (piece.cloneNoCaptureThisTurn) return moves;
-  if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
+  if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0 || piece.zombieSleepTurns > 0) return moves;
   const dom = (state?.meta?.dominionTurn?.[color] ?? 0) > 0;
 
   if (hasKnightSigil(piece))
@@ -607,9 +667,9 @@ export function getJumpMoves(board, piece, color, state = null) {
   const moves = [];
   if (state && isInDarknessZone(state, piece.row, piece.col)) return moves;
   if (piece.cloneNoCaptureThisTurn) return moves;
-  if (piece.revivedNoCapture || piece.zombifiedNoCapture || piece.berserkNoCapture) return moves;
+  if (piece.revivedNoCapture || piece.berserkNoCapture) return moves;
   if (piece.reverseOnlyTurns > 0 || piece.noCaptureTurns > 0) return moves;
-  if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.rooted > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
+  if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.rooted > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0 || piece.zombieSleepTurns > 0) return moves;
   if (hasKnightSigil(piece) && !piece.knightCapture) return moves;
   if (hasKnightSigil(piece) && piece.knightCapture)
     return getKnightMoves(board, piece, state, true);
@@ -741,6 +801,10 @@ function explodeBombAt(board, state, row, col) {
 export function applyMove(board, move, state = null) {
   const [fr, fc] = move.from;
   const [tr, tc] = move.to;
+  const moverBefore = board[fr]?.[fc];
+  const wasAwakeZombie = isAwakeZombie(moverBefore);
+  const zombieMasterId = moverBefore?.zombieMasterId ?? null;
+  const zombieColor = moverBefore?.color ?? null;
   const captureTargets = move.captures.map(([cr, cc]) => ({
     cr,
     cc,
@@ -762,6 +826,9 @@ export function applyMove(board, move, state = null) {
     const bountyVictim = cap.bountyBy === piece.color ? cap : null;
     const captured = resolveCapture(board, state, cr, cc, piece.color, { nonCap: false });
     if (captured && bountyVictim) payBountyOnCapture(state, bountyVictim, piece.color);
+    if (captured && wasAwakeZombie && zombieMasterId && zombieColor && !cap.king) {
+      spawnSpreadZombie(board, state, zombieColor, fr, fc, zombieMasterId);
+    }
   }
   if (!piece) return null;
   return resolveLandingTraps(board, state, tr, tc, piece);
@@ -788,7 +855,7 @@ export function backwardDirs(piece) {
 export function getBackwardStepMoves(board, piece, state = null) {
   const moves = [];
   if (piece.cloneNoCaptureThisTurn) return moves;
-  if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0) return moves;
+  if (isFrozen(piece) || piece.paralyzedTurns > 0 || piece.fortifyTurns > 0 || piece.hibernationTurns > 0 || piece.zombieSleepTurns > 0) return moves;
   for (const [dr, dc] of backwardDirs(piece)) {
     const nr = piece.row + dr, nc = piece.col + dc;
     if (!inBounds(nr, nc) || !isDarkSquare(nr, nc) || squareBlocked(state, nr, nc, piece.color)) continue;
@@ -890,8 +957,8 @@ export function tickEffects(board, color, state = null) {
           p.mindControlTurns = 0;
         }
       }
+      if (p.zombieSleepTurns > 0) p.zombieSleepTurns--;
       if (p.revivedNoCapture) p.revivedNoCapture = false;
-      if (p.zombifiedNoCapture) p.zombifiedNoCapture = false;
       if (p.berserkNoCapture) p.berserkNoCapture = false;
     }
   }
