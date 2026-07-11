@@ -170,6 +170,8 @@ export class MatchSession {
     this.opponentColor = this.localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
     /** In PvP, black (guest) sees the board from their side — pieces advance toward them. */
     this.boardFlipped = this.isPvp && this.localColor === COLORS.BLACK;
+    /** Logical row index → visual grid row (vertical flip only; files stay a–h left to right). */
+    this.visualRow = (row) => (this.boardFlipped ? SIZE - 1 - row : row);
     this.opponentName = options.opponentName || "Opponent";
     this.onStateSync = options.onStateSync ?? null;
     this.onPvpWin = options.onPvpWin ?? null;
@@ -2923,17 +2925,31 @@ ${starLine}`;
     }
   }
 
+  syncBoardPerspectiveLabels() {
+    const ranks = this.root.querySelector("#board-ranks-left");
+    if (!ranks) return;
+    const buttons = [...ranks.querySelectorAll(".board-rank-btn")];
+    buttons.sort((a, b) => {
+      const ar = Number(a.dataset.row);
+      const br = Number(b.dataset.row);
+      return this.boardFlipped ? br - ar : ar - br;
+    });
+    for (const btn of buttons) ranks.appendChild(btn);
+  }
+
   renderBoard() {
     const boardEl = this.$("board");
     if (!boardEl) return;
     const boardFrame = this.root.querySelector("#board-frame");
     boardFrame?.classList.toggle("board-frame--local-flipped", this.boardFlipped);
+    this.syncBoardPerspectiveLabels();
     boardEl.innerHTML = "";
     const s = this.getViewState();
     const zonePreview = this.getZonePreviewSets();
 
-    for (let row = 0; row < SIZE; row++) {
+    for (let visRow = 0; visRow < SIZE; visRow++) {
       for (let col = 0; col < SIZE; col++) {
+        const row = this.boardFlipped ? SIZE - 1 - visRow : visRow;
         const sq = document.createElement("button");
         sq.type = "button";
         sq.dataset.row = String(row);
@@ -3594,9 +3610,9 @@ ${starLine}`;
       for (const { r1, c1, r2, c2 } of linkedPairs) {
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute("x1", String(((c1 + 0.5) / SIZE) * 100));
-        line.setAttribute("y1", String(((r1 + 0.5) / SIZE) * 100));
+        line.setAttribute("y1", String(((this.visualRow(r1) + 0.5) / SIZE) * 100));
         line.setAttribute("x2", String(((c2 + 0.5) / SIZE) * 100));
-        line.setAttribute("y2", String(((r2 + 0.5) / SIZE) * 100));
+        line.setAttribute("y2", String(((this.visualRow(r2) + 0.5) / SIZE) * 100));
         svg.appendChild(line);
       }
       boardEl.appendChild(svg);

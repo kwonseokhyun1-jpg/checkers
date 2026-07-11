@@ -1,35 +1,8 @@
 /* Board gameplay, PvP perspective, and status indicators.
  * Shell / nav / typography: css/tokens.css + style.css + mobile-game.css */
 
-/* PvP: guest (black) sees the board from their side — your pieces advance toward you */
-.board-frame--local-flipped {
-  transform: rotate(180deg);
-}
-.board-frame--local-flipped .piece,
-.board-frame--local-flipped .board-file-btn,
-.board-frame--local-flipped .board-rank-btn,
-.board-frame--local-flipped .barrier-indicator,
-.board-frame--local-flipped .sanctuary-indicator,
-.board-frame--local-flipped .shield-indicator,
-.board-frame--local-flipped .ultra-shield-indicator,
-.board-frame--local-flipped .bishop-indicator,
-.board-frame--local-flipped .rook-indicator,
-.board-frame--local-flipped .constitution-indicator,
-.board-frame--local-flipped .poison-indicator,
-.board-frame--local-flipped .fire-indicator,
-.board-frame--local-flipped .blood-indicator,
-.board-frame--local-flipped .plague-indicator,
-.board-frame--local-flipped .fire-tile-indicator,
-.board-frame--local-flipped .landmine-indicator,
-.board-frame--local-flipped .collapse-indicator,
-.board-frame--local-flipped .quicksand-indicator,
-.board-frame--local-flipped .linked-fate-indicator,
-.board-frame--local-flipped .fortify-indicator,
-.board-frame--local-flipped .mind-control-indicator,
-.board-frame--local-flipped .dominion-indicator,
-.board-frame--local-flipped .bounty-indicator {
-  transform: rotate(180deg);
-}
+/* PvP: guest (black) sees rows reversed so their pieces sit at the bottom.
+ * Square order is remapped in renderBoard(); rank labels follow via syncBoardPerspectiveLabels(). */
 
 .board-frame {
   background: #262421;
