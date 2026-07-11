@@ -6188,6 +6188,129 @@ html:has(body.cosmetic-open-active) {
 .vault-tab--locked:not(.active) {
   filter: grayscale(0.35);
 }
+
+/* Play sub-tabs (Adventure / Arena / Leaderboard) */
+.play-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+.play-tab {
+  font-family: var(--font-ui, "DM Sans", sans-serif);
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.45rem 1rem;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: rgba(232, 236, 244, 0.65);
+  cursor: pointer;
+}
+.play-tab.active,
+.play-tab[aria-selected="true"] {
+  color: var(--accent-gem, #5ce1e6);
+  background: rgba(92, 225, 230, 0.12);
+}
+.play-tab-panel.hidden {
+  display: none;
+}
+.play-tab--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.play-tab--locked:not(.active) {
+  filter: grayscale(0.35);
+}
+.play-panel .adventure-panel {
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.play-pvp-root:empty {
+  min-height: 0;
+}
+
+/* Social tab */
+.social-search {
+  margin-bottom: 1rem;
+}
+.social-search__label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: rgba(232, 236, 244, 0.75);
+}
+.social-search__row {
+  display: flex;
+  gap: 0.5rem;
+}
+.social-search__input {
+  flex: 1;
+  min-width: 0;
+}
+.social-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+.social-player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.social-player-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.social-player-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+.social-player-row__name {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.social-player-row__handle {
+  font-size: 0.8rem;
+  color: rgba(232, 236, 244, 0.55);
+}
+.social-empty {
+  padding: 0.75rem 0;
+  color: rgba(232, 236, 244, 0.55);
+  font-size: 0.9rem;
+}
+.social-empty--error {
+  color: var(--accent-red, #e85d5d);
+}
+.social-tag {
+  font-size: 0.8rem;
+  color: rgba(232, 236, 244, 0.55);
+}
+.social-sign-in-nudge {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: rgba(232, 236, 244, 0.7);
+}
+.social-status {
+  min-height: 1.25rem;
+  margin-bottom: 0.25rem;
+}
 .vault-locked-msg {
   padding: 1.25rem 0;
   text-align: center;

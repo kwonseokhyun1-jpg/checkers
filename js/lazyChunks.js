@@ -72,8 +72,14 @@ export function loadAnimationsChunk() {
   return animationsChunk;
 }
 
-/** @type {Promise<typeof import("./tutorialMeta.js")> | null} */
-let tutorialMetaChunk = null;
+/** @type {Promise<typeof import("./socialUI.js")> | null} */
+let socialChunk = null;
+
+export function loadSocialChunk() {
+  if (!socialChunk) socialChunk = import("./socialUI.js");
+  return socialChunk;
+}
+
 
 export function loadTutorialMetaChunk() {
   if (!tutorialMetaChunk) tutorialMetaChunk = import("./tutorialMeta.js");

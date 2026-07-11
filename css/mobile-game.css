@@ -130,7 +130,7 @@ body.match-active .game-nav.tabs {
 }
 
 body.match-active #view-match:not(.hidden),
-body.match-active #view-pvp:not(.hidden) {
+body.match-active #view-play:not(.hidden) #play-arena-root:has(#pvp-match-root) {
   display: block;
   width: 100%;
 }
@@ -2626,7 +2626,7 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   body.match-active #view-match:not(.hidden),
-  body.match-active #view-pvp:not(.hidden) {
+  body.match-active #view-play:not(.hidden) #play-arena-root:has(#pvp-match-root) {
     flex: 1;
     display: flex;
     flex-direction: column;

@@ -408,6 +408,21 @@ export async function fetchProfileRow(userId) {
   return data;
 }
 
+/** Search public profiles by username (partial match). */
+export async function searchProfilesByUsername(query, limit = 20) {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const q = String(query || "").trim();
+  if (q.length < 2) return [];
+  const { data, error } = await sb
+    .from("profiles")
+    .select("id, username, display_name, profile_json")
+    .ilike("username", `%${q}%`)
+    .limit(Math.min(Math.max(limit, 1), 30));
+  if (error) throw error;
+  return data || [];
+}
+
 export async function upsertProfileRow(userId, patch) {
   const sb = getSupabase();
   if (!sb || !userId) return null;

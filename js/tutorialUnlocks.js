@@ -41,22 +41,40 @@ const PVP_STEPS = [
   {
     id: "intro",
     title: "PvP unlocked!",
-    body: "Challenge other players in real-time 1v1 matches.",
+    body: "Challenge other players in real-time 1v1 matches — Arena and Leaderboard are now under Play.",
     autoAdvance: true,
   },
   {
-    id: "pvp-tab",
-    title: "Open PvP",
-    body: "Tap the PvP tab to host or join a room.",
-    hint: "Tap PvP in the menu below.",
-    highlight: '[data-tab="pvp"]',
-    allowed: ['[data-tab="pvp"]'],
-    actionSelector: '[data-tab="pvp"]',
+    id: "play-tab",
+    title: "Open Play",
+    body: "Tap the Play tab to choose Adventure, Arena, or Leaderboard.",
+    hint: "Tap Play in the menu below.",
+    highlight: '[data-tab="play"]',
+    allowed: ['[data-tab="play"]'],
+    actionSelector: '[data-tab="play"]',
+  },
+  {
+    id: "pvp-arena-tab",
+    title: "PvP Arena",
+    body: "Switch to Arena to host or join a live match.",
+    hint: "Tap Arena in the Play tabs.",
+    highlight: '[data-play-tab="arena"]',
+    allowed: ['[data-play-tab="arena"]'],
+    actionSelector: '[data-play-tab="arena"]',
+  },
+  {
+    id: "pvp-leaderboard-tab",
+    title: "Leaderboard",
+    body: "Open Leaderboard for global ranks and live spectating.",
+    hint: "Tap Leaderboard in the Play tabs.",
+    highlight: '[data-play-tab="leaderboard"]',
+    allowed: ['[data-play-tab="leaderboard"]'],
+    actionSelector: '[data-play-tab="leaderboard"]',
   },
   {
     id: "pvp-lobby",
-    title: "PvP Hub",
-    body: "Tap Arena to host or join matches. Tap Leaderboard for global ranks and live spectating.",
+    title: "You are set for PvP",
+    body: "Host or join matches in Arena. Check Leaderboard anytime for ranks and spectating.",
     autoAdvance: true,
   },
 ];
@@ -475,10 +493,15 @@ export function startPvpTutorial(opts) {
   startSpotlightTutorial({
     ...opts,
     steps: PVP_STEPS,
-    skipMessage: "Skip the PvP tutorial? You can open PvP anytime from the menu.",
+    skipMessage: "Skip the PvP tutorial? You can open Arena and Leaderboard under Play anytime.",
     dismiss: dismissPvpTutorial,
-    onEventMap: (step, event, data) =>
-      step.id === "pvp-tab" && event === "tab-changed" && data?.tab === "pvp",
+    onEventMap: (step, event, data) => {
+      if (step.id === "play-tab" && event === "tab-changed" && data?.tab === "play") return true;
+      if (step.id === "pvp-arena-tab" && event === "play-tab-changed" && data?.tab === "arena") return true;
+      if (step.id === "pvp-leaderboard-tab" && event === "play-tab-changed" && data?.tab === "leaderboard")
+        return true;
+      return false;
+    },
   });
 }
 

@@ -34,7 +34,7 @@ const shots = [
   { file: "01-decks.png", tab: "deck", wait: 800 },
   { file: "02-adventure.png", tab: "play", wait: 1200 },
   { file: "04-shop.png", tab: "chests", wait: 800 },
-  { file: "05-pvp.png", tab: "pvp", wait: 800 },
+  { file: "05-pvp.png", tab: "play", wait: 800 },
 ];
 
 const server = staticServer();

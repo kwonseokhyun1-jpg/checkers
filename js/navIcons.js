@@ -28,6 +28,12 @@ export const NAV_ICONS = {
     <path d="M9 12h6M9 15h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
     <circle cx="16" cy="5" r="3" fill="var(--accent-gold, #e8c547)" stroke="#080a12" stroke-width="1"/>
   </svg>`,
+  social: `<svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.5"/>
+    <circle cx="17" cy="10" r="2.6" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M3.5 19c0-2.8 2.5-4.5 5.5-4.5s5.5 1.7 5.5 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M14 18.5c0-1.8 1.6-3 3.5-3s3.5 1.2 3.5 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>`,
 };
 
 /** Inject SVG nav icons into tab buttons. */
@@ -36,7 +42,7 @@ export function initNavIcons() {
     deck: NAV_ICONS.deck,
     chests: NAV_ICONS.chests,
     play: NAV_ICONS.play,
-    pvp: NAV_ICONS.pvp,
+    social: NAV_ICONS.social,
     quests: NAV_ICONS.quests,
   };
   for (const btn of document.querySelectorAll(".game-nav .tab-btn[data-tab]")) {

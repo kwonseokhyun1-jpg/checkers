@@ -64,11 +64,6 @@ import {
 } from "./userProfileModal.js";
 import { enhanceSelect } from "./customSelect.js";
 import { initPanelHelp } from "./panelHelp.js";
-import {
-  arenaHubIconSvg,
-  leaderboardHubIconSvg,
-  pvpHubTileScenery,
-} from "./pvpArt.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -99,15 +94,29 @@ function pvpPanelHead(descHtml) {
 
 /**
  * @param {object} opts
- * @param {HTMLElement} opts.root
+ * @param {HTMLElement} opts.arenaRoot
+ * @param {HTMLElement} opts.leaderboardRoot
  * @param {() => object} opts.getProfile
  * @param {() => void} opts.openAuthModal
  */
-export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPvpViewShown, onOpenDeckEdit }) {
-  if (!root) return { render: () => {}, dispose: () => {} };
+export function initPvpUI({
+  arenaRoot,
+  leaderboardRoot,
+  getProfile,
+  openAuthModal,
+  onNavigateTab,
+  onNavigatePlayTab,
+  onPvpViewShown,
+  onOpenDeckEdit,
+}) {
+  if (!arenaRoot || !leaderboardRoot) return { render: () => {}, dispose: () => {} };
 
-  function bindPvpPanelHelp() {
-    initPanelHelp(root.querySelector("#pvp-help-btn"), root.querySelector("#pvp-help-desc"));
+  function screenRoot() {
+    return pvpScreen === "leaderboard" ? leaderboardRoot : arenaRoot;
+  }
+
+  function bindPvpPanelHelp(scope = screenRoot()) {
+    initPanelHelp(scope.querySelector("#pvp-help-btn"), scope.querySelector("#pvp-help-desc"));
   }
 
   let pvpService = null;
@@ -122,8 +131,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   let openRoomsRefreshInFlight = false;
   let pvpGameOverCtx = null;
   let rematchPollId = null;
-  /** @type {"hub" | "arena" | "leaderboard"} */
-  let pvpScreen = "hub";
+  /** @type {"arena" | "leaderboard"} */
+  let pvpScreen = "arena";
   let leaderboardPollId = null;
   let unsubscribeLiveMatches = null;
   let spectating = false;
@@ -139,11 +148,11 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   }
 
   function pvpBackButton() {
-    return `<button type="button" class="btn-text pvp-back-btn" id="pvp-back-hub">← PvP</button>`;
+    return `<button type="button" class="btn-text pvp-back-btn" id="pvp-back-play">← Adventure</button>`;
   }
 
-  function bindPvpBackToHub() {
-    root.querySelector("#pvp-back-hub")?.addEventListener("click", () => {
+  function bindPvpBackToAdventure() {
+    screenRoot().querySelector("#pvp-back-play")?.addEventListener("click", () => {
       stopOpenRoomsSync();
       stopLeaderboardSync();
       hideHosting();
@@ -151,8 +160,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         pvpService?.dispose();
         pvpService = null;
       }
-      pvpScreen = "hub";
-      renderPvpHub();
+      onNavigatePlayTab?.("adventure");
     });
   }
 
@@ -160,79 +168,13 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     stopRematchPoll();
     pvpGameOverCtx = null;
     spectating = false;
-    pvpScreen = "hub";
-    renderPvpHub();
-  }
-
-  function renderPvpHub(message = "", isError = false) {
-    stopOpenRoomsSync();
-    stopLeaderboardSync();
-
-    if (!isAuthAvailable()) {
-      root.innerHTML = `
-        <section class="panel game-panel pvp-panel">
-          ${pvpPanelHead(`Add your Supabase <strong>anon</strong> key to <code>js/supabaseConfig.js</code> from
-              <a href="https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/api" target="_blank" rel="noopener">API settings</a>, run <code>supabase/schema.sql</code>, then reload.`)}
-        </section>`;
-      bindPvpPanelHelp();
-      return;
-    }
-
-    const user = getCurrentUser();
-    root.innerHTML = `
-      <section class="panel game-panel pvp-hub-panel">
-        <div class="pvp-panel-content">
-        <header class="panel-head panel-head--compact">
-          <div class="panel-head-title-row">
-            <h2 class="panel-head__title">PvP</h2>
-            <button type="button" id="pvp-help-btn" class="panel-help-btn" aria-label="How PvP works" aria-expanded="false" aria-controls="pvp-help-desc">?</button>
-          </div>
-          <p id="pvp-help-desc" class="panel-head__desc" hidden>Tap Arena to host or join matches. Tap Leaderboard for global ranks and live spectating.</p>
-        </header>
-        <div class="pvp-hub" role="group" aria-label="PvP destinations">
-          <button type="button" class="pvp-hub-tile pvp-hub-tile--arena" id="pvp-go-arena">
-            ${pvpHubTileScenery("arena")}
-            <span class="pvp-hub-tile__content">
-              <span class="pvp-hub-tile__icon" aria-hidden="true">${arenaHubIconSvg()}</span>
-              <span class="pvp-hub-tile__title">Arena</span>
-              <span class="pvp-hub-tile__desc">Host or join live matches</span>
-            </span>
-          </button>
-          <button type="button" class="pvp-hub-tile pvp-hub-tile--leaderboard" id="pvp-go-leaderboard">
-            ${pvpHubTileScenery("leaderboard")}
-            <span class="pvp-hub-tile__content">
-              <span class="pvp-hub-tile__icon" aria-hidden="true">${leaderboardHubIconSvg()}</span>
-              <span class="pvp-hub-tile__title">Leaderboard</span>
-              <span class="pvp-hub-tile__desc">Global ranks &amp; spectate live games</span>
-            </span>
-          </button>
-        </div>
-        ${user ? "" : `<p class="pvp-sign-in-nudge">${GUEST_SIGN_IN_NUDGE_PVP}</p>`}
-        <p id="pvp-status" class="pvp-status${isError ? " pvp-status--error" : ""}" role="status">${escapeHtml(message)}</p>
-        </div>
-      </section>`;
-
-    bindPvpPanelHelp();
-    root.querySelector("#pvp-go-arena")?.addEventListener("click", () => {
-      if (!getCurrentUser()) {
-        openAuthModal();
-        return;
-      }
-      pvpScreen = "arena";
-      renderLobby();
-    });
-    root.querySelector("#pvp-go-leaderboard")?.addEventListener("click", () => {
-      if (!getCurrentUser()) {
-        openAuthModal();
-        return;
-      }
-      pvpScreen = "leaderboard";
-      renderLeaderboard();
-    });
+    pvpScreen = "arena";
+    onNavigatePlayTab?.("arena");
+    renderLobby();
   }
 
   function setLeaderboardStatus(text, isError = false) {
-    const el = root.querySelector("#pvp-leaderboard-status");
+    const el = leaderboardRoot.querySelector("#pvp-leaderboard-status");
     if (el) {
       el.textContent = text;
       el.classList.toggle("pvp-status--error", isError);
@@ -291,8 +233,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   }
 
   async function refreshLeaderboardPanel() {
-    const rankList = root.querySelector("#pvp-rank-list");
-    const liveList = root.querySelector("#pvp-live-list");
+    const rankList = leaderboardRoot.querySelector("#pvp-rank-list");
+    const liveList = leaderboardRoot.querySelector("#pvp-live-list");
     const user = getCurrentUser();
     if (!rankList || !liveList || !user || matchSession || spectating) return;
     if (leaderboardRefreshInFlight) return;
@@ -326,14 +268,14 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
   function renderLeaderboard(message = "", isError = false) {
     stopOpenRoomsSync();
+    pvpScreen = "leaderboard";
     const user = getCurrentUser();
     if (!user) {
-      pvpScreen = "hub";
-      renderPvpHub();
+      openAuthModal();
       return;
     }
 
-    root.innerHTML = `
+    leaderboardRoot.innerHTML = `
       <section class="panel game-panel pvp-leaderboard-panel">
         <div class="pvp-panel-content">
         ${pvpBackButton()}
@@ -361,8 +303,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         </div>
       </section>`;
 
-    bindPvpPanelHelp();
-    bindPvpBackToHub();
+    bindPvpPanelHelp(leaderboardRoot);
+    bindPvpBackToAdventure();
     startLeaderboardSync();
   }
 
@@ -451,10 +393,10 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     const hostCosmetics = cosmeticsWithPieceSkin(hostCosmeticsBase, row.host_piece_skin);
     const guestCosmetics = cosmeticsWithPieceSkin(guestCosmeticsBase, row.guest_piece_skin);
 
-    root.innerHTML = "";
+    arenaRoot.innerHTML = "";
     const matchRoot = document.createElement("div");
     matchRoot.id = "pvp-match-root";
-    root.appendChild(matchRoot);
+    arenaRoot.appendChild(matchRoot);
     matchRoot.innerHTML = getMatchHtml(guestName, {
       exitLabel: "← Leave spectate",
       pvp: true,
@@ -551,22 +493,21 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     stopOpenRoomsSync();
 
     if (!isAuthAvailable()) {
-      root.innerHTML = `
+      arenaRoot.innerHTML = `
         <section class="panel game-panel pvp-panel">
           ${pvpPanelHead(`Add your Supabase <strong>anon</strong> key to <code>js/supabaseConfig.js</code> from
               <a href="https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/api" target="_blank" rel="noopener">API settings</a>, run <code>supabase/schema.sql</code>, then reload.`)}
         </section>`;
-      bindPvpPanelHelp();
+      bindPvpPanelHelp(arenaRoot);
       return;
     }
 
     if (!user) {
-      pvpScreen = "hub";
-      renderPvpHub();
+      openAuthModal();
       return;
     }
 
-    root.innerHTML = `
+    arenaRoot.innerHTML = `
       <section class="panel game-panel pvp-panel pvp-panel--arena">
         <div class="pvp-panel-content">
         ${pvpBackButton()}
@@ -618,18 +559,18 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         </div>
       </section>`;
 
-    root.querySelector("#pvp-host")?.addEventListener("click", () => void hostRoom());
-    enhanceSelect(root.querySelector("#pvp-deck-select"));
-    enhanceSelect(root.querySelector("#pvp-mode-select"));
-    root.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
+    arenaRoot.querySelector("#pvp-host")?.addEventListener("click", () => void hostRoom());
+    enhanceSelect(arenaRoot.querySelector("#pvp-deck-select"));
+    enhanceSelect(arenaRoot.querySelector("#pvp-mode-select"));
+    arenaRoot.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
     syncModeUi();
-    bindPvpPanelHelp();
-    bindPvpBackToHub();
+    bindPvpPanelHelp(arenaRoot);
+    bindPvpBackToAdventure();
     startOpenRoomsSync();
 
     void probePvpBackend().then((probe) => {
       if (!probe.ok && probe.reason) {
-        const el = root.querySelector("#pvp-status");
+        const el = arenaRoot.querySelector("#pvp-status");
         if (el && !el.textContent) {
           el.textContent = probe.reason;
           el.classList.add("pvp-status--error");
@@ -641,8 +582,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   }
 
   async function refreshOpenRooms(pendingHostRow = null) {
-    const yourList = root.querySelector("#pvp-your-list");
-    const openList = root.querySelector("#pvp-open-list");
+    const yourList = arenaRoot.querySelector("#pvp-your-list");
+    const openList = arenaRoot.querySelector("#pvp-open-list");
     const user = getCurrentUser();
     if (!yourList || !openList || !user || matchSession) return;
     if (openRoomsRefreshInFlight) {
@@ -743,7 +684,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   }
 
   function syncHostButtonState(hostingCount = 0) {
-    const hostBtn = root.querySelector("#pvp-host");
+    const hostBtn = arenaRoot.querySelector("#pvp-host");
     if (!hostBtn) return;
     const blocked = hostingCount > 0;
     hostBtn.disabled = blocked;
@@ -752,8 +693,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   }
 
   function renderRoomLists(mine, others, hostProfiles = new Map()) {
-    const yourList = root.querySelector("#pvp-your-list");
-    const openList = root.querySelector("#pvp-open-list");
+    const yourList = arenaRoot.querySelector("#pvp-your-list");
+    const openList = arenaRoot.querySelector("#pvp-open-list");
     if (!yourList || !openList) return;
 
     const mySkin = getEquippedPieceSkin(getProfile());
@@ -836,20 +777,20 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   }
 
   function getSelectedMode() {
-    return root.querySelector("#pvp-mode-select")?.value || PVP_MODE_NORMAL;
+    return arenaRoot.querySelector("#pvp-mode-select")?.value || PVP_MODE_NORMAL;
   }
 
   function syncModeUi() {
     const mystery = getSelectedMode() === PVP_MODE_MYSTERY;
-    const deckSelect = root.querySelector("#pvp-deck-select");
-    const hint = root.querySelector("#pvp-mode-hint");
+    const deckSelect = arenaRoot.querySelector("#pvp-deck-select");
+    const hint = arenaRoot.querySelector("#pvp-mode-hint");
     if (deckSelect) deckSelect.disabled = mystery;
     hint?.classList.toggle("hidden", !mystery);
   }
 
   function getSelectedDeck() {
     const profile = getProfile();
-    const id = root.querySelector("#pvp-deck-select")?.value || profile.selectedDeckId;
+    const id = arenaRoot.querySelector("#pvp-deck-select")?.value || profile.selectedDeckId;
     return profile.decks.find((d) => d.id === id);
   }
 
@@ -899,7 +840,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   }
 
   function setStatus(text, isError = false) {
-    const el = root.querySelector("#pvp-status");
+    const el = arenaRoot.querySelector("#pvp-status");
     if (el) {
       el.textContent = text;
       el.classList.toggle("pvp-status--error", isError);
@@ -907,14 +848,14 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   }
 
   function showHosting() {
-    const box = root.querySelector("#pvp-waiting");
+    const box = arenaRoot.querySelector("#pvp-waiting");
     if (!box) return;
     box.classList.remove("hidden");
     box.innerHTML = `<p class="pvp-wait-hint">Your room is listed under <strong>Your rooms</strong>. Waiting for someone to join…</p>`;
   }
 
   function hideHosting() {
-    const box = root.querySelector("#pvp-waiting");
+    const box = arenaRoot.querySelector("#pvp-waiting");
     if (box) {
       box.classList.add("hidden");
       box.innerHTML = "";
@@ -1273,7 +1214,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       clearActivePvpMatchId();
       pvpService?.dispose();
       pvpService = null;
-      root.innerHTML = "";
+      arenaRoot.innerHTML = "";
       onNavigateTab?.("deck");
       if (deckId) onOpenDeckEdit?.(deckId);
       return;
@@ -1371,7 +1312,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     };
 
     if (!resume) {
-      await showPvpMatchLoading(root, {
+      await showPvpMatchLoading(arenaRoot, {
         local: { username: localName, cosmetics: localCosmetics },
         opponent: { username: opponentName, cosmetics: opponentCosmetics },
       });
@@ -1383,10 +1324,10 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       return;
     }
 
-    root.innerHTML = "";
+    arenaRoot.innerHTML = "";
     const matchRoot = document.createElement("div");
     matchRoot.id = "pvp-match-root";
-    root.appendChild(matchRoot);
+    arenaRoot.appendChild(matchRoot);
     matchRoot.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP", pvp: true });
 
     pvpService._lastVersion = row.version ?? 0;
@@ -1608,13 +1549,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     return row?.host_id === userId || row?.guest_id === userId;
   }
 
-  function showPvpView() {
-    document.querySelectorAll(".tab-btn").forEach((b) => {
-      b.classList.toggle("active", b.dataset.tab === "pvp");
-    });
-    document.querySelectorAll(".view").forEach((v) => {
-      v.classList.toggle("hidden", v.id !== "view-pvp");
-    });
+  function showPvpView(screen = pvpScreen) {
+    onNavigatePlayTab?.(screen === "leaderboard" ? "leaderboard" : "arena");
     onPvpViewShown?.();
   }
 
@@ -1717,23 +1653,23 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     if (!matchSession || matchLaunching || isLiveMatchUiVisible()) return false;
     matchSession = null;
     exitMatchMode({ clearCheckpoint: false });
-    root.querySelector("#pvp-match-root")?.remove();
+    arenaRoot.querySelector("#pvp-match-root")?.remove();
     return true;
   }
 
   function renderPvpSurface({ resume = false } = {}) {
     clearStalePvpSession();
-    if (matchLaunching || root.querySelector(".pvp-loading")) return;
+    if (matchLaunching || arenaRoot.querySelector(".pvp-loading")) return;
     if (!matchSession) {
-      if (pvpScreen === "arena") renderLobby();
-      else if (pvpScreen === "leaderboard") renderLeaderboard();
-      else renderPvpHub();
+      if (pvpScreen === "leaderboard") renderLeaderboard();
+      else renderLobby();
       if (resume) void tryResumePvpMatch();
     }
   }
 
   const onShellReconciled = () => {
-    if (!root || root.classList.contains("hidden")) return;
+    const panel = arenaRoot?.closest(".play-tab-panel");
+    if (!panel || panel.classList.contains("hidden")) return;
     renderPvpSurface({ resume: true });
   };
   window.addEventListener("cc-match-shell-reconciled", onShellReconciled);
@@ -1755,6 +1691,11 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   return {
     render: renderPvpSurface,
     tryResume: tryResumePvpMatch,
+    setScreen(screen) {
+      if (screen === "arena" || screen === "leaderboard") {
+        pvpScreen = screen;
+      }
+    },
     dispose() {
       unsubAuth();
       window.removeEventListener("cc-match-shell-reconciled", onShellReconciled);
@@ -1764,7 +1705,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       pvpGameOverCtx = null;
       matchSession = null;
       spectating = false;
-      pvpScreen = "hub";
+      pvpScreen = "arena";
       clearActivePvpMatchId();
       pvpService?.dispose();
       pvpService = null;
