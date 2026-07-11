@@ -1747,8 +1747,8 @@ export const EFFECT_ILLUSTRATIONS = {
   shield_2: () => uncommonBleed("s2", "#38bdf8", "#0c4a6e", aegisMotif()),
   bulwark: () => rareBleed("bw", "#b794f4", "#553c7a", bulwarkMotif()),
   barrier: () => commonBleed("br", "#94a3b8", "#1f2937", barrierMotif()),
-  last_stand: () => uncommonBleed("ls", "#38bdf8", "#0c4a6e", lastStandMotif()),
-  fortify: () => rareBleed("fo", "#a78bfa", "#4c1d95", fortifyMotif()),
+  last_stand: () => rareBleed("ls", "#38bdf8", "#0c4a6e", lastStandMotif()),
+  fortify: () => uncommonBleed("fo", "#a78bfa", "#4c1d95", fortifyMotif()),
   sanctuary_pulse: () => uncommonBleed("sp", "#7dd3fc", "#1e3a5f", sanctuaryPulseMotif()),
   sanctuary: () => rareBleed("sa", "#c4b5fd", "#4c1d95", sanctuaryMotif()),
   deflect_1: () => uncommonBleed("df", "#38bdf8", "#0c4a6e", deflectMotif()),
@@ -1786,7 +1786,7 @@ export const EFFECT_ILLUSTRATIONS = {
   tangle: () => rareBleed("tg", "#93c5fd", "#312e81", tangleMotif()),
   blind: () => rareBleed("bl", "#a78bfa", "#4c1d95", blindMotif()),
   confusion: () => epicBleed("cf", "#c4b5fd", "#4c1d95", confusionMotif()),
-  extract: () => epicBleed("ex", "#c4b5fd", "#4c1d95", extractMotif()),
+  extract: () => rareBleed("ex", "#c4b5fd", "#4c1d95", extractMotif()),
   fog_2: () => wrap(`${piece(32, 34, 6)}<ellipse cx="32" cy="24" rx="16" ry="8" fill="currentColor" opacity="0.22"/>`),
 
   crown: () => uncommonBleed("cr", "#fbbf24", "#451a03", crownMotif()),
@@ -1794,7 +1794,7 @@ export const EFFECT_ILLUSTRATIONS = {
   fusion: () => rareBleed("fu", "#8b5cf6", "#4c1d95", fusionMotif()),
   clone: () => epicBleed("cln", "#93c5fd", "#312e81", cloneMotif()),
   chameleon: () => rareBleed("ch", "#86efac", "#312e81", chameleonMotif()),
-  hibernation: () => rareBleed("hi", "#c4b5fd", "#4c1d95", hibernationMotif()),
+  hibernation: () => epicBleed("hi", "#c4b5fd", "#4c1d95", hibernationMotif()),
 
   quicksand: () => commonBleed("qs", "#a8a29e", "#292524", quicksandMotif()),
   landmine: () => uncommonBleed("lm", "#78716c", "#292524", landmineMotif()),
@@ -1803,7 +1803,7 @@ export const EFFECT_ILLUSTRATIONS = {
   scatter: () => uncommonBleed("st", "#7dd3fc", "#1e3a5f", scatterMotif()),
   call_forward: () => rareBleed("cfw", "#fca5a5", "#4c1d95", callForwardMotif()),
   dash: () => rareBleed("ds", "#c4b5fd", "#4c1d95", dashMotif()),
-  earthquake: () => legendaryBleed("eq", "#78716c", "#292524", earthquakeMotif()),
+  earthquake: () => epicBleed("eq", "#78716c", "#292524", earthquakeMotif()),
 
   coin_flip: () => coinFlipMotif(),
   ignore: () => commonBleed("ig", "#94a3b8", "#1f2937", ignoreMotif()),
@@ -1822,7 +1822,7 @@ export const EFFECT_ILLUSTRATIONS = {
   bishop_2: () => rareBleed("bp", "#b794f4", "#4c1d95", bishopMarkMotif()),
   rook_2: () => rareBleed("rk", "#a78bfa", "#4c1d95", rookMarkMotif()),
   hostile_swap: () => epicBleed("hs", "#93c5fd", "#312e81", hostileSwapMotif()),
-  deport: () => epicBleed("dp", "#c4b5fd", "#1e1b4b", deportMotif()),
+  deport: () => rareBleed("dp", "#c4b5fd", "#1e1b4b", deportMotif()),
 };
 
 /**
