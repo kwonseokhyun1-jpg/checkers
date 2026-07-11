@@ -1137,9 +1137,19 @@ export class MatchSession {
   }
 
   cancelCardPlay() {
+    if (this.actionBusy) return;
     this.dismissCardTargetingUI();
     this.setMessage("Spell cancelled.");
     this.render();
+  }
+
+  /** Keep spell-cast chrome visible during resolve so the board does not resize mid-cast. */
+  enterSpellResolvePhase() {
+    this.validTargets = [];
+    this.selectedSquare = null;
+    this.selectedColumn = null;
+    this.selectedRow = null;
+    this.updateSpellCastUI();
   }
 
   startCardPlay(card) {
@@ -1241,7 +1251,7 @@ export class MatchSession {
     }
     const finalPicks = [...picks];
     const spellCtx = { card, picks: finalPicks };
-    this.dismissCardTargetingUI();
+    this.enterSpellResolvePhase();
     this.render();
     void this.resolveTargetedSpell(card, finalPicks)
       .then((res) => {

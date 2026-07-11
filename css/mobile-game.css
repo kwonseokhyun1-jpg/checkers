@@ -863,6 +863,10 @@ nav.game-nav.tabs .game-nav__btn,
     padding: 0.4rem 0.65rem;
   }
 
+  body.match-active .board-wrap {
+    flex: 0 0 auto;
+  }
+
   /* Adventure prebattle — bottom sheet like auth modal */
   .adventure-floor-modal {
     align-items: flex-end;
@@ -2665,7 +2669,7 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   body.match-active .board-wrap {
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     align-self: center;
     width: auto;
     height: auto;
