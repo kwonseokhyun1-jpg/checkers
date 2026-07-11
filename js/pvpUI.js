@@ -46,6 +46,11 @@ import {
   shouldApplyPvpRow,
   formatPvpError,
 } from "./pvp.js";
+import {
+  fetchPvpLeaderboard,
+  fetchLivePvpMatches,
+  subscribeLiveMatches,
+} from "./pvpLeaderboard.js";
 import { showPvpMatchLoading } from "./pvpLoadingScreen.js";
 import { lockPortrait } from "./orientation.js";
 import { setAudioMode } from "./audio.js";
@@ -112,6 +117,377 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
   let openRoomsRefreshInFlight = false;
   let pvpGameOverCtx = null;
   let rematchPollId = null;
+  /** @type {"hub" | "arena" | "leaderboard"} */
+  let pvpScreen = "hub";
+  let leaderboardPollId = null;
+  let unsubscribeLiveMatches = null;
+  let spectating = false;
+  let leaderboardRefreshInFlight = false;
+
+  function stopLeaderboardSync() {
+    if (leaderboardPollId) {
+      clearInterval(leaderboardPollId);
+      leaderboardPollId = null;
+    }
+    unsubscribeLiveMatches?.();
+    unsubscribeLiveMatches = null;
+  }
+
+  function pvpBackButton() {
+    return `<button type="button" class="btn-text pvp-back-btn" id="pvp-back-hub">← PvP</button>`;
+  }
+
+  function bindPvpBackToHub() {
+    root.querySelector("#pvp-back-hub")?.addEventListener("click", () => {
+      stopOpenRoomsSync();
+      stopLeaderboardSync();
+      hideHosting();
+      if (!matchSession && !spectating) {
+        pvpService?.dispose();
+        pvpService = null;
+      }
+      pvpScreen = "hub";
+      renderPvpHub();
+    });
+  }
+
+  function returnToPvpShell() {
+    stopRematchPoll();
+    pvpGameOverCtx = null;
+    spectating = false;
+    pvpScreen = "hub";
+    renderPvpHub();
+  }
+
+  function renderPvpHub(message = "", isError = false) {
+    stopOpenRoomsSync();
+    stopLeaderboardSync();
+
+    if (!isAuthAvailable()) {
+      root.innerHTML = `
+        <section class="panel game-panel pvp-panel">
+          ${pvpPanelHead(`Add your Supabase <strong>anon</strong> key to <code>js/supabaseConfig.js</code> from
+              <a href="https://supabase.com/dashboard/project/xhoskftcrgbsjkmzjscw/settings/api" target="_blank" rel="noopener">API settings</a>, run <code>supabase/schema.sql</code>, then reload.`)}
+        </section>`;
+      bindPvpPanelHelp();
+      return;
+    }
+
+    const user = getCurrentUser();
+    root.innerHTML = `
+      <section class="panel game-panel pvp-hub-panel">
+        <header class="panel-head panel-head--compact">
+          <div class="panel-head-title-row">
+            <h2 class="panel-head__title">PvP</h2>
+            <button type="button" id="pvp-help-btn" class="panel-help-btn" aria-label="How PvP works" aria-expanded="false" aria-controls="pvp-help-desc">?</button>
+          </div>
+          <p id="pvp-help-desc" class="panel-head__desc" hidden>Tap Arena to host or join matches. Tap Leaderboard for global ranks and live spectating.</p>
+        </header>
+        <div class="pvp-hub" role="group" aria-label="PvP destinations">
+          <button type="button" class="pvp-hub-tile pvp-hub-tile--arena" id="pvp-go-arena">
+            <span class="pvp-hub-tile__icon" aria-hidden="true">⚔️</span>
+            <span class="pvp-hub-tile__title">Arena</span>
+            <span class="pvp-hub-tile__desc">Host or join live matches</span>
+          </button>
+          <button type="button" class="pvp-hub-tile pvp-hub-tile--leaderboard" id="pvp-go-leaderboard">
+            <span class="pvp-hub-tile__icon" aria-hidden="true">🏆</span>
+            <span class="pvp-hub-tile__title">Leaderboard</span>
+            <span class="pvp-hub-tile__desc">Global ranks &amp; spectate live games</span>
+          </button>
+        </div>
+        ${user ? "" : `<p class="pvp-sign-in-nudge">${GUEST_SIGN_IN_NUDGE_PVP}</p>`}
+        <p id="pvp-status" class="pvp-status${isError ? " pvp-status--error" : ""}" role="status">${escapeHtml(message)}</p>
+      </section>`;
+
+    bindPvpPanelHelp();
+    root.querySelector("#pvp-go-arena")?.addEventListener("click", () => {
+      if (!getCurrentUser()) {
+        openAuthModal();
+        return;
+      }
+      pvpScreen = "arena";
+      renderLobby();
+    });
+    root.querySelector("#pvp-go-leaderboard")?.addEventListener("click", () => {
+      if (!getCurrentUser()) {
+        openAuthModal();
+        return;
+      }
+      pvpScreen = "leaderboard";
+      renderLeaderboard();
+    });
+  }
+
+  function setLeaderboardStatus(text, isError = false) {
+    const el = root.querySelector("#pvp-leaderboard-status");
+    if (el) {
+      el.textContent = text;
+      el.classList.toggle("pvp-status--error", isError);
+    }
+  }
+
+  function rankMedal(rank) {
+    if (rank === 1) return "🥇";
+    if (rank === 2) return "🥈";
+    if (rank === 3) return "🥉";
+    return String(rank);
+  }
+
+  function renderLeaderboardRows(rows, currentUserId) {
+    if (!rows.length) {
+      return `<li class="pvp-leaderboard-empty">No ranked players yet — win PvP matches to appear here.</li>`;
+    }
+    return rows
+      .map((row) => {
+        const self = row.id === currentUserId ? " pvp-leaderboard-row--self" : "";
+        return `<li class="pvp-leaderboard-row${self}">
+          <span class="pvp-leaderboard-row__rank">${rankMedal(row.rank)}</span>
+          <span class="pvp-leaderboard-row__name">${escapeHtml(row.username)}</span>
+          <span class="pvp-leaderboard-row__wins">${row.pvpWins} win${row.pvpWins === 1 ? "" : "s"}</span>
+        </li>`;
+      })
+      .join("");
+  }
+
+  function renderLiveMatchRows(matches, currentUserId) {
+    if (!matches.length) {
+      return `<li class="pvp-leaderboard-empty">No live matches right now.</li>`;
+    }
+    return matches
+      .map((row) => {
+        const host = escapeHtml(row.host_display_name?.trim() || "Red");
+        const guest = escapeHtml(row.guest_display_name?.trim() || "Black");
+        const isParticipant = row.host_id === currentUserId || row.guest_id === currentUserId;
+        const mode = isMysteryMode(row) ? mysteryModeBadge() : "";
+        const turnName =
+          row.turn === COLORS.RED
+            ? row.host_display_name?.trim() || "Red"
+            : row.guest_display_name?.trim() || "Black";
+        const action = isParticipant
+          ? `<span class="pvp-live-match__tag">Your match</span>`
+          : `<button type="button" class="btn-secondary pvp-live-spectate" data-spectate-match="${row.id}">Spectate</button>`;
+        return `<li class="pvp-live-match">
+          <div class="pvp-live-match__body">
+            <span class="pvp-live-match__players">${host} vs ${guest} ${mode}</span>
+            <span class="pvp-live-match__meta">${escapeHtml(turnName)}&apos;s turn</span>
+          </div>
+          ${action}
+        </li>`;
+      })
+      .join("");
+  }
+
+  async function refreshLeaderboardPanel() {
+    const rankList = root.querySelector("#pvp-rank-list");
+    const liveList = root.querySelector("#pvp-live-list");
+    const user = getCurrentUser();
+    if (!rankList || !liveList || !user || matchSession || spectating) return;
+    if (leaderboardRefreshInFlight) return;
+    leaderboardRefreshInFlight = true;
+
+    try {
+      const [ranks, live] = await Promise.all([fetchPvpLeaderboard(50), fetchLivePvpMatches(20)]);
+      rankList.innerHTML = renderLeaderboardRows(ranks, user.id);
+      liveList.innerHTML = renderLiveMatchRows(live, user.id);
+      liveList.querySelectorAll("[data-spectate-match]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.getAttribute("data-spectate-match");
+          if (id) void startSpectate(id);
+        });
+      });
+    } catch (e) {
+      const err = `<li class="pvp-leaderboard-empty pvp-open-empty--error">${escapeHtml(formatPvpError(e))}</li>`;
+      rankList.innerHTML = err;
+      liveList.innerHTML = err;
+    } finally {
+      leaderboardRefreshInFlight = false;
+    }
+  }
+
+  function startLeaderboardSync() {
+    stopLeaderboardSync();
+    void refreshLeaderboardPanel();
+    leaderboardPollId = setInterval(() => void refreshLeaderboardPanel(), 8000);
+    unsubscribeLiveMatches = subscribeLiveMatches(() => void refreshLeaderboardPanel());
+  }
+
+  function renderLeaderboard(message = "", isError = false) {
+    stopOpenRoomsSync();
+    const user = getCurrentUser();
+    if (!user) {
+      pvpScreen = "hub";
+      renderPvpHub();
+      return;
+    }
+
+    root.innerHTML = `
+      <section class="panel game-panel pvp-leaderboard-panel">
+        ${pvpBackButton()}
+        <header class="panel-head panel-head--compact">
+          <div class="panel-head-title-row">
+            <h2 class="panel-head__title">Leaderboard</h2>
+            <button type="button" id="pvp-help-btn" class="panel-help-btn" aria-label="How the leaderboard works" aria-expanded="false" aria-controls="pvp-help-desc">?</button>
+          </div>
+          <p id="pvp-help-desc" class="panel-head__desc" hidden>Players are ranked by total PvP wins. Spectate ongoing matches — hands stay hidden, but you can scrub move history during the watch.</p>
+        </header>
+        <div class="pvp-leaderboard-section">
+          <h3 class="pvp-room-section__title">Global ranks</h3>
+          <ol id="pvp-rank-list" class="pvp-leaderboard-list" aria-live="polite">
+            <li class="pvp-leaderboard-empty meta-skeleton"><span class="meta-skeleton__row"></span></li>
+          </ol>
+        </div>
+        <div class="pvp-leaderboard-section">
+          <h3 class="pvp-room-section__title">Live matches</h3>
+          <p class="pvp-room-section__hint">Watch ongoing games — hands are hidden, but move history is available.</p>
+          <ul id="pvp-live-list" class="pvp-live-list" aria-live="polite">
+            <li class="pvp-leaderboard-empty meta-skeleton"><span class="meta-skeleton__row"></span></li>
+          </ul>
+        </div>
+        <p id="pvp-leaderboard-status" class="pvp-status${isError ? " pvp-status--error" : ""}" role="status">${escapeHtml(message)}</p>
+      </section>`;
+
+    bindPvpPanelHelp();
+    bindPvpBackToHub();
+    startLeaderboardSync();
+  }
+
+  async function startSpectate(matchId) {
+    if (!getCurrentUser()) {
+      openAuthModal();
+      return;
+    }
+    if (matchSession || matchLaunching || spectating) return;
+
+    try {
+      setLeaderboardStatus("Joining as spectator…");
+      const svc = new PvpService();
+      const row = await svc.fetchMatch(matchId);
+      if (!row || row.status !== "active" || !row.guest_id || !row.state_json) {
+        setLeaderboardStatus("That match is no longer live.", true);
+        void refreshLeaderboardPanel();
+        return;
+      }
+      const user = getCurrentUser();
+      if (row.host_id === user.id || row.guest_id === user.id) {
+        pvpScreen = "arena";
+        ensurePvpService().attachToMatch(row, user.id);
+        saveActivePvpMatchId(row.id);
+        matchLaunching = true;
+        await launchMatch(row, { resume: true });
+        return;
+      }
+      stopLeaderboardSync();
+      pvpService?.dispose();
+      pvpService = svc;
+      pvpService.onMatchRow = onMatchRow;
+      pvpService.onError = (e) => matchSession?.setMessage(formatPvpError(e));
+      pvpService.attachAsSpectator(row);
+      matchLaunching = true;
+      await launchSpectate(row);
+    } catch (e) {
+      setLeaderboardStatus(formatPvpError(e), true);
+      matchLaunching = false;
+      spectating = false;
+    }
+  }
+
+  function applySpectateRow(row) {
+    if (!matchSession || !spectating || !row?.state_json) return;
+    if (!shouldApplyPvpRow(row, pvpService, matchSession)) return;
+    const hostName = row.host_display_name?.trim() || "Red";
+    const guestName = row.guest_display_name?.trim() || "Black";
+    if (row.status === "finished") {
+      matchSession.actionBusy = false;
+      matchSession.importState(row.state_json);
+      if (!row.winner_id && isMutualElimination(row.state_json)) {
+        matchSession.setMessage("Match over — tie game.");
+      } else if (row.winner_id) {
+        const winnerName = row.winner_id === row.host_id ? hostName : guestName;
+        matchSession.setMessage(`Match over — ${winnerName} wins.`);
+      } else {
+        matchSession.setMessage("Match over.");
+      }
+      return;
+    }
+    matchSession.importState(row.state_json);
+    const turnName = row.turn === COLORS.RED ? hostName : guestName;
+    matchSession.setMessage(`${turnName} is playing…`);
+  }
+
+  async function launchSpectate(row) {
+    if (!row?.state_json || row.status !== "active") {
+      matchLaunching = false;
+      spectating = false;
+      renderLeaderboard("That match is no longer live.", true);
+      return;
+    }
+
+    spectating = true;
+    showPvpView();
+
+    const hostName = row.host_display_name?.trim() || "Red";
+    const guestName = row.guest_display_name?.trim() || "Black";
+    const profile = getProfile();
+
+    const [hostCosmeticsBase, guestCosmeticsBase] = await Promise.all([
+      cosmeticsForUser(row.host_id, profile),
+      cosmeticsForUser(row.guest_id, profile),
+    ]);
+    const hostCosmetics = cosmeticsWithPieceSkin(hostCosmeticsBase, row.host_piece_skin);
+    const guestCosmetics = cosmeticsWithPieceSkin(guestCosmeticsBase, row.guest_piece_skin);
+
+    root.innerHTML = "";
+    const matchRoot = document.createElement("div");
+    matchRoot.id = "pvp-match-root";
+    root.appendChild(matchRoot);
+    matchRoot.innerHTML = getMatchHtml(guestName, {
+      exitLabel: "← Leave spectate",
+      pvp: true,
+      spectator: true,
+      localName: hostName,
+    });
+
+    pvpService._lastVersion = row.version ?? 0;
+    pvpService._lastAppliedFingerprint = matchRowFingerprint(row);
+
+    const deckIds = Array.isArray(row.host_deck_ids) ? row.host_deck_ids : row.host_deck_ids || [];
+
+    matchSession = new MatchSession(
+      deckIds,
+      matchRoot,
+      () => {
+        matchSession = null;
+        matchLaunching = false;
+        spectating = false;
+        exitMatchMode();
+        void lockPortrait();
+        setAudioMode("hub");
+        pvpService?.dispose();
+        pvpService = null;
+        pvpScreen = "leaderboard";
+        renderLeaderboard();
+      },
+      null,
+      {
+        pvp: true,
+        spectator: true,
+        localColor: COLORS.RED,
+        initialState: row.state_json,
+        opponentName: guestName,
+        cosmetics: hostCosmetics,
+        opponentCosmetics: guestCosmetics,
+        skipCheckpoint: true,
+      }
+    );
+
+    enterMatchMode({ kind: "pvp" });
+    await lockPortrait();
+    setAudioMode("match");
+    matchSession.setMessage(`Spectating ${hostName} vs ${guestName}`);
+    matchSession.render();
+    pvpService.startPolling(1200);
+    matchLaunching = false;
+  }
 
   function stopOpenRoomsSync() {
     if (openRoomsPollId) {
@@ -170,19 +546,14 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     }
 
     if (!user) {
-      root.innerHTML = `
-        <section class="panel game-panel pvp-panel">
-          ${pvpPanelHead("Challenge other players in real-time 1v1 matches.")}
-          <p class="pvp-sign-in-nudge">${GUEST_SIGN_IN_NUDGE_PVP}</p>
-          <button type="button" class="btn-primary btn-lg" id="pvp-sign-in">Sign in / Sign up</button>
-        </section>`;
-      root.querySelector("#pvp-sign-in")?.addEventListener("click", openAuthModal);
-      bindPvpPanelHelp();
+      pvpScreen = "hub";
+      renderPvpHub();
       return;
     }
 
     root.innerHTML = `
       <section class="panel game-panel pvp-panel">
+        ${pvpBackButton()}
         ${pvpPanelHead("Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.")}
         <div class="pvp-setup-row">
           <div class="pvp-setup-field">
@@ -236,6 +607,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     root.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
     syncModeUi();
     bindPvpPanelHelp();
+    bindPvpBackToHub();
     startOpenRoomsSync();
 
     void probePvpBackend().then((probe) => {
@@ -573,6 +945,11 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
   function onMatchRow(row) {
     if (!row) return;
+
+    if (spectating && matchSession) {
+      applySpectateRow(row);
+      return;
+    }
 
     if (matchSession?._gameOverUiShown && pvpGameOverCtx) {
       if (
@@ -1015,7 +1392,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
           pvpService = null;
           const tab = consumePendingNavigationTab();
           if (tab) onNavigateTab?.(tab);
-          else renderLobby();
+          else returnToPvpShell();
         },
         null,
         {
@@ -1256,6 +1633,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     }
 
     if (row?.status === "active") {
+      pvpScreen = "arena";
       showPvpView();
       if (!row.state_json) {
         svc.attachToMatch(row, user.id);
@@ -1279,6 +1657,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       try {
         const waiting = await svc.listMyWaitingRooms();
         if (waiting.length) {
+          pvpScreen = "arena";
           showPvpView();
           const room = waiting[0];
           svc.attachToMatch({ ...room, status: "waiting" }, user.id);
@@ -1329,7 +1708,9 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     clearStalePvpSession();
     if (matchLaunching || root.querySelector(".pvp-loading")) return;
     if (!matchSession) {
-      renderLobby();
+      if (pvpScreen === "arena") renderLobby();
+      else if (pvpScreen === "leaderboard") renderLeaderboard();
+      else renderPvpHub();
       if (resume) void tryResumePvpMatch();
     }
   }
@@ -1361,9 +1742,12 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       unsubAuth();
       window.removeEventListener("cc-match-shell-reconciled", onShellReconciled);
       stopOpenRoomsSync();
+      stopLeaderboardSync();
       stopRematchPoll();
       pvpGameOverCtx = null;
       matchSession = null;
+      spectating = false;
+      pvpScreen = "hub";
       clearActivePvpMatchId();
       pvpService?.dispose();
       pvpService = null;

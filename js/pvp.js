@@ -295,6 +295,39 @@ export class PvpService {
     this.subscribe(row.id);
   }
 
+  /** Watch an active match without participating. */
+  attachAsSpectator(row) {
+    if (!row?.id) throw new Error("Cannot spectate match");
+    if (row.status !== "active" || !row.guest_id) {
+      throw new Error("That match is no longer live.");
+    }
+    this.role = "spectator";
+    this.localColor = COLORS.RED;
+    this.matchId = row.id;
+    this._lastVersion = row.version ?? -1;
+    this._lastAppliedFingerprint = matchRowFingerprint(row);
+    this.subscribe(row.id);
+  }
+
+  async listActiveMatches(limit = 20) {
+    const sb = getSupabase();
+    const user = getCurrentUser();
+    if (!sb || !user) return [];
+
+    const { data, error } = await sb
+      .from("pvp_matches")
+      .select(
+        "id, host_id, guest_id, host_display_name, guest_display_name, turn, match_mode, updated_at, version, status, state_json"
+      )
+      .eq("status", "active")
+      .not("guest_id", "is", null)
+      .order("updated_at", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data || [];
+  }
+
   async listActiveMatchForUser() {
     const sb = getSupabase();
     const user = getCurrentUser();

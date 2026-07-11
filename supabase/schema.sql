@@ -63,6 +63,7 @@ create policy "pvp_select_participant_or_open"
     auth.uid() = host_id
     or auth.uid() = guest_id
     or (status = 'waiting' and guest_id is null)
+    or (status = 'active' and guest_id is not null)
   );
 
 create policy "pvp_insert_host"

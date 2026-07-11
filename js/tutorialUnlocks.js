@@ -55,8 +55,8 @@ const PVP_STEPS = [
   },
   {
     id: "pvp-lobby",
-    title: "PvP Arena",
-    body: "Pick your deck, host a room, or join an open match below. Battle other mages online!",
+    title: "PvP Hub",
+    body: "Tap Arena to host or join matches. Tap Leaderboard for global ranks and live spectating.",
     autoAdvance: true,
   },
 ];
