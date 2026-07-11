@@ -57,7 +57,7 @@ import {
 import { pickCoinFlipVictim, pickRandomTeleportDestination } from "./cardEffectHandlers.js";
 import { boardFxDuration } from "./boardFx.js";
 import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells } from "./cardEffectHandlers.js";
-import { isInDarknessZone } from "./gameMeta.js";
+import { isInDarknessZone, isPieceHiddenByDarknessFromViewer } from "./gameMeta.js";
 import {
   saveMatchCheckpoint,
   clearMatchCheckpoint,
@@ -2352,6 +2352,14 @@ ${starLine}`;
       return finishSpellTrack(res);
     }
 
+    if (card.effect === "darkness") {
+      const res = await this.applyCardWithTrapFx(card, picks);
+      if (!res.success) return finishSpellTrack(res);
+      this.render();
+      await this.runSpellAnimation(buildAnimSpec(card, animPicks, this.localColor, extra));
+      return finishSpellTrack(res);
+    }
+
     const spec = buildAnimSpec(card, animPicks, this.localColor, extra);
     await this.runSpellAnimation(spec);
     return finishSpellTrack(await this.applyCardWithTrapFx(card, picks));
@@ -3009,9 +3017,26 @@ ${starLine}`;
         }
 
         if (terrain?.darkness > 0 || isInDarknessZone(s, row, col)) {
+          const turnsLeft = terrain?.darkness > 0 ? terrain.darkness : null;
           const darkEl = document.createElement("div");
           darkEl.className = "darkness-indicator";
-          darkEl.setAttribute("aria-hidden", "true");
+          darkEl.setAttribute(
+            "aria-label",
+            turnsLeft != null
+              ? `Darkness zone — ${turnsLeft} turn${turnsLeft === 1 ? "" : "s"} left`
+              : "Darkness zone"
+          );
+          if (turnsLeft != null) {
+            const mark = document.createElement("span");
+            mark.className = "darkness-indicator__mark";
+            mark.textContent = "◌";
+            mark.setAttribute("aria-hidden", "true");
+            const turns = document.createElement("span");
+            turns.className = "darkness-indicator__turns";
+            turns.textContent = String(turnsLeft);
+            darkEl.appendChild(mark);
+            darkEl.appendChild(turns);
+          }
           sq.appendChild(darkEl);
         }
 
@@ -3144,7 +3169,7 @@ ${starLine}`;
         }
 
         const piece = s.board[row][col];
-        if (piece) {
+        if (piece && !isPieceHiddenByDarknessFromViewer(s, row, col, this.localColor)) {
           const el = document.createElement("span");
           const skinSource =
             piece.color === this.localColor

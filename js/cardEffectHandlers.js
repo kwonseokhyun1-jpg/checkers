@@ -168,7 +168,7 @@ export function getSanctuaryCells(r, c) {
 }
 
 export function getDarknessZoneCells(r, c) {
-  return getDarknessZoneCellsAround(r, c);
+  return [[r, c], ...getDarknessZoneCellsAround(r, c)];
 }
 
 function isFurthestBackRow(piece) {
@@ -679,7 +679,9 @@ const EFFECTS = {
   mirror_board(state, color, picks) { state.meta.mirrorBoardTurns[opp(color)]=2; return ok(); },
   darkness(state, color, picks) {
     const [r, c] = p0(picks);
-    getSq(state, r, c).darkness = 2;
+    const sq = getSq(state, r, c);
+    sq.darkness = 2;
+    sq.darknessOwner = color;
     return ok("Darkness — zone cloaked.", { darknessCells: getDarknessZoneCells(r, c) });
   },
   highlight_path(state, color, picks) { state.meta.highlightTurns[opp(color)]=2; return ok(); },
