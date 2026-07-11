@@ -415,17 +415,61 @@ export function absorbZombieIntoPiece(board, survivor, absorbed) {
   }
 }
 
-function spawnSpreadZombie(board, state, color, row, col, masterId) {
-  if (!inBounds(row, col) || !isDarkSquare(row, col) || board[row][col]) return null;
-  if (state && squareBlocked(state, row, col, color)) return null;
-  const zombie = createPiece(color, row, col, false);
-  zombie.isZombie = true;
-  zombie.isMainZombie = false;
-  zombie.zombieMasterId = masterId;
-  zombie.zombieSleepTurns = 0;
-  board[row][col] = zombie;
-  if (state) queueBoardFx(state, "zombify", row, col, [[row, col]]);
-  return zombie;
+function squareBlockedForZombieRise(state, r, c, moverColor = null) {
+  if (!inBounds(r, c)) return true;
+  const key = sk(r, c);
+  if (collapsedSquareKey(state?.meta) === key) return true;
+  const sq = state?.squares?.[key];
+  if (sq?.obstacle) return true;
+  // Ghost Guard leaves a block on the kill square, but the curse still rises there.
+  if (sq?.barrier?.turnsLeft > 0 && moverColor && sq.barrier.owner !== moverColor) return true;
+  if (isFireBlockedForMover(state, r, c, moverColor)) return true;
+  return false;
+}
+
+function spawnSpreadZombie(board, state, color, row, col, masterId, { avoidSquare = null } = {}) {
+  const tryAt = (r, c) => {
+    if (avoidSquare && r === avoidSquare[0] && c === avoidSquare[1]) return null;
+    if (!inBounds(r, c) || !isDarkSquare(r, c) || board[r][c]) return null;
+    if (state && squareBlockedForZombieRise(state, r, c, color)) return null;
+    const zombie = createPiece(color, r, c, false);
+    zombie.isZombie = true;
+    zombie.isMainZombie = false;
+    zombie.zombieMasterId = masterId;
+    zombie.zombieSleepTurns = 0;
+    board[r][c] = zombie;
+    if (state) queueBoardFx(state, "zombify", r, c, [[r, c]]);
+    return zombie;
+  };
+  let zombie = tryAt(row, col);
+  if (zombie) return zombie;
+  for (const [nr, nc] of adjacentDarkSquares(row, col)) {
+    zombie = tryAt(nr, nc);
+    if (zombie) return zombie;
+  }
+  return null;
+}
+
+function applyMoveCapture(board, state, piece, { cr, cc, cap }, zombieCtx) {
+  if (!cap || !piece) return piece;
+  if (tryConsumeVengeance(state, piece.color, cap.color)) {
+    queueTrapHistoryReveal(state, { effect: "vengeance", color: cap.color, picks: [[cr, cc]] });
+    queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
+    state?.meta?.achievementHook?.onTrapTriggered?.(cap.color, piece.color);
+    removePiece(board, piece.row, piece.col, { state });
+    cap.bloodTurns = VENGEANCE_BLOOD_TURNS;
+    setPiece(board, cr, cc, cap);
+    return null;
+  }
+  const bountyVictim = cap.bountyBy === piece.color ? cap : null;
+  const captured = resolveCapture(board, state, cr, cc, piece.color, { nonCap: false });
+  if (captured && bountyVictim) payBountyOnCapture(state, bountyVictim, piece.color);
+  if (captured && zombieCtx.wasAwakeZombie && zombieCtx.zombieMasterId && zombieCtx.zombieColor && !cap.king) {
+    spawnSpreadZombie(board, state, zombieCtx.zombieColor, cr, cc, zombieCtx.zombieMasterId, {
+      avoidSquare: zombieCtx.avoidZombieSquare,
+    });
+  }
+  return piece;
 }
 
 /**
@@ -856,29 +900,32 @@ export function applyMove(board, move, state = null) {
     cc,
     cap: board[cr]?.[cc] ?? null,
   }));
-  let piece = movePiece(board, fr, fc, tr, tc);
-  for (const { cr, cc, cap } of captureTargets) {
-    if (!cap || !piece) continue;
-    if (tryConsumeVengeance(state, piece.color, cap.color)) {
-      queueTrapHistoryReveal(state, { effect: "vengeance", color: cap.color, picks: [[cr, cc]] });
-      queueBoardFx(state, "vengeance", cr, cc, [[cr, cc], [piece.row, piece.col]]);
-      state?.meta?.achievementHook?.onTrapTriggered?.(cap.color, piece.color);
-      removePiece(board, piece.row, piece.col, { state });
-      cap.bloodTurns = VENGEANCE_BLOOD_TURNS;
-      setPiece(board, cr, cc, cap);
-      piece = null;
-      continue;
-    }
-    const bountyVictim = cap.bountyBy === piece.color ? cap : null;
-    const captured = resolveCapture(board, state, cr, cc, piece.color, { nonCap: false });
-    if (captured && bountyVictim) payBountyOnCapture(state, bountyVictim, piece.color);
-    if (captured && wasAwakeZombie && zombieMasterId && zombieColor && !cap.king) {
-      // Rise on the square where the enemy fell (skip when landing on that square — e.g. knight capture).
-      if (cr !== tr || cc !== tc) {
-        spawnSpreadZombie(board, state, zombieColor, cr, cc, zombieMasterId);
-      }
-    }
+  const preMoveCaptures = captureTargets.filter(({ cr, cc }) => cr === tr && cc === tc);
+  const postMoveCaptures = captureTargets.filter(({ cr, cc }) => cr !== tr || cc !== tc);
+
+  let piece = moverBefore;
+  for (const target of preMoveCaptures) {
+    piece = applyMoveCapture(board, state, piece, target, {
+      wasAwakeZombie,
+      zombieMasterId,
+      zombieColor,
+      avoidZombieSquare: [tr, tc],
+    });
+    if (!piece) return null;
   }
+
+  piece = movePiece(board, fr, fc, tr, tc);
+
+  for (const target of postMoveCaptures) {
+    piece = applyMoveCapture(board, state, piece, target, {
+      wasAwakeZombie,
+      zombieMasterId,
+      zombieColor,
+      avoidZombieSquare: null,
+    });
+    if (!piece) return null;
+  }
+
   if (!piece) return null;
   return resolveLandingTraps(board, state, tr, tc, piece);
 }

@@ -85,6 +85,23 @@ assert.equal(hordeSpread?.isZombie, true, "non-king zombie capture should zombif
 assert.equal(hordeSpread?.isMainZombie, false);
 assert.equal(hordeSpread?.zombieMasterId, main.zombieMasterId);
 
+// Ghost Guard on the victim should not block the curse from rising on the kill square.
+const boardGhost = Array.from({ length: 8 }, () => Array(8).fill(null));
+const stateGhost = emptyState(boardGhost);
+place(boardGhost, 5, 0, COLORS.RED);
+const ghostVictim = place(boardGhost, 4, 1, COLORS.BLACK);
+ghostVictim.ghostGuard = true;
+applyEffect(stateGhost, COLORS.RED, "zombify", [[5, 0]]);
+const ghostKing = boardGhost[5][0];
+tickEffects(boardGhost, COLORS.RED, stateGhost);
+applyMove(
+  boardGhost,
+  { from: [5, 0], to: [3, 2], captures: [[4, 1]], type: "jump" },
+  stateGhost
+);
+assert.equal(boardGhost[4][1]?.isZombie, true, "ghost guard victim should still rise as a horde zombie");
+assert.equal(boardGhost[4][1]?.zombieMasterId, ghostKing.zombieMasterId);
+
 // A second zombify should create an independent horde without clearing the first.
 const board3 = Array.from({ length: 8 }, () => Array(8).fill(null));
 const state3 = emptyState(board3);
