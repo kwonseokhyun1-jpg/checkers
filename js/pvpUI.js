@@ -67,7 +67,7 @@ import { initPanelHelp } from "./panelHelp.js";
 import {
   arenaHubIconSvg,
   leaderboardHubIconSvg,
-  pvpSceneryLayer,
+  pvpHubTileScenery,
 } from "./pvpArt.js";
 
 function escapeHtml(text) {
@@ -181,7 +181,6 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     const user = getCurrentUser();
     root.innerHTML = `
       <section class="panel game-panel pvp-hub-panel">
-        ${pvpSceneryLayer("arena")}
         <div class="pvp-panel-content">
         <header class="panel-head panel-head--compact">
           <div class="panel-head-title-row">
@@ -192,14 +191,20 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         </header>
         <div class="pvp-hub" role="group" aria-label="PvP destinations">
           <button type="button" class="pvp-hub-tile pvp-hub-tile--arena" id="pvp-go-arena">
-            <span class="pvp-hub-tile__icon" aria-hidden="true">${arenaHubIconSvg()}</span>
-            <span class="pvp-hub-tile__title">Arena</span>
-            <span class="pvp-hub-tile__desc">Host or join live matches</span>
+            ${pvpHubTileScenery("arena")}
+            <span class="pvp-hub-tile__content">
+              <span class="pvp-hub-tile__icon" aria-hidden="true">${arenaHubIconSvg()}</span>
+              <span class="pvp-hub-tile__title">Arena</span>
+              <span class="pvp-hub-tile__desc">Host or join live matches</span>
+            </span>
           </button>
           <button type="button" class="pvp-hub-tile pvp-hub-tile--leaderboard" id="pvp-go-leaderboard">
-            <span class="pvp-hub-tile__icon" aria-hidden="true">${leaderboardHubIconSvg()}</span>
-            <span class="pvp-hub-tile__title">Leaderboard</span>
-            <span class="pvp-hub-tile__desc">Global ranks &amp; spectate live games</span>
+            ${pvpHubTileScenery("leaderboard")}
+            <span class="pvp-hub-tile__content">
+              <span class="pvp-hub-tile__icon" aria-hidden="true">${leaderboardHubIconSvg()}</span>
+              <span class="pvp-hub-tile__title">Leaderboard</span>
+              <span class="pvp-hub-tile__desc">Global ranks &amp; spectate live games</span>
+            </span>
           </button>
         </div>
         ${user ? "" : `<p class="pvp-sign-in-nudge">${GUEST_SIGN_IN_NUDGE_PVP}</p>`}
@@ -330,7 +335,6 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
     root.innerHTML = `
       <section class="panel game-panel pvp-leaderboard-panel">
-        ${pvpSceneryLayer("leaderboard")}
         <div class="pvp-panel-content">
         ${pvpBackButton()}
         <header class="panel-head panel-head--compact">
@@ -564,7 +568,6 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
     root.innerHTML = `
       <section class="panel game-panel pvp-panel pvp-panel--arena">
-        ${pvpSceneryLayer("arena")}
         <div class="pvp-panel-content">
         ${pvpBackButton()}
         ${pvpPanelHead("Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.")}

@@ -168,6 +168,123 @@ export function leaderboardScenerySvgMarkup() {
   </svg>`;
 }
 
+/** Hub tile backdrop — arena colosseum, torches, crossed blades */
+export function arenaHubTileScenerySvg() {
+  const id = "pvp-tile-arena";
+  const p = ARENA_PALETTE;
+  return `<svg class="pvp-hub-tile-scenery-svg" viewBox="0 0 320 140" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    ${svgDefs(id, p.gold, { sky: p.sky, stone: p.stone, stoneDark: p.stoneDark })}
+    <rect width="320" height="140" fill="url(#${id}-sky)"/>
+    <rect width="320" height="140" fill="url(#${id}-glow)"/>
+    <!-- arena arches -->
+    <g opacity="0.5" fill="${p.stone}">
+      <path d="M10 72 Q10 48 28 48 Q46 48 46 72 L46 96 L10 96 Z"/>
+      <path d="M52 72 Q52 42 78 42 Q104 42 104 72 L104 96 L52 96 Z"/>
+      <path d="M110 72 Q110 40 160 40 Q210 40 210 72 L210 96 L110 96 Z"/>
+      <path d="M216 72 Q216 42 242 42 Q268 42 268 72 L268 96 L216 96 Z"/>
+      <path d="M274 72 Q274 48 292 48 Q310 48 310 72 L310 96 L274 96 Z"/>
+    </g>
+    <rect x="0" y="94" width="320" height="46" fill="${p.stoneDark}" opacity="0.45"/>
+    <ellipse cx="160" cy="98" rx="120" ry="14" fill="rgba(0,0,0,0.4)"/>
+    <!-- crossed swords -->
+    <g transform="translate(160 72)" opacity="0.9" filter="url(#${id}-glow-filter)">
+      <g transform="rotate(-38)">
+        <rect x="-2.5" y="-22" width="5" height="28" rx="1.2" fill="${p.goldDim}"/>
+        <rect x="-4" y="4" width="8" height="3.5" rx="0.8" fill="${p.gold}"/>
+        <circle cx="0" cy="9" r="3" fill="${p.gold}" opacity="0.9"/>
+        <polygon points="0,-26 -3.5,-19 3.5,-19" fill="${p.gold}"/>
+      </g>
+      <g transform="rotate(38)">
+        <rect x="-2.5" y="-22" width="5" height="28" rx="1.2" fill="${p.goldDim}"/>
+        <rect x="-4" y="4" width="8" height="3.5" rx="0.8" fill="${p.gold}"/>
+        <circle cx="0" cy="9" r="3" fill="${p.gold}" opacity="0.9"/>
+        <polygon points="0,-26 -3.5,-19 3.5,-19" fill="${p.gold}"/>
+      </g>
+    </g>
+    <!-- torches -->
+    <g opacity="0.85">
+      <rect x="36" y="68" width="2.5" height="12" fill="${p.stoneDark}"/>
+      <ellipse cx="37.2" cy="66" rx="3.5" ry="4.5" fill="${p.ember}" filter="url(#${id}-glow-filter)"/>
+      <ellipse cx="37.2" cy="65" rx="1.8" ry="2.2" fill="#fff8e0" opacity="0.55"/>
+      <rect x="281" y="68" width="2.5" height="12" fill="${p.stoneDark}"/>
+      <ellipse cx="282.2" cy="66" rx="3.5" ry="4.5" fill="${p.ember}" filter="url(#${id}-glow-filter)"/>
+      <ellipse cx="282.2" cy="65" rx="1.8" ry="2.2" fill="#fff8e0" opacity="0.55"/>
+    </g>
+    <!-- pennants -->
+    <g opacity="0.45">
+      <path d="M48 52 L48 64 L58 58 Z" fill="${p.goldDim}"/>
+      <path d="M262 50 L262 62 L272 56 Z" fill="${p.goldDim}"/>
+    </g>
+    <!-- embers -->
+    <circle cx="100" cy="48" r="1.2" fill="${p.gold}" opacity="0.5" filter="url(#${id}-glow-filter)"/>
+    <circle cx="220" cy="44" r="1" fill="${p.ember}" opacity="0.45" filter="url(#${id}-glow-filter)"/>
+    <circle cx="160" cy="36" r="0.8" fill="${p.gold}" opacity="0.35" filter="url(#${id}-glow-filter)"/>
+  </svg>`;
+}
+
+/** Hub tile backdrop — trophy hall, podium, laurel wreath */
+export function leaderboardHubTileScenerySvg() {
+  const id = "pvp-tile-lb";
+  const p = LEADERBOARD_PALETTE;
+  return `<svg class="pvp-hub-tile-scenery-svg" viewBox="0 0 320 140" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    ${svgDefs(id, p.gem, { sky: p.sky, stone: p.stone, stoneDark: p.stoneDark })}
+    <rect width="320" height="140" fill="url(#${id}-sky)"/>
+    <rect width="320" height="140" fill="url(#${id}-glow)"/>
+    <!-- vaulted ceiling -->
+    <path d="M0 36 Q160 12 320 36 L320 48 Q160 24 0 48 Z" fill="${p.stone}" opacity="0.35"/>
+    <!-- columns -->
+    <g opacity="0.45" fill="url(#${id}-pillar)">
+      <rect x="20" y="44" width="10" height="68" rx="1"/>
+      <rect x="290" y="44" width="10" height="68" rx="1"/>
+      <rect x="58" y="54" width="7" height="58" rx="1" opacity="0.7"/>
+      <rect x="255" y="54" width="7" height="58" rx="1" opacity="0.7"/>
+    </g>
+    <!-- podium -->
+    <g opacity="0.7">
+      <rect x="112" y="96" width="96" height="8" rx="2" fill="${p.stone}"/>
+      <rect x="124" y="88" width="72" height="8" rx="2" fill="${p.stone}"/>
+      <rect x="138" y="80" width="44" height="8" rx="2" fill="${p.gemDim}" opacity="0.6"/>
+    </g>
+    <!-- central trophy -->
+    <g transform="translate(160 68)" filter="url(#${id}-glow-filter)" opacity="0.92">
+      <path d="M-12 0 Q-12 -16 -5 -19 Q0 -21 5 -19 Q12 -16 12 0 L9 4 L-9 4 Z" fill="${p.gem}" opacity="0.85"/>
+      <rect x="-7" y="4" width="14" height="5" rx="1" fill="${p.gemDim}"/>
+      <rect x="-9" y="9" width="18" height="4" rx="1" fill="${p.gem}"/>
+      <ellipse cx="0" cy="-12" rx="4" ry="2.5" fill="#fff" opacity="0.28"/>
+      <path d="M-12 -4 Q-18 -2 -16 4 Q-14 8 -12 4" fill="none" stroke="${p.gem}" stroke-width="1.8" opacity="0.7"/>
+      <path d="M12 -4 Q18 -2 16 4 Q14 8 12 4" fill="none" stroke="${p.gem}" stroke-width="1.8" opacity="0.7"/>
+    </g>
+    <!-- side trophies -->
+    <g transform="translate(104 78)" opacity="0.5">
+      <path d="M-7 0 Q-7 -9 -2.5 -11 Q0 -12 2.5 -11 Q7 -9 7 0 L5 2.5 L-5 2.5 Z" fill="${p.violet}"/>
+      <rect x="-4" y="2.5" width="8" height="3.5" rx="1" fill="${p.violet}" opacity="0.7"/>
+    </g>
+    <g transform="translate(216 78)" opacity="0.5">
+      <path d="M-7 0 Q-7 -9 -2.5 -11 Q0 -12 2.5 -11 Q7 -9 7 0 L5 2.5 L-5 2.5 Z" fill="${p.violet}"/>
+      <rect x="-4" y="2.5" width="8" height="3.5" rx="1" fill="${p.violet}" opacity="0.7"/>
+    </g>
+    <!-- laurel wreath -->
+    <g opacity="0.4" stroke="${p.gem}" stroke-width="1.2" fill="none">
+      <ellipse cx="160" cy="54" rx="20" ry="9"/>
+      <ellipse cx="160" cy="54" rx="16" ry="7" opacity="0.6"/>
+    </g>
+    <!-- star sparkles -->
+    <g fill="${p.gem}" opacity="0.55" filter="url(#${id}-glow-filter)">
+      <polygon points="160,30 161,34 165,34 162,36 163,40 160,38 157,40 158,36 155,34 159,34"/>
+      <polygon points="78,46 78.6,48 81,48 79,49.4 79.6,51.5 78,50.2 76.4,51.5 77,49.4 75,48 77.4,48" opacity="0.7"/>
+      <polygon points="242,44 242.6,46 245,46 243,47.4 243.6,49.5 242,48.2 240.4,49.5 241,47.4 239,46 241.4,46" opacity="0.7"/>
+    </g>
+    <ellipse cx="160" cy="108" rx="100" ry="12" fill="rgba(92,225,230,0.06)"/>
+  </svg>`;
+}
+
+/** Hub tile scenery wrapper */
+export function pvpHubTileScenery(variant) {
+  const svg =
+    variant === "leaderboard" ? leaderboardHubTileScenerySvg() : arenaHubTileScenerySvg();
+  return `<span class="pvp-hub-tile__scenery pvp-hub-tile__scenery--${variant}">${svg}</span>`;
+}
+
 /** Hub tile icon — crossed blades */
 export function arenaHubIconSvg() {
   const id = "pvp-hub-arena";
