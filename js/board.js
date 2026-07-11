@@ -957,7 +957,13 @@ export function tickEffects(board, color, state = null) {
           p.mindControlTurns = 0;
         }
       }
-      if (p.zombieSleepTurns > 0) p.zombieSleepTurns--;
+      if (p.zombieSleepTurns > 0) {
+        p.zombieSleepTurns--;
+        if (p.zombieSleepTurns <= 0) {
+          p.zombieSleepTurns = 0;
+          if (p.isMainZombie) p.king = true;
+        }
+      }
       if (p.revivedNoCapture) p.revivedNoCapture = false;
       if (p.berserkNoCapture) p.berserkNoCapture = false;
     }

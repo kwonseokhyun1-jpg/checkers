@@ -7,6 +7,7 @@ import {
   resolveCapture,
   isAwakeZombie,
   isZombieSleeping,
+  tickEffects,
 } from "../js/board.js";
 
 function emptyState(board) {
@@ -36,8 +37,12 @@ const main = board[5][0];
 assert.equal(main.isMainZombie, true);
 assert.equal(main.zombieSleepTurns, 2);
 assert.equal(isZombieSleeping(main), true);
+assert.equal(main.king, false);
 
-main.zombieSleepTurns = 0;
+tickEffects(board, COLORS.RED, state);
+tickEffects(board, COLORS.RED, state);
+assert.equal(main.zombieSleepTurns, 0);
+assert.equal(main.king, true, "main zombie should crown on wake");
 assert.equal(isAwakeZombie(main), true);
 
 applyMove(

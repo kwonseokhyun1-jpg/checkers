@@ -3478,8 +3478,8 @@ ${starLine}`;
               "aria-label",
               piece.isMainZombie
                 ? sleeping
-                  ? `Main zombie — sleeping in gravestone (${piece.zombieSleepTurns} turn${piece.zombieSleepTurns === 1 ? "" : "s"} left)`
-                  : "Main zombie — captures spread the curse"
+                  ? `Zombie king — sleeping in gravestone (${piece.zombieSleepTurns} turn${piece.zombieSleepTurns === 1 ? "" : "s"} left)`
+                  : "Zombie king — captures spread the curse"
                 : "Zombified — part of the horde"
             );
             const mark = document.createElement("span");

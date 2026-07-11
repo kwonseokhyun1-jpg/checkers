@@ -27,7 +27,7 @@ const BUFF_RULES = [
 const CURSE_RULES = [
   { key: "linkedFateId", label: "Linked Fate", bool: true },
   { key: "bountyBy", label: "Bounty (jump-capture to reward)", bool: true },
-  { key: "isMainZombie", label: "Main zombie", bool: true },
+  { key: "isMainZombie", label: "Zombie king", bool: true },
   { key: "isZombie", label: "Zombie", bool: true },
   { key: "zombieSleepTurns", label: "Sleeping in gravestone", turns: true },
   { key: "frozenTurns", label: "Frozen", turns: true },

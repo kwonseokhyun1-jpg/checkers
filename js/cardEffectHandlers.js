@@ -719,7 +719,7 @@ const EFFECTS = {
     p.isMainZombie = true;
     p.zombieMasterId = p.id;
     p.zombieSleepTurns = 2;
-    return ok("Zombify — your piece sleeps in a gravestone for 2 turns, then rises to spread the curse.");
+    return ok("Zombify — your piece sleeps in a gravestone for 2 turns, then rises as a zombie king.");
   },
   identity_theft(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=3; return ok(); },
   call_forward(state, color, picks) {
