@@ -23,7 +23,7 @@ Profile and Settings are available from the header.
 
 ## Match rules
 
-- Start with **3 cards** in hand; draw **1 card every 2 turns** from your deck.
+- Start with **4 cards** in hand; draw **1 card every 2 turns** from your deck.
 - On your turn: optionally cast **1 spell** (some cards like **Parallel** grant an extra cast), then make a normal checkers move.
 - Mandatory jumps when available; multi-jump chains when possible.
 - Reach the far row to crown, or use spells such as **Royal Decree**.
