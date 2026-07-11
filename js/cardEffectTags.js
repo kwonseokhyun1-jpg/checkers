@@ -19,6 +19,7 @@ const TAGS = {
   swap_friendly: ["Swap two friendly pieces"],
   quick_march: ["Same piece moves again; either step may capture"],
   offering: ["Sacrifice a friendly piece", "Draw 2 cards", "Cast another spell immediately"],
+  mulligan: ["Discard your hand", "Draw that many new cards", "Cast another spell this turn"],
   destroy_unshielded: ["Destroy any unshielded enemy", "You cannot cast spells on your next turn"],
   revive: ["Requires a captured friendly piece", "Place on any empty dark square on your side of the board", "Revived piece cannot capture this turn"],
   blink_2: ["Teleport within 2 squares"],

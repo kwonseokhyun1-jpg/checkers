@@ -699,7 +699,14 @@ const EFFECTS = {
   bankrupt(state, color, picks) { state.gems[color]=Math.floor(state.gems[color]/2); state.gems[opp(color)]=Math.floor(state.gems[opp(color)]/2); return ok(); },
   coupon(state, color, picks) { state.meta.freeDraw[color]=true; return ok(); },
   hand_expand(state, color, picks) { state.meta.handMax[color]=8; return ok(); },
-  mulligan(state, color, picks) { const h=state.hands[color]; const n=h.length; h.length=0; for(let i=0;i<n;i++) h.push(createCardInstance(drawRandomCard())); return ok(); },
+  mulligan(state, color, picks) {
+    const h = state.hands[color];
+    const n = h.length;
+    h.length = 0;
+    for (let i = 0; i < n; i++) h.push(createCardInstance(drawRandomCard()));
+    state.meta.extraSpellCast[color] = true;
+    return ok(`Mulligan — drew ${n} card${n === 1 ? "" : "s"}; cast another spell.`);
+  },
   hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns||isFortified(a)||isFortified(b)) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
   mind_control(state, color, picks) {
     const [r, c] = p0(picks);
