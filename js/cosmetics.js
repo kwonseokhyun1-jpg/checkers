@@ -8,7 +8,7 @@ export const COSMETIC_TYPES = ["avatar", "frame", "banner", "pieceSkin"];
 
 export const COSMETIC_RARITIES = ["common", "uncommon", "rare", "epic", "legendary"];
 
-export const RARITY_GEM_DUPE = { common: 5, uncommon: 10, rare: 20, epic: 40, legendary: 80 };
+export const RARITY_GEM_DUPE = { common: 1, uncommon: 2, rare: 3, epic: 4, legendary: 5 };
 
 /** @type {{ id: string, type: string, name: string, rarity: string, desc: string }[]} */
 export const COSMETIC_ITEMS = [
