@@ -137,7 +137,7 @@ export function maxCopiesForRarity(_rarity) {
 export function maxCopiesForCard(cardOrId) {
   return MAX_COPIES_PER_CARD;
 }
-export const START_HAND = 3;
+export const START_HAND = 4;
 /** @deprecated No hand cap in match — kept for legacy references */
 export const MAX_HAND = Infinity;
 export const DRAW_EVERY_TURNS = 2;
