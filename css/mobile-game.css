@@ -1588,6 +1588,19 @@ body.install-banner-visible.deck-editing .game-shell {
     min-width: 4.5rem;
   }
 
+  .pvp-hub {
+    min-height: min(58vh, 24rem);
+  }
+
+  .pvp-hub-tile {
+    min-height: 8.5rem;
+  }
+
+  .pvp-live-spectate,
+  .pvp-back-btn {
+    min-height: 44px;
+  }
+
   /* Settings account — username editor, sign out */
   #view-settings .profile-username-change,
   #view-settings .profile-username-cancel,

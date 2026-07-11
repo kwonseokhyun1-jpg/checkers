@@ -179,6 +179,7 @@ export class MatchSession {
     this.opponentCosmetics = options.opponentCosmetics || null;
     this.profile = options.profile || null;
     this.isPvp = !!options.pvp;
+    this.spectator = !!options.spectator;
     this.localColor = options.localColor ?? COLORS.RED;
     this.opponentColor = this.localColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
     /** In PvP, black (guest) sees the board from their side — pieces advance toward them. */
@@ -255,7 +256,7 @@ export class MatchSession {
     this.bindEls();
     if (this.hasMoveHistory()) ensureStartHistory(this.state);
     if (options.initialState && this.isPvp) {
-      if (this.state.turn === this.localColor && !this.state.gameOver) {
+      if (!this.spectator && this.state.turn === this.localColor && !this.state.gameOver) {
         this._beginLocalPvpTurnIfNeeded(this.state);
       }
     } else if (!(options.initialState && this.isPvp)) {
@@ -453,6 +454,10 @@ export class MatchSession {
       }
       const skipConfirm = consumeLeaveConfirmSkip();
       if (this.isPvp) {
+        if (this.spectator) {
+          this.onExit?.();
+          return;
+        }
         if (
           !skipConfirm &&
           !(await mobileConfirm("Leave this match? Your opponent wins automatically.", {
@@ -537,6 +542,7 @@ export class MatchSession {
   }
 
   canMovePieces() {
+    if (this.spectator) return false;
     const s = this.state;
     if (
       !(
@@ -597,6 +603,7 @@ export class MatchSession {
   }
 
   canPlaySpells() {
+    if (this.spectator) return false;
     const s = this.state;
     return (
       !this.isViewingHistory() &&
@@ -3081,6 +3088,13 @@ ${starLine}`;
     const countLabel = this.$("hand-count-label");
     if (!handEl) return;
     handEl.innerHTML = "";
+    const enemyCountLabel = this.$("enemy-hand-count-label");
+    if (this.spectator) {
+      handEl.classList.add("hand--spectator-hidden");
+      if (countLabel) countLabel.textContent = "Hand hidden";
+      if (enemyCountLabel) enemyCountLabel.textContent = "Hand hidden";
+      return;
+    }
     const s = this.getViewState();
     const n = s.hands[this.localColor].length;
     if (countLabel) {
@@ -3107,7 +3121,6 @@ ${starLine}`;
       handEl.appendChild(el);
     }
 
-    const enemyCountLabel = this.$("enemy-hand-count-label");
     if (enemyCountLabel) {
       const oppN = s.hands[this.opponentColor].length;
       enemyCountLabel.textContent =

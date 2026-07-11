@@ -3,13 +3,22 @@ import { boardFrameHtml } from "./board.js";
 export function getMatchHtml(opponentName = "Opponent", options = {}) {
   const safe = String(opponentName).replace(/</g, "");
   const exitLabel = options.exitLabel || "← Leave match";
+  const spectator = !!options.spectator;
+  const localName = spectator
+    ? String(options.localName || "Red").replace(/</g, "")
+    : "You";
+  const spectatorClass = spectator ? " match-wrap--spectator" : "";
+  const handHiddenNote = spectator
+    ? `<p class="hand-hidden-note">Hands hidden in spectate mode</p>`
+    : "";
   return `
-    <div class="match-wrap match-scene">
+    <div class="match-wrap match-scene${spectatorClass}">
       <button type="button" id="btn-leave-match" class="btn-text">${exitLabel}</button>
+      ${spectator ? `<p class="spectate-banner" role="status">Spectating — use move history below to review plays</p>` : ""}
       <div class="game-layout">
         <aside class="panel panel-opponent">
           <div class="player-badge opponent"><span class="piece-icon black"></span> ${safe}</div>
-          <p id="enemy-hand-count-label" class="hand-count-label">0 cards in hand</p>
+          <p id="enemy-hand-count-label" class="hand-count-label">${spectator ? "Hand hidden" : "0 cards in hand"}</p>
         </aside>
         <section class="board-section">
           <div id="turn-banner" class="turn-banner match-banner">Your turn</div>
@@ -34,9 +43,10 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
           <div id="piece-info" class="piece-info hidden"></div>
         </section>
         <aside class="panel panel-player">
-          <div class="player-badge you"><span class="piece-icon red"></span> You</div>
-          <p id="hand-count-label" class="hand-count-label">0 cards in hand</p>
-          <div id="hand-red" class="hand spell-hand"></div>
+          <div class="player-badge you"><span class="piece-icon red"></span> ${localName}</div>
+          <p id="hand-count-label" class="hand-count-label">${spectator ? "Hand hidden" : "0 cards in hand"}</p>
+          <div id="hand-red" class="hand spell-hand${spectator ? " hand--spectator-hidden" : ""}"></div>
+          ${handHiddenNote}
           <button type="button" id="btn-end-cards" class="btn-secondary btn-skip-spell hidden">Skip spell phase</button>
         </aside>
         <footer class="match-log">
