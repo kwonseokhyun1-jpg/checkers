@@ -7,7 +7,12 @@ import {
 } from "./auth.js";
 import { GUEST_SIGN_IN_NUDGE_PVP } from "./guestMode.js";
 import { DECK_SIZE } from "./cardCatalog.js";
-import { describeDeckIssue, validateDeck } from "./deckRules.js";
+import {
+  deckCardIdsFromMatchState,
+  deckIdsEqual,
+  describeDeckIssue,
+  validateDeck,
+} from "./deckRules.js";
 import { COLORS } from "./board.js";
 import { MatchSession, isPvpTerminalBoard, isMutualElimination } from "./match.js";
 import { getMatchHtml } from "./matchView.js";
@@ -633,14 +638,32 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
   function localDeckIdsFromRow(row) {
     const profile = getProfile();
-    const storedIds =
-      pvpService?.localColor === COLORS.RED ? row.host_deck_ids : row.guest_deck_ids;
+    const mystery = isMysteryMode(row);
+    const localColor = pvpService?.localColor;
+
+    if (mystery && row?.state_json && localColor) {
+      const fromState = deckCardIdsFromMatchState(row.state_json, localColor);
+      if (Array.isArray(fromState) && fromState.length === DECK_SIZE) {
+        return fromState;
+      }
+    }
+
+    const storedIds = localColor === COLORS.RED ? row.host_deck_ids : row.guest_deck_ids;
     // Mystery decks include spells outside the player's collection — skip ownership checks.
-    const deckProfile = isMysteryMode(row) ? null : profile;
+    const deckProfile = mystery ? null : profile;
     if (Array.isArray(storedIds) && !describeDeckIssue(storedIds, deckProfile)) {
+      if (mystery) {
+        const mainDeck = getSelectedDeck()?.cardIds;
+        if (mainDeck && deckIdsEqual(storedIds, mainDeck)) {
+          const fromState =
+            localColor && deckCardIdsFromMatchState(row?.state_json, localColor);
+          if (Array.isArray(fromState) && fromState.length === DECK_SIZE) return fromState;
+          return null;
+        }
+      }
       return storedIds;
     }
-    if (isMysteryMode(row)) return null;
+    if (mystery) return null;
     const deck = getSelectedDeck();
     if (deck && !describeDeckIssue(deck.cardIds, profile)) return deck.cardIds;
     return null;
@@ -1095,7 +1118,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       return;
     }
 
-    const mystery = getSelectedMode() === PVP_MODE_MYSTERY;
+    const matchMode = getSelectedMode();
+    const mystery = matchMode === PVP_MODE_MYSTERY;
     const deck = getSelectedDeck();
     if (!mystery) {
       const issue = describeDeckIssue(deck?.cardIds ?? [], getProfile());
@@ -1115,7 +1139,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         mystery ? null : deck.cardIds,
         await getDisplayName(),
         {
-          matchMode: getSelectedMode(),
+          matchMode,
           hostPieceSkin: getEquippedPieceSkin(getProfile()),
         }
       );

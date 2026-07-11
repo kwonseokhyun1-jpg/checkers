@@ -87,8 +87,42 @@ export function buildAiDeck() {
   return buildMysteryDeck();
 }
 
+/** Compare two deck lists regardless of draw order. */
+export function deckIdsEqual(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  const left = [...a].sort();
+  const right = [...b].sort();
+  return left.every((id, i) => id === right[i]);
+}
+
+/** Reconstruct a player's deck card ids from an in-progress match state. */
+export function deckCardIdsFromMatchState(state, color) {
+  if (!state || !color) return null;
+  const ids = [];
+  const pile = state.drawPile?.[color];
+  if (Array.isArray(pile)) ids.push(...pile);
+  const hand = state.hands?.[color];
+  if (Array.isArray(hand)) {
+    for (const card of hand) {
+      if (card?.id) ids.push(card.id);
+    }
+  }
+  const discard = state.discardPile?.[color];
+  if (Array.isArray(discard)) ids.push(...discard);
+  return ids.length ? ids : null;
+}
+
 /** Random deck from the full playable pool — no collection ownership check. */
-export function buildMysteryDeck() {
+export function buildMysteryDeck(options = {}) {
+  const { excludeDeckIds = null, maxAttempts = 12 } = options;
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const ids = buildMysteryDeckOnce();
+    if (!excludeDeckIds || !deckIdsEqual(ids, excludeDeckIds)) return ids;
+  }
+  return buildMysteryDeckOnce();
+}
+
+function buildMysteryDeckOnce() {
   const pool = getPlayableCards();
   const ids = [];
   while (ids.length < DECK_SIZE) {
