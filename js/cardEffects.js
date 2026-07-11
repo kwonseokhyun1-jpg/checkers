@@ -99,7 +99,7 @@ export function getCardHint(card) {
     return "Hidden trap — next spell hit within 2 turns reflects to the closest enemy.";
   }
   if (card.effect === "martyr" || card.id === "martyr") {
-    return "Hidden trap — if this piece dies within 2 turns, you draw 2 cards.";
+    return "Hidden trap — if an enemy kills this piece on their turn within 2 turns, you draw 2 cards.";
   }
   if (card.effect === "pyromancy") return hints.pyromancy_hint;
   if (card.effect === "snowball") return hints.snowball_hint;

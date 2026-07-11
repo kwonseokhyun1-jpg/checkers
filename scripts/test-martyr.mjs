@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Martyr hidden trap — piece death draws 2 cards; expires after 2 owner turn cycles.
+ * Martyr hidden trap — enemy capture/spell kill on their turn draws 2 cards.
  * Run: node scripts/test-martyr.mjs
  */
 import {
@@ -11,6 +11,7 @@ import {
   applyMove,
   tickEffects,
   resolveCapture,
+  removePiece,
   SIZE,
   MARTYR_TRAP_TURNS,
 } from "../js/board.js";
@@ -43,9 +44,10 @@ function assert(cond, msg) {
   }
 }
 
-// Capture death draws 2 cards for trap owner
+// Enemy capture on their turn draws 2 cards
 {
   const state = baseState();
+  state.turn = COLORS.RED;
   setPiece(state.board, 4, 3, createPiece(COLORS.BLACK, 4, 3));
   const martyr = CARD_REGISTRY.find((c) => c.id === "martyr");
   const cast = applyCard(state, COLORS.BLACK, martyr, [[4, 3]]);
@@ -59,22 +61,50 @@ function assert(cond, msg) {
 
   applyMove(state.board, capture, state);
   assert(!state.board[4][3], "Martyred piece should be removed");
-  assert(state.hands[COLORS.BLACK].length === 2, "Martyr should draw 2 cards on death");
+  assert(state.hands[COLORS.BLACK].length === 2, "Martyr should draw 2 cards on enemy capture");
   const trap = takeTrapHistoryReveal(state);
   assert(trap?.effect === "martyr", "Trap history should record Martyr");
-  console.log("OK: Martyr draws 2 cards on capture death");
+  console.log("OK: Martyr draws 2 cards on enemy capture");
 }
 
-// Spell kill also triggers Martyr
+// Enemy spell kill on their turn draws 2 cards
 {
   const state = baseState();
+  state.turn = COLORS.RED;
   setPiece(state.board, 4, 3, createPiece(COLORS.BLACK, 4, 3));
   const martyr = CARD_REGISTRY.find((c) => c.id === "martyr");
   applyCard(state, COLORS.BLACK, martyr, [[4, 3]]);
   resolveCapture(state.board, state, 4, 3, COLORS.RED, { nonCap: true });
   assert(!state.board[4][3], "Piece should be destroyed");
-  assert(state.hands[COLORS.BLACK].length === 2, "Martyr should draw 2 on spell death");
-  console.log("OK: Martyr draws 2 cards on spell death");
+  assert(state.hands[COLORS.BLACK].length === 2, "Martyr should draw 2 on enemy spell death");
+  console.log("OK: Martyr draws 2 cards on enemy spell kill");
+}
+
+// Own-turn sacrifice does not trigger Martyr
+{
+  const state = baseState();
+  state.turn = COLORS.BLACK;
+  setPiece(state.board, 4, 3, createPiece(COLORS.BLACK, 4, 3));
+  const martyr = CARD_REGISTRY.find((c) => c.id === "martyr");
+  applyCard(state, COLORS.BLACK, martyr, [[4, 3]]);
+  removePiece(state.board, 4, 3, { force: true, state });
+  assert(state.hands[COLORS.BLACK].length === 0, "Martyr should not draw on own-turn removal");
+  console.log("OK: Martyr does not trigger on own-turn removal");
+}
+
+// Debuff expiry on owner's turn does not trigger Martyr
+{
+  const state = baseState();
+  state.turn = COLORS.BLACK;
+  const piece = createPiece(COLORS.BLACK, 4, 3);
+  piece.martyr = true;
+  piece.martyrTurns = MARTYR_TRAP_TURNS;
+  piece.venom = 1;
+  setPiece(state.board, 4, 3, piece);
+  tickEffects(state.board, COLORS.BLACK, state);
+  assert(!state.board[4][3], "Piece should die to venom");
+  assert(state.hands[COLORS.BLACK].length === 0, "Martyr should not draw on debuff expiry");
+  console.log("OK: Martyr does not trigger on debuff expiry");
 }
 
 // Martyr expires after 2 owner turn cycles

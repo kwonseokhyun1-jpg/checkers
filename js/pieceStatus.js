@@ -14,7 +14,7 @@ const BUFF_RULES = [
   { key: "wraithTurns", label: "Wraith Step", turns: true },
   { key: "superMan", label: "Superman Leap", turns: true },
   { key: "lastStand", label: "Last Stand (ultra shield on capture)", bool: true },
-  { key: "martyr", label: "Martyr (draw 2 on death)", bool: true },
+  { key: "martyr", label: "Martyr (draw 2 if enemy kills on their turn)", bool: true },
   { key: "mirrorShield", label: "Mirror Shield", bool: true },
   { key: "ghostGuard", label: "Ghost Guard", bool: true },
   { key: "bombArmed", label: "Bomb Armed", bool: true },

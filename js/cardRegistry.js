@@ -106,7 +106,7 @@ export const CARD_REGISTRY = [
   { id: "link_fate", name: "Link Fate", desc: "Link two enemy pieces — when either is destroyed, the other dies too.", rarity: "epic", weight: 2, mode: "e_e", effect: "link_fate" },
   { id: "clone", name: "Clone", desc: "Duplicate one of your men on an adjacent empty square (original stays). The copy cannot capture, be captured, or be sacrificed until your next turn. Clones are destroyed instantly by freeze, poison, burn, or plague.", rarity: "epic", weight: 2, mode: "f_empty", effect: "clone" },
   { id: "constitution", name: "Constitution", desc: "Requires a king. Your kings cannot be destroyed by non-capture effects for 5 turns.", rarity: "epic", weight: 2, mode: "instant", effect: "constitution" },
-  { id: "martyr", name: "Martyr", desc: "Hidden trap on a friendly piece — if it dies for any reason within 2 turns, you draw 2 cards (invisible until it triggers).", rarity: "epic", weight: 2, mode: "friendly", effect: "martyr" },
+  { id: "martyr", name: "Martyr", desc: "Hidden trap on a friendly piece — if an enemy captures or destroys it on their turn within 2 turns, you draw 2 cards (invisible until it triggers).", rarity: "epic", weight: 2, mode: "friendly", effect: "martyr" },
   { id: "deport", name: "Deport", desc: "Send an enemy piece back to the square where it started the game; any piece already there is destroyed.", rarity: "rare", weight: 3, mode: "enemy", effect: "deport" },
   { id: "dominion", name: "Dominion", desc: "All your men may move backward for 2 turns.", rarity: "uncommon", weight: 4, mode: "instant", effect: "dominion" },
 ];

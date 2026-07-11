@@ -313,11 +313,14 @@ export function flushPendingBountyMessage(meta, color) {
   return `Bounty — drew ${n} card${n === 1 ? "" : "s"}.`;
 }
 
-export function payMartyrOnDeath(state, piece, row, col) {
-  if (!state?.meta || !piece?.martyr) return 0;
+export function payMartyrOnDeath(state, piece, row, col, { cause } = {}) {
+  if (!piece?.martyr) return 0;
   const owner = piece.color;
   piece.martyr = false;
   piece.martyrTurns = 0;
+  if (!state?.meta) return 0;
+  if (cause !== "capture" && cause !== "spell") return 0;
+  if (!state.turn || state.turn === owner) return 0;
   queueTrapHistoryReveal(state, { effect: "martyr", color: owner, picks: [[row, col]] });
   const drawn = drawToHand(state, owner, 2);
   if (!drawn) return 0;

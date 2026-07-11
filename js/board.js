@@ -423,7 +423,7 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
     return false;
   }
   if (state) {
-    payMartyrOnDeath(state, p, r, c);
+    payMartyrOnDeath(state, p, r, c, { cause: nonCap ? "spell" : "capture" });
     if (!state.captured[p.color]) state.captured[p.color] = [];
     state.captured[p.color].push({ color: p.color, king: p.king });
     if (p.succession) {
@@ -449,7 +449,6 @@ export function removePiece(board, row, col, { force = false, state = null } = {
   if (isFortified(p)) return false;
   if (p?.cloneNoCaptureThisTurn && !force) return false;
   if (p && state) {
-    payMartyrOnDeath(state, p, row, col);
     if (!state.captured[p.color]) state.captured[p.color] = [];
     state.captured[p.color].push({ king: p.king });
     if (p.linkedFateId) {
