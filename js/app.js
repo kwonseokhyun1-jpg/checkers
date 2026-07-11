@@ -210,10 +210,6 @@ function ensurePvpUI() {
         onNavigateTab: showTab,
         onNavigatePlayTab: showPlayTab,
         onOpenDeckEdit: openDeckEdit,
-        onPvpViewShown: () => {
-          activeTab = "play";
-          syncMainTabShellState();
-        },
       });
       return pvpController;
     });
