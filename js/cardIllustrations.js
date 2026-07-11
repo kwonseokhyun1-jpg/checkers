@@ -348,6 +348,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "mass_nudge",
   "sanctuary_pulse",
   "last_stand",
+  "martyr",
   "cryo_bolt",
   "collapse",
   "last_king",
@@ -1680,6 +1681,21 @@ function lastStandMotif() {
     <text x="10" y="18" font-size="6" fill="#e9d5ff" opacity="0.55">?</text>`;
 }
 
+/** Hidden martyr trap — piece fading into two cards on death. */
+function martyrMotif() {
+  return `${groundShadow(30, 56, 16, 3.5)}
+    ${allyPro(24, 40, 5.5)}
+    <path d="M24 40 C18 30 20 18 30 14" stroke="#fca5a5" stroke-width="2.4" fill="none" opacity="0.75"/>
+    <circle cx="30" cy="14" r="4.5" fill="#fecaca" opacity="0.85" stroke="#f87171" stroke-width="1.2"/>
+    <rect x="34" y="10" width="14" height="22" rx="2.2" fill="#4c1d95" stroke="#0f172a" stroke-width="1.8" transform="rotate(8 41 21)"/>
+    <rect x="34" y="10" width="14" height="22" rx="2.2" fill="none" stroke="#a78bfa" stroke-width="1.2" transform="rotate(8 41 21)"/>
+    <rect x="44" y="14" width="14" height="22" rx="2.2" fill="#5b21b6" stroke="#0f172a" stroke-width="1.8" transform="rotate(-6 51 25)"/>
+    <rect x="44" y="14" width="14" height="22" rx="2.2" fill="none" stroke="#c4b5fd" stroke-width="1.2" transform="rotate(-6 51 25)"/>
+    <path d="M12 16 L16 20 L12 24 L8 20 Z" fill="#4c1d95" opacity="0.45" stroke="#a78bfa" stroke-width="1"/>
+    <text x="38" y="48" font-size="7" fill="#e9d5ff" opacity="0.9" font-weight="700">+2</text>
+    ${sparkles([[30, 12, 0.7], [50, 10, 0.6]], "#fecaca", 0.55)}`;
+}
+
 function cryoBoltMotif() {
   return `${groundShadow(30, 54, 18, 3.5)}
     ${tokenPro(42, 22, 5.5)}${allyPro(20, 48, 4.5)}
@@ -1748,6 +1764,7 @@ export const EFFECT_ILLUSTRATIONS = {
   bulwark: () => rareBleed("bw", "#b794f4", "#553c7a", bulwarkMotif()),
   barrier: () => commonBleed("br", "#94a3b8", "#1f2937", barrierMotif()),
   last_stand: () => rareBleed("ls", "#38bdf8", "#0c4a6e", lastStandMotif()),
+  martyr: () => epicBleed("my", "#fca5a5", "#4c0519", martyrMotif()),
   fortify: () => uncommonBleed("fo", "#a78bfa", "#4c1d95", fortifyMotif()),
   sanctuary_pulse: () => uncommonBleed("sp", "#7dd3fc", "#1e3a5f", sanctuaryPulseMotif()),
   sanctuary: () => rareBleed("sa", "#c4b5fd", "#4c1d95", sanctuaryMotif()),

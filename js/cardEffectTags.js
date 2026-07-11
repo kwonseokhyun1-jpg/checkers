@@ -45,6 +45,7 @@ const TAGS = {
   poison_3: ["Enemy dies in 3 turns — 3-turn poison bar"],
   deflect_1: ["Hidden trap — spell hit within 2 turns kills closest enemy instead"],
   last_stand: ["Hidden trap — ultra shield on capture or destroy for 3 turns", "Expires after 1 of your turn cycles if unused"],
+  martyr: ["Hidden trap on a friendly piece", "If an enemy captures or destroys it on their turn within 2 turns, draw 2 cards", "Expires after 2 of your turn cycles if unused"],
   clone: ["Your man, then adjacent empty square — copy cannot capture or be taken this turn; dies to freeze/poison/burn/plague"],
   deport: ["Send an enemy back to its game-start square", "Destroys any piece already on that square"],
   bounty: ["Mark an enemy piece", "When you jump-capture it, draw 2 cards", "Spell destroys do not count"],

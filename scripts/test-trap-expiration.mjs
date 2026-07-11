@@ -11,6 +11,7 @@ import {
   SIZE,
   LAST_STAND_TRAP_TURNS,
   VENGEANCE_TRAP_TURNS,
+  MARTYR_TRAP_TURNS,
 } from "../js/board.js";
 import { createMatchMeta, hasVengeanceArmed } from "../js/gameMeta.js";
 import { applyCard } from "../js/cardEffectHandlers.js";
@@ -73,6 +74,27 @@ function assert(cond, msg) {
   assert(!piece.lastStand, "Last Stand should disappear after 1 owner turn cycle");
   assert(piece.lastStandTurns === 0, "Last Stand turn counter should be cleared");
   console.log("OK: Last Stand expires after 1 turn cycle");
+}
+
+// Martyr disappears after 2 owner turn cycles
+{
+  const state = baseState();
+  setPiece(state.board, 4, 3, createPiece(COLORS.BLACK, 4, 3));
+  const martyr = CARD_REGISTRY.find((c) => c.id === "martyr");
+  const cast = applyCard(state, COLORS.BLACK, martyr, [[4, 3]]);
+  assert(cast.success, "Martyr cast should succeed");
+  const piece = state.board[4][3];
+  assert(piece.martyr, "Martyr should be armed");
+  assert(piece.martyrTurns === MARTYR_TRAP_TURNS, "Martyr should start with 2 turn cycles");
+
+  tickEffects(state.board, COLORS.BLACK, state);
+  assert(piece.martyr, "Martyr should still be armed after 1 turn cycle");
+  assert(piece.martyrTurns === 1, "1 turn cycle should remain");
+
+  tickEffects(state.board, COLORS.BLACK, state);
+  assert(!piece.martyr, "Martyr should disappear after 2 owner turn cycles");
+  assert(piece.martyrTurns === 0, "Martyr turn counter should be cleared");
+  console.log("OK: Martyr expires after 2 turn cycles");
 }
 
 console.log("All trap expiration tests passed.");

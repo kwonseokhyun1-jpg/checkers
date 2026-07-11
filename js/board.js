@@ -1,5 +1,5 @@
 /** Checkers board logic with card-effect modifiers */
-import { getMineOwner, tickMineDurability, tickVengeanceDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance, payBountyOnCapture, ensureConstitutionTurns, queueTrapHistoryReveal } from "./gameMeta.js";
+import { getMineOwner, tickMineDurability, tickVengeanceDurability, collapsedSquareKey, isSanctuaryProtected, isInDarknessZone, revealMine, tryConsumeVengeance, payBountyOnCapture, payMartyrOnDeath, ensureConstitutionTurns, queueTrapHistoryReveal } from "./gameMeta.js";
 import { queueBoardFx } from "./boardFx.js";
 
 function sk(r, c) {
@@ -64,6 +64,8 @@ export const LAST_STAND_TRAP_TURNS = 1;
 export const VENGEANCE_BLOOD_TURNS = 2;
 /** Armed Vengeance trap duration (owner turn cycles before it expires). */
 export const VENGEANCE_TRAP_TURNS = 2;
+/** Armed Martyr trap duration (owner turn cycles before it expires). */
+export const MARTYR_TRAP_TURNS = 2;
 export const PLAGUE_TURNS = 2;
 
 export function hasKnightSigil(piece) {
@@ -116,6 +118,8 @@ export function createPiece(color, row, col, king = false) {
     superMan: 0,
     lastStand: false,
     lastStandTurns: 0,
+    martyr: false,
+    martyrTurns: 0,
     mirrorShield: false,
     ghostGuard: false,
     phalanxId: 0,
@@ -419,6 +423,7 @@ export function resolveCapture(board, state, r, c, byColor, { nonCap = true, ber
     return false;
   }
   if (state) {
+    payMartyrOnDeath(state, p, r, c, { cause: nonCap ? "spell" : "capture" });
     if (!state.captured[p.color]) state.captured[p.color] = [];
     state.captured[p.color].push({ color: p.color, king: p.king });
     if (p.succession) {
@@ -934,6 +939,13 @@ export function tickEffects(board, color, state = null) {
         if (p.lastStandTurns <= 0) {
           p.lastStand = false;
           p.lastStandTurns = 0;
+        }
+      }
+      if (p.martyr && p.martyrTurns > 0) {
+        p.martyrTurns--;
+        if (p.martyrTurns <= 0) {
+          p.martyr = false;
+          p.martyrTurns = 0;
         }
       }
       if (p.plagueTurns > 0) {

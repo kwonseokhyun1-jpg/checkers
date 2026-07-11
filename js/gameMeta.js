@@ -244,6 +244,7 @@ export const TRAP_EFFECT_LABELS = {
   quicksand: "Quicksand",
   last_stand: "Last Stand",
   deflect_1: "Deflect",
+  martyr: "Martyr",
 };
 
 /** Queue a trap spell for move history — logged after the action that triggered it. */
@@ -310,6 +311,31 @@ export function flushPendingBountyMessage(meta, color) {
   if (!n) return null;
   meta.pendingBountyDraw[color] = 0;
   return `Bounty — drew ${n} card${n === 1 ? "" : "s"}.`;
+}
+
+export function payMartyrOnDeath(state, piece, row, col, { cause } = {}) {
+  if (!piece?.martyr) return 0;
+  const owner = piece.color;
+  piece.martyr = false;
+  piece.martyrTurns = 0;
+  if (!state?.meta) return 0;
+  if (cause !== "capture" && cause !== "spell") return 0;
+  if (!state.turn || state.turn === owner) return 0;
+  queueTrapHistoryReveal(state, { effect: "martyr", color: owner, picks: [[row, col]] });
+  const drawn = drawToHand(state, owner, 2);
+  if (!drawn) return 0;
+  if (!state.meta.pendingMartyrDraw) {
+    state.meta.pendingMartyrDraw = { [COLORS.RED]: 0, [COLORS.BLACK]: 0 };
+  }
+  state.meta.pendingMartyrDraw[owner] += drawn;
+  return drawn;
+}
+
+export function flushPendingMartyrMessage(meta, color) {
+  const n = meta?.pendingMartyrDraw?.[color] || 0;
+  if (!n) return null;
+  meta.pendingMartyrDraw[color] = 0;
+  return `Martyr — drew ${n} card${n === 1 ? "" : "s"}.`;
 }
 
 export function collapsedSquareKey(meta) {
