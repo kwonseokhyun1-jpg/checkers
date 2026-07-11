@@ -1326,14 +1326,14 @@ export class MatchSession {
   }
 
   onColumnClick(col) {
-    if (!this.cardPlay || this.cardPlay.card.mode !== "column") return;
+    if (!this.cardPlay || this.cardPlay.card.mode !== "column" || this.actionBusy) return;
     this.selectedColumn = col;
     this.onCardTargetClick(3, col);
   }
 
 
   onRowClick(row) {
-    if (!this.cardPlay || this.cardPlay.card.mode !== "row") return;
+    if (!this.cardPlay || this.cardPlay.card.mode !== "row" || this.actionBusy) return;
     this.selectedRow = row;
     this.onCardTargetClick(row, 3);
   }
@@ -1367,7 +1367,7 @@ export class MatchSession {
   }
 
   onCardTargetClick(row, col) {
-    if (!this.cardPlay) return;
+    if (!this.cardPlay || this.actionBusy) return;
     const { card, picks } = this.cardPlay;
     const allowed = getValidTargets(this.state, this.localColor, card, picks);
     if (!allowed.some(([r, c]) => r === row && c === col)) {
@@ -1386,6 +1386,7 @@ export class MatchSession {
     const finalPicks = [...picks];
     const spellCtx = { card, picks: finalPicks };
     this.enterSpellResolvePhase();
+    this.actionBusy = true;
     this.render();
     void this.resolveTargetedSpell(card, finalPicks)
       .then((res) => {
@@ -1419,6 +1420,9 @@ export class MatchSession {
         this.dismissCardTargetingUI();
         this.setMessage("Spell failed — try again.");
         this.render();
+      })
+      .finally(() => {
+        this.actionBusy = false;
       });
   }
 
@@ -1617,6 +1621,7 @@ export class MatchSession {
     const s = this.state;
     if (s.gameOver || s.turn !== this.localColor) return;
     if (this.cardPlay) {
+      if (this.actionBusy) return;
       const axisMsg = axisPickMessage(this.cardPlay.card);
       if (axisMsg) {
         this.setMessage(axisMsg);
@@ -2627,13 +2632,7 @@ ${starLine}`;
   }
 
   async resolveTargetedSpell(card, picks) {
-    this.actionBusy = true;
-    try {
-      const res = await this.applySpellWithAnimation(card, picks);
-      return res;
-    } finally {
-      this.actionBusy = false;
-    }
+    return this.applySpellWithAnimation(card, picks);
   }
 
 
