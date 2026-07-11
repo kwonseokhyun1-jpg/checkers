@@ -161,6 +161,16 @@ export function grantAwokenBear(piece) {
   piece.hibernationTurns = 0;
 }
 
+/** True when a piece carries both the Awoken Bear mark and the zombie curse. */
+export function isZombieBearStack(piece) {
+  return !!(piece?.bearAwakened && piece?.isZombie);
+}
+
+/** Awake zombie bear — bear bonus moves and capture spread. */
+export function isZombieBear(piece) {
+  return isZombieBearStack(piece) && isAwakeZombie(piece);
+}
+
 /** Stall/Fortify — fully invulnerable to capture, destruction, and debuffs. */
 export function isFortified(piece) {
   return !!(piece && piece.fortifyTurns > 0);
@@ -360,6 +370,30 @@ export function clearPlayerZombieChain(board, color) {
     }
   }
   for (const masterId of masterIds) clearZombieChain(board, masterId);
+}
+
+/** Fuse zombie identity from absorbed piece into survivor; re-link horde if main zombie merges. */
+export function absorbZombieIntoPiece(board, survivor, absorbed) {
+  if (!absorbed?.isZombie || !survivor) return;
+  if (absorbed.isMainZombie) {
+    const oldMasterId = absorbed.zombieMasterId;
+    survivor.isZombie = true;
+    survivor.isMainZombie = true;
+    survivor.zombieSleepTurns = Math.max(survivor.zombieSleepTurns || 0, absorbed.zombieSleepTurns || 0);
+    survivor.zombieMasterId = survivor.id;
+    if (oldMasterId) {
+      forEachZombieInChain(board, oldMasterId, (p) => {
+        if (p.id !== survivor.id) p.zombieMasterId = survivor.id;
+      });
+    }
+    return;
+  }
+  if (!survivor.isZombie) {
+    survivor.isZombie = true;
+    survivor.isMainZombie = false;
+    survivor.zombieMasterId = absorbed.zombieMasterId;
+    survivor.zombieSleepTurns = absorbed.zombieSleepTurns;
+  }
 }
 
 function spawnSpreadZombie(board, state, color, row, col, masterId) {

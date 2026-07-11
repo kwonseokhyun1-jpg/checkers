@@ -4,7 +4,7 @@
 import {
   SIZE, COLORS, isDarkSquare, inBounds, displacePiece, resolveLandingTraps, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
-  createPiece, grantAwokenBear, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
+  createPiece, grantAwokenBear, absorbZombieIntoPiece, isZombieBearStack, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified, clearPlayerZombieChain,
   tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS, MARTYR_TRAP_TURNS,
 } from "./board.js";
@@ -658,9 +658,14 @@ const EFFECTS = {
     if (!a || !b || a.color !== color || b.color !== color) return fail();
     if (a.king || b.king) return fail("Only men can fuse");
     if (Math.max(Math.abs(a.row - b.row), Math.abs(a.col - b.col)) !== 1) return fail("Pick adjacent pieces");
+    if (b.isZombie) absorbZombieIntoPiece(state.board, a, b);
     removePiece(state.board, b.row, b.col);
     grantAwokenBear(a);
-    return ok("Fusion — Awoken Bear! Move again after each move with this piece.");
+    return ok(
+      isZombieBearStack(a)
+        ? "Fusion — Zombie Bear! Move again after each move; captures rise as zombies."
+        : "Fusion — Awoken Bear! Move again after each move with this piece."
+    );
   },
   chameleon(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=2; return ok(); },
   wraith_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.wraithTurns=2; return ok(); },
@@ -724,12 +729,17 @@ const EFFECTS = {
     if (!p || p.color !== color || p.king) return fail();
     if (isFortified(p)) return fail("Fortified");
     if (p.isZombie) return fail("Already a zombie");
+    const hadBear = p.bearAwakened;
     clearPlayerZombieChain(state.board, color);
     p.isZombie = true;
     p.isMainZombie = true;
     p.zombieMasterId = p.id;
     p.zombieSleepTurns = 1;
-    return ok("Zombify — your piece sleeps in a gravestone for 1 turn, then rises as a zombie king.");
+    return ok(
+      hadBear
+        ? "Zombify — Zombie Bear sleeps 1 turn, then rises as a zombie king with bear moves and spreading curse."
+        : "Zombify — your piece sleeps in a gravestone for 1 turn, then rises as a zombie king."
+    );
   },
   identity_theft(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||a.color!==color||!b||b.color===color) return fail(); a.chameleonFrom=b.id; a.chameleonTurns=3; return ok(); },
   call_forward(state, color, picks) {

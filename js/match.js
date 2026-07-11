@@ -17,6 +17,8 @@ import {
   tickEndTurnEffects,
   findPanicPiece,
   getBackwardStepMoves,
+  isZombieBear,
+  isZombieBearStack,
 } from "./board.js";
 import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, hasVengeanceArmed, isConfused, clearConfusion } from "./gameMeta.js";
 import {
@@ -1661,7 +1663,7 @@ export class MatchSession {
     s.phase = PHASE.MOVE;
     this.validMoves = extras;
     this.selectedSquare = [landR, landC];
-    this.setMessage("Awoken Bear — move again!");
+    this.setMessage(isZombieBear(landed) ? "Zombie Bear — move again!" : "Awoken Bear — move again!");
     this.render();
     return true;
   }
@@ -3230,12 +3232,13 @@ ${starLine}`;
           if (constitutionTurns > 0) el.classList.add("constitution-mark");
           if (dominionTurns > 0) el.classList.add("dominion-mark");
           if (piece.hibernationTurns > 0) el.classList.add("hibernating");
-          if (piece.bearAwakened) el.classList.add("bear-awoken");
+          if (isZombieBearStack(piece)) el.classList.add("zombie-bear");
+          else if (piece.bearAwakened) el.classList.add("bear-awoken");
           if (piece.linkedFateId) el.classList.add("linked-fate");
           if (piece.fortifyTurns > 0) el.classList.add("fortify-mark");
           if (piece.mindControlTurns > 0) el.classList.add("mind-controlled");
           if (piece.isZombie && piece.zombieSleepTurns > 0) el.classList.add("zombie-sleeping");
-          else if (piece.isMainZombie) el.classList.add("zombie-main");
+          else if (!isZombieBear(piece) && piece.isMainZombie) el.classList.add("zombie-main");
           else if (piece.isZombie) el.classList.add("zombie-spread");
           if (piece.bountyBy) el.classList.add("bounty-mark");
           if (piece.revivedNoCapture) el.classList.add("revived-mark");
@@ -3547,7 +3550,11 @@ ${starLine}`;
             const sleeping = piece.zombieSleepTurns > 0;
             zombify.setAttribute(
               "aria-label",
-              piece.isMainZombie
+              isZombieBearStack(piece)
+                ? piece.zombieSleepTurns > 0
+                  ? `Zombie Bear — sleeping in gravestone (${piece.zombieSleepTurns} turn${piece.zombieSleepTurns === 1 ? "" : "s"} left)`
+                  : "Zombie Bear — bear moves; captures rise as zombies"
+                : piece.isMainZombie
                 ? sleeping
                   ? `Zombie king — sleeping in gravestone (${piece.zombieSleepTurns} turn${piece.zombieSleepTurns === 1 ? "" : "s"} left)`
                   : "Zombie king — captures spread the curse"
@@ -3555,7 +3562,7 @@ ${starLine}`;
             );
             const mark = document.createElement("span");
             mark.className = "zombify-indicator__mark";
-            mark.textContent = sleeping ? "🪦" : "🧟";
+            mark.textContent = sleeping ? "🪦" : isZombieBearStack(piece) ? "🐻🧟" : "🧟";
             mark.setAttribute("aria-hidden", "true");
             zombify.appendChild(mark);
             if (sleeping) {
