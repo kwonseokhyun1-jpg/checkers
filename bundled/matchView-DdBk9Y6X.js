@@ -1,10 +1,11 @@
-import{c as e}from"./board-BrVclqW3.js";function t(t=`Opponent`,n={}){let r=String(t).replace(/</g,``);return`
-    <div class="match-wrap match-scene">
-      <button type="button" id="btn-leave-match" class="btn-text">${n.exitLabel||`← Leave match`}</button>
+import{c as e}from"./board-BrVclqW3.js";function t(t=`Opponent`,n={}){let r=String(t).replace(/</g,``),i=n.exitLabel||`← Leave match`,a=!!n.spectator,o=a?String(n.localName||`Red`).replace(/</g,``):`You`,s=a?` match-wrap--spectator`:``,c=a?`<p class="hand-hidden-note">Hands hidden in spectate mode</p>`:``;return`
+    <div class="match-wrap match-scene${s}">
+      <button type="button" id="btn-leave-match" class="btn-text">${i}</button>
+      ${a?`<p class="spectate-banner" role="status">Spectating — use move history below to review plays</p>`:``}
       <div class="game-layout">
         <aside class="panel panel-opponent">
           <div class="player-badge opponent"><span class="piece-icon black"></span> ${r}</div>
-          <p id="enemy-hand-count-label" class="hand-count-label">0 cards in hand</p>
+          <p id="enemy-hand-count-label" class="hand-count-label">${a?`Hand hidden`:`0 cards in hand`}</p>
         </aside>
         <section class="board-section">
           <div id="turn-banner" class="turn-banner match-banner">Your turn</div>
@@ -29,9 +30,10 @@ import{c as e}from"./board-BrVclqW3.js";function t(t=`Opponent`,n={}){let r=Stri
           <div id="piece-info" class="piece-info hidden"></div>
         </section>
         <aside class="panel panel-player">
-          <div class="player-badge you"><span class="piece-icon red"></span> You</div>
-          <p id="hand-count-label" class="hand-count-label">0 cards in hand</p>
-          <div id="hand-red" class="hand spell-hand"></div>
+          <div class="player-badge you"><span class="piece-icon red"></span> ${o}</div>
+          <p id="hand-count-label" class="hand-count-label">${a?`Hand hidden`:`0 cards in hand`}</p>
+          <div id="hand-red" class="hand spell-hand${a?` hand--spectator-hidden`:``}"></div>
+          ${c}
           <button type="button" id="btn-end-cards" class="btn-secondary btn-skip-spell hidden">Skip spell phase</button>
         </aside>
         <footer class="match-log">
