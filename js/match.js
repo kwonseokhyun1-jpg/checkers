@@ -864,6 +864,63 @@ export class MatchSession {
     return row;
   }
 
+  /** True when local PvP board/turn progress should win over an incoming row. */
+  localPvpStateAheadOf(incoming) {
+    if (!this.isPvp || !incoming) return false;
+    if (this._pvpTurnMoveLog.length > 0 || this._syncDirty) return true;
+    const localHist = this.state?.moveHistory?.length ?? 0;
+    const incomingHist = incoming.moveHistory?.length ?? 0;
+    if (localHist > incomingHist) return true;
+    const localSeq = this.state?.pvpTurnSeq ?? 0;
+    const incomingSeq = incoming.pvpTurnSeq ?? 0;
+    if (localSeq > incomingSeq) return true;
+    const localSpell = this.state?.pvpLastSpell?.seq ?? 0;
+    const incomingSpell = incoming.pvpLastSpell?.seq ?? 0;
+    return localSpell > incomingSpell;
+  }
+
+  _captureLocalPvpBoardSnapshot() {
+    if (!this.isPvp || !this.state) return null;
+    return {
+      board: cloneMatchState({ board: this.state.board }).board,
+      captured: cloneMatchState({ captured: this.state.captured }).captured,
+      turn: this.state.turn,
+      phase: this.state.phase,
+      moveHistory: this.state.moveHistory ? [...this.state.moveHistory] : [],
+      pvpLastTurnMoves: this.state.pvpLastTurnMoves
+        ? JSON.parse(JSON.stringify(this.state.pvpLastTurnMoves))
+        : null,
+      pvpTurnSeq: this.state.pvpTurnSeq ?? 0,
+      meta: {
+        lastMove: { ...(this.state.meta?.lastMove || {}) },
+        bearBonusUsed: { ...(this.state.meta?.bearBonusUsed || {}) },
+        pendingDouble: { ...(this.state.meta?.pendingDouble || {}) },
+        pendingPressMove: { ...(this.state.meta?.pendingPressMove || {}) },
+      },
+    };
+  }
+
+  _restoreLocalPvpBoardSnapshot(snapshot, incoming) {
+    if (!snapshot) return;
+    this.state.board = snapshot.board;
+    this.state.captured = snapshot.captured;
+    if (snapshot.moveHistory.length > (this.state.moveHistory?.length ?? 0)) {
+      this.state.moveHistory = snapshot.moveHistory;
+    }
+    if (snapshot.pvpTurnSeq > (this.state.pvpTurnSeq ?? 0)) {
+      this.state.pvpTurnSeq = snapshot.pvpTurnSeq;
+      this.state.pvpLastTurnMoves = snapshot.pvpLastTurnMoves;
+    }
+    if (snapshot.turn !== incoming.turn) {
+      this.state.turn = snapshot.turn;
+      this.state.phase = snapshot.phase;
+    }
+    this.state.meta.lastMove = { ...this.state.meta.lastMove, ...snapshot.meta.lastMove };
+    this.state.meta.bearBonusUsed = snapshot.meta.bearBonusUsed;
+    this.state.meta.pendingDouble = snapshot.meta.pendingDouble;
+    this.state.meta.pendingPressMove = snapshot.meta.pendingPressMove;
+  }
+
   /** Apply authoritative state from PvP sync (opponent moved). */
   importState(nextState) {
     if (!nextState || this.actionBusy || this._syncBusy) return false;
@@ -895,6 +952,8 @@ export class MatchSession {
         }
       : null;
     const finalState = nextState;
+    const preserveLocalBoard = this.isPvp && this.localPvpStateAheadOf(nextState);
+    const prevLocalPvpBoard = preserveLocalBoard ? this._captureLocalPvpBoardSnapshot() : null;
     const prevLocalPvpDeck = this.isPvp
       ? {
           turnNumber: this.state?.turnNumber?.[this.localColor] ?? 0,
@@ -922,6 +981,9 @@ export class MatchSession {
       if (prevLocalPvpDeck.discardPile) {
         this.state.discardPile[this.localColor] = prevLocalPvpDeck.discardPile;
       }
+    }
+    if (preserveLocalBoard) {
+      this._restoreLocalPvpBoardSnapshot(prevLocalPvpBoard, nextState);
     }
     if (incomingSpell?.seq) this._lastPvpSpellSeq = incomingSpell.seq;
     if (incomingTurnMoves?.seq) this._lastPvpTurnSeq = incomingTurnMoves.seq;
@@ -989,7 +1051,14 @@ export class MatchSession {
   }
 
   async replayOpponentPvpTurnMoves(turnMoves, finalState) {
-    if (this.actionBusy) return;
+    if (this.actionBusy) {
+      if (finalState) {
+        this.state.board = finalState.board;
+        this.state.captured = finalState.captured;
+        this.render();
+      }
+      return;
+    }
     this.actionBusy = true;
     try {
       await this.playAiTurnPresentation(turnMoves.moves || [], {

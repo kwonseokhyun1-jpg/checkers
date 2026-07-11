@@ -735,9 +735,8 @@ export class PvpService {
 
   async _reconcileFromServer() {
     const fresh = await this.fetchMatch(this.matchId);
-    if (fresh) {
-      this._lastVersion = fresh.version ?? this._lastVersion;
-      this.onMatchRow?.(fresh);
+    if (fresh?.version != null) {
+      this._lastVersion = Math.max(this._lastVersion, fresh.version);
     }
     return fresh;
   }

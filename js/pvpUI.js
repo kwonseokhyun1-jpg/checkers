@@ -1000,7 +1000,11 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
       const finished = row.status === "finished";
       if (!finished && !shouldApplyPvpRow(row, pvpService, matchSession)) return;
       if (
-        (matchSession.actionBusy || matchSession._syncBusy || matchSession._syncDirty) &&
+        (matchSession.actionBusy ||
+          matchSession._syncBusy ||
+          matchSession._syncDirty ||
+          matchSession._pvpTurnMoveLog?.length > 0 ||
+          matchSession.localPvpStateAheadOf(row.state_json)) &&
         !terminal &&
         !finished
       ) {
@@ -1420,15 +1424,20 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
           cosmetics: localCosmetics,
           opponentCosmetics,
           onStateSync: async (state) => {
-            const v = pvpService._lastVersion;
-            const updated = await pvpService.pushState(state, v);
+            const updated = await pvpService.pushState(state, pvpService._lastVersion);
             if (updated) {
               pvpService._lastVersion = updated.version;
               pvpService._lastAppliedFingerprint = matchRowFingerprint(updated);
               return;
             }
+            if (matchSession?.localPvpStateAheadOf(state)) {
+              matchSession.pushPvpState();
+              return;
+            }
             const fresh = await pvpService.fetchMatch(pvpService.matchId);
-            if (fresh) onMatchRow(fresh);
+            if (fresh && !matchSession?.localPvpStateAheadOf(fresh.state_json)) {
+              onMatchRow(fresh);
+            }
           },
           onPvpForfeit: async () => {
             if (!pvpService || matchSession?._gameOverUiShown) return;
