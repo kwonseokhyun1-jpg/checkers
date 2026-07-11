@@ -106,7 +106,6 @@ export function initPvpUI({
   openAuthModal,
   onNavigateTab,
   onNavigatePlayTab,
-  onPvpViewShown,
   onOpenDeckEdit,
 }) {
   if (!arenaRoot || !leaderboardRoot) return { render: () => {}, dispose: () => {} };
@@ -170,6 +169,7 @@ export function initPvpUI({
     spectating = false;
     pvpScreen = "arena";
     onNavigatePlayTab?.("arena");
+    onNavigateTab?.("play");
     renderLobby();
   }
 
@@ -422,6 +422,8 @@ export function initPvpUI({
         pvpService?.dispose();
         pvpService = null;
         pvpScreen = "leaderboard";
+        onNavigatePlayTab?.("leaderboard");
+        onNavigateTab?.("play");
         renderLeaderboard();
       },
       null,
@@ -1560,7 +1562,7 @@ export function initPvpUI({
 
   function showPvpView(screen = pvpScreen) {
     onNavigatePlayTab?.(screen === "leaderboard" ? "leaderboard" : "arena");
-    onPvpViewShown?.();
+    onNavigateTab?.("play");
   }
 
   async function tryResumePvpMatch() {
