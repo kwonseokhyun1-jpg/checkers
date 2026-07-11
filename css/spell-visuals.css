@@ -369,7 +369,10 @@
 .square.playable.target.has-sanctuary::after,
 .square.playable.target.has-darkness-zone::after,
 .square.playable.target.has-darkness-core::after {
-  position: static;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   inset: unset;
   width: 28%;
   height: 28%;
@@ -381,7 +384,10 @@
 .square.playable.capture-target.has-sanctuary::after,
 .square.playable.capture-target.has-darkness-zone::after,
 .square.playable.capture-target.has-darkness-core::after {
-  position: static;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   inset: unset;
   width: 75%;
   height: 75%;

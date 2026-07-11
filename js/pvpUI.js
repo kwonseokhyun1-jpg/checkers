@@ -619,6 +619,10 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
     if (row.status === "active" && !matchSession && !matchLaunching) {
       if (row.state_json) {
+        const user = getCurrentUser();
+        if (user && isParticipant(row, user.id)) {
+          pvpService?.attachToMatch(row, user.id);
+        }
         stopOpenRoomsSync();
         hideHosting();
         hostLaunchSync = false;
@@ -912,6 +916,12 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     );
   }
 
+  function resolveLocalColor(row, userId = getCurrentUser()?.id) {
+    if (row?.host_id && row.host_id === userId) return COLORS.RED;
+    if (row?.guest_id && row.guest_id === userId) return COLORS.BLACK;
+    return pvpService?.localColor ?? COLORS.RED;
+  }
+
   async function launchMatch(row, { resume = false } = {}) {
     const profile = getProfile();
     let deckIds = localDeckIdsFromRow(row);
@@ -935,17 +945,20 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
     showPvpView();
 
-    const localColor = pvpService.localColor;
+    const user = getCurrentUser();
+    if (user && isParticipant(row, user.id)) {
+      pvpService.attachToMatch(row, user.id);
+    }
+    const localColor = resolveLocalColor(row, user?.id);
     const opponentName = opponentNameFromRow(row);
     const localName = localNameFromRow(row);
-    const user = getCurrentUser();
 
     const [localCosmeticsBase, opponentCosmeticsBase] = await Promise.all([
       cosmeticsForUser(user?.id, profile),
       cosmeticsForUser(opponentIdFromRow(row), profile),
     ]);
 
-    const isLocalHost = pvpService?.localColor === COLORS.RED;
+    const isLocalHost = localColor === COLORS.RED;
     const localMatchSkin = isLocalHost ? row.host_piece_skin : row.guest_piece_skin;
     const opponentMatchSkin = isLocalHost ? row.guest_piece_skin : row.host_piece_skin;
     const localCosmetics = cosmeticsWithPieceSkin(localCosmeticsBase, localMatchSkin);
