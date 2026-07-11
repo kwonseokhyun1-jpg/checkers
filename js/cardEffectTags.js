@@ -35,7 +35,7 @@ const TAGS = {
   plague: ["Infect your piece + adjacent pieces", "Seed spreads plague on every move", "All infected die in 2 owner turns"],
   press: ["Opponent must move again after their normal move on their next turn", "Extra step cannot capture"],
   mind_control: ["Convert an enemy man to your color for 2 of your turns", "Reverts to the enemy afterward"],
-  zombify: ["Curse one of your men — sleeps in a gravestone for 2 turns", "Rises as a zombie king that zombifies captures", "Horde zombies persist even if the king falls"],
+  zombify: ["Curse one of your men — sleeps in a gravestone for 1 turn", "Rises as a zombie king that zombifies captures", "Horde zombies persist even if the king falls"],
   barrier: ["Place on any dark square", "Blocks enemies for 2 turn cycles"],
   vengeance: ["Hidden trap — destroys the next enemy who captures your piece", "Expires after 2 of your turn cycles if unused", "Your piece survives 2 turns (blood counters), then dies"],
   hibernation: ["Sleep 2 turns (immobile)", "Wake with Awoken Bear mark", "Extra move every turn after"],

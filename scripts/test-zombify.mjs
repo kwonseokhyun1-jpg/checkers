@@ -35,11 +35,10 @@ assert.equal(curse.success, true, curse.message || "zombify should succeed");
 
 const main = board[5][0];
 assert.equal(main.isMainZombie, true);
-assert.equal(main.zombieSleepTurns, 2);
+assert.equal(main.zombieSleepTurns, 1);
 assert.equal(isZombieSleeping(main), true);
 assert.equal(main.king, false);
 
-tickEffects(board, COLORS.RED, state);
 tickEffects(board, COLORS.RED, state);
 assert.equal(main.zombieSleepTurns, 0);
 assert.equal(main.king, true, "main zombie should crown on wake");

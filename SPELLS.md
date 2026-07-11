@@ -147,5 +147,5 @@
 
 ## Legendary
 
-- **Zombify** — Curse one of your men; it sleeps in a gravestone for 2 turns, then rises as a zombie king. Any piece it captures becomes zombified. Horde zombies persist even if the king falls.
+- **Zombify** — Curse one of your men; it sleeps in a gravestone for 1 turn, then rises as a zombie king. Any piece it captures becomes zombified. Horde zombies persist even if the king falls.
 
