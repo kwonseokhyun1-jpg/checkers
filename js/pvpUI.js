@@ -64,6 +64,11 @@ import {
 } from "./userProfileModal.js";
 import { enhanceSelect } from "./customSelect.js";
 import { initPanelHelp } from "./panelHelp.js";
+import {
+  arenaHubIconSvg,
+  leaderboardHubIconSvg,
+  pvpSceneryLayer,
+} from "./pvpArt.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -176,6 +181,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     const user = getCurrentUser();
     root.innerHTML = `
       <section class="panel game-panel pvp-hub-panel">
+        ${pvpSceneryLayer("arena")}
+        <div class="pvp-panel-content">
         <header class="panel-head panel-head--compact">
           <div class="panel-head-title-row">
             <h2 class="panel-head__title">PvP</h2>
@@ -185,18 +192,19 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         </header>
         <div class="pvp-hub" role="group" aria-label="PvP destinations">
           <button type="button" class="pvp-hub-tile pvp-hub-tile--arena" id="pvp-go-arena">
-            <span class="pvp-hub-tile__icon" aria-hidden="true">⚔️</span>
+            <span class="pvp-hub-tile__icon" aria-hidden="true">${arenaHubIconSvg()}</span>
             <span class="pvp-hub-tile__title">Arena</span>
             <span class="pvp-hub-tile__desc">Host or join live matches</span>
           </button>
           <button type="button" class="pvp-hub-tile pvp-hub-tile--leaderboard" id="pvp-go-leaderboard">
-            <span class="pvp-hub-tile__icon" aria-hidden="true">🏆</span>
+            <span class="pvp-hub-tile__icon" aria-hidden="true">${leaderboardHubIconSvg()}</span>
             <span class="pvp-hub-tile__title">Leaderboard</span>
             <span class="pvp-hub-tile__desc">Global ranks &amp; spectate live games</span>
           </button>
         </div>
         ${user ? "" : `<p class="pvp-sign-in-nudge">${GUEST_SIGN_IN_NUDGE_PVP}</p>`}
         <p id="pvp-status" class="pvp-status${isError ? " pvp-status--error" : ""}" role="status">${escapeHtml(message)}</p>
+        </div>
       </section>`;
 
     bindPvpPanelHelp();
@@ -322,6 +330,8 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
 
     root.innerHTML = `
       <section class="panel game-panel pvp-leaderboard-panel">
+        ${pvpSceneryLayer("leaderboard")}
+        <div class="pvp-panel-content">
         ${pvpBackButton()}
         <header class="panel-head panel-head--compact">
           <div class="panel-head-title-row">
@@ -344,6 +354,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
           </ul>
         </div>
         <p id="pvp-leaderboard-status" class="pvp-status${isError ? " pvp-status--error" : ""}" role="status">${escapeHtml(message)}</p>
+        </div>
       </section>`;
 
     bindPvpPanelHelp();
@@ -552,7 +563,9 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
     }
 
     root.innerHTML = `
-      <section class="panel game-panel pvp-panel">
+      <section class="panel game-panel pvp-panel pvp-panel--arena">
+        ${pvpSceneryLayer("arena")}
+        <div class="pvp-panel-content">
         ${pvpBackButton()}
         ${pvpPanelHead("Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.")}
         <div class="pvp-setup-row">
@@ -599,6 +612,7 @@ export function initPvpUI({ root, getProfile, openAuthModal, onNavigateTab, onPv
         </div>
         <p id="pvp-status" class="pvp-status${isError ? " pvp-status--error" : ""}" role="status">${escapeHtml(message)}</p>
         <div id="pvp-waiting" class="pvp-waiting hidden"></div>
+        </div>
       </section>`;
 
     root.querySelector("#pvp-host")?.addEventListener("click", () => void hostRoom());
