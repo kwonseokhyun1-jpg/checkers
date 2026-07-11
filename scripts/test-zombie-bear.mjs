@@ -75,4 +75,41 @@ assert.equal(survivor?.isMainZombie, true, "fused survivor keeps main zombie");
 assert.equal(isZombieBearStack(survivor), true, "fusion grants bear to stacked zombie");
 assert.equal(isAwakeZombie(survivor), true, "fused zombie bear is awake");
 
+// Clone copies Awoken Bear and zombie horde marks (never a second main zombie).
+{
+  const board3 = Array.from({ length: 8 }, () => Array(8).fill(null));
+  const state3 = emptyState(board3);
+  const source = place(board3, 5, 0, COLORS.RED);
+  grantAwokenBear(source);
+  source.isZombie = true;
+  source.isMainZombie = true;
+  source.zombieMasterId = source.id;
+  source.zombieSleepTurns = 1;
+
+  const cloned = applyEffect(state3, COLORS.RED, "clone", [[5, 0], [4, 1]]);
+  assert.equal(cloned.success, true, cloned.message || "clone sleeping zombie bear should succeed");
+  const copy = board3[4][1];
+  assert.equal(copy?.isClone, true, "clone should mark copy");
+  assert.equal(copy?.bearAwakened, true, "clone should copy Awoken Bear");
+  assert.equal(copy?.isZombie, true, "clone should copy zombie curse");
+  assert.equal(copy?.isMainZombie, false, "clone should not create a second main zombie");
+  assert.equal(copy?.zombieMasterId, source.zombieMasterId, "clone should stay in the same horde");
+}
+
+// Revive strips zombie curse and Awoken Bear from the revived piece.
+{
+  const board4 = Array.from({ length: 8 }, () => Array(8).fill(null));
+  const state4 = emptyState(board4);
+  state4.captured[COLORS.RED] = [{ king: true }];
+
+  const revived = applyEffect(state4, COLORS.RED, "revive", [[6, 1]]);
+  assert.equal(revived.success, true, revived.message || "revive should succeed");
+  const piece = board4[6][1];
+  assert.equal(piece?.king, true, "revive should restore king status");
+  assert.equal(piece?.bearAwakened, false, "revive should strip Awoken Bear");
+  assert.equal(piece?.isZombie, false, "revive should strip zombie curse from revived piece");
+  assert.equal(piece?.isMainZombie, false, "revive should not restore main zombie");
+  assert.equal(piece?.zombieMasterId, null, "revive should clear zombie master link on revived piece");
+}
+
 console.log("Zombie Bear stacked mechanic test: OK");

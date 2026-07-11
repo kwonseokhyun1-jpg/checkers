@@ -4,7 +4,7 @@
 import {
   SIZE, COLORS, isDarkSquare, inBounds, displacePiece, resolveLandingTraps, removePiece, resolveCapture,
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
-  createPiece, grantAwokenBear, absorbZombieIntoPiece, isZombieBearStack, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
+  createPiece, grantAwokenBear, copyMarksToClone, stripZombieBearMarks, absorbZombieIntoPiece, isZombieBearStack, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified, clearPlayerZombieChain,
   tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS, MARTYR_TRAP_TURNS,
 } from "./board.js";
@@ -544,7 +544,19 @@ const EFFECTS = {
     p.rooted = 0;
     return ok();
   },
-  revive(state, color, picks) { const [r,c]=p0(picks); const cap=state.captured[color]; if(!cap?.length) return fail('Revive requires a captured piece'); if(!reviveSquareAllowed(color,r)) return fail('Can only revive on your side of the board'); if(!emptyDark(state,r,c)) return fail(); const data=cap.pop(); const p=createPiece(color,r,c,data.king); p.revivedNoCapture=true; state.board[r][c]=p; return ok('Piece revived — it cannot capture this turn.'); },
+  revive(state, color, picks) {
+    const [r, c] = p0(picks);
+    const cap = state.captured[color];
+    if (!cap?.length) return fail("Revive requires a captured piece");
+    if (!reviveSquareAllowed(color, r)) return fail("Can only revive on your side of the board");
+    if (!emptyDark(state, r, c)) return fail();
+    const data = cap.pop();
+    const p = createPiece(color, r, c, data.king);
+    stripZombieBearMarks(p);
+    p.revivedNoCapture = true;
+    state.board[r][c] = p;
+    return ok("Piece revived — it cannot capture this turn.");
+  },
   ghost_guard(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.ghostGuard=true; return ok(); },
   fortify(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); p.fortifyTurns=2; return ok(); },
   reverse_only_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.reverseOnlyTurns=2; p.noCaptureTurns=2; return ok(); },
@@ -644,7 +656,7 @@ const EFFECTS = {
       return fail("Pick an adjacent empty square");
     }
     const copy = createPiece(color, r2, c2, false);
-    copy.bearAwakened = p.bearAwakened;
+    copyMarksToClone(p, copy);
     copy.isClone = true;
     copy.cloneNoCaptureThisTurn = true;
     state.board[r2][c2] = copy;

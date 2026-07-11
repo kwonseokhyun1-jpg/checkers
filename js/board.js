@@ -161,6 +161,25 @@ export function grantAwokenBear(piece) {
   piece.hibernationTurns = 0;
 }
 
+/** Copy Awoken Bear / zombie horde marks onto a clone (never a second main zombie king). */
+export function copyMarksToClone(source, copy) {
+  copy.bearAwakened = !!source.bearAwakened;
+  if (!source.isZombie) return;
+  copy.isZombie = true;
+  copy.isMainZombie = false;
+  copy.zombieMasterId = source.zombieMasterId || source.id;
+  copy.zombieSleepTurns = source.zombieSleepTurns || 0;
+}
+
+/** Strip Awoken Bear and zombie curse from a piece (e.g. Revive). */
+export function stripZombieBearMarks(piece) {
+  piece.bearAwakened = false;
+  piece.isZombie = false;
+  piece.isMainZombie = false;
+  piece.zombieMasterId = null;
+  piece.zombieSleepTurns = 0;
+}
+
 /** True when a piece carries both the Awoken Bear mark and the zombie curse. */
 export function isZombieBearStack(piece) {
   return !!(piece?.bearAwakened && piece?.isZombie);
