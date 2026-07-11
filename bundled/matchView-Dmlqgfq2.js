@@ -1,4 +1,4 @@
-import{s as e}from"./board-CaszeLIs.js";function t(t=`Opponent`,n={}){let r=String(t).replace(/</g,``);return`
+import{c as e}from"./board-BrVclqW3.js";function t(t=`Opponent`,n={}){let r=String(t).replace(/</g,``);return`
     <div class="match-wrap match-scene">
       <button type="button" id="btn-leave-match" class="btn-text">${n.exitLabel||`← Leave match`}</button>
       <div class="game-layout">
