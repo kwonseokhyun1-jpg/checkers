@@ -997,31 +997,30 @@ export function initPvpUI({
   function localDeckIdsFromRow(row) {
     const profile = getProfile();
     const mystery = isMysteryMode(row);
-    const localColor = pvpService?.localColor;
+    const localColor = resolveLocalColor(row, getCurrentUser()?.id);
 
-    if (mystery && row?.state_json && localColor) {
-      const fromState = deckCardIdsFromMatchState(row.state_json, localColor);
-      if (Array.isArray(fromState) && fromState.length === DECK_SIZE) {
-        return fromState;
+    if (mystery) {
+      if (row?.state_json && localColor) {
+        const fromState = deckCardIdsFromMatchState(row.state_json, localColor);
+        if (Array.isArray(fromState) && fromState.length === DECK_SIZE) {
+          return fromState;
+        }
       }
+      const storedIds = localColor === COLORS.RED ? row.host_deck_ids : row.guest_deck_ids;
+      if (Array.isArray(storedIds) && !describeDeckIssue(storedIds, null)) {
+        const mainDeck = getSelectedDeck()?.cardIds;
+        if (mainDeck && deckIdsEqual(storedIds, mainDeck)) {
+          return null;
+        }
+        return storedIds;
+      }
+      return null;
     }
 
     const storedIds = localColor === COLORS.RED ? row.host_deck_ids : row.guest_deck_ids;
-    // Mystery decks include spells outside the player's collection — skip ownership checks.
-    const deckProfile = mystery ? null : profile;
-    if (Array.isArray(storedIds) && !describeDeckIssue(storedIds, deckProfile)) {
-      if (mystery) {
-        const mainDeck = getSelectedDeck()?.cardIds;
-        if (mainDeck && deckIdsEqual(storedIds, mainDeck)) {
-          const fromState =
-            localColor && deckCardIdsFromMatchState(row?.state_json, localColor);
-          if (Array.isArray(fromState) && fromState.length === DECK_SIZE) return fromState;
-          return null;
-        }
-      }
+    if (Array.isArray(storedIds) && !describeDeckIssue(storedIds, profile)) {
       return storedIds;
     }
-    if (mystery) return null;
     const deck = getSelectedDeck();
     if (deck && !describeDeckIssue(deck.cardIds, profile)) return deck.cardIds;
     return null;
@@ -1150,7 +1149,9 @@ export function initPvpUI({
       ctx.localRematchRoomId = null;
     }
 
-    const guestDeckIds = mystery ? null : (getProfile().decks.find((d) => d.id === ctx.deckId) || getSelectedDeck())?.cardIds;
+    const guestDeckIds = mystery
+      ? (getProfile().decks.find((d) => d.id === ctx.deckId) || getSelectedDeck())?.cardIds ?? null
+      : (getProfile().decks.find((d) => d.id === ctx.deckId) || getSelectedDeck())?.cardIds;
     const svc = ensurePvpService();
     const row = await svc.joinRoomById(matchId, guestDeckIds, await getDisplayName(), {
       guestPieceSkin: getEquippedPieceSkin(getProfile()),
@@ -1188,7 +1189,7 @@ export function initPvpUI({
 
       const deck = getProfile().decks.find((d) => d.id === ctx.deckId) || getSelectedDeck();
       const rematchRow = await pvpService.createRoom(
-        mystery ? null : deck.cardIds,
+        mystery ? deck?.cardIds ?? null : deck.cardIds,
         await getDisplayName(),
         {
           matchMode: ctx.finishedRow.match_mode || PVP_MODE_NORMAL,
@@ -1515,7 +1516,7 @@ export function initPvpUI({
       setStatus(mystery ? "Opening Mystery room…" : "Opening your room…");
       const svc = ensurePvpService();
       const row = await svc.createRoom(
-        mystery ? null : deck.cardIds,
+        mystery ? deck?.cardIds ?? null : deck.cardIds,
         await getDisplayName(),
         {
           matchMode,
@@ -1545,9 +1546,11 @@ export function initPvpUI({
       return;
     }
 
+    const selectedDeck = getSelectedDeck();
+    const guestDeckIds = selectedDeck?.cardIds ?? null;
+
     if (!mystery) {
-      const deck = getSelectedDeck();
-      const issue = describeDeckIssue(deck?.cardIds ?? [], getProfile());
+      const issue = describeDeckIssue(guestDeckIds ?? [], getProfile());
       if (issue) {
         setStatus(issue, true);
         return;
@@ -1561,7 +1564,6 @@ export function initPvpUI({
       setStatus(mystery ? "Joining Mystery match…" : "Joining match…");
       stopOpenRoomsSync();
       const svc = ensurePvpService();
-      const guestDeckIds = mystery ? null : getSelectedDeck().cardIds;
       const guestPieceSkin = getEquippedPieceSkin(getProfile());
       const row = await svc.joinRoomById(matchId, guestDeckIds, await getDisplayName(), {
         guestPieceSkin,

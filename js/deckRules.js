@@ -112,6 +112,13 @@ export function deckCardIdsFromMatchState(state, color) {
   return ids.length ? ids : null;
 }
 
+/** Build options that exclude a known 30-card list from a mystery roll. */
+export function mysteryExcludeOptions(deckIds) {
+  return Array.isArray(deckIds) && deckIds.length === DECK_SIZE
+    ? { excludeDeckIds: deckIds }
+    : {};
+}
+
 /** Random deck from the full playable pool — no collection ownership check. */
 export function buildMysteryDeck(options = {}) {
   const { excludeDeckIds = null, maxAttempts = 12 } = options;
