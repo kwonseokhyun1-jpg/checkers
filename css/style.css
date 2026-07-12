@@ -6384,10 +6384,30 @@ body.play-sub-active .play-pvp-root {
 .social-player-row__name {
   font-weight: 700;
   font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .social-player-row__handle {
   font-size: 0.8rem;
   color: rgba(232, 236, 244, 0.55);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.social-player-row .social-add-btn {
+  width: auto;
+  margin-top: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+}
+.social-player-row .btn-text {
+  margin-bottom: 0;
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 0.85rem;
 }
 .social-empty {
   padding: 0.75rem 0;
@@ -6398,6 +6418,7 @@ body.play-sub-active .play-pvp-root {
   color: var(--accent-red, #e85d5d);
 }
 .social-tag {
+  flex-shrink: 0;
   font-size: 0.8rem;
   color: rgba(232, 236, 244, 0.55);
 }
