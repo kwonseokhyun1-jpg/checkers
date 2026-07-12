@@ -365,6 +365,17 @@
   );
 }
 
+.square.scatter-source-preview {
+  box-shadow: inset 0 0 0 2px rgba(56, 189, 248, 0.7);
+  background-image: repeating-linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.14) 0,
+    rgba(56, 189, 248, 0.14) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
 /* Sanctuary/darkness zones use ::after for overlays — restore move dots on playable squares. */
 .square.playable.target.has-sanctuary::after,
 .square.playable.target.has-darkness-zone::after,
