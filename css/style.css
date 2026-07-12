@@ -8997,6 +8997,10 @@ body.auth-gate-active .game-shell {
 body.tutorial-match-active #view-match:not(.hidden) {
   padding-bottom: var(--tutorial-match-inset, 0px);
 }
+body.tutorial-match-active .match-history-footer,
+body.tutorial-match-active .match-log {
+  display: none;
+}
 body.tutorial-match-active.card-preview-open #view-match:not(.hidden),
 body.tutorial-match-active:has(.tutorial-match-overlay--card-top) #view-match:not(.hidden) {
   padding-bottom: 0;
