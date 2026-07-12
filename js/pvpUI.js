@@ -14,8 +14,8 @@ import {
   validateDeck,
 } from "./deckRules.js";
 import { COLORS } from "./board.js";
-import { MatchSession, isPvpTerminalBoard, isMutualElimination } from "./match.js";
-import { getMatchHtml } from "./matchView.js";
+import { isPvpTerminalBoard, isMutualElimination } from "./match.js";
+import { loadMatchChunk } from "./lazyChunks.js";
 import {
   enterMatchMode,
   exitMatchMode,
@@ -403,6 +403,7 @@ export function initPvpUI({
       renderLeaderboard("Could not open the match view.", true);
       return;
     }
+    const { MatchSession, getMatchHtml } = await loadMatchChunk();
     matchContainer.innerHTML = getMatchHtml(guestName, {
       exitLabel: "← Leave spectate",
       pvp: true,
@@ -1351,6 +1352,7 @@ export function initPvpUI({
       return;
     }
 
+    const { MatchSession, getMatchHtml } = await loadMatchChunk();
     matchContainer.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP", pvp: true });
 
     pvpService._lastVersion = row.version ?? 0;
