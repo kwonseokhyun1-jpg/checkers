@@ -160,8 +160,8 @@ const TAB_LABELS = {
   settings: "Settings",
 };
 const MAIN_TABS = new Set(Object.keys(TAB_LABELS));
-/** @type {'adventure'|'arena'|'leaderboard'} */
-let activePlayTab = "adventure";
+/** @type {'adventure'|'arena'|'leaderboard'|null} */
+let activePlayTab = null;
 /** @type {'adventure'|'arena'|'leaderboard'|null} */
 let pendingPlaySubTab = null;
 let bypassPlayPvpGate = false;
@@ -211,6 +211,7 @@ function ensurePvpUI() {
         openAuthModal: () => authUI?.open("signin", { forced: true }),
         onNavigateTab: showTab,
         onNavigatePlayTab: showPlayTab,
+        onNavigatePlayMenu: showPlayMenu,
         onOpenDeckEdit: openDeckEdit,
       });
       return pvpController;
@@ -352,6 +353,7 @@ function showUnlockHint(message = QUESTS_PVP_UNLOCK_MESSAGE, title = "Locked") {
 
 function syncMainTabShellState() {
   document.body.classList.toggle("main-tab-active", MAIN_TABS.has(activeTab));
+  document.body.classList.toggle("play-sub-active", activeTab === "play" && activePlayTab !== null);
   document.body.classList.toggle("adventure-active", activeTab === "play" && activePlayTab === "adventure");
 }
 
@@ -364,6 +366,17 @@ function syncPlaySubtabUnlockState() {
     btn.setAttribute("aria-disabled", unlocked ? "false" : "true");
     btn.title = unlocked ? "" : questsPvpUnlockMessage("PvP");
   }
+}
+
+function showPlayMenu() {
+  activePlayTab = null;
+  $("play-menu")?.classList.remove("hidden");
+  document.querySelectorAll(".play-tab-panel").forEach((panel) => {
+    panel.classList.add("hidden");
+    panel.hidden = true;
+  });
+  syncMainTabShellState();
+  syncPlaySubtabUnlockState();
 }
 
 async function showPlayTab(tab) {
@@ -393,6 +406,7 @@ async function showPlayTab(tab) {
   }
 
   activePlayTab = tab;
+  $("play-menu")?.classList.add("hidden");
   document.querySelectorAll(".play-tab").forEach((btn) => {
     const on = btn.dataset.playTab === tab;
     btn.classList.toggle("active", on);
@@ -574,9 +588,13 @@ async function showTab(tab) {
     void renderQuests();
   }
   if (tab === "play") {
-    const sub = pendingPlaySubTab || activePlayTab || "adventure";
+    const sub = pendingPlaySubTab;
     pendingPlaySubTab = null;
-    showPlayTab(sub);
+    if (sub) {
+      void showPlayTab(sub);
+    } else {
+      showPlayMenu();
+    }
   }
   if (tab === "social") {
     showSocialLoading();
@@ -2035,14 +2053,10 @@ function fitAdventureMapCanvasHeight(map) {
     const visualBottom = maxY - mapRect.top;
     let height = Math.ceil(Math.max(visualBottom + bottomOffset, span + topHeadroom + bottomOffset));
 
-    const scene = map.closest(".adventure-map-scene");
-    if (scene && tabletMq.matches) {
-      height = Math.max(height, scene.clientHeight);
-    }
-
     map.style.minHeight = `${height}px`;
     map.style.height = `${height}px`;
 
+    const scene = map.closest(".adventure-map-scene");
     if (scene) {
       const maxScrollTop = Math.max(0, map.offsetHeight - scene.clientHeight);
       if (scene.scrollTop > maxScrollTop) scene.scrollTop = maxScrollTop;
@@ -2784,6 +2798,14 @@ function init() {
         return;
       }
       void showPlayTab(btn.dataset.playTab);
+    });
+  });
+
+  document.querySelectorAll(".play-sub-back").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      void hapticLight();
+      AudioSfx.tap();
+      showPlayMenu();
     });
   });
 
