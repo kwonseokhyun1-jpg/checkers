@@ -597,13 +597,17 @@ async function showTab(tab) {
     }
   }
   if (tab === "social") {
-    showSocialLoading();
-    void ensureSocialUI()
-      .then((c) => c?.render())
-      .catch((err) => {
-        console.error("[Social] init failed", err);
-        showSocialError();
-      });
+    if (socialController) {
+      socialController.refresh?.() ?? socialController.render();
+    } else {
+      showSocialLoading();
+      void ensureSocialUI()
+        .then((c) => c?.render())
+        .catch((err) => {
+          console.error("[Social] init failed", err);
+          showSocialError();
+        });
+    }
   }
   notifyMetaTutorial("tab-changed", { tab });
   notifyUnlockTutorial("tab-changed", { tab });
@@ -2932,7 +2936,7 @@ function init() {
         if (activeTab === "profile") void renderProfile();
         if (activeTab === "quests") void renderQuests();
         if (activeTab === "play") void ensurePvpUI().then((c) => c?.render({ resume: true }));
-        if (activeTab === "social") void ensureSocialUI().then((c) => c?.render());
+        if (activeTab === "social") void ensureSocialUI().then((c) => c?.refresh?.() ?? c?.render());
       });
       void ensurePvpUI().then((c) => c?.render({ resume: true }));
       void maybeStartInteractiveTutorial();
