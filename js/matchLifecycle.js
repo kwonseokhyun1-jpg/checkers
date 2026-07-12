@@ -60,7 +60,13 @@ export function consumeLeaveConfirmSkip() {
 
 function cleanupOrphanMatchDom() {
   const matchView = document.getElementById("view-match");
-  if (matchView?.classList.contains("hidden") && matchView.innerHTML.trim()) {
+  if (matchView && !matchView.classList.contains("hidden") && matchView.innerHTML.trim()) {
+    const leaveBtn = matchView.querySelector("#btn-leave-match");
+    if (!isVisibleShellElement(leaveBtn)) {
+      matchView.innerHTML = "";
+      matchView.classList.add("hidden");
+    }
+  } else if (matchView?.classList.contains("hidden") && matchView.innerHTML.trim()) {
     matchView.innerHTML = "";
   }
   const pvpRoot = document.getElementById("play-arena-root");

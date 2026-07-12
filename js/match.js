@@ -954,6 +954,19 @@ export class MatchSession {
     const finalState = nextState;
     const preserveLocalBoard = this.isPvp && this.localPvpStateAheadOf(nextState);
     const prevLocalPvpBoard = preserveLocalBoard ? this._captureLocalPvpBoardSnapshot() : null;
+    const preserveSelection =
+      this.isPvp &&
+      this.selectedSquare &&
+      this.state?.turn === this.localColor &&
+      !preserveLocalBoard &&
+      JSON.stringify(this.state?.board) === JSON.stringify(nextState.board);
+    const savedSelection = preserveSelection ? [...this.selectedSquare] : null;
+    const savedValidMoves = preserveSelection ? this.validMoves.map((m) => ({
+      ...m,
+      from: [...m.from],
+      to: [...m.to],
+      captures: m.captures?.map((c) => [...c]) ?? [],
+    })) : [];
     const prevLocalPvpDeck = this.isPvp
       ? {
           turnNumber: this.state?.turnNumber?.[this.localColor] ?? 0,
@@ -996,6 +1009,10 @@ export class MatchSession {
     this.selectedSquare = null;
     this.selectedColumn = null;
     this.selectedRow = null;
+    if (savedSelection) {
+      this.selectedSquare = savedSelection;
+      this.validMoves = savedValidMoves;
+    }
     this.endDrag();
     if (this.isPvp && !this.state.gameOver && this.state.turn === this.localColor) {
       this._beginLocalPvpTurnIfNeeded(this.state, { prevTurn });
