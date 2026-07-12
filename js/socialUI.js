@@ -3,6 +3,14 @@ import { GUEST_SIGN_IN_NUDGE_SAVE } from "./guestMode.js";
 import { normalizeCosmetics } from "./cosmetics.js";
 import { buildRoomHostAvatarHtml, openPublicProfileModal } from "./userProfileModal.js";
 import { initPanelHelp } from "./panelHelp.js";
+import {
+  sendFriendRequest,
+  acceptFriendRequest,
+  declineFriendRequest,
+  cancelFriendRequest,
+  fetchIncomingFriendRequests,
+  fetchOutgoingFriendRequests,
+} from "./friendRequests.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -26,6 +34,21 @@ function normalizeFriends(profile) {
   return profile.friends;
 }
 
+function buildRequestStateMap(incoming, outgoing) {
+  const map = new Map();
+  for (const req of incoming) {
+    const entry = map.get(req.from_user_id) || {};
+    entry.incoming = req;
+    map.set(req.from_user_id, entry);
+  }
+  for (const req of outgoing) {
+    const entry = map.get(req.to_user_id) || {};
+    entry.outgoing = req;
+    map.set(req.to_user_id, entry);
+  }
+  return map;
+}
+
 /**
  * @param {object} opts
  * @param {HTMLElement} opts.root
@@ -38,6 +61,9 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
 
   let searchTimer = null;
   let searchResults = [];
+  let incomingRequests = [];
+  let outgoingRequests = [];
+  let requestStatesByUserId = new Map();
 
   function setStatus(text, isError = false) {
     const el = root.querySelector("#social-status");
@@ -51,21 +77,100 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
     return friends.includes(userId);
   }
 
-  function addFriend(userId) {
+  async function refreshRequests() {
     const user = getCurrentUser();
     if (!user) {
-      openAuthModal();
+      incomingRequests = [];
+      outgoingRequests = [];
+      requestStatesByUserId = new Map();
       return;
     }
-    if (!userId || userId === user.id) return;
+    try {
+      [incomingRequests, outgoingRequests] = await Promise.all([
+        fetchIncomingFriendRequests(),
+        fetchOutgoingFriendRequests(),
+      ]);
+      requestStatesByUserId = buildRequestStateMap(incomingRequests, outgoingRequests);
+    } catch (e) {
+      setStatus(e?.message || "Could not load friend requests.", true);
+    }
+  }
+
+  function addFriendLocally(userId) {
     const profile = getProfile();
     const friends = normalizeFriends(profile);
     if (friends.includes(userId)) return;
     profile.friends = [...friends, userId];
     saveProfile(profile);
-    setStatus("Friend added.");
-    void renderFriendsList();
-    renderSearchResults();
+  }
+
+  async function sendRequest(toUserId) {
+    const user = getCurrentUser();
+    if (!user) {
+      openAuthModal();
+      return;
+    }
+    if (!toUserId || toUserId === user.id) return;
+    try {
+      await sendFriendRequest(toUserId);
+      setStatus("Friend request sent.");
+      await refreshRequests();
+      renderSearchResults();
+    } catch (e) {
+      setStatus(e?.message || "Could not send friend request.", true);
+    }
+  }
+
+  async function acceptRequest(requestId, fromUserId) {
+    const user = getCurrentUser();
+    if (!user) {
+      openAuthModal();
+      return;
+    }
+    try {
+      await acceptFriendRequest(requestId);
+      addFriendLocally(fromUserId);
+      setStatus("Friend request accepted.");
+      await refreshRequests();
+      void renderInbox();
+      void renderFriendsList();
+      renderSearchResults();
+    } catch (e) {
+      setStatus(e?.message || "Could not accept friend request.", true);
+    }
+  }
+
+  async function declineRequest(requestId) {
+    const user = getCurrentUser();
+    if (!user) {
+      openAuthModal();
+      return;
+    }
+    try {
+      await declineFriendRequest(requestId);
+      setStatus("Friend request declined.");
+      await refreshRequests();
+      void renderInbox();
+      renderSearchResults();
+    } catch (e) {
+      setStatus(e?.message || "Could not decline friend request.", true);
+    }
+  }
+
+  async function cancelRequest(requestId) {
+    const user = getCurrentUser();
+    if (!user) {
+      openAuthModal();
+      return;
+    }
+    try {
+      await cancelFriendRequest(requestId);
+      setStatus("Friend request cancelled.");
+      await refreshRequests();
+      renderSearchResults();
+    } catch (e) {
+      setStatus(e?.message || "Could not cancel friend request.", true);
+    }
   }
 
   function removeFriend(userId) {
@@ -76,6 +181,61 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
     setStatus("Friend removed.");
     void renderFriendsList();
     renderSearchResults();
+  }
+
+  function renderPlayerAction(row, user) {
+    const self = user?.id === row.id;
+    const friend = isFriend(row.id);
+    const state = requestStatesByUserId.get(row.id);
+
+    if (self) {
+      return `<span class="social-tag">You</span>`;
+    }
+    if (friend) {
+      return `<button type="button" class="btn-text social-remove-btn" data-remove-friend="${escapeHtml(row.id)}">Remove</button>`;
+    }
+    if (state?.incoming) {
+      return `<div class="social-request-actions">
+        <button type="button" class="btn-secondary social-accept-btn" data-accept-request="${escapeHtml(state.incoming.id)}" data-from-user="${escapeHtml(row.id)}">Accept</button>
+        <button type="button" class="btn-text social-decline-btn" data-decline-request="${escapeHtml(state.incoming.id)}">Deny</button>
+      </div>`;
+    }
+    if (state?.outgoing) {
+      return `<button type="button" class="btn-text social-cancel-btn" data-cancel-request="${escapeHtml(state.outgoing.id)}">Request sent</button>`;
+    }
+    return `<button type="button" class="btn-secondary social-send-btn" data-send-request="${escapeHtml(row.id)}">Send friend request</button>`;
+  }
+
+  function bindProfileAvatars(container) {
+    container?.querySelectorAll("[data-view-profile]").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const userId = btn.getAttribute("data-view-profile");
+        const fallbackName = btn.getAttribute("data-profile-name") || "Player";
+        if (userId) void openPublicProfileModal(userId, { fallbackName });
+      });
+    });
+  }
+
+  function bindRequestActions(container) {
+    container?.querySelectorAll("[data-send-request]").forEach((btn) => {
+      btn.addEventListener("click", () => void sendRequest(btn.getAttribute("data-send-request")));
+    });
+    container?.querySelectorAll("[data-accept-request]").forEach((btn) => {
+      btn.addEventListener("click", () =>
+        void acceptRequest(btn.getAttribute("data-accept-request"), btn.getAttribute("data-from-user"))
+      );
+    });
+    container?.querySelectorAll("[data-decline-request]").forEach((btn) => {
+      btn.addEventListener("click", () => void declineRequest(btn.getAttribute("data-decline-request")));
+    });
+    container?.querySelectorAll("[data-cancel-request]").forEach((btn) => {
+      btn.addEventListener("click", () => void cancelRequest(btn.getAttribute("data-cancel-request")));
+    });
+    container?.querySelectorAll("[data-remove-friend]").forEach((btn) => {
+      btn.addEventListener("click", () => removeFriend(btn.getAttribute("data-remove-friend")));
+    });
   }
 
   function renderSearchResults() {
@@ -94,16 +254,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
           clickable: true,
           userId: row.id,
         });
-        const self = user?.id === row.id;
-        const friend = isFriend(row.id);
-        let action = "";
-        if (self) {
-          action = `<span class="social-tag">You</span>`;
-        } else if (friend) {
-          action = `<button type="button" class="btn-text social-remove-btn" data-remove-friend="${escapeHtml(row.id)}">Remove</button>`;
-        } else {
-          action = `<button type="button" class="btn-secondary social-add-btn" data-add-friend="${escapeHtml(row.id)}">Add friend</button>`;
-        }
+        const action = renderPlayerAction(row, user);
         return `<li class="social-player-row">
           ${avatar}
           <div class="social-player-row__body">
@@ -115,21 +266,54 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
       })
       .join("");
 
-    list.querySelectorAll("[data-add-friend]").forEach((btn) => {
-      btn.addEventListener("click", () => addFriend(btn.getAttribute("data-add-friend")));
-    });
-    list.querySelectorAll("[data-remove-friend]").forEach((btn) => {
-      btn.addEventListener("click", () => removeFriend(btn.getAttribute("data-remove-friend")));
-    });
-    list.querySelectorAll("[data-view-profile]").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const userId = btn.getAttribute("data-view-profile");
-        const fallbackName = btn.getAttribute("data-profile-name") || "Player";
-        if (userId) void openPublicProfileModal(userId, { fallbackName });
-      });
-    });
+    bindRequestActions(list);
+    bindProfileAvatars(list);
+  }
+
+  async function renderInbox() {
+    const list = root.querySelector("#social-inbox-list");
+    if (!list) return;
+    const user = getCurrentUser();
+    if (!user) {
+      list.innerHTML = `<li class="social-empty">Sign in to see friend requests.</li>`;
+      return;
+    }
+    if (!incomingRequests.length) {
+      list.innerHTML = `<li class="social-empty">No pending friend requests.</li>`;
+      return;
+    }
+
+    list.innerHTML = `<li class="social-empty">Loading requests…</li>`;
+    try {
+      const rows = await Promise.all(incomingRequests.map((req) => fetchProfileRow(req.from_user_id)));
+      list.innerHTML = incomingRequests
+        .map((req, index) => {
+          const row = rows[index];
+          const name = row ? displayNameFromRow(row) : "Player";
+          const cosmetics = normalizeCosmetics(row?.profile_json?.cosmetics);
+          const avatar = buildRoomHostAvatarHtml(cosmetics, name, {
+            clickable: true,
+            userId: req.from_user_id,
+          });
+          return `<li class="social-player-row">
+            ${avatar}
+            <div class="social-player-row__body">
+              <span class="social-player-row__name">${escapeHtml(name)}</span>
+              <span class="social-player-row__handle">@${escapeHtml(row?.username || "player")}</span>
+            </div>
+            <div class="social-request-actions">
+              <button type="button" class="btn-secondary social-accept-btn" data-accept-request="${escapeHtml(req.id)}" data-from-user="${escapeHtml(req.from_user_id)}">Accept</button>
+              <button type="button" class="btn-text social-decline-btn" data-decline-request="${escapeHtml(req.id)}">Deny</button>
+            </div>
+          </li>`;
+        })
+        .join("");
+
+      bindRequestActions(list);
+      bindProfileAvatars(list);
+    } catch {
+      list.innerHTML = `<li class="social-empty social-empty--error">Could not load friend requests.</li>`;
+    }
   }
 
   async function renderFriendsList() {
@@ -142,7 +326,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
       return;
     }
     if (!friends.length) {
-      list.innerHTML = `<li class="social-empty">No friends yet — search above to add players.</li>`;
+      list.innerHTML = `<li class="social-empty">No friends yet — accept requests or search above.</li>`;
       return;
     }
 
@@ -184,15 +368,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
           if (userId) void openPublicProfileModal(userId, { fallbackName });
         });
       });
-      list.querySelectorAll("[data-view-profile]").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const userId = btn.getAttribute("data-view-profile");
-          const fallbackName = btn.getAttribute("data-profile-name") || "Player";
-          if (userId) void openPublicProfileModal(userId, { fallbackName });
-        });
-      });
+      bindProfileAvatars(list);
     } catch {
       list.innerHTML = `<li class="social-empty social-empty--error">Could not load friends.</li>`;
     }
@@ -258,13 +434,15 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
     );
   }
 
-  function refresh() {
+  async function refresh() {
     if (!root.querySelector(".social-panel")) {
       render();
       return;
     }
     syncGuestNudge();
+    await refreshRequests();
     renderSearchResults();
+    void renderInbox();
     void renderFriendsList();
   }
 
@@ -277,7 +455,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
             <h2 class="panel-head__title">Social</h2>
             <button type="button" id="social-help-btn" class="panel-help-btn" aria-label="How Social works" aria-expanded="false" aria-controls="social-help-desc">?</button>
           </div>
-          <p id="social-help-desc" class="panel-head__desc" hidden>Search players by username or display name, add them as friends, and view their public profiles. Sign in to save your friends list.</p>
+          <p id="social-help-desc" class="panel-head__desc" hidden>Search players by username or display name, send friend requests, and accept or deny requests in your inbox. Sign in to save your friends list.</p>
         </header>
         ${
           user
@@ -292,6 +470,8 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
           </div>
         </div>
         <p id="social-status" class="pvp-status social-status" role="status"></p>
+        <h3 class="social-section-title">Friend requests</h3>
+        <ul id="social-inbox-list" class="social-player-list" aria-live="polite"></ul>
         <h3 class="social-section-title">Search results</h3>
         <ul id="social-search-results" class="social-player-list" aria-live="polite"></ul>
         <h3 class="social-section-title">Friends</h3>
@@ -300,8 +480,11 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
 
     bindPanel();
     searchResults = [];
-    renderSearchResults();
-    void renderFriendsList();
+    void refreshRequests().then(() => {
+      renderSearchResults();
+      void renderInbox();
+      void renderFriendsList();
+    });
   }
 
   return { render, refresh };
