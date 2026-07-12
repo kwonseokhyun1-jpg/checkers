@@ -1,4 +1,4 @@
-import{_ as e,a as t,b as n,c as r,g as i,i as a,m as o,n as s,o as c,r as l,u,y as d}from"./auth-DHasSuFN.js";import{V as f,_ as p,g as m,m as h,q as g}from"./index-BX4eR634.js";var _=`https://sites.google.com/view/arcane-checkers/home`;function v(e){return String(e??``).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`)}function y(){let e=m();return`
+import{_ as e,a as t,b as n,c as r,g as i,i as a,m as o,n as s,o as c,r as l,u,y as d}from"./auth-DU_H4sep.js";import{V as f,_ as p,g as m,m as h,q as g}from"./index-CzoPGxjE.js";var _=`https://sites.google.com/view/arcane-checkers/home`;function v(e){return String(e??``).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`)}function y(){let e=m();return`
     <div class="settings-panel">
       <section class="settings-group" aria-labelledby="settings-audio-heading">
         <h4 id="settings-audio-heading" class="settings-group__title">Audio</h4>

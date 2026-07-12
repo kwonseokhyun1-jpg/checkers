@@ -1,4 +1,4 @@
-import{c as e}from"./board-BNtm-Dqd.js";function t(t=`Opponent`,n={}){let r=String(t).replace(/</g,``),i=n.exitLabel||`← Leave match`,a=!!n.spectator,o=a?String(n.localName||`Red`).replace(/</g,``):`You`,s=a?` match-wrap--spectator`:``,c=a?`<p class="hand-hidden-note">Hands hidden in spectate mode</p>`:``;return`
+import{c as e}from"./board-CNEVxRXl.js";function t(t=`Opponent`,n={}){let r=String(t).replace(/</g,``),i=n.exitLabel||`← Leave match`,a=!!n.spectator,o=a?String(n.localName||`Red`).replace(/</g,``):`You`,s=a?` match-wrap--spectator`:``,c=a?`<p class="hand-hidden-note">Hands hidden in spectate mode</p>`:``;return`
     <div class="match-wrap match-scene${s}">
       <button type="button" id="btn-leave-match" class="btn-text">${i}</button>
       ${a?`<p class="spectate-banner" role="status">Spectating — use move history below to review plays</p>`:``}
