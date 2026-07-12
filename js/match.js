@@ -1137,7 +1137,10 @@ export class MatchSession {
         const pendingRow = this.flushPendingPvpRow();
         if (pendingRow && this.onPvpPendingRow) {
           this.onPvpPendingRow(pendingRow);
-        } else if (pendingRow?.state_json) {
+        } else if (
+          pendingRow?.state_json &&
+          !this.localPvpStateAheadOf(pendingRow.state_json)
+        ) {
           this.importState(pendingRow.state_json);
         }
         if (this._syncDirty) void this._flushPvpState();
