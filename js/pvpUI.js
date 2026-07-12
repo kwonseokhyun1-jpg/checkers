@@ -146,11 +146,34 @@ export function initPvpUI({
     unsubscribeLiveMatches = null;
   }
 
+  function getMatchViewEl() {
+    return document.getElementById("view-match");
+  }
+
+  /** Full-screen match shell — same presentation as Adventure (#view-match). */
+  function showFullScreenMatchShell() {
+    document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
+    const root = getMatchViewEl();
+    root?.classList.remove("hidden");
+    if (root) root.innerHTML = "";
+    return root;
+  }
+
+  function clearFullScreenMatchShell() {
+    const root = getMatchViewEl();
+    if (root) {
+      root.innerHTML = "";
+      root.classList.add("hidden");
+    }
+    arenaRoot.querySelector("#pvp-match-root")?.remove();
+  }
+
   function returnToPvpShell() {
     stopRematchPoll();
     pvpGameOverCtx = null;
     spectating = false;
     pvpScreen = "arena";
+    clearFullScreenMatchShell();
     onNavigatePlayTab?.("arena");
     onNavigateTab?.("play");
     renderLobby();
@@ -374,10 +397,16 @@ export function initPvpUI({
     const hostCosmetics = cosmeticsWithPieceSkin(hostCosmeticsBase, row.host_piece_skin);
     const guestCosmetics = cosmeticsWithPieceSkin(guestCosmeticsBase, row.guest_piece_skin);
 
-    arenaRoot.innerHTML = "";
+    const matchContainer = showFullScreenMatchShell();
+    if (!matchContainer) {
+      matchLaunching = false;
+      spectating = false;
+      renderLeaderboard("Could not open the match view.", true);
+      return;
+    }
     const matchRoot = document.createElement("div");
     matchRoot.id = "pvp-match-root";
-    arenaRoot.appendChild(matchRoot);
+    matchContainer.appendChild(matchRoot);
     matchRoot.innerHTML = getMatchHtml(guestName, {
       exitLabel: "← Leave spectate",
       pvp: true,
@@ -402,6 +431,7 @@ export function initPvpUI({
         setAudioMode("hub");
         pvpService?.dispose();
         pvpService = null;
+        clearFullScreenMatchShell();
         pvpScreen = "leaderboard";
         onNavigatePlayTab?.("leaderboard");
         onNavigateTab?.("play");
@@ -1199,7 +1229,7 @@ export function initPvpUI({
       clearActivePvpMatchId();
       pvpService?.dispose();
       pvpService = null;
-      arenaRoot.innerHTML = "";
+      clearFullScreenMatchShell();
       onNavigateTab?.("deck");
       if (deckId) onOpenDeckEdit?.(deckId);
       return;
@@ -1296,8 +1326,16 @@ export function initPvpUI({
       deckId: selectedDeck?.id || profile.selectedDeckId,
     };
 
+    const matchContainer = showFullScreenMatchShell();
+    if (!matchContainer) {
+      matchLaunching = false;
+      setStatus("Could not open the match view.", true);
+      renderLobby();
+      return;
+    }
+
     if (!resume) {
-      await showPvpMatchLoading(arenaRoot, {
+      await showPvpMatchLoading(matchContainer, {
         local: { username: localName, cosmetics: localCosmetics },
         opponent: { username: opponentName, cosmetics: opponentCosmetics },
       });
@@ -1305,14 +1343,15 @@ export function initPvpUI({
 
     if (!pvpService || row.status !== "active" || !row.state_json) {
       matchLaunching = false;
+      clearFullScreenMatchShell();
       if (!matchSession) renderLobby();
       return;
     }
 
-    arenaRoot.innerHTML = "";
+    matchContainer.innerHTML = "";
     const matchRoot = document.createElement("div");
     matchRoot.id = "pvp-match-root";
-    arenaRoot.appendChild(matchRoot);
+    matchContainer.appendChild(matchRoot);
     matchRoot.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP", pvp: true });
 
     pvpService._lastVersion = row.version ?? 0;
@@ -1333,6 +1372,7 @@ export function initPvpUI({
           clearActivePvpMatchId();
           pvpService?.dispose();
           pvpService = null;
+          clearFullScreenMatchShell();
           const tab = consumePendingNavigationTab();
           if (tab) onNavigateTab?.(tab);
           else returnToPvpShell();
@@ -1415,7 +1455,7 @@ export function initPvpUI({
     } catch (err) {
       matchSession = null;
       matchLaunching = false;
-      matchRoot.remove();
+      clearFullScreenMatchShell();
       renderLobby();
       throw err;
     }
@@ -1643,7 +1683,7 @@ export function initPvpUI({
     if (!matchSession || matchLaunching || isLiveMatchUiVisible()) return false;
     matchSession = null;
     exitMatchMode({ clearCheckpoint: false });
-    arenaRoot.querySelector("#pvp-match-root")?.remove();
+    clearFullScreenMatchShell();
     return true;
   }
 

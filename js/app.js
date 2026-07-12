@@ -531,25 +531,22 @@ async function showTab(tab) {
   reconcileMatchShellState();
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
-    const switchingToActivePvpMatch = tab === "play" && document.getElementById("pvp-match-root");
-    if (!switchingToActivePvpMatch) {
-      const label = TAB_LABELS[tab] || tab;
-      if (
-        !(await mobileConfirm(`Leave your current match to open ${label}?`, {
-          title: "Leave match?",
-          confirmLabel: "Leave",
-          cancelLabel: "Stay",
-          destructive: true,
-        }))
-      ) {
-        return;
-      }
-      setPendingNavigationTab(tab);
-      if (tab === "play") pendingPlaySubTab = "arena";
-      armLeaveConfirmSkip();
-      document.querySelector("#btn-leave-match")?.click();
+    const label = TAB_LABELS[tab] || tab;
+    if (
+      !(await mobileConfirm(`Leave your current match to open ${label}?`, {
+        title: "Leave match?",
+        confirmLabel: "Leave",
+        cancelLabel: "Stay",
+        destructive: true,
+      }))
+    ) {
       return;
     }
+    setPendingNavigationTab(tab);
+    if (tab === "play") pendingPlaySubTab = "arena";
+    armLeaveConfirmSkip();
+    document.querySelector("#btn-leave-match")?.click();
+    return;
   }
   if (
     deckSubview === "edit" &&
