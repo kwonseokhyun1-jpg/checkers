@@ -246,6 +246,16 @@ export function applySquareSpellFx(square, visual, animRole, ctx) {
     if (from && from[0] === row && from[1] === col) square.classList.add("spell-fx-swap-a");
     if (to && to[0] === row && to[1] === col) square.classList.add("spell-fx-swap-b");
   }
+  if (visual === "scatter" && from) {
+    if (from[0] === row && from[1] === col) {
+      square.classList.add("spell-fx-scatter-center");
+    } else {
+      const dr = Math.sign(row - from[0]);
+      const dc = Math.sign(col - from[1]);
+      square.style.setProperty("--scatter-x", `${dc * 4}px`);
+      square.style.setProperty("--scatter-y", `${dr * 4}px`);
+    }
+  }
 }
 
 function coinFaceStarSvg() {

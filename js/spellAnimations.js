@@ -200,6 +200,21 @@ export function buildAnimSpec(card, picks = [], _color, extra = {}) {
     }, effect);
   }
 
+  if (effect === "scatter" && p.length) {
+    const center = p[0];
+    const sources = extra.scatterSourceCells || [];
+    const squares = uniqueSquares([center, ...sources]);
+    return finishSpec({
+      type: "multi",
+      visual: "scatter",
+      duration: Math.max(MIN_SPELL_ANIM_MS, 1200),
+      label,
+      squares,
+      from: center,
+      to: center,
+    }, effect);
+  }
+
   if (effect === "trickster" && extra.tricksterSquares?.length) {
     return finishSpec({
       type: "swap",

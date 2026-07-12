@@ -58,7 +58,7 @@ import {
 } from "./spellFx.js";
 import { pickCoinFlipVictim, pickRandomTeleportDestination } from "./cardEffectHandlers.js";
 import { boardFxDuration } from "./boardFx.js";
-import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells } from "./cardEffectHandlers.js";
+import { planTrickster, getChainLightningAnimSquares, getSanctuaryCells, getDarknessZoneCells, getScatterSourceCells } from "./cardEffectHandlers.js";
 import { isInDarknessZone, isPieceHiddenByDarknessFromViewer } from "./gameMeta.js";
 import {
   saveMatchCheckpoint,
@@ -1104,6 +1104,7 @@ export class MatchSession {
     if (extra.pyromancySquares?.length) out.pyromancySquares = this.copyPvpSquares(extra.pyromancySquares);
     if (extra.sanctuaryCells?.length) out.sanctuaryCells = this.copyPvpSquares(extra.sanctuaryCells);
     if (extra.darknessCells?.length) out.darknessCells = this.copyPvpSquares(extra.darknessCells);
+    if (extra.scatterSourceCells?.length) out.scatterSourceCells = this.copyPvpSquares(extra.scatterSourceCells);
     if (extra.tricksterSquares?.length) out.tricksterSquares = this.copyPvpSquares(extra.tricksterSquares);
     if (extra.backstabTo) out.backstabTo = [...extra.backstabTo];
     if (extra.cryoShatter != null) out.cryoShatter = extra.cryoShatter;
@@ -1126,6 +1127,7 @@ export class MatchSession {
       ...(spell.pyromancySquares ? { pyromancySquares: spell.pyromancySquares } : {}),
       ...(spell.sanctuaryCells ? { sanctuaryCells: spell.sanctuaryCells } : {}),
       ...(spell.darknessCells ? { darknessCells: spell.darknessCells } : {}),
+      ...(spell.scatterSourceCells ? { scatterSourceCells: spell.scatterSourceCells } : {}),
       ...(spell.tricksterSquares ? { tricksterSquares: spell.tricksterSquares } : {}),
       ...(spell.backstabTo ? { backstabTo: spell.backstabTo } : {}),
       ...(spell.cryoShatter != null ? { cryoShatter: spell.cryoShatter } : {}),
@@ -2480,6 +2482,9 @@ ${starLine}`;
     if (card.effect === "darkness" && picks.length) {
       extra.darknessCells = getDarknessZoneCells(picks[0][0], picks[0][1]);
     }
+    if (card.effect === "scatter" && picks.length) {
+      extra.scatterSourceCells = getScatterSourceCells(s, picks[0][0], picks[0][1]);
+    }
     if (card.effect === "random_teleport" && picks.length) {
       const [r, c] = picks[0];
       const dest = pickRandomTeleportDestination(s, r, c);
@@ -2671,6 +2676,10 @@ ${starLine}`;
     if (entry.darknessCells?.length) extra.darknessCells = entry.darknessCells;
     else if (entry.cardEffect === "darkness" && picks.length) {
       extra.darknessCells = getDarknessZoneCells(picks[0][0], picks[0][1]);
+    }
+    if (entry.scatterSourceCells?.length) extra.scatterSourceCells = entry.scatterSourceCells;
+    else if (entry.cardEffect === "scatter" && picks.length) {
+      extra.scatterSourceCells = getScatterSourceCells(s, picks[0][0], picks[0][1]);
     }
     if (entry.tricksterSquares?.length) extra.tricksterSquares = entry.tricksterSquares;
     else if (entry.cardEffect === "trickster") {
@@ -3053,8 +3062,12 @@ ${starLine}`;
   getZonePreviewSets() {
     const sanctuary = new Set();
     const darkness = new Set();
-    if (!this.cardPlay || this.cardPlay.picks.length > 0) return { sanctuary, darkness };
+    const scatterSource = new Set();
+    if (!this.cardPlay || this.cardPlay.picks.length > 0) {
+      return { sanctuary, darkness, scatterSource };
+    }
     const { card } = this.cardPlay;
+    const s = this.getViewState();
     for (const [r, c] of this.validTargets) {
       if (card.effect === "sanctuary") {
         for (const [zr, zc] of getSanctuaryCells(r, c)) sanctuary.add(`${zr},${zc}`);
@@ -3062,8 +3075,11 @@ ${starLine}`;
       if (card.effect === "darkness") {
         for (const [zr, zc] of getDarknessZoneCells(r, c)) darkness.add(`${zr},${zc}`);
       }
+      if (card.effect === "scatter") {
+        for (const [sr, sc] of getScatterSourceCells(s, r, c)) scatterSource.add(`${sr},${sc}`);
+      }
     }
-    return { sanctuary, darkness };
+    return { sanctuary, darkness, scatterSource };
   }
 
   renderHand() {
@@ -3151,6 +3167,7 @@ ${starLine}`;
         if (terrain?.fireTurns > 0) cls += " has-fire-tile";
         if (zonePreview.sanctuary.has(key)) cls += " sanctuary-zone-preview";
         if (zonePreview.darkness.has(key)) cls += " darkness-zone-preview";
+        if (zonePreview.scatterSource.has(key)) cls += " scatter-source-preview";
         if (isSquareCollapsed(s.meta, row, col)) cls += " square--collapsed";
         sq.className = cls;
 
