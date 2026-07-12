@@ -408,16 +408,22 @@ export async function fetchProfileRow(userId) {
   return data;
 }
 
-/** Search public profiles by username (partial match). */
+/** Escape `%` / `_` so user input is treated literally in ilike patterns. */
+function escapeIlikePattern(query) {
+  return String(query || "").replace(/[%_]/g, "");
+}
+
+/** Search public profiles by username or display name (partial match). */
 export async function searchProfilesByUsername(query, limit = 20) {
   const sb = getSupabase();
   if (!sb) return [];
-  const q = String(query || "").trim();
+  const q = escapeIlikePattern(String(query || "").trim());
   if (q.length < 2) return [];
+  const pattern = `%${q}%`;
   const { data, error } = await sb
     .from("profiles")
     .select("id, username, display_name, profile_json")
-    .ilike("username", `%${q}%`)
+    .or(`username.ilike.${pattern},display_name.ilike.${pattern}`)
     .limit(Math.min(Math.max(limit, 1), 30));
   if (error) throw error;
   return data || [];

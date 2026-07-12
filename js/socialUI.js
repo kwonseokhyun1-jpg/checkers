@@ -83,7 +83,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
     if (!list) return;
     const user = getCurrentUser();
     if (!searchResults.length) {
-      list.innerHTML = `<li class="social-empty">Search by username to find players.</li>`;
+      list.innerHTML = `<li class="social-empty">Search by username or display name to find players.</li>`;
       return;
     }
     list.innerHTML = searchResults
@@ -203,22 +203,18 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
     if (q.length < 2) {
       searchResults = [];
       renderSearchResults();
-      setStatus("");
-      return;
-    }
-    if (!getCurrentUser()) {
-      setStatus("Sign in to search players.", true);
+      setStatus(q.length ? "Type at least 2 characters to search." : "");
       return;
     }
     if (!isAuthAvailable()) {
-      setStatus("Social features need Supabase — check your config.", true);
+      setStatus("Player search needs an online connection — check your config.", true);
       return;
     }
     setStatus("Searching…");
     try {
       searchResults = await searchProfilesByUsername(q, 12);
       renderSearchResults();
-      setStatus(searchResults.length ? "" : "No players matched that username.");
+      setStatus(searchResults.length ? "" : "No players matched that search.");
     } catch (e) {
       searchResults = [];
       renderSearchResults();
@@ -246,6 +242,32 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
     });
   }
 
+  function syncGuestNudge() {
+    const user = getCurrentUser();
+    const existingNudge = root.querySelector(".social-sign-in-nudge");
+    if (user) {
+      existingNudge?.remove();
+      return;
+    }
+    if (existingNudge) return;
+    const search = root.querySelector(".social-search");
+    if (!search) return;
+    search.insertAdjacentHTML(
+      "beforebegin",
+      `<p class="social-sign-in-nudge">${escapeHtml(GUEST_SIGN_IN_NUDGE_SAVE)}</p>`
+    );
+  }
+
+  function refresh() {
+    if (!root.querySelector(".social-panel")) {
+      render();
+      return;
+    }
+    syncGuestNudge();
+    renderSearchResults();
+    void renderFriendsList();
+  }
+
   function render() {
     const user = getCurrentUser();
     root.innerHTML = `
@@ -255,7 +277,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
             <h2 class="panel-head__title">Social</h2>
             <button type="button" id="social-help-btn" class="panel-help-btn" aria-label="How Social works" aria-expanded="false" aria-controls="social-help-desc">?</button>
           </div>
-          <p id="social-help-desc" class="panel-head__desc" hidden>Search players by username, add them as friends, and view their public profiles.</p>
+          <p id="social-help-desc" class="panel-head__desc" hidden>Search players by username or display name, add them as friends, and view their public profiles. Sign in to save your friends list.</p>
         </header>
         ${
           user
@@ -265,7 +287,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
         <div class="social-search">
           <label class="social-search__label" for="social-search-input">Find players</label>
           <div class="social-search__row">
-            <input type="search" id="social-search-input" class="input-text social-search__input" placeholder="Username…" aria-label="Search by username" autocomplete="off" />
+            <input type="search" id="social-search-input" class="input-text social-search__input" placeholder="Username or name…" aria-label="Search players by username or display name" autocomplete="off" />
             <button type="button" id="social-search-btn" class="btn-secondary social-search__btn">Search</button>
           </div>
         </div>
@@ -282,5 +304,5 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
     void renderFriendsList();
   }
 
-  return { render };
+  return { render, refresh };
 }
