@@ -6189,30 +6189,111 @@ html:has(body.cosmetic-open-active) {
   filter: grayscale(0.35);
 }
 
-/* Play sub-tabs (Adventure / Arena / Leaderboard) */
-.play-tabs {
+/* Play menu — big mode buttons instead of persistent tab bar */
+.play-menu {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 0.5rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 1rem;
 }
-.play-tab {
-  font-family: var(--font-ui, "DM Sans", sans-serif);
-  font-size: 0.9rem;
-  font-weight: 600;
-  padding: 0.45rem 1rem;
-  border: none;
-  border-radius: 6px 6px 0 0;
-  background: transparent;
-  color: rgba(232, 236, 244, 0.65);
+.play-menu.hidden {
+  display: none;
+}
+.play-menu__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.play-menu-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  width: 100%;
+  min-height: 5.5rem;
+  padding: 1rem 1.15rem;
+  border: 2px solid rgba(201, 162, 39, 0.28);
+  border-radius: 16px;
+  background: linear-gradient(165deg, var(--bg-panel-elevated) 0%, var(--bg-panel) 55%, #0f1520 100%);
+  color: var(--text);
   cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s;
 }
-.play-tab.active,
-.play-tab[aria-selected="true"] {
-  color: var(--accent-gem, #5ce1e6);
-  background: rgba(92, 225, 230, 0.12);
+.play-menu-btn:active:not(:disabled) {
+  transform: translateY(2px);
+}
+.play-menu-btn__icon {
+  font-size: 1.65rem;
+  line-height: 1;
+}
+.play-menu-btn__label {
+  font-family: var(--font-heading, "Cinzel", serif);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.play-menu-btn__desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+.play-menu-btn.active {
+  border-color: var(--accent-gem, #5ce1e6);
+  box-shadow: 0 0 20px rgba(92, 225, 230, 0.15), 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+.play-menu-btn.play-tab--locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+/* Play sub-views (Adventure / Arena / Leaderboard) */
+.play-sub-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  margin-bottom: 0.65rem;
+}
+.play-sub-back {
+  min-height: 44px;
+  padding: 0.35rem 0.65rem;
+  flex-shrink: 0;
+}
+.play-sub-head--bar {
+  margin-bottom: 0.35rem;
+}
+body.play-sub-active .play-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+body.play-sub-active #view-play {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+body.play-sub-active .play-tab-panel:not(.hidden) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+body.play-sub-active .play-pvp-root {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Legacy play tab selectors (menu buttons reuse .play-tab) */
+.play-tabs {
+  display: none;
 }
 .play-tab-panel.hidden {
   display: none;
@@ -7543,6 +7624,13 @@ body.adventure-active:not(.adventure-floor-open) #view-play {
   flex-direction: column;
   overflow: hidden;
 }
+body.adventure-active:not(.adventure-floor-open) .play-tab-panel:not(.hidden) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 body.adventure-active:not(.adventure-floor-open) .adventure-panel {
   flex: 1;
   min-height: 0;
@@ -7576,8 +7664,8 @@ body.adventure-active:not(.adventure-floor-open) .adventure-floor-list:not(.adve
   padding-bottom: var(--nav-clearance);
   scroll-padding-bottom: var(--nav-clearance);
 }
-body.adventure-active:not(.adventure-floor-open) .adventure-world-shields,
-body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
+body.adventure-active:not(.adventure-floor-open) .adventure-world-shields--overlay,
+body.adventure-active:not(.adventure-floor-open) .play-sub-head {
   flex-shrink: 0;
 }
 .adventure-floor-modal__backdrop {
@@ -7651,6 +7739,9 @@ body.adventure-active:not(.adventure-floor-open) .panel-head--compact {
   box-shadow:
     inset 0 0 80px rgba(0, 0, 0, 0.75),
     0 8px 32px rgba(0, 0, 0, 0.55);
+}
+body.adventure-active:not(.adventure-floor-open) .adventure-map-canvas {
+  padding-bottom: calc(var(--nav-clearance) + 1.5rem);
 }
 .adventure-map-canvas {
   position: relative;
@@ -8738,6 +8829,15 @@ body.adventure-active:not(.adventure-floor-open) .adventure-map-canvas__bg::afte
   margin: 0 0 0.75rem;
   position: relative;
   z-index: 2;
+}
+.adventure-world-shields--overlay {
+  position: sticky;
+  top: 0;
+  z-index: 25;
+  margin: 0;
+  padding: 0.45rem 0.5rem 0.35rem;
+  background: linear-gradient(180deg, rgba(6, 4, 10, 0.92) 0%, rgba(6, 4, 10, 0.75) 70%, transparent 100%);
+  backdrop-filter: blur(4px);
 }
 .adventure-world-shield {
   display: flex;

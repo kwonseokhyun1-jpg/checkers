@@ -146,23 +146,6 @@ export function initPvpUI({
     unsubscribeLiveMatches = null;
   }
 
-  function pvpBackButton() {
-    return `<button type="button" class="btn-text pvp-back-btn" id="pvp-back-play">← Adventure</button>`;
-  }
-
-  function bindPvpBackToAdventure() {
-    screenRoot().querySelector("#pvp-back-play")?.addEventListener("click", () => {
-      stopOpenRoomsSync();
-      stopLeaderboardSync();
-      hideHosting();
-      if (!matchSession && !spectating) {
-        pvpService?.dispose();
-        pvpService = null;
-      }
-      onNavigatePlayTab?.("adventure");
-    });
-  }
-
   function returnToPvpShell() {
     stopRematchPoll();
     pvpGameOverCtx = null;
@@ -278,7 +261,6 @@ export function initPvpUI({
     leaderboardRoot.innerHTML = `
       <section class="panel game-panel pvp-leaderboard-panel">
         <div class="pvp-panel-content">
-        ${pvpBackButton()}
         <header class="panel-head panel-head--compact">
           <div class="panel-head-title-row">
             <h2 class="panel-head__title">Leaderboard</h2>
@@ -304,7 +286,6 @@ export function initPvpUI({
       </section>`;
 
     bindPvpPanelHelp(leaderboardRoot);
-    bindPvpBackToAdventure();
     startLeaderboardSync();
   }
 
@@ -512,7 +493,6 @@ export function initPvpUI({
     arenaRoot.innerHTML = `
       <section class="panel game-panel pvp-panel pvp-panel--arena">
         <div class="pvp-panel-content">
-        ${pvpBackButton()}
         ${pvpPanelHead("Host a room or join an open match below. Piece skins are shown on the board — matching non-default skins block joins so both sides stay distinct.")}
         <div class="pvp-setup-row">
           <div class="pvp-setup-field">
@@ -567,7 +547,6 @@ export function initPvpUI({
     arenaRoot.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
     syncModeUi();
     bindPvpPanelHelp(arenaRoot);
-    bindPvpBackToAdventure();
     startOpenRoomsSync();
 
     void probePvpBackend().then((probe) => {
