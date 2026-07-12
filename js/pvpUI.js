@@ -959,7 +959,6 @@ export function initPvpUI({
         (matchSession.actionBusy ||
           matchSession._syncBusy ||
           matchSession._syncDirty ||
-          matchSession._pvpTurnMoveLog?.length > 0 ||
           matchSession.localPvpStateAheadOf(row.state_json)) &&
         !terminal &&
         !finished
