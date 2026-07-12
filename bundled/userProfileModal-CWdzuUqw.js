@@ -1,4 +1,4 @@
-import{O as e,q as t}from"./storage-D61OLkcg.js";import{s as n}from"./mageTitles-BPvsmJqw.js";import{a as r}from"./auth-12TAJw7y.js";import{c as i,i as a,l as o}from"./index-D_mqVEai.js";function s(e){return String(e??``).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`)}function c(e,t,{clickable:n=!1,userId:r=``}={}){let a=e?.equipped||{},c=(t||`P`).charAt(0).toUpperCase(),l=o(a.avatar)||`<span class="profile-avatar-fallback">${s(c)}</span>`,u=`<span class="profile-avatar-stack ${i(a.frame)}"><span class="profile-avatar-inner">${l}</span></span>`;return n&&r?`<button type="button" class="pvp-room-host-profile" data-view-profile="${s(r)}" data-profile-name="${s(t)}" aria-label="View ${s(t)}'s profile">${u}</button>`:`<span class="pvp-room-host-profile pvp-room-host-profile--static" aria-hidden="true">${u}</span>`}function l(e){return`
+import{O as e,q as t}from"./storage-D9Rz-LDI.js";import{s as n}from"./mageTitles-BPvsmJqw.js";import{a as r}from"./auth-DHasSuFN.js";import{a as i,l as a,u as o}from"./index-BX4eR634.js";function s(e){return String(e??``).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`)}function c(e,t,{clickable:n=!1,userId:r=``}={}){let i=e?.equipped||{},c=(t||`P`).charAt(0).toUpperCase(),l=o(i.avatar)||`<span class="profile-avatar-fallback">${s(c)}</span>`,u=`<span class="profile-avatar-stack ${a(i.frame)}"><span class="profile-avatar-inner">${l}</span></span>`;return n&&r?`<button type="button" class="pvp-room-host-profile" data-view-profile="${s(r)}" data-profile-name="${s(t)}" aria-label="View ${s(t)}'s profile">${u}</button>`:`<span class="pvp-room-host-profile pvp-room-host-profile--static" aria-hidden="true">${u}</span>`}function l(e){return`
     <div class="profile-hero-stats public-profile-modal__stats" aria-label="Player statistics">
       ${[{key:`pvp`,label:`PvP wins`,value:e.pvpWins},{key:`adventure`,label:`Floors cleared`,value:e.adventureFloorsCleared},{key:`spells`,label:`Spells played`,value:e.spellsPlayed}].map(e=>`
         <article class="profile-stat-card profile-stat-card--${e.key}">
@@ -11,9 +11,9 @@ import{O as e,q as t}from"./storage-D61OLkcg.js";import{s as n}from"./mageTitles
       <div class="public-profile-modal__dialog panel game-panel">
         <button type="button" class="auth-modal-close public-profile-modal__close" data-close-public-profile aria-label="Close">×</button>
         <div class="profile-showcase public-profile-modal__showcase">
-          <div class="profile-showcase__banner" style="background:${a(c.banner)}"></div>
+          <div class="profile-showcase__banner" style="background:${i(c.banner)}"></div>
           <div class="profile-showcase__hero public-profile-modal__hero">
-            <div class="profile-avatar-stack ${i(c.frame)}">
+            <div class="profile-avatar-stack ${a(c.frame)}">
               <div class="profile-avatar-inner" aria-hidden="true">${d}</div>
             </div>
             <div class="public-profile-modal__identity">

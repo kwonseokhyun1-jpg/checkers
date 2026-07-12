@@ -13,8 +13,8 @@
   <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="./icons/icon-192.png" />
   <title>Arcane Checkers</title>
-  <script type="module" crossorigin src="./bundled/index-D_mqVEai.js"></script>
-  <link rel="stylesheet" crossorigin href="./bundled/index-DdC7qoBl.css">
+  <script type="module" crossorigin src="./bundled/index-BX4eR634.js"></script>
+  <link rel="stylesheet" crossorigin href="./bundled/index-C1SCVObQ.css">
 </head>
 <body>
   <div id="app-splash" class="app-splash" role="img" aria-label="Arcane Checkers loading">
@@ -184,39 +184,59 @@
 
       <div id="view-play" class="view view-panel hidden">
         <section class="panel game-panel play-panel">
-          <header class="panel-head panel-head--compact">
-            <div class="panel-head-title-row">
-              <h2 class="panel-head__title">Play</h2>
-              <button type="button" id="play-help-btn" class="panel-help-btn" aria-label="How Play works" aria-expanded="false" aria-controls="play-help-desc">?</button>
+          <div id="play-menu" class="play-menu">
+            <header class="panel-head panel-head--compact">
+              <div class="panel-head-title-row">
+                <h2 class="panel-head__title">Play</h2>
+                <button type="button" id="play-help-btn" class="panel-help-btn" aria-label="How Play works" aria-expanded="false" aria-controls="play-help-desc">?</button>
+              </div>
+              <p id="play-help-desc" class="panel-head__desc" hidden><strong>Adventure</strong> — climb tower maps and earn stars. <strong>Arena</strong> — host or join live PvP (unlocks after Adventure floor 1). <strong>Leaderboard</strong> — global ranks and spectating.</p>
+            </header>
+            <div class="play-menu__choices" role="group" aria-label="Play modes">
+              <button type="button" class="play-menu-btn play-tab" data-play-tab="adventure">
+                <span class="play-menu-btn__icon" aria-hidden="true">🏰</span>
+                <span class="play-menu-btn__label">Adventure</span>
+                <span class="play-menu-btn__desc">Climb towers &amp; earn stars</span>
+              </button>
+              <button type="button" class="play-menu-btn play-tab" data-play-tab="arena">
+                <span class="play-menu-btn__icon" aria-hidden="true">⚔</span>
+                <span class="play-menu-btn__label">Arena</span>
+                <span class="play-menu-btn__desc">Host or join live PvP</span>
+              </button>
+              <button type="button" class="play-menu-btn play-tab" data-play-tab="leaderboard">
+                <span class="play-menu-btn__icon" aria-hidden="true">🏆</span>
+                <span class="play-menu-btn__label">Leaderboard</span>
+                <span class="play-menu-btn__desc">Global ranks &amp; spectating</span>
+              </button>
             </div>
-            <p id="play-help-desc" class="panel-head__desc" hidden><strong>Adventure</strong> — climb tower maps and earn stars. <strong>Arena</strong> — host or join live PvP (unlocks after Adventure floor 1). <strong>Leaderboard</strong> — global ranks and spectating.</p>
-          </header>
-          <nav class="play-tabs" role="tablist" aria-label="Play modes">
-            <button type="button" class="play-tab active" data-play-tab="adventure" role="tab" aria-selected="true" aria-controls="play-tab-adventure">Adventure</button>
-            <button type="button" class="play-tab" data-play-tab="arena" role="tab" aria-selected="false" aria-controls="play-tab-arena">Arena</button>
-            <button type="button" class="play-tab" data-play-tab="leaderboard" role="tab" aria-selected="false" aria-controls="play-tab-leaderboard">Leaderboard</button>
-          </nav>
-          <div id="play-tab-adventure" class="play-tab-panel" role="tabpanel">
+          </div>
+          <div id="play-tab-adventure" class="play-tab-panel hidden" role="tabpanel" hidden>
             <section id="adventure-map-view" class="adventure-panel">
-              <header class="panel-head panel-head--compact adventure-panel__head">
-                <button type="button" id="adventure-map-back" class="btn-text adventure-map-back hidden" aria-label="Back">← Map</button>
+              <header class="panel-head panel-head--compact adventure-panel__head play-sub-head">
+                <button type="button" id="play-sub-back-adventure" class="btn-text play-sub-back" aria-label="Back to Play menu">← Play</button>
                 <div class="panel-head-title-row">
                   <h3 class="panel-head__title">Adventure</h3>
                   <button type="button" id="adventure-help-btn" class="panel-help-btn" aria-label="How Adventure works" aria-expanded="false" aria-controls="adventure-help-desc">?</button>
                 </div>
                 <p id="adventure-help-desc" class="panel-head__desc" hidden>Tap a numbered stone on the map to battle. Earn <strong>★ stars</strong> on victory (more pieces left = more stars). Clear <strong>floor 30</strong> to unlock hidden worlds.</p>
               </header>
-              <nav id="adventure-world-tabs" class="adventure-world-shields" role="tablist" aria-label="World towers"></nav>
               <div class="adventure-map-scene">
+                <nav id="adventure-world-tabs" class="adventure-world-shields adventure-world-shields--overlay" role="tablist" aria-label="World towers"></nav>
                 <div id="adventure-map" class="adventure-map-canvas"></div>
               </div>
               <div id="adventure-floor-list" class="adventure-floor-list adventure-floor-list--sr" aria-label="Tower floors"></div>
             </section>
           </div>
           <div id="play-tab-arena" class="play-tab-panel hidden" role="tabpanel" hidden>
+            <header class="play-sub-head play-sub-head--bar">
+              <button type="button" id="play-sub-back-arena" class="btn-text play-sub-back" aria-label="Back to Play menu">← Play</button>
+            </header>
             <div id="play-arena-root" class="play-pvp-root"></div>
           </div>
           <div id="play-tab-leaderboard" class="play-tab-panel hidden" role="tabpanel" hidden>
+            <header class="play-sub-head play-sub-head--bar">
+              <button type="button" id="play-sub-back-leaderboard" class="btn-text play-sub-back" aria-label="Back to Play menu">← Play</button>
+            </header>
             <div id="play-leaderboard-root" class="play-pvp-root"></div>
           </div>
         </section>
