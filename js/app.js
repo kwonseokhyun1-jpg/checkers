@@ -505,6 +505,14 @@ async function showTab(tab) {
     return;
   }
   if (
+    matchView &&
+    !matchView.classList.contains("hidden") &&
+    matchView.querySelector(".pvp-loading") &&
+    tab !== activeTab
+  ) {
+    return;
+  }
+  if (
     !bypassQuestsPvpGate &&
     tab === "quests" &&
     !isQuestsAndPvpUnlocked(profile)
@@ -531,6 +539,7 @@ async function showTab(tab) {
   reconcileMatchShellState();
   if (isMatchActive() && isLiveMatchUiVisible()) {
     if (tab === activeTab) return;
+    if (matchView?.querySelector(".pvp-loading")) return;
     const label = TAB_LABELS[tab] || tab;
     if (
       !(await mobileConfirm(`Leave your current match to open ${label}?`, {

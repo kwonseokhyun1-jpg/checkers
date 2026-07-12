@@ -165,7 +165,6 @@ export function initPvpUI({
       root.innerHTML = "";
       root.classList.add("hidden");
     }
-    arenaRoot.querySelector("#pvp-match-root")?.remove();
   }
 
   function returnToPvpShell() {
@@ -404,10 +403,7 @@ export function initPvpUI({
       renderLeaderboard("Could not open the match view.", true);
       return;
     }
-    const matchRoot = document.createElement("div");
-    matchRoot.id = "pvp-match-root";
-    matchContainer.appendChild(matchRoot);
-    matchRoot.innerHTML = getMatchHtml(guestName, {
+    matchContainer.innerHTML = getMatchHtml(guestName, {
       exitLabel: "← Leave spectate",
       pvp: true,
       spectator: true,
@@ -421,7 +417,7 @@ export function initPvpUI({
 
     matchSession = new MatchSession(
       deckIds,
-      matchRoot,
+      matchContainer,
       () => {
         matchSession = null;
         matchLaunching = false;
@@ -875,10 +871,18 @@ export function initPvpUI({
 
   function applyPvpMatchRow(row) {
     if (!matchSession || !row?.state_json) return;
-    if (!shouldApplyPvpRow(row, pvpService, matchSession)) return;
-    const ver = row.version ?? 0;
     const terminal = isPvpTerminalBoard(row.state_json, pvpService.localColor);
     const finished = row.status === "finished";
+    if (
+      !finished &&
+      !terminal &&
+      matchSession.localPvpStateAheadOf(row.state_json)
+    ) {
+      matchSession.queuePvpRow(row);
+      return;
+    }
+    if (!shouldApplyPvpRow(row, pvpService, matchSession)) return;
+    const ver = row.version ?? 0;
     if (terminal || finished) matchSession.actionBusy = false;
     const isMyTurn = row.turn === pvpService.localColor;
     const opponentName = opponentNameFromRow(row);
@@ -1348,11 +1352,7 @@ export function initPvpUI({
       return;
     }
 
-    matchContainer.innerHTML = "";
-    const matchRoot = document.createElement("div");
-    matchRoot.id = "pvp-match-root";
-    matchContainer.appendChild(matchRoot);
-    matchRoot.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP", pvp: true });
+    matchContainer.innerHTML = getMatchHtml(opponentName, { exitLabel: "← Leave PvP", pvp: true });
 
     pvpService._lastVersion = row.version ?? 0;
     pvpService._lastAppliedFingerprint = matchRowFingerprint(row);
@@ -1360,7 +1360,7 @@ export function initPvpUI({
     try {
       matchSession = new MatchSession(
         deckIds,
-        matchRoot,
+        matchContainer,
         () => {
           matchSession = null;
           matchLaunching = false;
@@ -1581,6 +1581,8 @@ export function initPvpUI({
 
   function showPvpView(screen = pvpScreen) {
     onNavigatePlayTab?.(screen === "leaderboard" ? "leaderboard" : "arena");
+    const matchView = getMatchViewEl();
+    if (matchView && !matchView.classList.contains("hidden")) return;
     onNavigateTab?.("play");
   }
 
@@ -1721,6 +1723,7 @@ export function initPvpUI({
   return {
     render: renderPvpSurface,
     tryResume: tryResumePvpMatch,
+    isBusy: () => !!(matchSession || matchLaunching),
     setScreen(screen) {
       if (screen === "arena" || screen === "leaderboard") {
         pvpScreen = screen;

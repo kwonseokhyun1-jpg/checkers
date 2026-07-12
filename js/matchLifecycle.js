@@ -23,12 +23,15 @@ function isVisibleShellElement(el) {
 
 /** True when the in-match board UI (with Leave match) is visible on screen. */
 export function isLiveMatchUiVisible() {
+  const matchView = document.getElementById("view-match");
+  if (matchView && !matchView.classList.contains("hidden") && matchView.querySelector(".pvp-loading")) {
+    return true;
+  }
   const leaveBtn = document.querySelector("#btn-leave-match");
   if (!leaveBtn) return false;
   if (isVisibleShellElement(leaveBtn)) return true;
   // PvP/adventure match may still be mounted in a hidden tab until the view is revealed.
   if (!isMatchActive()) return false;
-  const matchView = document.getElementById("view-match");
   const pvpView = document.getElementById("play-arena-root");
   if (matchView?.contains(leaveBtn) || pvpView?.contains(leaveBtn)) return true;
   return false;
@@ -61,6 +64,7 @@ export function consumeLeaveConfirmSkip() {
 function cleanupOrphanMatchDom() {
   const matchView = document.getElementById("view-match");
   if (matchView && !matchView.classList.contains("hidden") && matchView.innerHTML.trim()) {
+    if (matchView.querySelector(".pvp-loading")) return;
     const leaveBtn = matchView.querySelector("#btn-leave-match");
     if (!isVisibleShellElement(leaveBtn)) {
       matchView.innerHTML = "";
@@ -71,10 +75,7 @@ function cleanupOrphanMatchDom() {
   }
   const pvpRoot = document.getElementById("play-arena-root");
   if (pvpRoot) {
-    const leaveBtn = pvpRoot.querySelector("#btn-leave-match");
-    if (!isVisibleShellElement(leaveBtn)) {
-      pvpRoot.querySelector("#pvp-match-root")?.remove();
-    }
+    pvpRoot.querySelector("#pvp-match-root")?.remove();
   }
 }
 
