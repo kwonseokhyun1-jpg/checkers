@@ -12,6 +12,7 @@ import {
   deckCardIdsFromMatchState,
   deckIdsEqual,
   describeDeckIssue,
+  mysteryExcludeOptions,
 } from "../js/deckRules.js";
 import { buildStarterDeckCardIds } from "../js/storage.js";
 
@@ -41,7 +42,17 @@ for (let i = 0; i < 40; i++) {
 }
 assert.equal(excludedMatch, false, "Excluded mystery deck should not match the excluded list");
 
-const state = createMatchState(buildMysteryDeck(), buildMysteryDeck());
+assert.deepEqual(mysteryExcludeOptions(starterDeck), { excludeDeckIds: starterDeck });
+assert.deepEqual(mysteryExcludeOptions(["nudge"]), {});
+
+const hostDeck = buildMysteryDeck(mysteryExcludeOptions(starterDeck));
+const guestDeck = buildMysteryDeck(mysteryExcludeOptions(starterDeck));
+assert.equal(hostDeck.length, DECK_SIZE);
+assert.equal(guestDeck.length, DECK_SIZE);
+assert.equal(deckIdsEqual(hostDeck, starterDeck), false, "Host mystery roll should exclude main deck");
+assert.equal(deckIdsEqual(guestDeck, starterDeck), false, "Guest mystery roll should exclude main deck");
+
+const state = createMatchState(hostDeck, guestDeck);
 const hostFromState = deckCardIdsFromMatchState(state, COLORS.RED);
 assert.equal(hostFromState.length, DECK_SIZE, "Match state should reconstruct a full host deck");
 

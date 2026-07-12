@@ -3,7 +3,7 @@ import { getCurrentUser } from "./auth.js";
 import { COLORS, createInitialBoard } from "./board.js";
 import { createMatchState } from "./match.js";
 import { DECK_SIZE } from "./cardCatalog.js";
-import { buildMysteryDeck } from "./deckRules.js";
+import { buildMysteryDeck, mysteryExcludeOptions } from "./deckRules.js";
 import {
   DEFAULT_PIECE_SKIN,
   SAME_PIECE_SKIN_JOIN_MESSAGE,
@@ -395,7 +395,8 @@ export class PvpService {
       const row = {
         code,
         host_id: user.id,
-        host_deck_ids: mystery ? null : hostDeckIds,
+        // Mystery waiting rooms store the host's main deck as an exclude hint (replaced on join).
+        host_deck_ids: mystery ? hostDeckIds ?? null : hostDeckIds,
         host_display_name: displayName,
         status: "waiting",
         match_mode: mystery ? PVP_MODE_MYSTERY : PVP_MODE_NORMAL,
@@ -598,12 +599,8 @@ export class PvpService {
     const resolvedHostSkin = await this.resolveEffectiveHostPieceSkin(sb, row);
     this.assertDistinctPieceSkins(resolvedHostSkin, guestPieceSkin);
 
-    const hostDeckIds = buildMysteryDeck();
-    const guestDeckIds = buildMysteryDeck(
-      Array.isArray(guestMainDeckIds) && guestMainDeckIds.length === DECK_SIZE
-        ? { excludeDeckIds: guestMainDeckIds }
-        : {}
-    );
+    const hostDeckIds = buildMysteryDeck(mysteryExcludeOptions(row.host_deck_ids));
+    const guestDeckIds = buildMysteryDeck(mysteryExcludeOptions(guestMainDeckIds));
     const state = createMatchState(hostDeckIds, guestDeckIds);
     state.turn = COLORS.RED;
     const stateJson = serializeMatchState(state);
@@ -643,13 +640,11 @@ export class PvpService {
   async finalizeGuestJoin(data, guestDeckIds) {
     const sb = getSupabase();
     const mystery = isMysteryMode(data);
-    const hostDeckIds = mystery ? buildMysteryDeck() : data.host_deck_ids;
+    const hostDeckIds = mystery
+      ? buildMysteryDeck(mysteryExcludeOptions(data.host_deck_ids))
+      : data.host_deck_ids;
     const resolvedGuestDeckIds = mystery
-      ? buildMysteryDeck(
-          Array.isArray(guestDeckIds) && guestDeckIds.length === DECK_SIZE
-            ? { excludeDeckIds: guestDeckIds }
-            : {}
-        )
+      ? buildMysteryDeck(mysteryExcludeOptions(guestDeckIds))
       : guestDeckIds;
     const state = createMatchState(hostDeckIds, resolvedGuestDeckIds);
     state.turn = COLORS.RED;
