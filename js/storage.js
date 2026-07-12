@@ -316,6 +316,11 @@ function normalizeLoadedProfile(parsed) {
       ? Math.max(0, Math.floor(parsed.spellsPlayed))
       : undefined;
 
+  const friends =
+    Array.isArray(parsed.friends)
+      ? [...new Set(parsed.friends.filter((id) => typeof id === "string" && id.length > 0))]
+      : [];
+
   return {
     gems: typeof parsed.gems === "number" ? parsed.gems : STARTING_GEMS,
     stars: typeof parsed.stars === "number" ? parsed.stars : STARTING_STARS,
@@ -328,6 +333,7 @@ function normalizeLoadedProfile(parsed) {
     adventure: stub.adventure,
     savedAt: typeof parsed.savedAt === "number" ? parsed.savedAt : undefined,
     newCardIds: parsed.newCardIds && typeof parsed.newCardIds === "object" ? parsed.newCardIds : undefined,
+    friends,
     ...(pvpWins !== undefined ? { pvpWins } : {}),
     ...(spellsPlayed !== undefined ? { spellsPlayed } : {}),
     ...tutorialFlagsFromParsed(parsed),

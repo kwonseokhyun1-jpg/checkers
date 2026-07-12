@@ -6395,13 +6395,31 @@ body.play-sub-active .play-pvp-root {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.social-player-row .social-add-btn {
+.social-player-row .social-add-btn,
+.social-player-row .social-send-btn {
   width: auto;
   margin-top: 0;
   flex-shrink: 0;
   white-space: nowrap;
   padding: 0.45rem 0.85rem;
   font-size: 0.85rem;
+}
+.social-request-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+.social-request-actions .btn-secondary,
+.social-request-actions .btn-text {
+  width: auto;
+  margin-top: 0;
+  white-space: nowrap;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+}
+.social-player-row .social-cancel-btn {
+  opacity: 0.75;
 }
 .social-player-row .btn-text {
   margin-bottom: 0;
