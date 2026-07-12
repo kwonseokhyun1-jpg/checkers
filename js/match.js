@@ -107,6 +107,9 @@ const AI_PACE = {
   replayTimeout: 14000,
 };
 
+/** Brief square highlights when replaying opponent PvP moves */
+const PVP_MOVE_HIGHLIGHT_MS = 650;
+
 export function isMutualElimination(state) {
   if (!state?.board) return false;
   return countPieces(state.board, COLORS.RED) === 0 && countPieces(state.board, COLORS.BLACK) === 0;
@@ -134,6 +137,8 @@ export function createMatchState(playerDeckIds, aiDeckIds = null, options = {}) 
     gems: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     pvpSpellSeq: 0,
     pvpLastSpell: null,
+    pvpMoveHighlightSeq: 0,
+    pvpLastMoveHighlights: null,
     moveHistory: [],
   };
   initCardState(state);
@@ -192,6 +197,8 @@ export class MatchSession {
     /** Last server turn key we ran beginPlayerTurn for in PvP (`${turn}_${turnNumber[local]}_${moveHistory.length}`). */
     this._pvpLocalTurnKey = null;
     this._lastPvpSpellSeq = options.initialState?.pvpLastSpell?.seq ?? 0;
+    this._lastPvpMoveHighlightSeq = options.initialState?.pvpLastMoveHighlights?.seq ?? 0;
+    this._pvpMoveHighlightLog = [];
     if (options.initialState) {
       this.state = options.initialState;
       this.state.meta = { ...createMatchMeta(), ...this.state.meta };
@@ -907,6 +914,16 @@ export class MatchSession {
       incomingSpell &&
       incomingSpell.seq > prevSpellSeq &&
       incomingSpell.caster === this.opponentColor;
+    const prevHighlightSeq =
+      this.state?.pvpLastMoveHighlights?.seq ?? this._lastPvpMoveHighlightSeq ?? 0;
+    const incomingHighlights = nextState.pvpLastMoveHighlights;
+    const flashMoveHighlights =
+      this.isPvp &&
+      !replaySpell &&
+      incomingHighlights &&
+      incomingHighlights.seq > prevHighlightSeq &&
+      incomingHighlights.mover === this.opponentColor &&
+      incomingHighlights.moves?.length > 0;
     const preserveLocalBoard = this.isPvp && this.localPvpStateAheadOf(nextState);
     const prevLocalPvpBoard = preserveLocalBoard ? this._captureLocalPvpBoardSnapshot() : null;
     const preserveSelection =
@@ -954,6 +971,7 @@ export class MatchSession {
       this._restoreLocalPvpBoardSnapshot(prevLocalPvpBoard, nextState);
     }
     if (incomingSpell?.seq) this._lastPvpSpellSeq = incomingSpell.seq;
+    if (incomingHighlights?.seq) this._lastPvpMoveHighlightSeq = incomingHighlights.seq;
     if (this.isPvp) ensureStartHistory(this.state);
     this.historyViewIndex = null;
     this.aiHighlight = null;
@@ -976,7 +994,22 @@ export class MatchSession {
     this.updateHistoryNavUI();
     this.render();
     if (replaySpell) void this.replayOpponentPvpSpell(incomingSpell);
+    else if (flashMoveHighlights) void this.flashOpponentMoveHighlights(incomingHighlights);
     return true;
+  }
+
+  async flashOpponentMoveHighlights(highlights) {
+    for (const move of highlights.moves || []) {
+      this.aiHighlight = {
+        from: move.from,
+        to: move.to,
+        captures: move.captures || [],
+      };
+      this.render();
+      await delay(PVP_MOVE_HIGHLIGHT_MS);
+    }
+    this.aiHighlight = null;
+    this.render();
   }
 
   async replayOpponentPvpSpell(spell) {
@@ -1118,6 +1151,32 @@ export class MatchSession {
       ...this.pvpSpellReplayFields(extras),
     };
     this._lastPvpSpellSeq = seq;
+  }
+
+  recordPvpMoveHighlight(move) {
+    if (!this.isPvp || !move) return;
+    this._pvpMoveHighlightLog.push({
+      from: [...move.from],
+      to: [...move.to],
+      captures: move.captures?.map((c) => [...c]) ?? [],
+    });
+  }
+
+  flushPvpMoveHighlights() {
+    if (!this.isPvp || !this._pvpMoveHighlightLog.length) return;
+    const seq = (this.state.pvpMoveHighlightSeq || 0) + 1;
+    this.state.pvpMoveHighlightSeq = seq;
+    this.state.pvpLastMoveHighlights = {
+      seq,
+      mover: this.localColor,
+      moves: this._pvpMoveHighlightLog.map((move) => ({
+        from: [...move.from],
+        to: [...move.to],
+        captures: move.captures?.map((c) => [...c]) ?? [],
+      })),
+    };
+    this._lastPvpMoveHighlightSeq = seq;
+    this._pvpMoveHighlightLog = [];
   }
 
   removeCardFromHand(card) {
@@ -1802,6 +1861,7 @@ export class MatchSession {
     const capAfter = s.captured[this.localColor]?.length ?? 0;
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
     this.achievementTracker?.onMoveAfter(s);
+    if (this.isPvp) this.recordPvpMoveHighlight(move);
     const bountyMsg = flushPendingBountyMessage(s.meta, this.localColor);
     const martyrMsg = flushPendingMartyrMessage(s.meta, this.localColor);
     const rewardMsg = [bountyMsg, martyrMsg].filter(Boolean).join(" ");
@@ -1899,6 +1959,7 @@ export class MatchSession {
       this._pendingHistoryLabel = null;
     }
     if (this.isPvp) {
+      this.flushPvpMoveHighlights();
       this.setMessage("Waiting for opponent…");
       this.render();
       await this.pushPvpState();

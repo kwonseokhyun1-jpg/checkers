@@ -212,11 +212,12 @@ export function matchRowFingerprint(row) {
   if (!row?.state_json) return `v${row?.version ?? 0}|nostate`;
   const s = row.state_json;
   const seq = s.pvpSpellSeq ?? 0;
+  const highlightSeq = s.pvpMoveHighlightSeq ?? 0;
   const tr = s.turn ?? "";
   const red = s.turnNumber?.red ?? 0;
   const blk = s.turnNumber?.black ?? 0;
   const hist = s.moveHistory?.length ?? 0;
-  return `v${row.version ?? 0}|${tr}|${seq}|${red}|${blk}|${hist}`;
+  return `v${row.version ?? 0}|${tr}|${seq}|${highlightSeq}|${red}|${blk}|${hist}`;
 }
 
 export function shouldApplyPvpRow(row, pvpService, matchSession = null) {
