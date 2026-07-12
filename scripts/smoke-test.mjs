@@ -61,6 +61,16 @@ async function dismissMetaTutorialIfOpen(page) {
 await dismissInteractiveTutorialIfOpen(page);
 await dismissMetaTutorialIfOpen(page);
 
+async function openAdventureFromPlayTab(page) {
+  await page.locator('[data-tab="play"]').click();
+  await page.waitForTimeout(600);
+  const adventureBtn = page.locator('[data-play-tab="adventure"]');
+  if (await adventureBtn.isVisible().catch(() => false)) {
+    await adventureBtn.click();
+    await page.waitForTimeout(800);
+  }
+}
+
 const tutorialVisible = await page.locator("#tutorial-modal:not(.hidden)").isVisible();
 if (tutorialVisible) {
   await page.locator('[data-tab="play"]').click();
@@ -72,8 +82,7 @@ if (tutorialVisible) {
   }
 }
 
-await page.locator('[data-tab="play"]').click();
-await page.waitForTimeout(1200);
+await openAdventureFromPlayTab(page);
 const tiles = await page.locator("#adventure-map .adventure-map-tile").count();
 if (tiles < 1) {
   console.error("Expected adventure map tiles, found", tiles);
