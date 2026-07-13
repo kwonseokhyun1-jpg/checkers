@@ -20,7 +20,7 @@ import {
   isZombieBear,
   isZombieBearStack,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, hasVengeanceArmed, isConfused, clearConfusion } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, hasVengeanceArmed, isConfused, clearConfusion, applyPeriodicTurnDraw } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -35,7 +35,7 @@ import {
 } from "./cardEffects.js";
 import { planAiTurnWork, runAiTurn, cloneMatchState, syncPlannedAiState, applyAiReplayEntry } from "./ai.js";
 import { formatPieceStatusMessage, getPieceStatus } from "./pieceStatus.js";
-import { DRAW_EVERY_TURNS, START_HAND, getCardDef } from "./cardCatalog.js";
+import { START_HAND, getCardDef } from "./cardCatalog.js";
 import { pieceSkinCssSuffix } from "./cosmetics.js";
 import { renderSpellCardEl } from "./cardArt.js";
 import { getCardEffectTags } from "./cardEffectTags.js";
@@ -790,10 +790,8 @@ export class MatchSession {
     this.selectedSquare = null;
     this.validMoves = [];
     if (s.boardFx) s.boardFx = null;
-    if (s.turnNumber[color] > 1 && s.turnNumber[color] % DRAW_EVERY_TURNS === 0) {
-      const n = drawToHand(s, color, 1);
-      if (n) this.setMessage("Drew a card from your deck.");
-    }
+    const drawResult = applyPeriodicTurnDraw(s, color);
+    if (drawResult.drew) this.setMessage("Drew a card from your deck.");
     startTurnMeta(s, color);
     if (color === this.localColor) {
       this.achievementTracker?.onTurnStart();
@@ -801,7 +799,11 @@ export class MatchSession {
     if (color === this.localColor && s.meta.shatterSilenced?.[color]) {
       this.setMessage("Spell backlash — no spells this turn. Select a piece to move.");
     } else if (color === this.localColor && s.meta.blinded?.[color]) {
-      this.setMessage("You are blinded — no spells this turn. Select a piece to move.");
+      this.setMessage(
+        drawResult.blockedByBlind
+          ? "You are blinded — no draw and no spells this turn. Select a piece to move."
+          : "You are blinded — no spells this turn. Select a piece to move.",
+      );
     } else if (color === this.localColor && isConfused(s.meta, color)) {
       this.setMessage("Confusion — no spells. A random move will be chosen…");
       queueMicrotask(() => {

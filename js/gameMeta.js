@@ -1,6 +1,7 @@
 /** Global match state: gems modifiers, square terrain, turn flags */
 
 import { COLORS, SIZE, inBounds, isDarkSquare, tryPromoteOnFarRow } from "./board.js";
+import { DRAW_EVERY_TURNS } from "./cardCatalog.js";
 import { drawToHand } from "./deckPile.js";
 
 export function createMatchMeta() {
@@ -172,6 +173,27 @@ export function clearConfusion(meta, color) {
   if (!meta) return;
   if (meta.confused) meta.confused[color] = false;
   if (meta.confuseNext) meta.confuseNext[color] = false;
+}
+
+/** True when this color's per-color turn count is a scheduled deck-draw turn. */
+export function isPeriodicDrawTurn(turnNumberForColor, every = DRAW_EVERY_TURNS) {
+  return turnNumberForColor > 1 && turnNumberForColor % every === 0;
+}
+
+/**
+ * Scheduled hand draw at turn start. Blind (`blindNext`) skips the draw for that turn only;
+ * call before `startTurnMeta` consumes `blindNext` into `blinded`.
+ * @returns {{ drew: number, blockedByBlind: boolean }}
+ */
+export function applyPeriodicTurnDraw(state, color, every = DRAW_EVERY_TURNS) {
+  if (!isPeriodicDrawTurn(state.turnNumber?.[color] ?? 0, every)) {
+    return { drew: 0, blockedByBlind: false };
+  }
+  if (state.meta?.blindNext?.[color]) {
+    return { drew: 0, blockedByBlind: true };
+  }
+  const drew = drawToHand(state, color, 1);
+  return { drew, blockedByBlind: false };
 }
 
 export function startTurnMeta(state, color) {
