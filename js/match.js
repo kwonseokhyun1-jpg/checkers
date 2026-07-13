@@ -1755,7 +1755,10 @@ export class MatchSession {
 
   async applyCardWithTrapFx(card, picks) {
     const res = applyCard(this.state, this.localColor, card, picks);
-    if (res.success) await this.flushTrapBoardFx(this.state);
+    if (res.success) {
+      await this.flushTrapBoardFx(this.state);
+      await this.finalizePendingMartyrTrapReveal();
+    }
     return res;
   }
 
@@ -1873,7 +1876,8 @@ export class MatchSession {
     const pendingBoardFx = s.boardFx;
     s.boardFx = null;
 
-    const finishTurn = () => {
+    const finishTurn = async () => {
+      await this.finalizePendingMartyrTrapReveal();
       this._pressExtraFrom = null;
       if (rewardMsg) this.setMessage(rewardMsg);
       if (this.tutorialHooks?.beforeEndHumanTurn) {
@@ -1919,7 +1923,9 @@ export class MatchSession {
 
     this.selectedSquare = null;
     this.validMoves = [];
-    playPendingBoardFx(finishTurn);
+    playPendingBoardFx(() => {
+      void finishTurn();
+    });
   }
 
   tryPressExtraMove(s, color, landR, landC) {
@@ -2291,6 +2297,57 @@ ${starLine}`;
       banner.className = "turn-banner";
     }
     this.resetTrapSpellBanner();
+  }
+
+  async runMartyrReveal({ trapOwner, drawCount = 2 } = {}) {
+    const def = getCardDef("martyr");
+    const cardName = def?.name || "Martyr";
+    const cardDesc =
+      def?.desc ||
+      "Hidden trap on a friendly piece — if an enemy captures or destroys it on their turn within 2 turns, you draw 2 cards.";
+    const label =
+      trapOwner == null
+        ? "Trap triggered"
+        : trapOwner === this.localColor
+          ? "Your trap"
+          : "Enemy trap";
+    const cardsLabel = drawCount === 1 ? "1 card" : `${drawCount} cards`;
+
+    this.showTrapSpellBanner(cardName, cardDesc, { label });
+
+    const frame = this.$("board")?.closest(".board-frame");
+    frame?.classList.add("board-frame--martyr");
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent =
+        trapOwner === this.localColor
+          ? `${cardName}! — drew ${cardsLabel}.`
+          : `${cardName}!`;
+      banner.className = "turn-banner turn-banner--martyr";
+    }
+    this.root.querySelector(".match-wrap")?.classList.add("match-wrap--martyr");
+    this.render();
+    await delay(1200 + SPELL_BANNER_EXTRA_MS);
+    frame?.classList.remove("board-frame--martyr");
+    this.root.querySelector(".match-wrap")?.classList.remove("match-wrap--martyr");
+    if (banner) {
+      banner.classList.remove("turn-banner--martyr");
+      banner.className = "turn-banner";
+    }
+    this.resetTrapSpellBanner();
+  }
+
+  async finalizePendingMartyrTrapReveal({ recordHistory = true } = {}) {
+    const trap = this.state?.pendingTrapHistory;
+    if (!trap || trap.effect !== "martyr") return null;
+    const owner = trap.color;
+    const drawCount = this.state.meta?.pendingMartyrDraw?.[owner] || 2;
+    await this.runMartyrReveal({ trapOwner: owner, drawCount });
+    const msg =
+      owner === this.localColor ? flushPendingMartyrMessage(this.state.meta, this.localColor) : null;
+    if (msg) this.setMessage(msg);
+    if (recordHistory) this.recordPendingTrapHistory();
+    return msg;
   }
 
   async playCoinFlipAnimation(victimRow, victimCol, victimColor, cardName = "Coin Flip", victimSnap = null) {
@@ -2848,6 +2905,7 @@ ${starLine}`;
               await new Promise((resolve) => this.playBoardFx(this.state, resolve));
               this.recordPendingTrapHistory();
             }
+            await this.finalizePendingMartyrTrapReveal();
           } else {
             await this.playSpellEntryVisual(entry, { cardName, def, oc });
           }
@@ -2888,6 +2946,7 @@ ${starLine}`;
         if (this.state.boardFx) {
           await new Promise((resolve) => this.playBoardFx(this.state, resolve));
         }
+        await this.finalizePendingMartyrTrapReveal();
         await delay(AI_PACE.moveSettle);
       } else if (entry.type === "message") {
         if (aiLog) {
