@@ -915,6 +915,10 @@
   font-size: 0.85rem;
 }
 
+.turn-clock {
+  border-radius: 6px;
+}
+
 .spell-card {
   border-radius: 8px;
   border: 1px solid var(--card-border);

@@ -1,5 +1,7 @@
 import { boardFrameHtml } from "./board.js";
 
+const CLOCK_ICON = `<svg class="turn-clock__svg" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5V8l2.25 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
 export function getMatchHtml(opponentName = "Opponent", options = {}) {
   const safe = String(opponentName).replace(/</g, "");
   const exitLabel = options.exitLabel || "← Leave match";
@@ -17,7 +19,16 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
       ${spectator ? `<p class="spectate-banner" role="status">Spectating — use move history below to review plays</p>` : ""}
       <div class="game-layout">
         <aside class="panel panel-opponent">
-          <div class="player-badge opponent"><span class="piece-icon black"></span> ${safe}</div>
+          <div class="player-badge opponent">
+            <div class="player-badge__identity">
+              <span class="piece-icon black"></span>
+              <span class="player-badge__name">${safe}</span>
+            </div>
+            <div id="clock-opp" class="turn-clock" aria-label="Opponent turn timer">
+              <span class="turn-clock__icon" aria-hidden="true">${CLOCK_ICON}</span>
+              <span class="turn-clock__time">1:00</span>
+            </div>
+          </div>
           <p id="enemy-hand-count-label" class="hand-count-label">${spectator ? "Hand hidden" : "0 cards in hand"}</p>
         </aside>
         <section class="board-section">
@@ -43,7 +54,16 @@ export function getMatchHtml(opponentName = "Opponent", options = {}) {
           <div id="piece-info" class="piece-info hidden"></div>
         </section>
         <aside class="panel panel-player">
-          <div class="player-badge you"><span class="piece-icon red"></span> ${localName}</div>
+          <div class="player-badge you">
+            <div class="player-badge__identity">
+              <span class="piece-icon red"></span>
+              <span class="player-badge__name">${localName}</span>
+            </div>
+            <div id="clock-you" class="turn-clock" aria-label="Your turn timer">
+              <span class="turn-clock__icon" aria-hidden="true">${CLOCK_ICON}</span>
+              <span class="turn-clock__time">1:00</span>
+            </div>
+          </div>
           <p id="hand-count-label" class="hand-count-label">${spectator ? "Hand hidden" : "0 cards in hand"}</p>
           <div id="hand-red" class="hand spell-hand${spectator ? " hand--spectator-hidden" : ""}"></div>
           ${handHiddenNote}

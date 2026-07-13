@@ -82,9 +82,98 @@ body {
 .player-badge {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   font-weight: 600;
   margin-bottom: 0.75rem;
+}
+
+.player-badge__identity {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.player-badge__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.turn-clock {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 4.4rem;
+  padding: 0.32rem 0.55rem;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background: rgba(8, 10, 18, 0.55);
+  color: var(--text-muted);
+  font-family: var(--font-heading);
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.turn-clock__icon {
+  display: inline-flex;
+  opacity: 0.85;
+}
+
+.turn-clock__svg {
+  display: block;
+}
+
+.turn-clock__time {
+  letter-spacing: 0.02em;
+}
+
+.turn-clock--active {
+  background: #f4f6f8;
+  color: #121820;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.turn-clock--active .turn-clock__icon {
+  opacity: 1;
+}
+
+.turn-clock--urgency {
+  border-color: #e11d2e;
+  animation: turn-clock-glare 0.85s ease-in-out infinite;
+}
+
+@keyframes turn-clock-glare {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 rgba(225, 29, 46, 0),
+      0 0 0 1px rgba(225, 29, 46, 0.55);
+  }
+  50% {
+    box-shadow:
+      0 0 16px 2px rgba(225, 29, 46, 0.8),
+      0 0 0 2px rgba(225, 29, 46, 0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn-clock--urgency {
+    animation: none;
+    box-shadow:
+      0 0 10px 1px rgba(225, 29, 46, 0.65),
+      0 0 0 2px rgba(225, 29, 46, 0.9);
+  }
 }
 
 .piece-icon {
