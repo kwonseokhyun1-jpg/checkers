@@ -111,6 +111,9 @@ export function getCardHint(card) {
   if (card.effect === "mass_nudge") {
     return "Click your piece, then where it moves; optionally pick a second piece and destination.";
   }
+  if (card.effect === "hostile_swap") {
+    return "Click your piece, then an enemy within 3 squares (Chebyshev).";
+  }
   return hints[card.mode] || "Click valid targets on the board.";
 }
 
@@ -189,6 +192,33 @@ function adjacentEnemiesTo(state, color, row, col) {
       const c = col + dc;
       const p = at(state, r, c);
       if (p && p.color === o && !pieceCloakedByDarkness(state, r, c)) res.push([r, c]);
+    }
+  }
+  return res;
+}
+
+const HOSTILE_SWAP_RADIUS = 3;
+
+function hostileSwapEnemiesInRange(state, color, row, col) {
+  const o = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  const res = [];
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = at(state, r, c);
+      if (!p || p.color !== o || pieceCloakedByDarkness(state, r, c)) continue;
+      if (Math.max(Math.abs(r - row), Math.abs(c - col)) <= HOSTILE_SWAP_RADIUS) res.push([r, c]);
+    }
+  }
+  return res;
+}
+
+function friendlyWithHostileSwapTarget(state, color) {
+  const res = [];
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = at(state, r, c);
+      if (!p || p.color !== color || pieceCloakedByDarkness(state, r, c)) continue;
+      if (hostileSwapEnemiesInRange(state, color, r, c).length) res.push([r, c]);
     }
   }
   return res;
@@ -1056,7 +1086,16 @@ export function getValidTargets(state, color, card, picks) {
     case "f_f":
       return getValidTargets(state, color, { mode: "friendly" }, []);
     case "f_e":
-      if (picks.length === 0) return getValidTargets(state, color, { mode: "friendly" }, []);
+      if (picks.length === 0) {
+        if (card.effect === "hostile_swap") return friendlyWithHostileSwapTarget(state, color);
+        return getValidTargets(state, color, { mode: "friendly" }, []);
+      }
+      if (card.effect === "hostile_swap") {
+        const [pr, pc] = picks[0];
+        const p = at(state, pr, pc);
+        if (!p || p.color !== color) return [];
+        return hostileSwapEnemiesInRange(state, color, pr, pc);
+      }
       return getValidTargets(state, color, { mode: "enemy" }, []);
     case "f_e_adj":
       if (picks.length === 0) return friendlyWithAdjacentEnemy(state, color);

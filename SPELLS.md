@@ -133,7 +133,7 @@
 - **Demote** — Turn an enemy king back into a man (not on the back rank).
 - **Earthquake** — All pieces shift 1 square toward board center if possible.
 - **Exile King** — Teleport enemy king to a random empty square on their back row.
-- **Hostile Swap** — Swap one of your pieces with an enemy (both unshielded).
+- **Hostile Swap** — Swap one of your pieces with an unshielded enemy within 3 squares (Chebyshev).
 - **Last King** — If you have only 1 piece, it becomes a king with shield for 2 turns.
 - **Mirror Shield** — Next enemy spell on this piece reflects to a random enemy.
 - **Mind Control** — Convert an enemy man to your color for 2 of your turns; it then reverts to the enemy.

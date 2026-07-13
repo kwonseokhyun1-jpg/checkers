@@ -41,7 +41,7 @@ function makeState(board) {
 {
   const board = emptyBoard();
   board[5][0] = createPiece(COLORS.BLACK, 5, 0);
-  board[0][1] = createPiece(COLORS.RED, 0, 1);
+  board[2][1] = createPiece(COLORS.RED, 2, 1);
   const state = makeState(board);
   const card = getCardDef("hostile_swap");
   const res = tryAutoPlay(state, COLORS.BLACK, card);

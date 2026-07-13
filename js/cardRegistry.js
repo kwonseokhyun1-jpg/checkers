@@ -99,7 +99,7 @@ export const CARD_REGISTRY = [
   { id: "deep_freeze", name: "Deep Freeze", desc: "Freeze every enemy on one diagonal through your piece for 2 turns.", rarity: "epic", weight: 2, mode: "diagonal", effect: "deep_freeze" },
   { id: "earthquake", name: "Earthquake", desc: "All pieces shift 1 square toward board center if possible.", rarity: "epic", weight: 2, mode: "instant", effect: "earthquake" },
   { id: "berserk", name: "Berserk", desc: "Teleport one of your pieces anywhere except the enemy back rank. Landing on an enemy destroys it; you cannot capture this turn.", rarity: "legendary", weight: 1, mode: "f_empty", effect: "berserk" },
-  { id: "hostile_swap", name: "Hostile Swap", desc: "Swap one of your pieces with an unshielded enemy.", rarity: "epic", weight: 2, mode: "f_e", effect: "hostile_swap" },
+  { id: "hostile_swap", name: "Hostile Swap", desc: "Swap one of your pieces with an unshielded enemy within 3 squares (Chebyshev).", rarity: "epic", weight: 2, mode: "f_e", effect: "hostile_swap" },
   { id: "purify", name: "Purify", desc: "Remove all debuffs from your pieces, including burn and freeze.", rarity: "uncommon", weight: 4, mode: "instant", effect: "purify" },
   { id: "mulligan", name: "Mulligan", desc: "Discard your hand, then draw that many cards; you may cast another spell this turn.", rarity: "rare", weight: 3, mode: "instant", effect: "mulligan" },
   { id: "trickster", name: "Trickster", desc: "Swap up to 6 random pieces (pieces on back ranks are unaffected).", rarity: "rare", weight: 3, mode: "instant", effect: "trickster" },

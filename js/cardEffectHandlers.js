@@ -738,7 +738,7 @@ const EFFECTS = {
     state.meta.extraSpellCast[color] = true;
     return ok(`Mulligan — drew ${n} card${n === 1 ? "" : "s"}; cast another spell.`);
   },
-  hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns||isFortified(a)||isFortified(b)) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
+  hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); if(Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3) return fail('Out of range'); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns||isFortified(a)||isFortified(b)) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
   mind_control(state, color, picks) {
     const [r, c] = p0(picks);
     const p = at(state, r, c);
