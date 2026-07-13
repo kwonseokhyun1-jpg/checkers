@@ -2467,7 +2467,13 @@ async function launchAdventureMatch(
         setAudioMode("hub");
         root.innerHTML = "";
         $("view-match")?.classList.add("hidden");
-        showTab(consumePendingNavigationTab() || "play");
+        const tab = consumePendingNavigationTab();
+        if (tab) {
+          showTab(tab);
+        } else {
+          pendingPlaySubTab = "adventure";
+          showTab("play");
+        }
         if (pendingPostFloor1Tutorials) {
           schedulePostFloor1Tutorials();
         }
