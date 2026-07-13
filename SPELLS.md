@@ -76,7 +76,7 @@
 - **Bankrupt** — Both players lose half their gems.
 - **Bishop's Mark** — For 2 turns, a piece may slide along either diagonal over empty dark squares.
 - **Bishop's Sigil** — Piece slides diagonally any distance over empties for 3 turns.
-- **Blind** — Opponent cannot play cards on their next turn.
+- **Blind** — Opponent cannot play cards or draw on their next turn.
 - **Blink** — Teleport your piece to any empty dark square within 2 steps (Chebyshev).
 - **Blizzard** — Freeze up to 3 enemy men along a diagonal line you choose.
 - **Bulwark** — All your pieces on one diagonal line gain shield for 2 turns.

@@ -1216,7 +1216,7 @@ function chameleonMotif() {
     ${sparkles([[32, 12, 0.8], [8, 34, 0.6], [56, 34, 0.6]], "#e9d5ff", 0.55)}`;
 }
 
-/** Blindfold blocking opponent card play. */
+/** Blindfold blocking opponent card play and draw. */
 function blindMotif() {
   return `${groundShadow(32, 54, 20, 4)}
     <path d="M12 26 C24 16 40 16 52 26 C40 38 24 38 12 26 Z" fill="#312e81" opacity="0.78" stroke="#0f172a" stroke-width="2.4"/>

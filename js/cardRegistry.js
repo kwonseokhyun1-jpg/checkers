@@ -92,7 +92,7 @@ export const CARD_REGISTRY = [
   { id: "execution", name: "Execution", desc: "Destroy an enemy piece that has no legal moves.", rarity: "rare", weight: 3, mode: "enemy", effect: "execution" },
   { id: "snipe", name: "Snipe", desc: "Destroy an enemy 3+ squares away on a diagonal with nothing between.", rarity: "uncommon", weight: 4, mode: "enemy", effect: "snipe" },
   { id: "backstab", name: "Backstab", desc: "Destroy an enemy behind your piece on a backward diagonal if adjacent.", rarity: "uncommon", weight: 4, mode: "friendly", effect: "backstab" },
-  { id: "blind", name: "Blind", desc: "Opponent cannot play cards on their next turn.", rarity: "rare", weight: 3, mode: "instant", effect: "blind" },
+  { id: "blind", name: "Blind", desc: "Opponent cannot play cards or draw on their next turn.", rarity: "rare", weight: 3, mode: "instant", effect: "blind" },
   { id: "confusion", name: "Confusion", desc: "On opponent's next turn, their move is chosen randomly.", rarity: "epic", weight: 2, mode: "instant", effect: "confusion" },
   { id: "extract", name: "Extract", desc: "Force your opponent to discard a random card from their hand.", rarity: "rare", weight: 3, mode: "instant", effect: "extract" },
   { id: "counterspell", name: "Counterspell", desc: "Hidden trap: the next enemy spell is cancelled when they cast it.", rarity: "epic", weight: 2, mode: "instant", effect: "counterspell" },
