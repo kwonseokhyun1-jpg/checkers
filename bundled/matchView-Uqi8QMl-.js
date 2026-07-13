@@ -1,11 +1,20 @@
-import{c as e}from"./board-CLqmpsVm.js";function t(t=`Opponent`,n={}){let r=String(t).replace(/</g,``),i=n.exitLabel||`← Leave match`,a=!!n.spectator,o=a?String(n.localName||`Red`).replace(/</g,``):`You`,s=a?` match-wrap--spectator`:``,c=a?`<p class="hand-hidden-note">Hands hidden in spectate mode</p>`:``;return`
-    <div class="match-wrap match-scene${s}">
-      <button type="button" id="btn-leave-match" class="btn-text">${i}</button>
-      ${a?`<p class="spectate-banner" role="status">Spectating — use move history below to review plays</p>`:``}
+import{c as e}from"./board-CLqmpsVm.js";var t=`<svg class="turn-clock__svg" viewBox="0 0 16 16" width="14" height="14" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6.25" stroke="currentColor" stroke-width="1.5"/><path d="M8 4.5V8l2.25 1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;function n(n=`Opponent`,r={}){let i=String(n).replace(/</g,``),a=r.exitLabel||`← Leave match`,o=!!r.spectator,s=o?String(r.localName||`Red`).replace(/</g,``):`You`,c=o?` match-wrap--spectator`:``,l=o?`<p class="hand-hidden-note">Hands hidden in spectate mode</p>`:``;return`
+    <div class="match-wrap match-scene${c}">
+      <button type="button" id="btn-leave-match" class="btn-text">${a}</button>
+      ${o?`<p class="spectate-banner" role="status">Spectating — use move history below to review plays</p>`:``}
       <div class="game-layout">
         <aside class="panel panel-opponent">
-          <div class="player-badge opponent"><span class="piece-icon black"></span> ${r}</div>
-          <p id="enemy-hand-count-label" class="hand-count-label">${a?`Hand hidden`:`0 cards in hand`}</p>
+          <div class="player-badge opponent">
+            <div class="player-badge__identity">
+              <span class="piece-icon black"></span>
+              <span class="player-badge__name">${i}</span>
+            </div>
+            <div id="clock-opp" class="turn-clock" aria-label="Opponent turn timer">
+              <span class="turn-clock__icon" aria-hidden="true">${t}</span>
+              <span class="turn-clock__time">1:00</span>
+            </div>
+          </div>
+          <p id="enemy-hand-count-label" class="hand-count-label">${o?`Hand hidden`:`0 cards in hand`}</p>
         </aside>
         <section class="board-section">
           <div id="turn-banner" class="turn-banner match-banner">Your turn</div>
@@ -30,10 +39,19 @@ import{c as e}from"./board-CLqmpsVm.js";function t(t=`Opponent`,n={}){let r=Stri
           <div id="piece-info" class="piece-info hidden"></div>
         </section>
         <aside class="panel panel-player">
-          <div class="player-badge you"><span class="piece-icon red"></span> ${o}</div>
-          <p id="hand-count-label" class="hand-count-label">${a?`Hand hidden`:`0 cards in hand`}</p>
-          <div id="hand-red" class="hand spell-hand${a?` hand--spectator-hidden`:``}"></div>
-          ${c}
+          <div class="player-badge you">
+            <div class="player-badge__identity">
+              <span class="piece-icon red"></span>
+              <span class="player-badge__name">${s}</span>
+            </div>
+            <div id="clock-you" class="turn-clock" aria-label="Your turn timer">
+              <span class="turn-clock__icon" aria-hidden="true">${t}</span>
+              <span class="turn-clock__time">1:00</span>
+            </div>
+          </div>
+          <p id="hand-count-label" class="hand-count-label">${o?`Hand hidden`:`0 cards in hand`}</p>
+          <div id="hand-red" class="hand spell-hand${o?` hand--spectator-hidden`:``}"></div>
+          ${l}
           <button type="button" id="btn-end-cards" class="btn-secondary btn-skip-spell hidden">Skip spell phase</button>
         </aside>
         <footer class="match-log">
@@ -58,4 +76,4 @@ import{c as e}from"./board-CLqmpsVm.js";function t(t=`Opponent`,n={}){let r=Stri
         </div>
       </div>
     </div>
-  `}export{t as getMatchHtml};
+  `}export{n as getMatchHtml};
