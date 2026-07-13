@@ -17,6 +17,7 @@ const TAGS = {
   rook_2: ["Rank/file slide over empty dark squares for 2 turns"],
   crown: ["Instantly crown a friendly piece"],
   swap_friendly: ["Swap two friendly pieces"],
+  hostile_swap: ["Swap with an unshielded enemy within 3 squares (Chebyshev)"],
   quick_march: ["Same piece moves again; either step may capture"],
   offering: ["Sacrifice a friendly piece", "Draw 2 cards", "Cast another spell immediately"],
   mulligan: ["Discard your hand", "Draw that many new cards", "Cast another spell this turn"],

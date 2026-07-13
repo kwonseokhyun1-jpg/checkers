@@ -100,7 +100,7 @@ SPELLS = [
     ("hand_expand", "Hand Expand", "Your hand limit becomes 8 for the rest of the game.", "rare", 3, "instant", "hand_expand"),
     ("mulligan", "Mulligan", "Discard your hand, then draw that many cards; you may cast another spell this turn.", "rare", 3, "instant", "mulligan"),
     # === SWAPS / TRICKS ===
-    ("hostile_swap", "Hostile Swap", "Swap one of your pieces with an enemy (both unshielded).", "epic", 2, "f_e", "hostile_swap"),
+    ("hostile_swap", "Hostile Swap", "Swap one of your pieces with an unshielded enemy within 3 squares (Chebyshev).", "epic", 2, "f_e", "hostile_swap"),
     ("identity_theft", "Identity Theft", "Your piece copies an enemy's movement tags for 3 turns.", "rare", 3, "f_e", "identity_theft"),
     ("bait_switch", "Bait and Switch", "Swap an enemy with an empty square up to 2 steps away.", "rare", 3, "e_empty", "bait_switch"),
     ("mirror_move", "Mirror Move", "After opponent moves, copy their move pattern with your piece if legal.", "rare", 3, "instant", "mirror_move"),
