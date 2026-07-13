@@ -82,7 +82,19 @@ import {
 
 export const PHASE = { CARDS: "cards", MOVE: "move" };
 
+/** Fresh countdown granted at the start of every turn. */
+export const TURN_TIME_MS = 60_000;
+/** Border glare kicks in when this much time remains. */
+export const TURN_URGENCY_MS = 10_000;
+
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
+export function formatTurnClock(msLeft) {
+  const totalSec = Math.max(0, Math.ceil(msLeft / 1000));
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
 
 const BOUNTY_WANTED_SVG = `<svg viewBox="0 0 24 28" aria-hidden="true"><rect x="1" y="1" width="22" height="26" rx="2" fill="#fef3c7" stroke="#d97706" stroke-width="1.4"/><text x="12" y="9" text-anchor="middle" font-size="4.8" font-weight="700" fill="#92400e" font-family="Georgia,serif">WANTED</text><line x1="4" y1="11.5" x2="20" y2="11.5" stroke="#d97706" stroke-width="0.8"/><circle cx="12" cy="19" r="5.2" fill="#dc2626" stroke="#7f1d1d" stroke-width="1"/><ellipse cx="10" cy="17.2" rx="2.2" ry="1.4" fill="rgba(255,255,255,0.35)"/></svg>`;
 
@@ -140,6 +152,8 @@ export function createMatchState(playerDeckIds, aiDeckIds = null, options = {}) 
     pvpMoveHighlightSeq: 0,
     pvpLastMoveHighlights: null,
     moveHistory: [],
+    /** Wall-clock ms deadline for the active turn (1 minute per turn). */
+    turnEndsAt: null,
   };
   initCardState(state);
   initDeckPiles(state, playerDeckIds, aiDeckIds || buildAiDeck());
@@ -239,6 +253,12 @@ export class MatchSession {
     this._pendingHistoryLabel = null;
     this._pressExtraFrom = null;
     this._onKeyDown = (e) => this.onKeyDown(e);
+    this._clockTimer = null;
+    this._timeoutHandled = false;
+    this._onVisibility = () => {
+      this.tickTurnClock();
+      this.resumeFromBackground();
+    };
     this.achievementTracker =
       this.profile && !this.isPvp
         ? createMatchAchievementTracker(this.profile, this.localColor, this.state)
@@ -261,6 +281,7 @@ export class MatchSession {
         this.state.turn === this.opponentColor &&
         !this.state.gameOver
       ) {
+        this.resetTurnTimer();
         setTimeout(() => {
           void this.runOpponentTurn().catch((err) => console.error("AI turn failed:", err));
         }, AI_PACE.beforeTurn);
@@ -268,6 +289,7 @@ export class MatchSession {
         this.beginPlayerTurn();
       }
     }
+    this.ensureTurnClock();
     this.render();
   }
 
@@ -488,6 +510,7 @@ export class MatchSession {
     this.bindHandScroll();
 
     document.addEventListener("keydown", this._onKeyDown);
+    document.addEventListener("visibilitychange", this._onVisibility);
   }
 
   bindHandScroll() {
@@ -509,8 +532,10 @@ export class MatchSession {
 
   dispose() {
     this.achievementTracker?.dispose();
+    this.stopTurnClock();
     clearTimeout(this._suppressScrollClickTimer);
     document.removeEventListener("keydown", this._onKeyDown);
+    document.removeEventListener("visibilitychange", this._onVisibility);
     document.removeEventListener("pointermove", this._onDocPointerMove);
     document.removeEventListener("pointerup", this._onDocPointerUp);
     document.removeEventListener("pointercancel", this._onDocPointerUp);
@@ -793,6 +818,7 @@ export class MatchSession {
     const drawResult = applyPeriodicTurnDraw(s, color);
     if (drawResult.drew) this.setMessage("Drew a card from your deck.");
     startTurnMeta(s, color);
+    this.resetTurnTimer();
     if (color === this.localColor) {
       this.achievementTracker?.onTurnStart();
     }
@@ -1952,6 +1978,7 @@ export class MatchSession {
     tickMeta(this.state, this.localColor);
     this.state.turn = this.opponentColor;
     this.state.phase = PHASE.CARDS;
+    this.resetTurnTimer();
     if (this.isPvp) {
       this.state.spellPlayed[this.opponentColor] = false;
     }
@@ -2017,6 +2044,8 @@ export class MatchSession {
     if (this._gameOverUiShown) return;
     this._gameOverUiShown = true;
     this.state.gameOver = title;
+    this.stopTurnClock();
+    if (this.state) this.state.turnEndsAt = null;
     if (!this.isPvp) clearMatchCheckpoint();
     const won = title.startsWith("Victory");
     const isTie = title.startsWith("Tie");
@@ -2981,6 +3010,7 @@ ${starLine}`;
 
   async finishOpponentTurn(capBefore) {
     const s = this.state;
+    if (s.gameOver) return;
     const capAfter = s.captured[this.localColor]?.length ?? 0;
     if (capAfter > capBefore) this.achievementTracker?.onOurPieceCaptured();
 
@@ -3988,5 +4018,79 @@ ${starLine}`;
     if (youIcon) youIcon.className = `piece-icon ${this.localColor}${youSkin}`;
     const oppIcon = this.root.querySelector(".panel-opponent .piece-icon");
     if (oppIcon) oppIcon.className = `piece-icon ${this.opponentColor}${oppSkin}`;
+    this.updateTurnClocks();
+  }
+
+  resetTurnTimer() {
+    if (!this.state) return;
+    this.state.turnEndsAt = Date.now() + TURN_TIME_MS;
+    this._timeoutHandled = false;
+    this.ensureTurnClock();
+    this.updateTurnClocks();
+  }
+
+  ensureTurnClock() {
+    if (this._clockTimer || this.state?.gameOver) return;
+    this._clockTimer = setInterval(() => this.tickTurnClock(), 250);
+    this.tickTurnClock();
+  }
+
+  stopTurnClock() {
+    if (this._clockTimer) {
+      clearInterval(this._clockTimer);
+      this._clockTimer = null;
+    }
+  }
+
+  tickTurnClock() {
+    this.updateTurnClocks();
+    const s = this.state;
+    if (!s || s.gameOver || this._gameOverUiShown || this._timeoutHandled) return;
+    if (this.tutorialHooks || this.spectator) return;
+    if (!s.turnEndsAt || Date.now() < s.turnEndsAt) return;
+    this._timeoutHandled = true;
+    this.handleTurnTimeout();
+  }
+
+  handleTurnTimeout() {
+    const timedOut = this.state?.turn;
+    if (!timedOut || this.state.gameOver || this._gameOverUiShown) return;
+    this.stopTurnClock();
+    this.state.turnEndsAt = null;
+    // Clear busy so game-over UI / PvP sync can finish cleanly mid-turn.
+    this.actionBusy = false;
+    this.cancelCardPlay();
+    if (timedOut === this.localColor) {
+      void this.showGameOver("Defeat", "You ran out of time.");
+    } else {
+      void this.showGameOver("Victory!", "Opponent ran out of time.");
+    }
+  }
+
+  updateTurnClocks() {
+    const s = this.state;
+    if (!s) return;
+    const youClock = this.$("clock-you");
+    const oppClock = this.$("clock-opp");
+    if (!youClock && !oppClock) return;
+
+    const now = Date.now();
+    const activeColor = s.gameOver ? null : s.turn;
+    const remaining =
+      activeColor && s.turnEndsAt != null ? Math.max(0, s.turnEndsAt - now) : TURN_TIME_MS;
+
+    const apply = (el, color) => {
+      if (!el) return;
+      const timeEl = el.querySelector(".turn-clock__time");
+      const isActive = activeColor === color;
+      const ms = isActive ? remaining : TURN_TIME_MS;
+      if (timeEl) timeEl.textContent = formatTurnClock(ms);
+      el.classList.toggle("turn-clock--active", isActive);
+      el.classList.toggle("turn-clock--urgency", isActive && ms <= TURN_URGENCY_MS && !s.gameOver);
+      el.setAttribute("aria-live", isActive ? "polite" : "off");
+    };
+
+    apply(youClock, this.localColor);
+    apply(oppClock, this.opponentColor);
   }
 }

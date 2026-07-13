@@ -847,6 +847,12 @@ nav.game-nav.tabs .game-nav__btn,
     font-size: 0.9rem;
   }
 
+  body.match-active .turn-clock {
+    min-width: 4rem;
+    padding: 0.28rem 0.45rem;
+    font-size: 0.85rem;
+  }
+
   body.match-active .hand-count-label {
     margin: 0 0 0.35rem;
     font-size: 0.75rem;
@@ -2681,6 +2687,11 @@ body.install-banner-visible.deck-editing .game-shell {
   body.match-active .panel-opponent .player-badge,
   body.match-active .panel-player .player-badge {
     font-size: 1.12rem;
+  }
+
+  body.match-active .turn-clock {
+    min-width: 4.5rem;
+    font-size: 0.95rem;
   }
 
   body.match-active .hand-count-label {
