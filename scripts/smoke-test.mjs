@@ -71,6 +71,17 @@ async function openAdventureFromPlayTab(page) {
   }
 }
 
+/** Floor 1 sits above the fixed bottom nav; use a direct click so Playwright does not time out. */
+async function clickFirstAdventureTile(page) {
+  const tile = page
+    .locator(
+      "#adventure-map .adventure-map-tile--next, #adventure-map .adventure-map-tile:not(.adventure-map-tile--locked)"
+    )
+    .first();
+  await tile.waitFor({ state: "visible", timeout: 10000 });
+  await tile.evaluate((el) => el.click());
+}
+
 const tutorialVisible = await page.locator("#tutorial-modal:not(.hidden)").isVisible();
 if (tutorialVisible) {
   await page.locator('[data-tab="play"]').click();
@@ -89,7 +100,7 @@ if (tiles < 1) {
   process.exit(1);
 }
 
-await page.locator("#adventure-map .adventure-map-tile--next, #adventure-map .adventure-map-tile:not(.adventure-map-tile--locked)").first().click();
+await clickFirstAdventureTile(page);
 await page.waitForTimeout(800);
 if (!(await page.locator("#adventure-prebattle:not(.hidden)").isVisible())) {
   console.error("Prebattle modal did not open");
