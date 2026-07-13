@@ -62,7 +62,7 @@ import {
   bindPublicProfileViewButtons,
   buildRoomHostAvatarHtml,
 } from "./userProfileModal.js";
-import { enhanceSelect } from "./customSelect.js";
+import { enhanceSelect, resolveNativeSelect } from "./customSelect.js";
 import { initPanelHelp } from "./panelHelp.js";
 
 function escapeHtml(text) {
@@ -571,7 +571,12 @@ export function initPvpUI({
     arenaRoot.querySelector("#pvp-host")?.addEventListener("click", () => void hostRoom());
     enhanceSelect(arenaRoot.querySelector("#pvp-deck-select"));
     enhanceSelect(arenaRoot.querySelector("#pvp-mode-select"));
-    arenaRoot.querySelector("#pvp-mode-select")?.addEventListener("change", syncModeUi);
+    resolveNativeSelect(arenaRoot.querySelector("#pvp-deck-select"))?.addEventListener("change", (e) => {
+      const profile = getProfile();
+      profile.selectedDeckId = e.target.value;
+      saveProfile(profile);
+    });
+    resolveNativeSelect(arenaRoot.querySelector("#pvp-mode-select"))?.addEventListener("change", syncModeUi);
     syncModeUi();
     bindPvpPanelHelp(arenaRoot);
     startOpenRoomsSync();
@@ -785,12 +790,12 @@ export function initPvpUI({
   }
 
   function getSelectedMode() {
-    return arenaRoot.querySelector("#pvp-mode-select")?.value || PVP_MODE_NORMAL;
+    return resolveNativeSelect(arenaRoot.querySelector("#pvp-mode-select"))?.value || PVP_MODE_NORMAL;
   }
 
   function syncModeUi() {
     const mystery = getSelectedMode() === PVP_MODE_MYSTERY;
-    const deckSelect = arenaRoot.querySelector("#pvp-deck-select");
+    const deckSelect = resolveNativeSelect(arenaRoot.querySelector("#pvp-deck-select"));
     const hint = arenaRoot.querySelector("#pvp-mode-hint");
     if (deckSelect) deckSelect.disabled = mystery;
     hint?.classList.toggle("hidden", !mystery);
@@ -798,7 +803,9 @@ export function initPvpUI({
 
   function getSelectedDeck() {
     const profile = getProfile();
-    const id = arenaRoot.querySelector("#pvp-deck-select")?.value || profile.selectedDeckId;
+    const id =
+      resolveNativeSelect(arenaRoot.querySelector("#pvp-deck-select"))?.value ||
+      profile.selectedDeckId;
     return profile.decks.find((d) => d.id === id);
   }
 
