@@ -267,15 +267,51 @@ function adjacentDarkSquares(row, col) {
   return out;
 }
 
-/** Infect every piece adjacent to the plague seed (both colors). */
-export function spreadPlagueFromSeed(board, state, row, col) {
-  const seed = board[row][col];
-  if (!seed?.plagueSeed) return 0;
+/** Infect every piece adjacent to a square (both colors). */
+export function spreadPlagueAt(board, state, row, col) {
   let infected = 0;
   for (const [ar, ac] of adjacentDarkSquares(row, col)) {
     if (board[ar][ac] && applyPlagueToPiece(board, state, ar, ac)) infected++;
   }
   return infected;
+}
+
+/** Infect adjacent pieces and the occupier of a plague epicenter square. */
+export function spreadPlagueEpicenter(board, state, row, col) {
+  let infected = spreadPlagueAt(board, state, row, col);
+  if (board[row][col] && applyPlagueToPiece(board, state, row, col)) infected++;
+  return infected;
+}
+
+/** Spread plague when an enemy engages a plague seed (lands on or adjacent to it). */
+export function resolvePlagueSpreadFromEnemyApproach(board, state, moverRow, moverCol, { capturedPlagueSeedAt = null } = {}) {
+  const mover = board[moverRow]?.[moverCol];
+  if (!mover || mover.plagueSeed) return 0;
+
+  if (capturedPlagueSeedAt) {
+    return spreadPlagueEpicenter(board, state, capturedPlagueSeedAt[0], capturedPlagueSeedAt[1]);
+  }
+
+  let infected = 0;
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const seed = board[r][c];
+      if (!seed?.plagueSeed || seed.color === mover.color) continue;
+      const dr = Math.abs(moverRow - r);
+      const dc = Math.abs(moverCol - c);
+      if (dr <= 1 && dc <= 1 && (dr || dc)) {
+        infected += spreadPlagueFromSeed(board, state, r, c);
+      }
+    }
+  }
+  return infected;
+}
+
+/** Infect every piece adjacent to the plague seed (both colors). */
+export function spreadPlagueFromSeed(board, state, row, col) {
+  const seed = board[row][col];
+  if (!seed?.plagueSeed) return 0;
+  return spreadPlagueAt(board, state, row, col);
 }
 
 export function applyBurnToPiece(board, state, row, col, turns, byColor = null) {
@@ -904,7 +940,11 @@ export function applyMove(board, move, state = null) {
   const postMoveCaptures = captureTargets.filter(({ cr, cc }) => cr !== tr || cc !== tc);
 
   let piece = moverBefore;
+  let capturedPlagueSeedAt = null;
   for (const target of preMoveCaptures) {
+    if (target.cap?.plagueSeed && target.cap.color !== moverBefore?.color) {
+      capturedPlagueSeedAt = [target.cr, target.cc];
+    }
     piece = applyMoveCapture(board, state, piece, target, {
       wasAwakeZombie,
       zombieMasterId,
@@ -917,6 +957,9 @@ export function applyMove(board, move, state = null) {
   piece = movePiece(board, fr, fc, tr, tc);
 
   for (const target of postMoveCaptures) {
+    if (target.cap?.plagueSeed && target.cap.color !== moverBefore?.color) {
+      capturedPlagueSeedAt = [target.cr, target.cc];
+    }
     piece = applyMoveCapture(board, state, piece, target, {
       wasAwakeZombie,
       zombieMasterId,
@@ -927,7 +970,9 @@ export function applyMove(board, move, state = null) {
   }
 
   if (!piece) return null;
-  return resolveLandingTraps(board, state, tr, tc, piece);
+  piece = resolveLandingTraps(board, state, tr, tc, piece);
+  resolvePlagueSpreadFromEnemyApproach(board, state, tr, tc, { capturedPlagueSeedAt });
+  return piece;
 }
 
 
