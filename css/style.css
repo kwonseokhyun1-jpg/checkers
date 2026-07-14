@@ -6803,8 +6803,9 @@ body.public-profile-modal-open {
 .public-profile-modal__stats {
   margin-top: 0;
 }
-.public-profile-modal__stats .profile-stat-card__icon {
-  display: none;
+.public-profile-modal__title .mage-title-tag {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 .public-profile-modal__loading {
   margin: 2rem 0;
@@ -9520,8 +9521,8 @@ body.tutorial-match-active.card-preview-open .tutorial-match-card {
   border-color: rgba(220, 50, 70, 0.45);
 }
 .mage-title-tag.mage-title--color-dark-purple {
-  color: #5a2d8a;
-  border-color: rgba(90, 45, 138, 0.45);
+  color: #b794f6;
+  border-color: rgba(183, 148, 246, 0.5);
 }
 @keyframes mage-title-shimmer {
   0%, 100% { filter: brightness(1); }

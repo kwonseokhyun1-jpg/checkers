@@ -7,6 +7,7 @@ import {
 } from "./cosmeticArt.js";
 import { equippedTitleTagHtml } from "./mageTitles.js";
 import { getProfileStats } from "./profileStats.js";
+import { PROFILE_STAT_ICONS } from "./profileStatIcons.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -51,6 +52,7 @@ function publicProfileStatsHtml(stats) {
           (card) => `
         <article class="profile-stat-card profile-stat-card--${card.key}">
           <span class="profile-stat-card__label">${escapeHtml(card.label)}</span>
+          <span class="profile-stat-card__icon">${PROFILE_STAT_ICONS[card.key]}</span>
           <span class="profile-stat-card__value">${card.value}</span>
         </article>`
         )
