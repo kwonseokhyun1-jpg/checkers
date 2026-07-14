@@ -79,6 +79,42 @@ applyMove(
 );
 assert(spreadState.board[3][4]?.plagueTurns === PLAGUE_TURNS, "Piece adjacent to seed after move should be infected");
 
+// Enemy capturing the plague seed spreads plague from that square and infects the capturer
+const captureState = baseState();
+setPiece(captureState.board, 5, 4, createPiece(COLORS.RED, 5, 4));
+setPiece(captureState.board, 4, 5, createPiece(COLORS.BLACK, 4, 5));
+applyCard(captureState, COLORS.RED, { effect: "plague" }, [[5, 4]]);
+setPiece(captureState.board, 6, 3, createPiece(COLORS.RED, 6, 3));
+assert(!captureState.board[6][3]?.plagueTurns, "Fresh adjacent ally should not be infected yet");
+assert(captureState.board[4][5]?.plagueTurns === PLAGUE_TURNS, "Adjacent enemy should already be infected from cast");
+
+applyMove(
+  captureState.board,
+  { from: [4, 5], to: [5, 4], captures: [[5, 4]], type: "step" },
+  captureState,
+);
+assert(captureState.board[5][4]?.color === COLORS.BLACK, "Enemy should occupy the seed square");
+assert(captureState.board[5][4]?.plagueTurns === PLAGUE_TURNS, "Capturer should be infected");
+assert(captureState.board[6][3]?.plagueTurns === PLAGUE_TURNS, "Piece adjacent to capture square should be infected");
+
+// Enemy stepping adjacent to the plague seed spreads without capturing it
+const approachState = baseState();
+setPiece(approachState.board, 5, 4, createPiece(COLORS.RED, 5, 4));
+setPiece(approachState.board, 3, 4, createPiece(COLORS.BLACK, 3, 4));
+setPiece(approachState.board, 4, 3, createPiece(COLORS.RED, 4, 3));
+applyCard(approachState, COLORS.RED, { effect: "plague" }, [[5, 4]]);
+assert(approachState.board[4][3]?.plagueTurns === PLAGUE_TURNS, "Adjacent ally is infected on cast");
+approachState.board[4][3].plagueTurns = 0;
+approachState.board[4][3].plagueDeferBeginTick = false;
+
+applyMove(
+  approachState.board,
+  { from: [3, 4], to: [4, 5], captures: [], type: "step" },
+  approachState,
+);
+assert(approachState.board[5][4]?.plagueSeed, "Seed should still be on the board");
+assert(approachState.board[4][3]?.plagueTurns === PLAGUE_TURNS, "Ally adjacent to seed should be re-infected when enemy approaches");
+
 // Infected allies die after 2 owner turns (caster's tick already ran before infection)
 for (let i = 0; i < PLAGUE_TURNS; i++) {
   tickEffects(state.board, COLORS.RED, state);

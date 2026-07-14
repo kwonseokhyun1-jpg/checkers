@@ -6,6 +6,7 @@ import {
   getAdjacentEmpty, getTeleportTargets, getBoltTarget, getCryoBoltTarget, isCryoBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, diagonalDirectionFromPick, piecesOfColor, enemyPieces,
   createPiece, grantAwokenBear, copyMarksToClone, stripZombieBearMarks, absorbZombieIntoPiece, isZombieBearStack, getAllMovesForColor, pieceHasLegalMoves, pieceHasIntrinsicMoves, hasMandatoryJumps, countPieces,
   applyFreezeToPiece, applyVenomToPiece, applyPlagueToPiece, applyBurnToPiece, destroyPieceIfClone, isFortified,
+  spreadPlagueEpicenter, resolvePlagueSpreadFromEnemyApproach,
   tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS, MARTYR_TRAP_TURNS,
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns } from "./gameMeta.js";
@@ -82,6 +83,7 @@ export function deportCanTarget(state, piece, r, c) {
 
 function swapAt(state, r1, c1, r2, c2) {
   const a = at(state, r1, c1), b = at(state, r2, c2);
+  const seedWasAt = a?.plagueSeed && b && b.color !== a.color ? [r1, c1] : null;
   state.board[r1][c1] = b;
   state.board[r2][c2] = a;
   if (a) { a.row = r2; a.col = c2; }
@@ -90,6 +92,9 @@ function swapAt(state, r1, c1, r2, c2) {
   tryPromoteOnFarRow(b, r1);
   if (a) resolveLandingTraps(state.board, state, r2, c2, a);
   if (b) resolveLandingTraps(state.board, state, r1, c1, b);
+  if (seedWasAt) spreadPlagueEpicenter(state.board, state, seedWasAt[0], seedWasAt[1]);
+  else if (b) resolvePlagueSpreadFromEnemyApproach(state.board, state, r1, c1);
+  else if (a) resolvePlagueSpreadFromEnemyApproach(state.board, state, r2, c2);
 }
 
 function findPieceById(state, id) {
