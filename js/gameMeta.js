@@ -20,6 +20,8 @@ export function createMatchMeta() {
     vengeance: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blinded: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    restrictionTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
+    restrictionBlocked: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     confuseNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     confused: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     shatterSilenceNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
@@ -142,6 +144,30 @@ export function consumeFreeDraw(state, color) {
 }
 
 export const DOMINION_DURATION_TURNS = 2;
+export const RESTRICTION_DURATION_TURNS = 2;
+
+/** Ensure movement-spell restriction counters exist (older saves / partial meta). */
+export function ensureRestrictionTurns(meta) {
+  if (!meta.restrictionTurns || typeof meta.restrictionTurns !== "object") {
+    meta.restrictionTurns = { [COLORS.RED]: 0, [COLORS.BLACK]: 0 };
+  }
+  for (const color of [COLORS.RED, COLORS.BLACK]) {
+    const v = meta.restrictionTurns[color];
+    meta.restrictionTurns[color] = typeof v === "number" ? v : v ? RESTRICTION_DURATION_TURNS : 0;
+  }
+  return meta.restrictionTurns;
+}
+
+export function isMovementRestricted(meta, color) {
+  ensureRestrictionTurns(meta);
+  return !!meta.restrictionBlocked?.[color];
+}
+
+export function restrictionTurnsRemaining(meta, color) {
+  ensureRestrictionTurns(meta);
+  const turns = meta.restrictionTurns[color] ?? 0;
+  return turns + (meta.restrictionBlocked?.[color] ? 1 : 0);
+}
 
 /** Ensure dominion counter exists (older saves / partial meta). */
 export function ensureDominionTurns(meta) {
@@ -199,6 +225,7 @@ export function applyPeriodicTurnDraw(state, color, every = DRAW_EVERY_TURNS) {
 export function startTurnMeta(state, color) {
   ensureConstitutionTurns(state.meta);
   ensureDominionTurns(state.meta);
+  ensureRestrictionTurns(state.meta);
   state.meta.turnNumber += 1;
   const opp = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
   if (state.meta.prospectPending[color] > 0) {
@@ -211,6 +238,9 @@ export function startTurnMeta(state, color) {
   state.meta.movementCardPlayed[color] = false;
   state.meta.optionalJumps[color] = false;
   if (state.meta.dominionTurn[color] > 0) state.meta.dominionTurn[color]--;
+  state.meta.restrictionBlocked = state.meta.restrictionBlocked || { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  state.meta.restrictionBlocked[color] = state.meta.restrictionTurns[color] > 0;
+  if (state.meta.restrictionTurns[color] > 0) state.meta.restrictionTurns[color]--;
   state.meta.extraSpellCast[color] = false;
   state.meta.bearBonusUsed = state.meta.bearBonusUsed || { [COLORS.RED]: false, [COLORS.BLACK]: false };
   state.meta.bearBonusUsed[color] = false;

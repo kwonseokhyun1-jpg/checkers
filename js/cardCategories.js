@@ -80,6 +80,7 @@ const ID_TO_CATEGORY = {
   quicksand: "trap",
   rally: "defense",
   recall: "movement",
+  restriction: "control",
   repel: "movement",
   random_teleport: "movement",
   retreat: "movement",

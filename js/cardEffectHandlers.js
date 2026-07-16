@@ -9,7 +9,7 @@ import {
   spreadPlagueEpicenter, resolvePlagueSpreadFromEnemyApproach,
   tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS, MARTYR_TRAP_TURNS,
 } from "./board.js";
-import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns } from "./gameMeta.js";
+import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns, ensureRestrictionTurns, RESTRICTION_DURATION_TURNS } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
@@ -602,6 +602,11 @@ const EFFECTS = {
   root_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.rooted=1; return ok(); },
   slow_2(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color===color||isFortified(p)) return fail(); p.slowed=2; return ok(); },
   blind(state, color, picks) { state.meta.blindNext[opp(color)]=true; return ok(); },
+  restriction_2(state, color, picks) {
+    ensureRestrictionTurns(state.meta);
+    state.meta.restrictionTurns[opp(color)] = RESTRICTION_DURATION_TURNS;
+    return ok();
+  },
   confusion(state, color, picks) { state.meta.confuseNext[opp(color)]=true; return ok(); },
   extract(state, color, picks) {
     const enemy = opp(color);
