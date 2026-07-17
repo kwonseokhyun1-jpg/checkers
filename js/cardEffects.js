@@ -718,6 +718,42 @@ function hostileSwapWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
   );
 }
 
+/** Simulate converting an enemy man at (row, col). Returns null if Mind Control cannot target it. */
+function simulateMindControl(state, color, row, col) {
+  const p = at(state, row, col);
+  if (!p || p.color === color || p.king) return null;
+  if ((p.anchored || 0) > 0 || isFortified(p)) return null;
+  const board = cloneBoardCells(state.board);
+  const sim = board[row][col];
+  sim.mindControlOriginalColor = sim.color;
+  sim.color = color;
+  sim.mindControlTurns = 2;
+  return { ...state, board };
+}
+
+/** After Mind Control, the converted piece can jump-capture during the move phase. */
+function mindControlCanCaptureNow(state, color, row, col) {
+  const sim = simulateMindControl(state, color, row, col);
+  if (!sim) return false;
+  return getAllMovesForColor(sim.board, color, sim).some(
+    (m) => m.from[0] === row && m.from[1] === col && (m.captures?.length ?? 0) > 0
+  );
+}
+
+/**
+ * After Mind Control, the opponent is forced (mandatory capture) to jump the converted
+ * piece — i.e. take their own former man.
+ */
+function mindControlForcesOwnCapture(state, color, row, col) {
+  const sim = simulateMindControl(state, color, row, col);
+  if (!sim) return false;
+  const opponent = opponentColor(color);
+  const moves = getAllMovesForColor(sim.board, opponent, sim);
+  if (!moves.length) return false;
+  if (!moves.some((m) => (m.captures?.length ?? 0) > 0)) return false;
+  return moves.every((m) => m.captures?.some(([cr, cc]) => cr === row && cc === col));
+}
+
 function isAdjacentSquare(r1, c1, r2, c2) {
   return Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1 && (r1 !== r2 || c1 !== c2);
 }
@@ -1240,6 +1276,13 @@ function getAiPickTargets(state, color, card) {
   if (card.effect === "retreat_3") {
     return targets.filter(([r, c]) => retreatWouldEnableBackwardMoves(state, color, r, c));
   }
+  if (card.effect === "mind_control") {
+    return targets.filter(
+      ([r, c]) =>
+        mindControlCanCaptureNow(state, color, r, c) ||
+        mindControlForcesOwnCapture(state, color, r, c)
+    );
+  }
   if (AI_SKIP_SPELL_ON_CAPTURABLE.has(card.effect)) {
     return targets.filter(([r, c]) => !enemyCapturableThisTurn(state, color, r, c));
   }
@@ -1295,6 +1338,24 @@ function* pickSequences(state, color, card, max = 24) {
       .sort((a, b) => b.score - a.score || a.pos[0] - b.pos[0] || a.pos[1] - b.pos[1]);
     let n = 0;
     for (const { pos } of scored) {
+      yield [pos];
+      if (++n >= max) return;
+    }
+    return;
+  }
+  if (card.effect === "mind_control") {
+    const captureNow = [];
+    const forceOwn = [];
+    for (const p of t0) {
+      if (mindControlCanCaptureNow(state, color, p[0], p[1])) captureNow.push(p);
+      else forceOwn.push(p);
+    }
+    let n = 0;
+    for (const pos of captureNow) {
+      yield [pos];
+      if (++n >= max) return;
+    }
+    for (const pos of forceOwn) {
       yield [pos];
       if (++n >= max) return;
     }
