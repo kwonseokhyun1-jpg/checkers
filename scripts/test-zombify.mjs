@@ -85,6 +85,26 @@ assert.equal(hordeSpread?.isZombie, true, "non-king zombie capture should zombif
 assert.equal(hordeSpread?.isMainZombie, false);
 assert.equal(hordeSpread?.zombieMasterId, main.zombieMasterId);
 
+// Capturing a crowned enemy should also raise a horde zombie on the kill square.
+const boardKing = Array.from({ length: 8 }, () => Array(8).fill(null));
+const stateKing = emptyState(boardKing);
+place(boardKing, 5, 0, COLORS.RED);
+const kingVictim = place(boardKing, 4, 1, COLORS.BLACK, true);
+assert.equal(kingVictim.king, true);
+applyEffect(stateKing, COLORS.RED, "zombify", [[5, 0]]);
+const kingHunter = boardKing[5][0];
+tickEffects(boardKing, COLORS.RED, stateKing);
+applyMove(
+  boardKing,
+  { from: [5, 0], to: [3, 2], captures: [[4, 1]], type: "jump" },
+  stateKing
+);
+assert.equal(boardKing[3][2]?.id, kingHunter.id);
+const kingSpread = boardKing[4][1];
+assert.equal(kingSpread?.isZombie, true, "capturing a king should zombify the kill square");
+assert.equal(kingSpread?.isMainZombie, false);
+assert.equal(kingSpread?.zombieMasterId, kingHunter.zombieMasterId);
+
 // Ghost Guard on the victim should not block the curse from rising on the kill square.
 const boardGhost = Array.from({ length: 8 }, () => Array(8).fill(null));
 const stateGhost = emptyState(boardGhost);
