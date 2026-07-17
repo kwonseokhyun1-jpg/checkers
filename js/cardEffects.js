@@ -2,9 +2,10 @@
  * Card targeting UI + AI auto-play
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, getStepMoves, getJumpMoves, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
-import { collapsedSquareKey, ensureConstitutionTurns, ensureDominionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
+import { collapsedSquareKey, ensureConstitutionTurns, ensureDominionTurns, isInDarknessZone, sk, handLimit, isMovementRestricted } from "./gameMeta.js";
 import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, forwardBoltCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, promoRow, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
+import { getCardCategory } from "./cardCategories.js";
 import {
   friendlyHasDebuffs,
   pieceHasBuffOrDebuff,
@@ -21,6 +22,22 @@ export function initCardState(state) {
 
 export function isInstant(card) {
   return card.mode === "instant" || card.mode === "discard_pick";
+}
+
+export function isMovementSpell(card) {
+  return getCardCategory(card) === "movement";
+}
+
+export function getMovementSpellBlockReason(state, color, card) {
+  if (!isMovementSpell(card) || !isMovementRestricted(state.meta, color)) return null;
+  return "Movement spells restricted.";
+}
+
+export function getSpellCastBlockReason(state, color, card) {
+  const movementBlock = getMovementSpellBlockReason(state, color, card);
+  if (movementBlock) return movementBlock;
+  if (isInstant(card)) return getInstantCastBlockReason(state, color, card);
+  return null;
 }
 
 export function getInstantCastBlockReason(state, color, card) {
@@ -979,6 +996,7 @@ function fEmptyFirstPickTargets(state, color, card) {
 }
 
 export function getValidTargets(state, color, card, picks) {
+  if (getMovementSpellBlockReason(state, color, card)) return [];
   if (card.effect === "revive" && !(state.captured?.[color]?.length)) return [];
   const o = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
   const res = [];
@@ -1656,6 +1674,7 @@ export function dominionWouldEnableBackwardMoves(state, color) {
 }
 
 export function canAiPlay(state, color, card) {
+  if (getMovementSpellBlockReason(state, color, card)) return false;
   if (isInstant(card)) {
     if (!canCastInstant(state, color, card)) return false;
     if (card.effect === "dominion") return dominionWouldEnableBackwardMoves(state, color);

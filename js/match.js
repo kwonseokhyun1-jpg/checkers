@@ -20,12 +20,14 @@ import {
   isZombieBear,
   isZombieBearStack,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, hasVengeanceArmed, isConfused, clearConfusion, applyPeriodicTurnDraw } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, ensureRestrictionTurns, isMovementRestricted, restrictionTurnsRemaining, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, hasVengeanceArmed, isConfused, clearConfusion, applyPeriodicTurnDraw } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
   canCastInstant,
   getInstantCastBlockReason,
+  getSpellCastBlockReason,
+  getMovementSpellBlockReason,
   isHiddenTrapSpell,
   getCardHint,
   getValidTargets,
@@ -594,11 +596,13 @@ export class MatchSession {
     const s = this.state;
     if (!this.canPlaySpells()) return false;
     const hand = s.hands[this.localColor] || [];
-    return hand.some(
-      (card) =>
+    return hand.some((card) => {
+      if (getSpellCastBlockReason(s, this.localColor, card)) return false;
+      return (
         (isInstant(card) && canCastInstant(s, this.localColor, card)) ||
         getValidTargets(s, this.localColor, card, []).length > 0
-    );
+      );
+    });
   }
 
   ensureSpellPhaseOpen(color) {
@@ -843,6 +847,11 @@ export class MatchSession {
           void this.beginMovePhase();
         }
       });
+    } else if (color === this.localColor && isMovementRestricted(s.meta, color)) {
+      const turns = restrictionTurnsRemaining(s.meta, color);
+      this.setMessage(
+        `Movement spells restricted (${turns} turn${turns === 1 ? "" : "s"}) — other spells still work.`,
+      );
     } else if (color === this.localColor && s.meta.pendingPressMove?.[color]) {
       this.setMessage("Press — you'll step again after your normal move (no capture).");
     } else if (
@@ -1329,7 +1338,7 @@ export class MatchSession {
     if (!this.canPlaySpells()) return false;
 
     if (isInstant(card)) {
-      const blockReason = getInstantCastBlockReason(this.state, this.localColor, card);
+      const blockReason = getSpellCastBlockReason(this.state, this.localColor, card);
       if (blockReason) {
         this.setMessage(blockReason);
         return false;
@@ -1547,14 +1556,17 @@ export class MatchSession {
   attachCardInput(el, card, canPlay) {
     const s = this.state;
     const hasTargets =
-      (isInstant(card) && canCastInstant(s, this.localColor, card)) ||
-      getValidTargets(s, this.localColor, card, []).length > 0;
+      !getSpellCastBlockReason(s, this.localColor, card) &&
+      ((isInstant(card) && canCastInstant(s, this.localColor, card)) ||
+        getValidTargets(s, this.localColor, card, []).length > 0);
     const canCast = canPlay && this.canPlaySpells() && hasTargets;
     el.classList.toggle("disabled", !canCast);
     const disabledReason = !canCast
       ? !this.ensureSpellPhaseOpen(this.localColor)
         ? "Spells skipped — select a piece to move"
-        : s.meta.shatterSilenced?.[this.localColor]
+        : getMovementSpellBlockReason(s, this.localColor, card)
+          ? "Movement spells restricted"
+          : s.meta.shatterSilenced?.[this.localColor]
           ? "Spell backlash — no spells this turn"
           : s.meta.blinded?.[this.localColor]
             ? "Blinded — no spells this turn"
@@ -1563,7 +1575,9 @@ export class MatchSession {
               : s.spellPlayed[this.localColor]
                 ? "Already cast a spell this turn"
                 : !hasTargets
-                  ? getInstantCastBlockReason(s, this.localColor, card) || "No valid targets for this spell"
+                  ? getSpellCastBlockReason(s, this.localColor, card) ||
+                    getInstantCastBlockReason(s, this.localColor, card) ||
+                    "No valid targets for this spell"
                   : "Spells unavailable"
       : "";
     el.title = canCast
@@ -3957,6 +3971,10 @@ ${starLine}`;
           banner.className = "turn-banner";
         } else if (s.meta.blinded?.[this.localColor]) {
           banner.textContent = "Blinded — select a piece to move";
+          banner.className = "turn-banner";
+        } else if (isMovementRestricted(s.meta, this.localColor)) {
+          const turns = restrictionTurnsRemaining(s.meta, this.localColor);
+          banner.textContent = `Movement spells restricted (${turns} turn${turns === 1 ? "" : "s"}) — cast other spells or move`;
           banner.className = "turn-banner";
         } else if (isConfused(s.meta, this.localColor)) {
           banner.textContent = "Confused — select a piece to move";

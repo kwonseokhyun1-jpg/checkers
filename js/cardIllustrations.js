@@ -354,6 +354,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "last_king",
   "snipe",
   "dominion",
+  "restriction_2",
   "backstab",
   "bomb",
   "berserk",
@@ -1763,6 +1764,17 @@ function dominionMotif() {
     <circle cx="32" cy="40" r="14" fill="none" stroke="#60a5fa" stroke-width="0.8" opacity="0.2"/>`;
 }
 
+function restrictionMotif() {
+  return `${groundShadow(32, 54, 20, 4)}
+    <path d="M18 18 H46 V46 H18 Z" fill="none" stroke="#7c3aed" stroke-width="2.2" rx="2"/>
+    <path d="M24 30 H40 M24 36 H40" stroke="#c4b5fd" stroke-width="2" stroke-linecap="round" opacity="0.75"/>
+    <path d="M14 28 C14 20 22 14 32 14 C42 14 50 20 50 28" fill="none" stroke="#94a3b8" stroke-width="3.2" stroke-linecap="round"/>
+    <rect x="28" y="24" width="8" height="12" rx="1.5" fill="#64748b" stroke="#0f172a" stroke-width="1.4"/>
+    <path d="M12 40 L20 32 M52 40 L44 32" stroke="#f87171" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M20 48 L32 38 L44 48" stroke="#fca5a5" stroke-width="2.2" fill="none" stroke-linecap="round" opacity="0.8"/>
+    ${sparkles([[32, 12, 0.8], [14, 34, 0.55], [50, 34, 0.55]], "#e9d5ff", 0.5)}`;
+}
+
 export const EFFECT_ILLUSTRATIONS = {
   nudge: () => commonBleed("nu", "#94a3b8", "#1e293b", nudgeMotif()),
   backstep: () => commonBleed("bs", "#9ca3af", "#1f2937", backstepMotif()),
@@ -1778,6 +1790,7 @@ export const EFFECT_ILLUSTRATIONS = {
   displacement: () => rareBleed("dp", "#b794f4", "#553c7a", displacementMotif()),
   swap_friendly: () => commonBleed("sw", "#a78bfa", "#312e81", shadowSwapMotif()),
   dominion: () => uncommonBleed("dm", "#60a5fa", "#1e3a5f", dominionMotif()),
+  restriction_2: () => uncommonBleed("rs", "#a78bfa", "#4c1d95", restrictionMotif()),
 
   shield_1: () => commonBleed("s1", "#60a5fa", "#1e3a5f", wardMotif()),
   shield_2: () => uncommonBleed("s2", "#38bdf8", "#0c4a6e", aegisMotif()),
