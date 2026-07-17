@@ -500,7 +500,7 @@ function applyMoveCapture(board, state, piece, { cr, cc, cap }, zombieCtx) {
   const bountyVictim = cap.bountyBy === piece.color ? cap : null;
   const captured = resolveCapture(board, state, cr, cc, piece.color, { nonCap: false });
   if (captured && bountyVictim) payBountyOnCapture(state, bountyVictim, piece.color);
-  if (captured && zombieCtx.wasAwakeZombie && zombieCtx.zombieMasterId && zombieCtx.zombieColor && !cap.king) {
+  if (captured && zombieCtx.wasAwakeZombie && zombieCtx.zombieMasterId && zombieCtx.zombieColor) {
     spawnSpreadZombie(board, state, zombieCtx.zombieColor, cr, cc, zombieCtx.zombieMasterId, {
       avoidSquare: zombieCtx.avoidZombieSquare,
     });
