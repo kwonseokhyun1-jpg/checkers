@@ -354,6 +354,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "last_king",
   "snipe",
   "dominion",
+  "toll",
   "backstab",
   "bomb",
   "berserk",
@@ -1763,6 +1764,25 @@ function dominionMotif() {
     <circle cx="32" cy="40" r="14" fill="none" stroke="#60a5fa" stroke-width="0.8" opacity="0.2"/>`;
 }
 
+/** Spell cast taxed into drawn cards — coin/scale with +2 cards. */
+function tollMotif() {
+  return `${groundShadow(32, 54, 20, 4)}
+    <ellipse cx="32" cy="22" rx="10" ry="10" fill="#fbbf24" opacity="0.2" stroke="#f59e0b" stroke-width="1.4"/>
+    <circle cx="32" cy="22" r="7.5" fill="#f59e0b" stroke="#0f172a" stroke-width="1.8"/>
+    <circle cx="32" cy="22" r="5" fill="none" stroke="#fde68a" stroke-width="1.2"/>
+    <path d="M32 17 V27 M29 19.5 H35 M29 24.5 H35" stroke="#fef3c7" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M18 34 C22 28 26 28 32 32 C38 28 42 28 46 34" stroke="#0f172a" stroke-width="3.2" fill="none" opacity="0.2"/>
+    <path d="M18 34 C22 28 26 28 32 32 C38 28 42 28 46 34" stroke="#93c5fd" stroke-width="2.4" fill="none"/>
+    <path d="M14 36 L18 34 L16 40" stroke="#60a5fa" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <path d="M50 36 L46 34 L48 40" stroke="#60a5fa" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <rect x="12" y="38" width="14" height="18" rx="2" fill="#1e3a5f" stroke="#0f172a" stroke-width="1.6" transform="rotate(-12 19 47)"/>
+    <rect x="12" y="38" width="14" height="18" rx="2" fill="none" stroke="#93c5fd" stroke-width="1.1" transform="rotate(-12 19 47)"/>
+    <rect x="38" y="36" width="14" height="18" rx="2" fill="#1e3a5f" stroke="#0f172a" stroke-width="1.6" transform="rotate(10 45 45)"/>
+    <rect x="38" y="36" width="14" height="18" rx="2" fill="none" stroke="#7dd3fc" stroke-width="1.1" transform="rotate(10 45 45)"/>
+    <text x="26" y="52" font-size="8" fill="#fde68a" opacity="0.95" font-weight="700">+2</text>
+    ${sparkles([[22, 16, 0.75], [44, 14, 0.7], [32, 44, 0.55]], "#fde68a", 0.55)}`;
+}
+
 export const EFFECT_ILLUSTRATIONS = {
   nudge: () => commonBleed("nu", "#94a3b8", "#1e293b", nudgeMotif()),
   backstep: () => commonBleed("bs", "#9ca3af", "#1f2937", backstepMotif()),
@@ -1778,6 +1798,7 @@ export const EFFECT_ILLUSTRATIONS = {
   displacement: () => rareBleed("dp", "#b794f4", "#553c7a", displacementMotif()),
   swap_friendly: () => commonBleed("sw", "#a78bfa", "#312e81", shadowSwapMotif()),
   dominion: () => uncommonBleed("dm", "#60a5fa", "#1e3a5f", dominionMotif()),
+  toll: () => uncommonBleed("tl", "#fbbf24", "#1e3a5f", tollMotif()),
 
   shield_1: () => commonBleed("s1", "#60a5fa", "#1e3a5f", wardMotif()),
   shield_2: () => uncommonBleed("s2", "#38bdf8", "#0c4a6e", aegisMotif()),

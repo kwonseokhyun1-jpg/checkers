@@ -27,6 +27,7 @@ export function createMatchMeta() {
     mirrorBoardTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     highlightTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     dominionTurn: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
+    tollTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     prospectPending: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     constitutionTurns: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     forcedCapturePieceId: null,
@@ -142,6 +143,7 @@ export function consumeFreeDraw(state, color) {
 }
 
 export const DOMINION_DURATION_TURNS = 2;
+export const TOLL_DURATION_TURNS = 2;
 
 /** Ensure dominion counter exists (older saves / partial meta). */
 export function ensureDominionTurns(meta) {
@@ -153,6 +155,48 @@ export function ensureDominionTurns(meta) {
     meta.dominionTurn[color] = typeof v === "number" ? v : v ? 1 : 0;
   }
   return meta.dominionTurn;
+}
+
+/** Ensure Toll duration counter exists (older saves / partial meta). */
+export function ensureTollTurns(meta) {
+  if (!meta.tollTurns || typeof meta.tollTurns !== "object") {
+    meta.tollTurns = { [COLORS.RED]: 0, [COLORS.BLACK]: 0 };
+  }
+  for (const color of [COLORS.RED, COLORS.BLACK]) {
+    const v = meta.tollTurns[color];
+    meta.tollTurns[color] = typeof v === "number" ? v : v ? 1 : 0;
+  }
+  return meta.tollTurns;
+}
+
+export function hasTollArmed(state, color) {
+  ensureTollTurns(state.meta);
+  return state.meta.tollTurns[color] > 0;
+}
+
+/**
+ * When a player casts a spell, pay Toll to the opponent if they armed it.
+ * @returns {number} cards drawn for the Toll owner
+ */
+export function payTollOnSpellCast(state, casterColor) {
+  if (!state?.meta || !casterColor) return 0;
+  const owner = casterColor === COLORS.RED ? COLORS.BLACK : COLORS.RED;
+  ensureTollTurns(state.meta);
+  if (state.meta.tollTurns[owner] <= 0) return 0;
+  const drawn = drawToHand(state, owner, 2);
+  if (!drawn) return 0;
+  if (!state.meta.pendingTollDraw) {
+    state.meta.pendingTollDraw = { [COLORS.RED]: 0, [COLORS.BLACK]: 0 };
+  }
+  state.meta.pendingTollDraw[owner] += drawn;
+  return drawn;
+}
+
+export function flushPendingTollMessage(meta, color) {
+  const n = meta?.pendingTollDraw?.[color] || 0;
+  if (!n) return null;
+  meta.pendingTollDraw[color] = 0;
+  return `Toll — drew ${n} card${n === 1 ? "" : "s"}.`;
 }
 
 /** Ensure constitution counter exists (older saves / partial meta). */
@@ -199,6 +243,7 @@ export function applyPeriodicTurnDraw(state, color, every = DRAW_EVERY_TURNS) {
 export function startTurnMeta(state, color) {
   ensureConstitutionTurns(state.meta);
   ensureDominionTurns(state.meta);
+  ensureTollTurns(state.meta);
   state.meta.turnNumber += 1;
   const opp = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
   if (state.meta.prospectPending[color] > 0) {
@@ -211,6 +256,7 @@ export function startTurnMeta(state, color) {
   state.meta.movementCardPlayed[color] = false;
   state.meta.optionalJumps[color] = false;
   if (state.meta.dominionTurn[color] > 0) state.meta.dominionTurn[color]--;
+  if (state.meta.tollTurns[color] > 0) state.meta.tollTurns[color]--;
   state.meta.extraSpellCast[color] = false;
   state.meta.bearBonusUsed = state.meta.bearBonusUsed || { [COLORS.RED]: false, [COLORS.BLACK]: false };
   state.meta.bearBonusUsed[color] = false;

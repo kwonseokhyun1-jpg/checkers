@@ -99,6 +99,7 @@ const ID_TO_CATEGORY = {
   tangle: "control",
   teleport: "movement",
   trickster: "special",
+  toll: "special",
   vengeance: "trap",
   ward: "defense",
 };

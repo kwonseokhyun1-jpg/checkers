@@ -20,7 +20,7 @@ import {
   isZombieBear,
   isZombieBearStack,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, hasVengeanceArmed, isConfused, clearConfusion, applyPeriodicTurnDraw } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, flushPendingTollMessage, payTollOnSpellCast, hasVengeanceArmed, isConfused, clearConfusion, applyPeriodicTurnDraw } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -1275,6 +1275,7 @@ export class MatchSession {
       this.recordPvpSpell(card, picks, replayExtras);
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
+      payTollOnSpellCast(this.state, this.localColor);
     }
     if (!bonusSpell) this.state.spellPlayed[this.localColor] = true;
     else this.state.meta.extraSpellCast[this.localColor] = false;
@@ -2451,6 +2452,7 @@ ${starLine}`;
     const picks = picksOverride ?? (this.cardPlay?.picks ? [...this.cardPlay.picks] : []);
     this.recordPvpSpell(card, picks, { countered: true });
     this.removeCardFromHand(card);
+    payTollOnSpellCast(this.state, this.localColor);
     if (!this.state.meta.extraSpellCast?.[this.localColor]) {
       this.state.spellPlayed[this.localColor] = true;
     } else {
@@ -2672,6 +2674,7 @@ ${starLine}`;
       );
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
+      payTollOnSpellCast(this.state, this.localColor);
       const bonusSpell = !!this.state.meta.extraSpellCast?.[this.localColor];
       if (!bonusSpell) this.state.spellPlayed[this.localColor] = true;
       else this.state.meta.extraSpellCast[this.localColor] = false;
@@ -2688,7 +2691,9 @@ ${starLine}`;
           return;
         }
         let moveMsg = "Spell cast — select a piece to move.";
-        if (card.effect === "constitution") {
+        if (card.effect === "toll") {
+          moveMsg = "Toll armed — enemy spells draw you cards. Select a piece to move.";
+        } else if (card.effect === "constitution") {
           moveMsg = "Constitution active — your kings are protected. Select a piece to move.";
         } else if (card.effect === "counterspell") {
           moveMsg = "Counterspell armed (hidden) — select a piece to move.";
@@ -2944,6 +2949,8 @@ ${starLine}`;
 
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
+        const tollMsg = flushPendingTollMessage(this.state.meta, this.localColor);
+        if (tollMsg) this.setMessage(tollMsg);
         await delay(AI_PACE.spellSettle);
         afterSpell = true;
       } else if (entry.type === "move") {

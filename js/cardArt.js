@@ -22,7 +22,7 @@ export const THEME_KEYS = [
   ["defense", ["shield", "ward", "aegis", "bulwark", "stall", "sanctuary", "barrier", "anchor", "iron_will", "hibernation", "constitution"]],
   ["debuff", ["root", "panic", "backpedal", "blizzard", "deep_freeze", "snowball", "blind", "confusion", "extract", "press", "tangle", "shockwave"]],
   ["board", ["quicksand", "landmine", "collapse", "darkness", "earthquake", "scatter", "call_forward"]],
-  ["meta", ["counterspell", "vengeance", "last_stand", "martyr", "purify", "trickster", "ignore", "offering", "mulligan", "quick_march", "dominion", "last_king", "revive", "mind_control", "zombify"]],
+  ["meta", ["counterspell", "vengeance", "last_stand", "martyr", "purify", "trickster", "ignore", "offering", "mulligan", "quick_march", "dominion", "toll", "last_king", "revive", "mind_control", "zombify"]],
 ];
 
 export function cardHue(id) {

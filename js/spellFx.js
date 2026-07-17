@@ -106,6 +106,7 @@ export const META_SPELL_OVERLAY = {
   zombify: "curse",
   constitution: "constitution",
   dominion: "dominion",
+  toll: "toll",
   last_king: "crown-burst",
   purify: "purify",
 };
@@ -299,6 +300,7 @@ function metaOverlayMarkup(kind) {
     possess: "👁",
     constitution: "♛",
     dominion: "⚜",
+    toll: "⚖",
     "crown-burst": "♔",
     offering: "⚱",
     purify: "✦",
@@ -314,6 +316,7 @@ function metaOverlayMarkup(kind) {
     possess: "Mind Control",
     constitution: "Constitution",
     dominion: "Dominion",
+    toll: "Toll",
     "crown-burst": "Last King",
     offering: "Offering",
     purify: "Purify",

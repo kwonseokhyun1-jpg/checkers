@@ -9,7 +9,7 @@ import {
   spreadPlagueEpicenter, resolvePlagueSpreadFromEnemyApproach,
   tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS, MARTYR_TRAP_TURNS,
 } from "./board.js";
-import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns } from "./gameMeta.js";
+import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns, ensureTollTurns, TOLL_DURATION_TURNS } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
@@ -937,6 +937,10 @@ const EFFECTS = {
     return ok("Scatter — pieces pushed outward.", { scatterSourceCells: sources });
   },
   dominion(state, color, picks) { state.meta.dominionTurn[color]=2; return ok(); },
+  toll(state, color, picks) {
+    ensureTollTurns(state.meta)[color] = TOLL_DURATION_TURNS;
+    return ok("Toll — enemy spells draw you cards for 2 turns.");
+  },
   rally(state, color, picks) { const [r,c]=p0(picks); const p=at(state,r,c); if(!p||p.color!==color) return fail(); for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){ const q=at(state,r+dr,c+dc); if(q&&q.color===color) q.retreatTurns=Math.max(q.retreatTurns,1);} return ok(); },
   coronation_day(state, color, picks) { const pr=promoRow(color); for(let r=0;r<SIZE;r++) for(let c=0;c<SIZE;c++){ const p=at(state,r,c); if(p&&p.color===color&&r===pr&&!p.king) p.king=true;} return ok(); },
   regicide(state, color, picks) { state.meta.pendingRegicide[color]=true; return ok(); },
