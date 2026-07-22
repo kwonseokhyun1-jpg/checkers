@@ -795,6 +795,11 @@ const EFFECTS = {
   },
   parallel(state, color, picks) { state.meta.parallelExtra={...(state.meta.parallelExtra||{}), [color]:true}; state.meta.cardsLeft[color]=2; return ok(); },
   counterspell(state, color, picks) { state.meta.counterspell[color]=true; return ok(); },
+  copycat(state, color, picks) {
+    if (!state.meta.copycat) state.meta.copycat = { [COLORS.RED]: false, [COLORS.BLACK]: false };
+    state.meta.copycat[color] = true;
+    return ok();
+  },
   echo(state, color, picks) { const last=state.meta.lastCard[color]; if(!last) return fail('No previous card'); return applyEffect(state,color,last.effect,[]); },
   roulette(state, color, picks) { const card=drawRandomCard(); return applyEffect(state,color,card.effect,[]); },
   blizzard(state, color, picks) {

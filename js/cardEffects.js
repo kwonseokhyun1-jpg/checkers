@@ -52,6 +52,7 @@ export function isHiddenTrapSpell(card) {
   const effect = card?.effect || card?.id;
   return (
     effect === "counterspell" ||
+    effect === "copycat" ||
     effect === "vengeance" ||
     effect === "landmine" ||
     effect === "quicksand" ||
@@ -88,6 +89,9 @@ export function getCardHint(card) {
   };
   if (card.effect === "counterspell" || card.id === "counterspell") {
     return "Hidden trap — cancels their next spell when they cast it.";
+  }
+  if (card.effect === "copycat" || card.id === "copycat") {
+    return "Hidden trap — the next enemy spell is copied into your hand.";
   }
   if (card.effect === "vengeance" || card.id === "vengeance") {
     return "Hidden trap — destroys the next enemy who captures your piece.";

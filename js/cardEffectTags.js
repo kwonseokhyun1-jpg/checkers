@@ -54,6 +54,7 @@ const TAGS = {
   link_fate: ["Link two enemies — when one is destroyed, the other dies too"],
   extract: ["Opponent discards 1 random card from hand"],
   toll: ["For 2 turns, whenever an opponent casts a spell, draw 2 cards", "Lasts 2 of your turn cycles"],
+  copycat: ["Hidden trap", "Next enemy spell — add a copy of that spell to your hand", "Copy plays like any other card in hand"],
 };
 
 const MODE_TAGS = {

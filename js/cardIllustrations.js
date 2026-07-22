@@ -355,6 +355,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "snipe",
   "dominion",
   "toll",
+  "copycat",
   "backstab",
   "bomb",
   "berserk",
@@ -1783,6 +1784,22 @@ function tollMotif() {
     ${sparkles([[22, 16, 0.75], [44, 14, 0.7], [32, 44, 0.55]], "#fde68a", 0.55)}`;
 }
 
+/** Hidden trap that mirrors the next enemy spell into your hand. */
+function copycatMotif() {
+  return `${groundShadow(32, 54, 20, 4)}
+    <rect x="10" y="14" width="18" height="26" rx="2.5" fill="#1e293b" stroke="#0f172a" stroke-width="1.8" transform="rotate(-8 19 27)"/>
+    <rect x="10" y="14" width="18" height="26" rx="2.5" fill="none" stroke="#94a3b8" stroke-width="1.2" transform="rotate(-8 19 27)" opacity="0.85"/>
+    <rect x="36" y="12" width="18" height="26" rx="2.5" fill="#0f766e" stroke="#0f172a" stroke-width="1.8" transform="rotate(8 45 25)" opacity="0.9"/>
+    <rect x="36" y="12" width="18" height="26" rx="2.5" fill="none" stroke="#5eead4" stroke-width="1.2" transform="rotate(8 45 25)"/>
+    <path d="M28 28 H36" stroke="#0f172a" stroke-width="3" stroke-linecap="round" opacity="0.25"/>
+    <path d="M28 28 H36" stroke="#5eead4" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M34 24 L38 28 L34 32" stroke="#5eead4" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="19" cy="24" r="3.2" fill="#64748b" opacity="0.7"/>
+    <circle cx="45" cy="22" r="3.2" fill="#99f6e4" opacity="0.85"/>
+    <path d="M16 40 Q32 50 48 38" stroke="#14b8a6" stroke-width="1.4" fill="none" opacity="0.45"/>
+    ${sparkles([[14, 10, 0.7], [50, 8, 0.75], [32, 46, 0.55]], "#99f6e4", 0.55)}`;
+}
+
 export const EFFECT_ILLUSTRATIONS = {
   nudge: () => commonBleed("nu", "#94a3b8", "#1e293b", nudgeMotif()),
   backstep: () => commonBleed("bs", "#9ca3af", "#1f2937", backstepMotif()),
@@ -1799,7 +1816,7 @@ export const EFFECT_ILLUSTRATIONS = {
   swap_friendly: () => commonBleed("sw", "#a78bfa", "#312e81", shadowSwapMotif()),
   dominion: () => uncommonBleed("dm", "#60a5fa", "#1e3a5f", dominionMotif()),
   toll: () => uncommonBleed("tl", "#fbbf24", "#1e3a5f", tollMotif()),
-
+  copycat: () => commonBleed("cc", "#5eead4", "#134e4a", copycatMotif()),
   shield_1: () => commonBleed("s1", "#60a5fa", "#1e3a5f", wardMotif()),
   shield_2: () => uncommonBleed("s2", "#38bdf8", "#0c4a6e", aegisMotif()),
   bulwark: () => rareBleed("bw", "#b794f4", "#553c7a", bulwarkMotif()),
