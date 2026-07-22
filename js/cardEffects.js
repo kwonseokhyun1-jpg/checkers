@@ -624,6 +624,16 @@ function sidestepWouldEscape(state, color, from, to) {
   return displacementWouldEscape(state, color, from, to, (s, r1, c1) => getSidestepDestinations(s, r1, c1));
 }
 
+/** True when Displacement lands the friendly piece where it can capture on the move phase. */
+function displacementSpellWouldCaptureAfter(state, color, from, to) {
+  return displacementWouldCaptureAfter(state, color, from, to, (s) => getDisplacementDestinations(s, color));
+}
+
+/** True when Displacement moves a threatened piece to safety (second priority after capture). */
+function displacementSpellWouldEscape(state, color, from, to) {
+  return displacementWouldEscape(state, color, from, to, (s) => getDisplacementDestinations(s, color));
+}
+
 /** True when backstep lands the friendly piece where it can capture next. */
 function backstepWouldCaptureAfter(state, color, [r1, c1], [r2, c2]) {
   const p = at(state, r1, c1);
@@ -1520,10 +1530,24 @@ function* pickSequences(state, color, card, max = 24) {
       }
       return;
     }
-    if (card.effect === "blink_2" || card.effect === "teleport" || card.effect === "sidestep") {
+    if (
+      card.effect === "blink_2" ||
+      card.effect === "teleport" ||
+      card.effect === "sidestep" ||
+      card.effect === "displacement"
+    ) {
       const wouldCapture =
-        card.effect === "sidestep" ? sidestepWouldCaptureAfter : blinkWouldCaptureAfter;
-      const wouldEscape = card.effect === "sidestep" ? sidestepWouldEscape : blinkWouldEscape;
+        card.effect === "sidestep"
+          ? sidestepWouldCaptureAfter
+          : card.effect === "displacement"
+            ? displacementSpellWouldCaptureAfter
+            : blinkWouldCaptureAfter;
+      const wouldEscape =
+        card.effect === "sidestep"
+          ? sidestepWouldEscape
+          : card.effect === "displacement"
+            ? displacementSpellWouldEscape
+            : blinkWouldEscape;
       const captureSeqs = [];
       const escapeSeqs = [];
       for (const a of t0) {
