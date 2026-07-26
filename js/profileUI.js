@@ -39,7 +39,7 @@ import {
 } from "./auth.js";
 import { saveProfile } from "./storage.js";
 import { getProfileStats } from "./profileStats.js";
-import { PROFILE_STAT_ICONS } from "./profileStatIcons.js";
+import { profileStatCardsHtml } from "./profileStatCards.js";
 import {
   canClaimDailyQuest,
   claimDailyQuest,
@@ -101,25 +101,7 @@ function profileTitleBadgeHtml(profile) {
 
 
 function profileHeroStatsHtml(profile) {
-  const stats = getProfileStats(profile);
-  const cards = [
-    { key: "pvp", label: "PvP wins", value: stats.pvpWins },
-    { key: "adventure", label: "Floors cleared", value: stats.adventureFloorsCleared },
-    { key: "spells", label: "Spells played", value: stats.spellsPlayed },
-  ];
-  return `
-    <div class="profile-hero-stats" aria-label="Player statistics">
-      ${cards
-        .map(
-          (card) => `
-        <article class="profile-stat-card profile-stat-card--${card.key}">
-          <span class="profile-stat-card__label">${escapeHtml(card.label)}</span>
-          <span class="profile-stat-card__icon">${PROFILE_STAT_ICONS[card.key]}</span>
-          <span class="profile-stat-card__value">${card.value}</span>
-        </article>`
-        )
-        .join("")}
-    </div>`;
+  return profileStatCardsHtml(getProfileStats(profile));
 }
 
 function profileHeroCardHtml(cos, profile, { username }) {

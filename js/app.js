@@ -96,6 +96,7 @@ import { mobileConfirm } from "./mobileConfirm.js";
 import { enhanceAllSelectInputs, resolveNativeSelect } from "./customSelect.js";
 import { getCurrentUser, initAuth } from "./auth.js";
 import { pullCloudProfile } from "./cloudProfile.js";
+import { startFriendPresence, stopFriendPresence } from "./friendPresence.js";
 import {
   enterGuestMode,
   clearGuestMode,
@@ -2937,6 +2938,7 @@ function init() {
     },
     onSignedIn: () => {
       clearGuestMode();
+      startFriendPresence();
       profile = loadProfile();
       repairProfile(profile);
       syncTutorialStorageWithProfile(profile);
@@ -2961,6 +2963,7 @@ function init() {
     },
     onSignedOut: () => {
       clearGuestMode();
+      stopFriendPresence();
       closeHeaderProfileMenu();
       headerDisplayUsername = "";
       updateHeaderProfileBtn();
@@ -3185,6 +3188,7 @@ async function bootstrapAfterAuth() {
   try {
     const user = await initAuth();
     if (user) {
+      startFriendPresence();
       try {
         const cloud = await pullCloudProfile();
         if (cloud) profile = cloud;

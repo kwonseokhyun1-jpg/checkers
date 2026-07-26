@@ -2,6 +2,7 @@ import { getCurrentUser, isAuthAvailable, searchProfilesByUsername, fetchProfile
 import { GUEST_SIGN_IN_NUDGE_SAVE } from "./guestMode.js";
 import { normalizeCosmetics } from "./cosmetics.js";
 import { buildRoomHostAvatarHtml, openPublicProfileModal } from "./userProfileModal.js";
+import { isUserOnline, onFriendPresenceChange } from "./friendPresence.js";
 import { initPanelHelp } from "./panelHelp.js";
 import {
   sendFriendRequest,
@@ -64,6 +65,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
   let incomingRequests = [];
   let outgoingRequests = [];
   let requestStatesByUserId = new Map();
+  let unsubPresence = null;
 
   function setStatus(text, isError = false) {
     const el = root.querySelector("#social-status");
@@ -206,6 +208,22 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
     return `<button type="button" class="btn-secondary social-send-btn" data-send-request="${escapeHtml(row.id)}">Send friend request</button>`;
   }
 
+  function bindPresenceUpdates() {
+    unsubPresence?.();
+    unsubPresence = onFriendPresenceChange(() => {
+      void renderFriendsList();
+    });
+  }
+
+  function friendAvatarHtml(row, name, { showOnline = false } = {}) {
+    const cosmetics = normalizeCosmetics(row.profile_json?.cosmetics);
+    return buildRoomHostAvatarHtml(cosmetics, name, {
+      clickable: true,
+      userId: row.id,
+      isOnline: showOnline && isUserOnline(row.id),
+    });
+  }
+
   function bindProfileAvatars(container) {
     container?.querySelectorAll("[data-view-profile]").forEach((btn) => {
       btn.addEventListener("click", (e) => {
@@ -341,11 +359,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
       list.innerHTML = valid
         .map((row) => {
           const name = displayNameFromRow(row);
-          const cosmetics = normalizeCosmetics(row.profile_json?.cosmetics);
-          const avatar = buildRoomHostAvatarHtml(cosmetics, name, {
-            clickable: true,
-            userId: row.id,
-          });
+          const avatar = friendAvatarHtml(row, name, { showOnline: true });
           return `<li class="social-player-row">
             ${avatar}
             <div class="social-player-row__body">
@@ -440,6 +454,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
       return;
     }
     syncGuestNudge();
+    bindPresenceUpdates();
     await refreshRequests();
     renderSearchResults();
     void renderInbox();
@@ -479,6 +494,7 @@ export function initSocialUI({ root, getProfile, saveProfile, openAuthModal }) {
       </section>`;
 
     bindPanel();
+    bindPresenceUpdates();
     searchResults = [];
     void refreshRequests().then(() => {
       renderSearchResults();

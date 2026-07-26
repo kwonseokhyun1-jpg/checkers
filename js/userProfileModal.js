@@ -7,7 +7,7 @@ import {
 } from "./cosmeticArt.js";
 import { equippedTitleTagHtml } from "./mageTitles.js";
 import { getProfileStats } from "./profileStats.js";
-import { PROFILE_STAT_ICONS } from "./profileStatIcons.js";
+import { profileStatCardsHtml } from "./profileStatCards.js";
 
 function escapeHtml(text) {
   return String(text ?? "")
@@ -23,14 +23,19 @@ function escapeHtml(text) {
  * @param {string} displayName
  * @param {{ clickable?: boolean, userId?: string }} [opts]
  */
-export function buildRoomHostAvatarHtml(cosmetics, displayName, { clickable = false, userId = "" } = {}) {
+export function buildRoomHostAvatarHtml(
+  cosmetics,
+  displayName,
+  { clickable = false, userId = "", isOnline = false } = {}
+) {
   const equipped = cosmetics?.equipped || {};
   const initial = (displayName || "P").charAt(0).toUpperCase();
   const inner =
     renderAvatarPreview(equipped.avatar) ||
     `<span class="profile-avatar-fallback">${escapeHtml(initial)}</span>`;
   const frameClass = frameClassFor(equipped.frame);
-  const avatarMarkup = `<span class="profile-avatar-stack ${frameClass}"><span class="profile-avatar-inner">${inner}</span></span>`;
+  const onlineClass = isOnline ? " profile-avatar-stack--online" : "";
+  const avatarMarkup = `<span class="profile-avatar-stack ${frameClass}${onlineClass}"><span class="profile-avatar-inner">${inner}</span></span>`;
 
   if (clickable && userId) {
     return `<button type="button" class="pvp-room-host-profile" data-view-profile="${escapeHtml(userId)}" data-profile-name="${escapeHtml(displayName)}" aria-label="View ${escapeHtml(displayName)}'s profile">${avatarMarkup}</button>`;
@@ -40,24 +45,9 @@ export function buildRoomHostAvatarHtml(cosmetics, displayName, { clickable = fa
 }
 
 function publicProfileStatsHtml(stats) {
-  const cards = [
-    { key: "pvp", label: "PvP wins", value: stats.pvpWins },
-    { key: "adventure", label: "Floors cleared", value: stats.adventureFloorsCleared },
-    { key: "spells", label: "Spells played", value: stats.spellsPlayed },
-  ];
-  return `
-    <div class="profile-hero-stats public-profile-modal__stats" aria-label="Player statistics">
-      ${cards
-        .map(
-          (card) => `
-        <article class="profile-stat-card profile-stat-card--${card.key}">
-          <span class="profile-stat-card__label">${escapeHtml(card.label)}</span>
-          <span class="profile-stat-card__icon">${PROFILE_STAT_ICONS[card.key]}</span>
-          <span class="profile-stat-card__value">${card.value}</span>
-        </article>`
-        )
-        .join("")}
-    </div>`;
+  return profileStatCardsHtml(stats, {
+    wrapperClass: "profile-hero-stats public-profile-modal__stats",
+  });
 }
 
 function publicProfileDialogHtml({ username, cosmetics, stats }) {
