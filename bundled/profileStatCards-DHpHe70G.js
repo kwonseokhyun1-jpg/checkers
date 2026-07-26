@@ -15,4 +15,12 @@ var e={pvp:`<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/s
     <path d="M36 8l3-1 1 3-3 1-1-3z" fill="#5ce1e6"/>
     <path d="M38 14l2 2M40 10l-2 2" stroke="#e8c547" stroke-width="2" stroke-linecap="round"/>
     <circle cx="12" cy="36" r="2" fill="#9f7aea"/>
-  </svg>`};export{e as t};
+  </svg>`};function t(e){return String(e??``).replace(/&/g,`&amp;`).replace(/</g,`&lt;`).replace(/>/g,`&gt;`).replace(/"/g,`&quot;`)}function n(n,{wrapperClass:r=`profile-hero-stats`,ariaLabel:i=`Player statistics`}={}){let a=[{key:`pvp`,label:`PvP wins`,value:n.pvpWins},{key:`adventure`,label:`Floors cleared`,value:n.adventureFloorsCleared},{key:`spells`,label:`Spells played`,value:n.spellsPlayed}];return`
+    <div class="${t(r)}" aria-label="${t(i)}">
+      ${a.map(n=>`
+        <article class="profile-stat-card profile-stat-card--${n.key}">
+          <span class="profile-stat-card__label">${t(n.label)}</span>
+          <span class="profile-stat-card__icon" aria-hidden="true">${e[n.key]}</span>
+          <span class="profile-stat-card__value">${n.value}</span>
+        </article>`).join(``)}
+    </div>`}export{n as t};
