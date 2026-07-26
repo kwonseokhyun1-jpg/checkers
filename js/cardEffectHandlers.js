@@ -9,7 +9,7 @@ import {
   spreadPlagueEpicenter, resolvePlagueSpreadFromEnemyApproach,
   tryPromoteOnFarRow, LAST_STAND_TRAP_TURNS, VENGEANCE_TRAP_TURNS, MARTYR_TRAP_TURNS,
 } from "./board.js";
-import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns, ensureTollTurns, TOLL_DURATION_TURNS } from "./gameMeta.js";
+import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns, ensureTollTurns, TOLL_DURATION_TURNS, clearAllTraps } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
@@ -921,6 +921,11 @@ const EFFECTS = {
     if (!fri(state, color).some((p) => pieceHasDebuffs(p))) return fail("No debuffs to remove.");
     cleanseFriendlyDebuffs(state.board, color);
     return ok("Purify — all debuffs removed from your pieces.");
+  },
+  diffuse(state, color, picks) {
+    clearAllTraps(state);
+    state.meta.extraSpellCast[color] = true;
+    return ok("Diffuse — all traps deactivated; cast another spell.");
   },
   vacuum(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const all=fri(state,color).concat(en(state,color)); for(const p of all){ const dr=Math.sign(r-p.row),dc=Math.sign(c-p.col); const nr=p.row+dr,nc=p.col+dc; if((nr!==r||nc!==c)&&emptyDark(state,nr,nc)) displacePiece(state,p.row,p.col,nr,nc);} return ok(); },
   scatter(state, color, picks) {

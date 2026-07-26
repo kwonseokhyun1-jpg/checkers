@@ -2487,7 +2487,7 @@ ${starLine}`;
     };
     this.achievementTracker?.onSpellBefore(this.state);
 
-    const countered = tryConsumeCounterspell(this.state, this.localColor);
+    const countered = card.uncounterable ? null : tryConsumeCounterspell(this.state, this.localColor);
     if (countered) {
       await this.runCounterspellReveal({ trapOwner: countered.trapOwner });
       return finishSpellTrack({ success: false, countered: true, message: "Enemy Counterspell! Your spell fizzles." });

@@ -111,6 +111,7 @@ export const CARD_REGISTRY = [
   { id: "deport", name: "Deport", desc: "Send an enemy piece back to the square where it started the game; any piece already there is destroyed.", rarity: "rare", weight: 3, mode: "enemy", effect: "deport" },
   { id: "dominion", name: "Dominion", desc: "All your men may move backward for 2 turns.", rarity: "uncommon", weight: 4, mode: "instant", effect: "dominion" },
   { id: "toll", name: "Toll", desc: "For 2 turns, whenever an opponent casts a spell, draw 2 cards.", rarity: "uncommon", weight: 4, mode: "instant", effect: "toll" },
+  { id: "diffuse", name: "Diffuse", desc: "Can't be countered. Deactivate every trap that's set. Cast another spell this turn.", rarity: "uncommon", weight: 4, mode: "instant", effect: "diffuse", uncounterable: true },
 ];
 
 export const CARD_IDS = Object.fromEntries(CARD_REGISTRY.map((c) => [c.id.toUpperCase().replace(/[^A-Z0-9]/g, '_'), c.id]));

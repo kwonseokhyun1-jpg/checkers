@@ -400,7 +400,7 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
               ? snowballCard
               : playable[Math.floor(Math.random() * playable.length)];
       const idx = hand.indexOf(card);
-      const trapped = !!state.meta.counterspell?.[human];
+      const trapped = card.uncounterable ? false : !!state.meta.counterspell?.[human];
       if (trapped) {
         state.meta.counterspell[human] = false;
         hand.splice(idx, 1);

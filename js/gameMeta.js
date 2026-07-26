@@ -347,6 +347,60 @@ export function hasCounterspellArmed(state, color) {
   return !!state.meta.counterspell?.[color];
 }
 
+/** True if any hidden trap is armed anywhere on the board. */
+export function hasAnyTrapArmed(state) {
+  if (!state) return false;
+  ensureVengeanceTurns(state.meta);
+  for (const color of [COLORS.RED, COLORS.BLACK]) {
+    if (state.meta.counterspell?.[color]) return true;
+    if (state.meta.vengeance?.[color] > 0) return true;
+  }
+  for (const sq of Object.values(state.squares || {})) {
+    if (!sq) continue;
+    if (sq.hiddenMine || sq.mine || sq.hiddenQuicksand || sq.quicksand) return true;
+  }
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = state.board?.[r]?.[c];
+      if (!p) continue;
+      if (p.lastStand || p.martyr || p.deflectTurns > 0) return true;
+    }
+  }
+  return false;
+}
+
+/** Deactivate every armed trap on the board (both players). */
+export function clearAllTraps(state) {
+  if (!state) return;
+  ensureVengeanceTurns(state.meta);
+  if (!state.meta.counterspell) {
+    state.meta.counterspell = { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  }
+  for (const color of [COLORS.RED, COLORS.BLACK]) {
+    state.meta.counterspell[color] = false;
+    state.meta.vengeance[color] = 0;
+  }
+  for (const sq of Object.values(state.squares || {})) {
+    if (!sq) continue;
+    delete sq.hiddenMine;
+    delete sq.mine;
+    delete sq.hiddenQuicksand;
+    delete sq.quicksand;
+  }
+  if (!state.board) return;
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      const p = state.board[r][c];
+      if (!p) continue;
+      p.lastStand = false;
+      p.lastStandTurns = 0;
+      p.martyr = false;
+      p.martyrTurns = 0;
+      p.deflectTurns = 0;
+    }
+  }
+}
+
 export function tryConsumeVengeance(state, capturerColor, victimColor) {
   ensureVengeanceTurns(state.meta);
   if (capturerColor === victimColor) return null;
