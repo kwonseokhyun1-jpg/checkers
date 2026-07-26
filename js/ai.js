@@ -10,7 +10,7 @@ import {
   hasMandatoryJumps,
 } from "./board.js";
 import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, bombMoveWorthwhile, bestSnowballSetupScore, bestScatterCaptureScore } from "./cardEffects.js";
-import { queueTrapHistoryReveal, isConfused, clearConfusion, payTollOnSpellCast } from "./gameMeta.js";
+import { queueTrapHistoryReveal, isConfused, clearConfusion, payTollOnSpellCast, tryConsumeCopycat } from "./gameMeta.js";
 import { getCardDef } from "./cardCatalog.js";
 
 /** Deep copy for AI planning without mutating the live match state. */
@@ -110,6 +110,7 @@ export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
         queueTrapHistoryReveal(state, { effect: "counterspell", color: human, picks: [] });
       }
       payTollOnSpellCast(state, aiColor);
+      tryConsumeCopycat(state, aiColor, entry.cardId);
       return true;
     }
     const idx = hand.findIndex((c) => c.id === entry.cardId);
@@ -119,7 +120,10 @@ export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
     if (idx >= 0) hand.splice(idx, 1);
     if (!state.meta.extraSpellCast?.[aiColor]) state.spellPlayed[aiColor] = true;
     else state.meta.extraSpellCast[aiColor] = false;
-    if (res?.success) payTollOnSpellCast(state, aiColor);
+    if (res?.success) {
+      payTollOnSpellCast(state, aiColor);
+      tryConsumeCopycat(state, aiColor, entry.cardId || card.id);
+    }
     return !!res?.success;
   }
 

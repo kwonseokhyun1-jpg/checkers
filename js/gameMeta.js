@@ -1,7 +1,8 @@
 /** Global match state: gems modifiers, square terrain, turn flags */
 
 import { COLORS, SIZE, inBounds, isDarkSquare, tryPromoteOnFarRow } from "./board.js";
-import { DRAW_EVERY_TURNS } from "./cardCatalog.js";
+import { DRAW_EVERY_TURNS, getCardDef } from "./cardCatalog.js";
+import { createCardInstance } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 
 export function createMatchMeta() {
@@ -17,6 +18,7 @@ export function createMatchMeta() {
     pendingRegicide: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     pendingConduct: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     counterspell: { [COLORS.RED]: false, [COLORS.BLACK]: false },
+    copycat: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     vengeance: { [COLORS.RED]: 0, [COLORS.BLACK]: 0 },
     blindNext: { [COLORS.RED]: false, [COLORS.BLACK]: false },
     blinded: { [COLORS.RED]: false, [COLORS.BLACK]: false },
@@ -199,6 +201,52 @@ export function flushPendingTollMessage(meta, color) {
   return `Toll — drew ${n} card${n === 1 ? "" : "s"}.`;
 }
 
+/** Ensure Copycat armed flag exists (older saves / partial meta). */
+export function ensureCopycat(meta) {
+  if (!meta.copycat || typeof meta.copycat !== "object") {
+    meta.copycat = { [COLORS.RED]: false, [COLORS.BLACK]: false };
+  }
+  for (const color of [COLORS.RED, COLORS.BLACK]) {
+    meta.copycat[color] = !!meta.copycat[color];
+  }
+  return meta.copycat;
+}
+
+export function hasCopycatArmed(state, color) {
+  ensureCopycat(state.meta);
+  return !!state.meta.copycat[color];
+}
+
+/**
+ * When a player casts a spell, Copycat (if armed by the opponent) adds a copy of that
+ * spell to the trap owner's hand as a normal playable card instance.
+ * @returns {{ trapOwner: string, cardId: string, name: string } | null}
+ */
+export function tryConsumeCopycat(state, casterColor, cardId) {
+  if (!state?.meta || !casterColor || !cardId) return null;
+  ensureCopycat(state.meta);
+  const trapOwner = casterColor === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
+  if (!state.meta.copycat[trapOwner]) return null;
+  const def = getCardDef(cardId);
+  if (!def) return null;
+  state.meta.copycat[trapOwner] = false;
+  if (!state.hands[trapOwner]) state.hands[trapOwner] = [];
+  state.hands[trapOwner].push(createCardInstance(def));
+  queueTrapHistoryReveal(state, { effect: "copycat", color: trapOwner, picks: [] });
+  if (!state.meta.pendingCopycat) {
+    state.meta.pendingCopycat = { [COLORS.RED]: null, [COLORS.BLACK]: null };
+  }
+  state.meta.pendingCopycat[trapOwner] = def.name || cardId;
+  return { trapOwner, cardId, name: def.name || cardId };
+}
+
+export function flushPendingCopycatMessage(meta, color) {
+  const name = meta?.pendingCopycat?.[color];
+  if (!name) return null;
+  meta.pendingCopycat[color] = null;
+  return `Copycat — copied ${name}.`;
+}
+
 /** Ensure constitution counter exists (older saves / partial meta). */
 export function ensureConstitutionTurns(meta) {
   if (!meta.constitutionTurns || typeof meta.constitutionTurns !== "object") {
@@ -307,6 +355,7 @@ export function tickMeta(state, color) {
 
 export const TRAP_EFFECT_LABELS = {
   counterspell: "Counterspell",
+  copycat: "Copycat",
   vengeance: "Vengeance",
   landmine: "Landmine",
   quicksand: "Quicksand",
@@ -318,17 +367,32 @@ export const TRAP_EFFECT_LABELS = {
 /** Queue a trap spell for move history — logged after the action that triggered it. */
 export function queueTrapHistoryReveal(state, { effect, color, picks = [] }) {
   if (!state || !effect || !color) return;
-  state.pendingTrapHistory = {
+  const entry = {
     label: TRAP_EFFECT_LABELS[effect] || effect,
     effect,
     color,
     picks: picks.map((p) => [...p]),
   };
+  if (!Array.isArray(state.pendingTrapHistoryQueue)) {
+    state.pendingTrapHistoryQueue = [];
+    if (state.pendingTrapHistory) {
+      state.pendingTrapHistoryQueue.push(state.pendingTrapHistory);
+      state.pendingTrapHistory = null;
+    }
+  }
+  state.pendingTrapHistoryQueue.push(entry);
+  state.pendingTrapHistory = state.pendingTrapHistoryQueue[0];
 }
 
 export function takeTrapHistoryReveal(state) {
-  const entry = state?.pendingTrapHistory ?? null;
-  if (state) state.pendingTrapHistory = null;
+  if (!state) return null;
+  if (Array.isArray(state.pendingTrapHistoryQueue) && state.pendingTrapHistoryQueue.length) {
+    const entry = state.pendingTrapHistoryQueue.shift();
+    state.pendingTrapHistory = state.pendingTrapHistoryQueue[0] ?? null;
+    return entry;
+  }
+  const entry = state.pendingTrapHistory ?? null;
+  state.pendingTrapHistory = null;
   return entry;
 }
 

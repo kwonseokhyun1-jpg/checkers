@@ -37,6 +37,7 @@ const ID_TO_CATEGORY = {
   confusion: "control",
   constitution: "defense",
   counterspell: "trap",
+  copycat: "trap",
   crown: "special",
   cryo_bolt: "attack",
   cull: "attack",
@@ -115,7 +116,7 @@ export function getCardCategory(def) {
   if (mapped) return mapped;
 
   const blob = `${def?.id || ""} ${def?.effect || ""} ${def?.name || ""} ${def?.desc || ""}`.toLowerCase();
-  if (/trap|mine|quicksand|counterspell|vengeance|last.?stand|martyr/.test(blob)) return "trap";
+  if (/trap|mine|quicksand|counterspell|copycat|vengeance|last.?stand|martyr/.test(blob)) return "trap";
   if (/shield|ward|aegis|sanctuary|barrier|anchor|deflect|stall|iron_will|rally|darkness/.test(blob)) {
     return "defense";
   }

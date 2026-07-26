@@ -20,7 +20,7 @@ import {
   isZombieBear,
   isZombieBearStack,
 } from "./board.js";
-import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, flushPendingTollMessage, payTollOnSpellCast, hasVengeanceArmed, isConfused, clearConfusion, applyPeriodicTurnDraw } from "./gameMeta.js";
+import { createMatchMeta, startTurnMeta, tickMeta, tryConsumeCounterspell, isSquareCollapsed, getCollapsedTurnsLeft, ensureConstitutionTurns, ensureDominionTurns, takeTrapHistoryReveal, flushPendingBountyMessage, flushPendingMartyrMessage, flushPendingTollMessage, flushPendingCopycatMessage, payTollOnSpellCast, tryConsumeCopycat, hasVengeanceArmed, isConfused, clearConfusion, applyPeriodicTurnDraw } from "./gameMeta.js";
 import {
   initCardState,
   isInstant,
@@ -317,20 +317,22 @@ export class MatchSession {
 
   recordPendingTrapHistory() {
     if (!this.hasMoveHistory()) return;
-    const trap = takeTrapHistoryReveal(this.state);
-    if (!trap) return;
-    appendHistoryEntry(this.state, {
-      label: trap.label,
-      type: "spell",
-      color: trap.color,
-      picks: trap.picks,
-      trapTriggered: true,
-    });
-    this.historyViewIndex = null;
-    const aiLog = this.$("ai-action-log");
-    if (aiLog) {
-      aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell">✦ Trap: <strong>${trap.label}</strong></div>`;
-      aiLog.scrollTop = aiLog.scrollHeight;
+    let trap = takeTrapHistoryReveal(this.state);
+    while (trap) {
+      appendHistoryEntry(this.state, {
+        label: trap.label,
+        type: "spell",
+        color: trap.color,
+        picks: trap.picks,
+        trapTriggered: true,
+      });
+      this.historyViewIndex = null;
+      const aiLog = this.$("ai-action-log");
+      if (aiLog) {
+        aiLog.innerHTML += `<div class="ai-log-entry ai-log-entry--spell">✦ Trap: <strong>${trap.label}</strong></div>`;
+        aiLog.scrollTop = aiLog.scrollHeight;
+      }
+      trap = takeTrapHistoryReveal(this.state);
     }
   }
 
@@ -1276,6 +1278,7 @@ export class MatchSession {
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
       payTollOnSpellCast(this.state, this.localColor);
+      tryConsumeCopycat(this.state, this.localColor, card.id);
     }
     if (!bonusSpell) this.state.spellPlayed[this.localColor] = true;
     else this.state.meta.extraSpellCast[this.localColor] = false;
@@ -1286,6 +1289,7 @@ export class MatchSession {
         picks: picks.map((p) => [...p]),
       });
     }
+    if (card) this.recordPendingTrapHistory();
     if (card && this.tutorialHooks?.onSpellPlayed) {
       this.tutorialHooks.onSpellPlayed(this, card, picks);
     }
@@ -2225,6 +2229,17 @@ ${starLine}`;
     if (banner) banner.className = "turn-banner";
   }
 
+  async runHiddenCopycatCast() {
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent = "Copycat armed — hidden.";
+      banner.className = "turn-banner spell-anim-instant";
+    }
+    this.render();
+    await delay(450 + SPELL_BANNER_EXTRA_MS);
+    if (banner) banner.className = "turn-banner";
+  }
+
   async runHiddenVengeanceCast() {
     const banner = this.$("turn-banner");
     if (banner) {
@@ -2453,6 +2468,7 @@ ${starLine}`;
     this.recordPvpSpell(card, picks, { countered: true });
     this.removeCardFromHand(card);
     payTollOnSpellCast(this.state, this.localColor);
+    tryConsumeCopycat(this.state, this.localColor, card.id);
     if (!this.state.meta.extraSpellCast?.[this.localColor]) {
       this.state.spellPlayed[this.localColor] = true;
     } else {
@@ -2504,6 +2520,12 @@ ${starLine}`;
     if (card.effect === "counterspell") {
       const res = applyCard(this.state, this.localColor, card, picks);
       if (res.success) await this.runHiddenCounterspellCast();
+      return finishSpellTrack(res);
+    }
+
+    if (card.effect === "copycat") {
+      const res = applyCard(this.state, this.localColor, card, picks);
+      if (res.success) await this.runHiddenCopycatCast();
       return finishSpellTrack(res);
     }
 
@@ -2675,12 +2697,14 @@ ${starLine}`;
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
       payTollOnSpellCast(this.state, this.localColor);
+      tryConsumeCopycat(this.state, this.localColor, card.id);
       const bonusSpell = !!this.state.meta.extraSpellCast?.[this.localColor];
       if (!bonusSpell) this.state.spellPlayed[this.localColor] = true;
       else this.state.meta.extraSpellCast[this.localColor] = false;
       if (this.hasMoveHistory() && !this.shouldDeferTrapHistory(card)) {
         this.recordHistoryEntry(card.name, "spell", { color: this.localColor, picks: [] });
       }
+      this.recordPendingTrapHistory();
       if (this.checkWin()) return;
       this.render();
       this.pushPvpState();
@@ -2697,6 +2721,8 @@ ${starLine}`;
           moveMsg = "Constitution active — your kings are protected. Select a piece to move.";
         } else if (card.effect === "counterspell") {
           moveMsg = "Counterspell armed (hidden) — select a piece to move.";
+        } else if (card.effect === "copycat") {
+          moveMsg = "Copycat armed (hidden) — select a piece to move.";
         } else if (card.effect === "vengeance") {
           moveMsg = "Vengeance armed (hidden) — select a piece to move.";
         } else if (card.effect === "last_stand") {
@@ -2949,8 +2975,11 @@ ${starLine}`;
 
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
+        this.recordPendingTrapHistory();
         const tollMsg = flushPendingTollMessage(this.state.meta, this.localColor);
         if (tollMsg) this.setMessage(tollMsg);
+        const copycatMsg = flushPendingCopycatMessage(this.state.meta, this.localColor);
+        if (copycatMsg) this.setMessage(copycatMsg);
         await delay(AI_PACE.spellSettle);
         afterSpell = true;
       } else if (entry.type === "move") {
