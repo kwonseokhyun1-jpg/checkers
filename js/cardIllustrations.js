@@ -378,6 +378,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "mind_control",
   "zombify",
   "purify",
+  "diffuse",
   "pyromancy",
   "quick_march",
   "revive",
@@ -814,6 +815,21 @@ function purifyMotif() {
     <path d="M16 32 L20 36 M48 32 L44 36" stroke="#fca5a5" stroke-width="1.6" stroke-linecap="round" opacity="0.45"/>
     ${burst(32, 26, 8, "#fde68a", "#d97706")}
     ${sparkles([[20, 12, 0.9], [44, 12, 0.8], [32, 4, 1], [14, 28, 0.7], [50, 28, 0.7]], "#fff", 0.55)}`;
+}
+
+/** Trap sigils dispersing in a cleansing burst. */
+function diffuseMotif() {
+  return `${groundShadow(32, 54, 22, 4)}
+    <circle cx="32" cy="30" r="20" fill="#7dd3fc" opacity="0.12"/>
+    <path d="M32 10 L36 24 H50 L38 32 L42 48 L32 40 L22 48 L26 32 L14 24 H28 Z" fill="#bae6fd" opacity="0.75" stroke="#0f172a" stroke-width="2"/>
+    <path d="M18 20 L22 24 M46 20 L42 24 M18 44 L22 40 M46 44 L42 40" stroke="#f87171" stroke-width="2" stroke-linecap="round" opacity="0.55"/>
+    <circle cx="16" cy="18" r="4" fill="#fca5a5" opacity="0.35" stroke="#0f172a" stroke-width="1.2"/>
+    <circle cx="48" cy="18" r="4" fill="#fca5a5" opacity="0.35" stroke="#0f172a" stroke-width="1.2"/>
+    <circle cx="16" cy="46" r="4" fill="#fca5a5" opacity="0.35" stroke="#0f172a" stroke-width="1.2"/>
+    <circle cx="48" cy="46" r="4" fill="#fca5a5" opacity="0.35" stroke="#0f172a" stroke-width="1.2"/>
+    <path d="M12 14 L8 10 M52 14 L56 10 M12 50 L8 54 M52 50 L56 54" stroke="#93c5fd" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
+    ${burst(32, 28, 10, "#bae6fd", "#0284c7")}
+    ${sparkles([[10, 12, 0.8], [54, 12, 0.8], [10, 50, 0.8], [54, 50, 0.8], [32, 6, 1]], "#fff", 0.6)}`;
 }
 
 /** Wanted poster with checker piece — mark enemy for jump-capture reward. */
@@ -1867,6 +1883,7 @@ export const EFFECT_ILLUSTRATIONS = {
   ignore: () => commonBleed("ig", "#94a3b8", "#1f2937", ignoreMotif()),
   counterspell: () => epicBleed("cs", "#a78bfa", "#2e1065", counterspellMotif()),
   purify: () => uncommonBleed("pu", "#6ee7b7", "#14532d", purifyMotif()),
+  diffuse: () => uncommonBleed("df", "#7dd3fc", "#0c4a6e", diffuseMotif()),
   trickster: () => rareBleed("tr", "#c4b5fd", "#553c7a", tricksterMotif()),
   offering: () => rareBleed("of", "#d8b4fe", "#553c7a", offeringMotif()),
   mulligan: () => rareBleed("mu", "#c4b5fd", "#4c1d95", mulliganMotif()),

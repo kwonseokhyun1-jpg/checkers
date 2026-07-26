@@ -76,6 +76,7 @@ const ID_TO_CATEGORY = {
   zombify: "special",
   press: "control",
   purify: "special",
+  diffuse: "special",
   quick_march: "movement",
   quicksand: "trap",
   rally: "defense",
