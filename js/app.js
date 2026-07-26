@@ -594,7 +594,7 @@ async function showTab(tab) {
     void renderQuests();
   }
   if (tab === "play") {
-    const sub = pendingPlaySubTab;
+    const sub = pendingPlaySubTab ?? activePlayTab;
     pendingPlaySubTab = null;
     if (sub) {
       void showPlayTab(sub);
