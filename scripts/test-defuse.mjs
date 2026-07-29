@@ -1,6 +1,6 @@
 /**
- * Diffuse clears all traps, grants a bonus spell, and can't be countered.
- * Run: node scripts/test-diffuse.mjs
+ * Defuse clears all traps, grants a bonus spell, and can't be countered.
+ * Run: node scripts/test-defuse.mjs
  */
 import assert from "node:assert/strict";
 import {
@@ -22,7 +22,7 @@ import { getCardDef } from "../js/cardCatalog.js";
 import { applyEffect } from "../js/cardEffectHandlers.js";
 import { initCardState } from "../js/cardEffects.js";
 
-const diffuse = getCardDef("diffuse");
+const defuse = getCardDef("defuse");
 
 function makeState() {
   const state = {
@@ -37,8 +37,8 @@ function makeState() {
   return state;
 }
 
-assert.equal(diffuse.rarity, "uncommon");
-assert.equal(diffuse.uncounterable, true);
+assert.equal(defuse.rarity, "uncommon");
+assert.equal(defuse.uncounterable, true);
 
 const state = makeState();
 state.meta.counterspell[COLORS.BLACK] = true;
@@ -56,7 +56,7 @@ placeHiddenQuicksand(state.squares["5,5"] = {}, COLORS.RED);
 
 assert.equal(hasAnyTrapArmed(state), true);
 
-const result = applyEffect(state, COLORS.RED, diffuse.effect, []);
+const result = applyEffect(state, COLORS.RED, defuse.effect, []);
 assert.equal(result.success, true);
 assert.equal(hasAnyTrapArmed(state), false);
 assert.equal(state.meta.counterspell[COLORS.BLACK], false);
@@ -71,9 +71,9 @@ assert.match(result.message, /cast another spell/i);
 
 const counterState = makeState();
 counterState.meta.counterspell[COLORS.BLACK] = true;
-const counterResult = applyEffect(counterState, COLORS.RED, diffuse.effect, []);
+const counterResult = applyEffect(counterState, COLORS.RED, defuse.effect, []);
 assert.equal(counterResult.success, true);
 assert.equal(counterState.meta.counterspell[COLORS.BLACK], false);
 assert.equal(counterState.meta.extraSpellCast[COLORS.RED], true);
 
-console.log("test-diffuse.mjs: all assertions passed");
+console.log("test-defuse.mjs: all assertions passed");

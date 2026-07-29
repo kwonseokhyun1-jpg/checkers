@@ -90,7 +90,7 @@ export const EFFECT_VISUAL = {
   clone: "clone",
   offering: "offering",
   purify: "purify",
-  diffuse: "purify",
+  defuse: "purify",
 };
 
 /** Full-screen overlays for instant / meta spells (no board picks). */
@@ -110,7 +110,7 @@ export const META_SPELL_OVERLAY = {
   toll: "toll",
   last_king: "crown-burst",
   purify: "purify",
-  diffuse: "purify",
+  defuse: "purify",
 };
 
 export const VISUAL_DURATION_MS = {

@@ -378,7 +378,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "mind_control",
   "zombify",
   "purify",
-  "diffuse",
+  "defuse",
   "pyromancy",
   "quick_march",
   "revive",
@@ -818,7 +818,7 @@ function purifyMotif() {
 }
 
 /** Trap sigils dispersing in a cleansing burst. */
-function diffuseMotif() {
+function defuseMotif() {
   return `${groundShadow(32, 54, 22, 4)}
     <circle cx="32" cy="30" r="20" fill="#7dd3fc" opacity="0.12"/>
     <path d="M32 10 L36 24 H50 L38 32 L42 48 L32 40 L22 48 L26 32 L14 24 H28 Z" fill="#bae6fd" opacity="0.75" stroke="#0f172a" stroke-width="2"/>
@@ -1883,7 +1883,7 @@ export const EFFECT_ILLUSTRATIONS = {
   ignore: () => commonBleed("ig", "#94a3b8", "#1f2937", ignoreMotif()),
   counterspell: () => epicBleed("cs", "#a78bfa", "#2e1065", counterspellMotif()),
   purify: () => uncommonBleed("pu", "#6ee7b7", "#14532d", purifyMotif()),
-  diffuse: () => uncommonBleed("df", "#7dd3fc", "#0c4a6e", diffuseMotif()),
+  defuse: () => uncommonBleed("df", "#7dd3fc", "#0c4a6e", defuseMotif()),
   trickster: () => rareBleed("tr", "#c4b5fd", "#553c7a", tricksterMotif()),
   offering: () => rareBleed("of", "#d8b4fe", "#553c7a", offeringMotif()),
   mulligan: () => rareBleed("mu", "#c4b5fd", "#4c1d95", mulliganMotif()),
