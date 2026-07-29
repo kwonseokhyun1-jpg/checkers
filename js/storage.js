@@ -238,6 +238,19 @@ function migrateFireblastToPyromancy(profile) {
   return profile;
 }
 
+function migrateDiffuseToDefuse(profile) {
+  const legacy = profile.collection?.diffuse;
+  if (legacy && legacy > 0) {
+    profile.collection.defuse = (profile.collection.defuse || 0) + legacy;
+    delete profile.collection.diffuse;
+  }
+  for (const deck of profile.decks || []) {
+    if (!Array.isArray(deck.cardIds)) continue;
+    deck.cardIds = deck.cardIds.map((id) => (id === "diffuse" ? "defuse" : id));
+  }
+  return profile;
+}
+
 function stripRemovedCards(profile) {
   for (const id of Object.keys(profile.collection || {})) {
     if (isRemovedCard(id) || !getCardDef(id)) delete profile.collection[id];
@@ -345,6 +358,7 @@ function finalizeProfile(profile) {
   let p = stripKnightCards(profile);
   p = migrateDoubleToQuickMarch(p);
   p = migrateFireblastToPyromancy(p);
+  p = migrateDiffuseToDefuse(p);
   p = stripRemovedCards(p);
   p = capCollection(p);
   repairProfile(p);

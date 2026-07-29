@@ -922,10 +922,10 @@ const EFFECTS = {
     cleanseFriendlyDebuffs(state.board, color);
     return ok("Purify — all debuffs removed from your pieces.");
   },
-  diffuse(state, color, picks) {
+  defuse(state, color, picks) {
     clearAllTraps(state);
     state.meta.extraSpellCast[color] = true;
-    return ok("Diffuse — all traps deactivated; cast another spell.");
+    return ok("Defuse — all traps deactivated; cast another spell.");
   },
   vacuum(state, color, picks) { const [r,c]=p0(picks); if(!emptyDark(state,r,c)) return fail(); const all=fri(state,color).concat(en(state,color)); for(const p of all){ const dr=Math.sign(r-p.row),dc=Math.sign(c-p.col); const nr=p.row+dr,nc=p.col+dc; if((nr!==r||nc!==c)&&emptyDark(state,nr,nc)) displacePiece(state,p.row,p.col,nr,nc);} return ok(); },
   scatter(state, color, picks) {

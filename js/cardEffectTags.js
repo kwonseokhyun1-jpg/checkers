@@ -6,7 +6,7 @@ const TAGS = {
   forward_bolt: ["Destroy first enemy on forward diagonal (Stab)"],
   trickster: ["Swap up to 6 random pieces (not on back ranks)"],
   purify: ["Removes all debuffs from your pieces, including burn and freeze"],
-  diffuse: ["Can't be countered", "Deactivates every trap on the board", "Cast another spell this turn"],
+  defuse: ["Can't be countered", "Deactivates every trap on the board", "Cast another spell this turn"],
   chain_lightning: ["Strike adjacent enemies only", "Up to 2 kills if enemies touch each other", "Your piece is paralyzed 2 turns"],
   pyromancy: ["Enemy piece + empty dark square — both burn 2 turns; fire tiles block enemies", "You cannot cast spells on your next turn"],
   freeze_1: ["Enemy cannot move on their next turn"],
