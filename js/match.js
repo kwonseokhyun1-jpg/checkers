@@ -1267,6 +1267,14 @@ export class MatchSession {
     }
   }
 
+  /** Keep the spell phase open and unlock the hand for a follow-up cast (Offering, Mulligan, Defuse). */
+  enterBonusSpellCast(message) {
+    this.actionBusy = false;
+    this.state.phase = PHASE.CARDS;
+    this.setMessage(message || "Cast another spell.");
+    this.render();
+  }
+
   finishCardPlay(msg, replayExtras = {}, spellCtx = null) {
     const card = spellCtx?.card ?? this.cardPlay?.card;
     const picks = spellCtx?.picks ?? (this.cardPlay?.picks ? [...this.cardPlay.picks] : []);
@@ -1294,9 +1302,7 @@ export class MatchSession {
     this.pushPvpState();
     if (!this.state.gameOver) {
       if (bonusSpell) {
-        this.state.phase = PHASE.CARDS;
-        this.setMessage(msg || "Cast another spell.");
-        this.render();
+        this.enterBonusSpellCast(msg);
         return;
       }
       const moveMsg = msg ? `${msg} Select a piece to move.` : undefined;
@@ -2686,8 +2692,7 @@ ${starLine}`;
       this.pushPvpState();
       if (!this.state.gameOver) {
         if (bonusSpell) {
-          this.state.phase = PHASE.CARDS;
-          this.setMessage(res.message || "Cast another spell.");
+          this.enterBonusSpellCast(res.message);
           return;
         }
         let moveMsg = "Spell cast — select a piece to move.";
