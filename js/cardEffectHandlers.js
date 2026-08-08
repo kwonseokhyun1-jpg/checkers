@@ -738,10 +738,14 @@ const EFFECTS = {
   mulligan(state, color, picks) {
     const h = state.hands[color];
     const n = h.length;
+    state.discardPile[color] = state.discardPile[color] || [];
+    for (const card of h) {
+      if (card?.id) state.discardPile[color].push(card.id);
+    }
     h.length = 0;
-    for (let i = 0; i < n; i++) h.push(createCardInstance(drawRandomCard()));
+    const drawn = drawToHand(state, color, n);
     state.meta.extraSpellCast[color] = true;
-    return ok(`Mulligan — drew ${n} card${n === 1 ? "" : "s"}; cast another spell.`);
+    return ok(`Mulligan — drew ${drawn} card${drawn === 1 ? "" : "s"}; cast another spell.`);
   },
   hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); if(Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3) return fail('Out of range'); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns||isFortified(a)||isFortified(b)) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
   mind_control(state, color, picks) {
