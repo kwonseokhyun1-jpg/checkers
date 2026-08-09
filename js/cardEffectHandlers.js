@@ -12,6 +12,8 @@ import {
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns, ensureTollTurns, TOLL_DURATION_TURNS, clearAllTraps } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
+import { getPlayableCards } from "./cardCatalog.js";
+import { deckCardIdsFromMatchState } from "./deckRules.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
 import { cleanseFriendlyDebuffs, pieceHasDebuffs, pieceHasIronWillDebuff } from "./pieceStatus.js";
 import { isSquareCollapsed, setCollapsedSquare, ensureConstitutionTurns, getDarknessZoneCellsAround, isInDarknessZone } from "./gameMeta.js";
@@ -747,6 +749,28 @@ const EFFECTS = {
     state.meta.extraSpellCast[color] = true;
     return ok(`Mulligan — drew ${drawn} card${drawn === 1 ? "" : "s"}; cast another spell.`);
   },
+  conjure(state, color, picks) {
+    let pool = conjureOutsideDeckPool(state, color);
+    if (!pool.length) return fail("No spells outside your deck.");
+    const names = [];
+    for (let i = 0; i < 2 && pool.length; i++) {
+      const total = pool.reduce((s, c) => s + (c.weight || 1), 0);
+      let roll = Math.random() * total;
+      let idx = 0;
+      for (let j = 0; j < pool.length; j++) {
+        roll -= pool[j].weight || 1;
+        if (roll <= 0) {
+          idx = j;
+          break;
+        }
+      }
+      const pick = pool[idx];
+      state.hands[color].push(createCardInstance(pick));
+      names.push(pick.name);
+      pool = pool.filter((_, j) => j !== idx);
+    }
+    return ok(`Conjure — summoned ${names.join(" & ")}.`);
+  },
   hostile_swap(state, color, picks) { if(picks.length<2) return fail(); const [r1,c1]=p0(picks),[r2,c2]=p1(picks); if(Math.max(Math.abs(r2-r1),Math.abs(c2-c1))>3) return fail('Out of range'); const a=at(state,r1,c1),b=at(state,r2,c2); if(!a||!b||a.color!==color||b.color===color) return fail(); if(!enemyCardCanMove(b)) return fail('Anchored'); if(a.shieldTurns||b.shieldTurns||isFortified(a)||isFortified(b)) return fail('Shielded'); swapAt(state,r1,c1,r2,c2); return ok(); },
   mind_control(state, color, picks) {
     const [r, c] = p0(picks);
@@ -1045,6 +1069,15 @@ export function randomTeleportHasDestination(state, fromR, fromC) {
     }
   }
   return false;
+}
+
+/** Playable spells whose ids are absent from the caster's constructed deck. */
+export function conjureOutsideDeckPool(state, color) {
+  const deckIds = Array.isArray(state.deckLists?.[color]) && state.deckLists[color].length
+    ? state.deckLists[color]
+    : (deckCardIdsFromMatchState(state, color) || []);
+  const inDeck = new Set(deckIds);
+  return getPlayableCards().filter((c) => !inDeck.has(c.id));
 }
 
 export function applyEffect(state, color, effect, picks) {

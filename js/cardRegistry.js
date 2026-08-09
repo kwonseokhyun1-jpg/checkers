@@ -112,6 +112,7 @@ export const CARD_REGISTRY = [
   { id: "dominion", name: "Dominion", desc: "All your men may move backward for 2 turns.", rarity: "uncommon", weight: 4, mode: "instant", effect: "dominion" },
   { id: "toll", name: "Toll", desc: "For 2 turns, whenever an opponent casts a spell, draw 2 cards.", rarity: "uncommon", weight: 4, mode: "instant", effect: "toll" },
   { id: "defuse", name: "Defuse", desc: "Can't be countered. Deactivate every trap that's set. Cast another spell this turn.", rarity: "uncommon", weight: 4, mode: "instant", effect: "defuse", uncounterable: true },
+  { id: "conjure", name: "Conjure", desc: "Draw 2 random cards that are not in your deck.", rarity: "epic", weight: 2, mode: "instant", effect: "conjure" },
 ];
 
 export const CARD_IDS = Object.fromEntries(CARD_REGISTRY.map((c) => [c.id.toUpperCase().replace(/[^A-Z0-9]/g, '_'), c.id]));

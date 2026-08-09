@@ -3,7 +3,7 @@
  */
 import { COLORS, SIZE, isDarkSquare, inBounds, piecesOfColor, enemyPieces, getAdjacentEmpty, getLeapfrogTargets, getTeleportTargets, getBoltTarget, getCryoBoltTarget, getAdjacentForwardBoltTarget, getBackstepTarget, getNudgeTarget, getDashDestinations, getDiagonalThroughSquares, getDiagonalAdjacentSquares, hasMandatoryJumps, pieceHasLegalMoves, pieceHasIntrinsicMoves, isFortified, getAllMovesForColor, getStepMoves, getJumpMoves, applyMove, countPieces, tryPromoteOnFarRow, createPiece } from "./board.js";
 import { collapsedSquareKey, ensureConstitutionTurns, ensureDominionTurns, isInDarknessZone, sk, handLimit } from "./gameMeta.js";
-import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, deportCanTarget, forwardBoltCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, promoRow, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
+import { applyCard, applyEffect, backstabCanTarget, chainLightningCanTarget, callForwardMoveOk, conjureOutsideDeckPool, deportCanTarget, forwardBoltCanTarget, getDisplacementDestinations, longStepOk, magnetHasPull, ownBackRank, promoRow, randomTeleportHasDestination, reviveSquareAllowed } from "./cardEffectHandlers.js";
 import { drawRandomCard, createCardInstance } from "./cards.js";
 import {
   friendlyHasDebuffs,
@@ -39,6 +39,9 @@ export function getInstantCastBlockReason(state, color, card) {
   const enemy = color === COLORS.RED ? COLORS.BLACK : COLORS.RED;
   if (card.effect === "extract" && !state.hands[enemy]?.length) {
     return "Opponent has no cards in hand.";
+  }
+  if (card.effect === "conjure" && !conjureOutsideDeckPool(state, color).length) {
+    return "No spells outside your deck.";
   }
   return null;
 }
