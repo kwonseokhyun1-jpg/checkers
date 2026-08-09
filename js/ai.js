@@ -116,7 +116,11 @@ export function applyAiReplayEntry(state, entry, aiColor = COLORS.BLACK) {
     const card = idx >= 0 ? hand[idx] : getCardDef(entry.cardId);
     if (!card) return false;
     const res = applyCard(state, color, card, entry.picks || []);
-    if (idx >= 0) hand.splice(idx, 1);
+    // Mulligan (and similar) may already spend/replace the hand — only remove if still present.
+    const spentIdx = card.instanceId
+      ? hand.findIndex((c) => c.instanceId === card.instanceId)
+      : -1;
+    if (spentIdx >= 0) hand.splice(spentIdx, 1);
     if (!state.meta.extraSpellCast?.[aiColor]) state.spellPlayed[aiColor] = true;
     else state.meta.extraSpellCast[aiColor] = false;
     if (res?.success) payTollOnSpellCast(state, aiColor);
@@ -422,7 +426,10 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
       if (!res.success) break;
       if (card.effect === "snowball" && res.picks?.[0]) snowballTarget = [...res.picks[0]];
       if (card.effect === "scatter") scatterCast = true;
-      hand.splice(idx, 1);
+      const spentIdx = card.instanceId
+        ? hand.findIndex((c) => c.instanceId === card.instanceId)
+        : -1;
+      if (spentIdx >= 0) hand.splice(spentIdx, 1);
       const bonusSpell = !!state.meta.extraSpellCast?.[aiColor];
       if (!bonusSpell) state.spellPlayed[aiColor] = true;
       else state.meta.extraSpellCast[aiColor] = false;
