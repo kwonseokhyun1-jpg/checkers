@@ -48,7 +48,7 @@
 - **Long Step** — Move one of your pieces 2 squares diagonally if the path is clear (no capture).
 - **Displacement** — Teleport one of your pieces to any empty dark square on your side of the board.
 - **Mine** — Place a trap on an empty dark square; next enemy to land there is destroyed.
-- **Mulligan** — Discard your hand and draw the same number of cards from your deck.
+- **Mulligan** — Shuffle your hand into your deck, then draw the same number of cards.
 - **Obstacle** — Mark a light square as permanently impassable.
 - **Overrun** — After a capture this turn, slide 1 more square forward along the same diagonal if empty.
 - **Panic** — Force an enemy man to step backward on its owner's next turn if possible.

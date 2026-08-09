@@ -1,7 +1,7 @@
 import { createCardInstance } from "./cards.js";
 import { getCardDef } from "./cardCatalog.js";
 
-import { createMatchPile } from "./deckRules.js";
+import { createMatchPile, shuffle } from "./deckRules.js";
 
 export function initDeckPiles(state, redIds, blackIds) {
   state.drawPile = {
@@ -14,7 +14,7 @@ export function initDeckPiles(state, redIds, blackIds) {
 export function drawToHand(state, color, n = 1) {
   let drawn = 0;
   for (let i = 0; i < n; i++) {
-const id = state.drawPile[color].pop();
+    const id = state.drawPile[color].pop();
     if (!id) break;
     const def = getCardDef(id);
     if (!def) continue;
@@ -22,6 +22,22 @@ const id = state.drawPile[color].pop();
     drawn++;
   }
   return drawn;
+}
+
+/** Move every card currently in hand into the draw pile and reshuffle. */
+export function shuffleHandIntoDrawPile(state, color) {
+  const hand = state.hands[color];
+  if (!hand?.length) return 0;
+  if (!state.drawPile[color]) state.drawPile[color] = [];
+  let n = 0;
+  for (const card of hand) {
+    if (!card?.id) continue;
+    state.drawPile[color].push(card.id);
+    n++;
+  }
+  hand.length = 0;
+  state.drawPile[color] = shuffle(state.drawPile[color]);
+  return n;
 }
 
 export function discardFromHand(state, color, instanceId) {

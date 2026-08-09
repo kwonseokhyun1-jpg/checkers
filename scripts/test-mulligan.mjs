@@ -1,5 +1,5 @@
 /**
- * Mulligan discards the hand to the discard pile, redraws from the deck,
+ * Mulligan shuffles the hand into the deck, redraws from that pile,
  * and grants a bonus spell this turn.
  * Run: node scripts/test-mulligan.mjs
  */
@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { COLORS } from "../js/board.js";
 import { createMatchMeta } from "../js/gameMeta.js";
 import { getCardDef } from "../js/cardCatalog.js";
-import { applyEffect } from "../js/cardEffectHandlers.js";
+import { applyCard, applyEffect } from "../js/cardEffectHandlers.js";
 import { createCardInstance } from "../js/cards.js";
 import { initDeckPiles } from "../js/deckPile.js";
 
@@ -30,9 +30,10 @@ function makeState(handIds, drawIds = []) {
 }
 
 const deckIds = ["ward", "nudge", "backstep", "dash", "retreat"];
-const state = makeState(["nudge", "backstep", "ward"], deckIds);
+const handIds = ["nudge", "backstep", "ward"];
+const state = makeState(handIds, deckIds);
 const beforeIds = state.hands[COLORS.RED].map((c) => c.instanceId);
-const pileBefore = state.drawPile[COLORS.RED].length;
+const poolBefore = [...state.drawPile[COLORS.RED], ...handIds];
 
 const result = applyEffect(state, COLORS.RED, mulligan.effect, []);
 assert.equal(result.success, true);
@@ -43,19 +44,37 @@ assert.ok(
   state.hands[COLORS.RED].every((c) => !beforeIds.includes(c.instanceId)),
   "hand should contain freshly drawn card instances"
 );
-assert.deepEqual(
-  state.discardPile[COLORS.RED].sort(),
-  ["backstep", "nudge", "ward"].sort(),
-  "discarded hand should go to discard pile"
-);
+assert.equal(state.discardPile[COLORS.RED].length, 0, "mulliganed cards return to the deck, not discard");
 assert.equal(
-  state.drawPile[COLORS.RED].length,
-  pileBefore - 3,
-  "mulligan should draw from the deck pile"
+  state.drawPile[COLORS.RED].length + state.hands[COLORS.RED].length,
+  poolBefore.length,
+  "hand + remaining pile should equal the pre-mulligan card pool"
 );
 assert.ok(
-  state.hands[COLORS.RED].every((c) => deckIds.includes(c.id)),
-  "redrawn cards must come from the player's deck"
+  state.hands[COLORS.RED].every((c) => poolBefore.includes(c.id)),
+  "redrawn cards must come from the shuffled deck+hand pool"
+);
+
+// Casting Mulligan via applyCard spends the cast copy so it is not reshuffled.
+const castState = makeState(["mulligan", "nudge", "backstep"], ["ward", "dash", "retreat"]);
+const castCard = castState.hands[COLORS.RED][0];
+assert.equal(castCard.id, "mulligan");
+const castPool = ["nudge", "backstep", "ward", "dash", "retreat"];
+const castResult = applyCard(castState, COLORS.RED, castCard, []);
+assert.equal(castResult.success, true);
+assert.equal(castState.hands[COLORS.RED].length, 2, "draw the non-cast hand size");
+assert.equal(
+  castState.drawPile[COLORS.RED].length + castState.hands[COLORS.RED].length,
+  castPool.length,
+  "spent Mulligan leaves the match; other cards stay in deck pool"
+);
+assert.ok(
+  castState.hands[COLORS.RED].every((c) => castPool.includes(c.id)),
+  "post-cast hand comes only from the remaining deck pool"
+);
+assert.ok(
+  !castState.hands[COLORS.RED].some((c) => c.instanceId === castCard.instanceId),
+  "spent Mulligan instance must not remain in hand"
 );
 
 const emptyHand = makeState([], ["nudge", "ward"]);
@@ -64,13 +83,6 @@ assert.equal(emptyResult.success, true);
 assert.equal(emptyHand.hands[COLORS.RED].length, 0);
 assert.equal(emptyHand.meta.extraSpellCast[COLORS.RED], true);
 assert.equal(emptyHand.drawPile[COLORS.RED].length, 2, "empty hand draws nothing from deck");
-
-const shortDeck = makeState(["nudge", "backstep", "ward"], ["dash"]);
-const shortResult = applyEffect(shortDeck, COLORS.RED, mulligan.effect, []);
-assert.equal(shortResult.success, true);
-assert.equal(shortDeck.hands[COLORS.RED].length, 1, "draw only what the deck has left");
-assert.equal(shortDeck.drawPile[COLORS.RED].length, 0);
-assert.equal(shortDeck.hands[COLORS.RED][0].id, "dash");
 
 assert.equal(getCardDef("purify").rarity, "uncommon");
 

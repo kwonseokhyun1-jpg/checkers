@@ -11,7 +11,7 @@ import {
 } from "./board.js";
 import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceTurns, ensureTollTurns, TOLL_DURATION_TURNS, clearAllTraps } from "./gameMeta.js";
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
-import { drawToHand } from "./deckPile.js";
+import { drawToHand, shuffleHandIntoDrawPile } from "./deckPile.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
 import { cleanseFriendlyDebuffs, pieceHasDebuffs, pieceHasIronWillDebuff } from "./pieceStatus.js";
 import { isSquareCollapsed, setCollapsedSquare, ensureConstitutionTurns, getDarknessZoneCellsAround, isInDarknessZone } from "./gameMeta.js";
@@ -736,13 +736,7 @@ const EFFECTS = {
   coupon(state, color, picks) { state.meta.freeDraw[color]=true; return ok(); },
   hand_expand(state, color, picks) { state.meta.handMax[color]=8; return ok(); },
   mulligan(state, color, picks) {
-    const h = state.hands[color];
-    const n = h.length;
-    state.discardPile[color] = state.discardPile[color] || [];
-    for (const card of h) {
-      if (card?.id) state.discardPile[color].push(card.id);
-    }
-    h.length = 0;
+    const n = shuffleHandIntoDrawPile(state, color);
     const drawn = drawToHand(state, color, n);
     state.meta.extraSpellCast[color] = true;
     return ok(`Mulligan — drew ${drawn} card${drawn === 1 ? "" : "s"}; cast another spell.`);
@@ -1055,5 +1049,11 @@ export function applyEffect(state, color, effect, picks) {
 
 export function applyCard(state, color, card, picks) {
   state.meta.lastCard[color] = card.effect;
+  // Spend Mulligan before reshuffling so the cast copy is not drawn again.
+  if (card?.effect === "mulligan" && card.instanceId) {
+    const hand = state.hands[color];
+    const i = hand.findIndex((c) => c.instanceId === card.instanceId);
+    if (i >= 0) hand.splice(i, 1);
+  }
   return applyEffect(state, color, card.effect, picks);
 }
