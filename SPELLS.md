@@ -127,6 +127,7 @@
 
 ## Epic
 
+- **Conjure** — Draw 2 random cards that are not in your deck.
 - **Chain Lightning** — Destroy first enemy in a line; chains up to 3 times.
 - **Collapse** — Remove a dark square from play; piece on it moves to nearest empty dark square.
 - **Coronation Day** — All your men on the promotion row become kings.

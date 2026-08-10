@@ -388,6 +388,7 @@ export const FULL_BLEED_EFFECTS = new Set([
   "rook_2",
   "offering",
   "mulligan",
+  "conjure",
   "tangle",
   "call_forward",
   "dash",
@@ -998,6 +999,23 @@ function mulliganMotif() {
     <circle cx="32" cy="28" r="6" fill="#a78bfa" opacity="0.22" stroke="#c4b5fd" stroke-width="1.2"/>
     <text x="28" y="31" font-size="9" fill="#f0e6ff" font-weight="700">+1</text>
     ${sparkles([[12, 18, 0.8], [50, 8, 0.75], [32, 44, 0.6]], "#e9d5ff", 0.6)}`;
+}
+
+/** Two foreign spell cards materializing from a summoning ring. */
+function conjureMotif() {
+  return `${groundShadow(32, 54, 22, 4)}
+    <circle cx="32" cy="40" r="16" fill="none" stroke="#0f172a" stroke-width="3.2" opacity="0.2"/>
+    <circle cx="32" cy="40" r="16" fill="none" stroke="#a78bfa" stroke-width="2.4" stroke-dasharray="3 2.5"/>
+    <circle cx="32" cy="40" r="10" fill="#4c1d95" opacity="0.35" stroke="#c4b5fd" stroke-width="1.2"/>
+    <path d="M32 18 L34 28 L32 26 L30 28 Z" fill="#e9d5ff" opacity="0.85"/>
+    <rect x="8" y="10" width="14" height="22" rx="2.5" fill="#312e81" stroke="#0f172a" stroke-width="1.8" transform="rotate(-14 15 21)"/>
+    <rect x="8" y="10" width="14" height="22" rx="2.5" fill="none" stroke="#a78bfa" stroke-width="1.2" transform="rotate(-14 15 21)"/>
+    <path d="M11 16 H19 M11 20 H21 M11 24 H17" stroke="#e9d5ff" stroke-width="1.1" opacity="0.7" transform="rotate(-14 15 21)"/>
+    <rect x="42" y="12" width="14" height="22" rx="2.5" fill="#4c1d95" stroke="#0f172a" stroke-width="1.8" transform="rotate(16 49 23)"/>
+    <rect x="42" y="12" width="14" height="22" rx="2.5" fill="none" stroke="#c4b5fd" stroke-width="1.2" transform="rotate(16 49 23)"/>
+    <path d="M45 18 H53 M45 22 H55 M45 26 H51" stroke="#ddd6fe" stroke-width="1.1" opacity="0.65" transform="rotate(16 49 23)"/>
+    <text x="26" y="44" font-size="8" fill="#e9d5ff" opacity="0.9" font-weight="700">+2</text>
+    ${sparkles([[18, 8, 0.8], [46, 6, 0.75], [32, 30, 0.65], [24, 48, 0.55]], "#e9d5ff", 0.6)}`;
 }
 
 /** Ally piece dissolving into two drawn cards. */
@@ -1887,6 +1905,7 @@ export const EFFECT_ILLUSTRATIONS = {
   trickster: () => rareBleed("tr", "#c4b5fd", "#553c7a", tricksterMotif()),
   offering: () => rareBleed("of", "#d8b4fe", "#553c7a", offeringMotif()),
   mulligan: () => rareBleed("mu", "#c4b5fd", "#4c1d95", mulliganMotif()),
+  conjure: () => epicBleed("cj", "#c4b5fd", "#3b0764", conjureMotif()),
   quick_march: () => epicBleed("qm", "#60a5fa", "#1e3a5f", quickMarchMotif()),
   constitution: () => epicBleed("co", "#4ade80", "#14532d", constitutionMotif()),
   last_king: () => uncommonBleed("lk", "#fbbf24", "#1e3a5f", lastKingMotif()),

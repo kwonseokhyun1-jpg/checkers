@@ -22,6 +22,7 @@ const TAGS = {
   quick_march: ["Same piece moves again; either step may capture"],
   offering: ["Sacrifice a friendly piece", "Draw 2 cards", "Cast another spell immediately"],
   mulligan: ["Discard your hand", "Draw that many from your deck", "Cast another spell this turn"],
+  conjure: ["Draw 2 random cards not in your deck", "Cards come from the global spell pool"],
   destroy_unshielded: ["Destroy any unshielded enemy", "You cannot cast spells on your next turn"],
   revive: ["Requires a captured friendly piece", "Place on any empty dark square on your side of the board", "Returns a clean piece without zombie curse or Awoken Bear", "Revived piece cannot capture this turn"],
   blink_2: ["Teleport within 2 squares"],

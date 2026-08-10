@@ -4,6 +4,10 @@ import { getCardDef } from "./cardCatalog.js";
 import { createMatchPile } from "./deckRules.js";
 
 export function initDeckPiles(state, redIds, blackIds) {
+  state.deckLists = {
+    red: [...(redIds || [])],
+    black: [...(blackIds || [])],
+  };
   state.drawPile = {
     red: createMatchPile(redIds),
     black: createMatchPile(blackIds),
