@@ -10,7 +10,7 @@ import {
   hasMandatoryJumps,
 } from "./board.js";
 import { tryAutoPlay, canAiPlay, applyCard, isHiddenTrapSpell, bombMoveWorthwhile, bestSnowballSetupScore, bestScatterCaptureScore } from "./cardEffects.js";
-import { queueTrapHistoryReveal, isConfused, clearConfusion, payTollOnSpellCast } from "./gameMeta.js";
+import { queueTrapHistoryReveal, isConfused, clearConfusion, payTollOnSpellCast, hasTollArmed } from "./gameMeta.js";
 import { getCardDef } from "./cardCatalog.js";
 
 /** Deep copy for AI planning without mutating the live match state. */
@@ -378,6 +378,8 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
     log.push({ type: "message", text: `${opponentName} is blinded — skips spells.` });
   } else if (isConfused(state.meta, color)) {
     log.push({ type: "message", text: `${opponentName} is confused — skips spells.` });
+  } else if (hasTollArmed(state, human)) {
+    log.push({ type: "message", text: `${opponentName} armed Toll — skips spells.` });
   } else if (!state.spellPlayed[aiColor] && hand.length) {
     while (!state.spellPlayed[aiColor] && hand.length) {
       let playable = hand.filter((c) => canAiPlay(state, color, c));
