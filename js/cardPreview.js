@@ -23,6 +23,12 @@ export function closeCardPreview() {
   $("card-preview-modal")?.classList.add("hidden");
   $("card-preview-mount")?.classList.remove("card-preview-mount--reveal-only");
   setPreviewBodyState(false);
+  // iOS can leave a horizontal visual-viewport offset after bottom-sheet modals.
+  const y = window.scrollY || document.documentElement.scrollTop || 0;
+  window.scrollTo(0, y);
+  document.documentElement.scrollLeft = 0;
+  document.body.scrollLeft = 0;
+  document.querySelector(".game-main")?.scrollTo?.(0, document.querySelector(".game-main")?.scrollTop ?? 0);
 }
 
 /**

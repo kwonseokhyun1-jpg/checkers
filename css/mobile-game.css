@@ -2717,7 +2717,7 @@ body.install-banner-visible.deck-editing .game-shell {
   }
 
   /* Landscape / short-height: side panels so the board is not crushed vertically */
-  @media (max-height: 820px) {
+  @media (max-height: 820px) and (orientation: landscape) {
     body.match-active .game-layout {
       display: grid;
       grid-template-columns: minmax(0, 152px) minmax(0, 1fr) minmax(0, 172px);
