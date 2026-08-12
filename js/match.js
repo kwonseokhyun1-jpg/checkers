@@ -1275,7 +1275,7 @@ export class MatchSession {
     this.render();
   }
 
-  finishCardPlay(msg, replayExtras = {}, spellCtx = null) {
+  async finishCardPlay(msg, replayExtras = {}, spellCtx = null) {
     const card = spellCtx?.card ?? this.cardPlay?.card;
     const picks = spellCtx?.picks ?? (this.cardPlay?.picks ? [...this.cardPlay.picks] : []);
     const bonusSpell = !!this.state.meta.extraSpellCast?.[this.localColor];
@@ -1284,6 +1284,7 @@ export class MatchSession {
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
       payTollOnSpellCast(this.state, this.localColor);
+      await this.finalizePendingTollReveal();
     }
     if (!bonusSpell) this.state.spellPlayed[this.localColor] = true;
     else this.state.meta.extraSpellCast[this.localColor] = false;
@@ -1431,10 +1432,10 @@ export class MatchSession {
     this.actionBusy = true;
     this.render();
     void this.resolveTargetedSpell(card, finalPicks)
-      .then((res) => {
+      .then(async (res) => {
         if (!res.success) {
           if (res.countered) {
-            this.finalizeCounteredSpell(card, res.message, finalPicks);
+            await this.finalizeCounteredSpell(card, res.message, finalPicks);
             return;
           }
           this.cardPlay = { card, picks: finalPicks.slice(0, -1) };
@@ -1455,7 +1456,7 @@ export class MatchSession {
               }
             : {}),
         };
-        this.finishCardPlay(res.message, replayExtras, spellCtx);
+        await this.finishCardPlay(res.message, replayExtras, spellCtx);
       })
       .catch((err) => {
         console.error("Targeted spell failed:", err);
@@ -2388,6 +2389,56 @@ ${starLine}`;
     return msg;
   }
 
+  async runTollReveal({ tollOwner, drawCount = 2 } = {}) {
+    const def = getCardDef("toll");
+    const cardName = def?.name || "Toll";
+    const cardDesc =
+      def?.desc || "For 2 turns, whenever an opponent casts a spell, draw 2 cards.";
+    const label =
+      tollOwner == null
+        ? "Toll triggered"
+        : tollOwner === this.localColor
+          ? "Your Toll"
+          : "Enemy Toll";
+    const cardsLabel = drawCount === 1 ? "1 card" : `${drawCount} cards`;
+
+    this.showTrapSpellBanner(cardName, cardDesc, { label });
+
+    const frame = this.$("board")?.closest(".board-frame");
+    frame?.classList.add("board-frame--toll");
+    const banner = this.$("turn-banner");
+    if (banner) {
+      banner.textContent =
+        tollOwner === this.localColor
+          ? `${cardName}! — drew ${cardsLabel}.`
+          : `${cardName}!`;
+      banner.className = "turn-banner turn-banner--toll";
+    }
+    this.root.querySelector(".match-wrap")?.classList.add("match-wrap--toll");
+    this.render();
+    await delay(1200 + SPELL_BANNER_EXTRA_MS);
+    frame?.classList.remove("board-frame--toll");
+    this.root.querySelector(".match-wrap")?.classList.remove("match-wrap--toll");
+    if (banner) {
+      banner.classList.remove("turn-banner--toll");
+      banner.className = "turn-banner";
+    }
+    this.resetTrapSpellBanner();
+  }
+
+  async finalizePendingTollReveal() {
+    const meta = this.state?.meta;
+    if (!meta?.pendingTollDraw) return null;
+    const owner = [COLORS.RED, COLORS.BLACK].find((c) => (meta.pendingTollDraw[c] || 0) > 0);
+    if (!owner) return null;
+    const drawCount = meta.pendingTollDraw[owner];
+    await this.runTollReveal({ tollOwner: owner, drawCount });
+    const msg = owner === this.localColor ? flushPendingTollMessage(meta, this.localColor) : null;
+    if (owner !== this.localColor) flushPendingTollMessage(meta, owner);
+    if (msg) this.setMessage(msg);
+    return msg;
+  }
+
   async playCoinFlipAnimation(victimRow, victimCol, victimColor, cardName = "Coin Flip", victimSnap = null) {
     const board = this.$("board");
     const frame = board?.closest(".board-frame");
@@ -2454,11 +2505,12 @@ ${starLine}`;
     if (banner) banner.classList.remove("cull-casting");
   }
 
-  finalizeCounteredSpell(card, message, picksOverride = null) {
+  async finalizeCounteredSpell(card, message, picksOverride = null) {
     const picks = picksOverride ?? (this.cardPlay?.picks ? [...this.cardPlay.picks] : []);
     this.recordPvpSpell(card, picks, { countered: true });
     this.removeCardFromHand(card);
     payTollOnSpellCast(this.state, this.localColor);
+    await this.finalizePendingTollReveal();
     if (!this.state.meta.extraSpellCast?.[this.localColor]) {
       this.state.spellPlayed[this.localColor] = true;
     } else {
@@ -2659,7 +2711,7 @@ ${starLine}`;
     try {
       const res = await this.applySpellWithAnimation(card, []);
       if (!res.success) {
-        if (res.countered) this.finalizeCounteredSpell(card, res.message);
+        if (res.countered) await this.finalizeCounteredSpell(card, res.message);
         else this.setMessage(res.message || "Spell failed.");
         return;
       }
@@ -2681,6 +2733,7 @@ ${starLine}`;
       this.removeCardFromHand(card);
       this.recordSuccessfulSpellCast();
       payTollOnSpellCast(this.state, this.localColor);
+      await this.finalizePendingTollReveal();
       const bonusSpell = !!this.state.meta.extraSpellCast?.[this.localColor];
       if (!bonusSpell) this.state.spellPlayed[this.localColor] = true;
       else this.state.meta.extraSpellCast[this.localColor] = false;
@@ -2954,8 +3007,7 @@ ${starLine}`;
 
         this.$("board")?.classList.remove("board--ai-spell");
         this.hideAiSpellBanner();
-        const tollMsg = flushPendingTollMessage(this.state.meta, this.localColor);
-        if (tollMsg) this.setMessage(tollMsg);
+        await this.finalizePendingTollReveal();
         await delay(AI_PACE.spellSettle);
         afterSpell = true;
       } else if (entry.type === "move") {

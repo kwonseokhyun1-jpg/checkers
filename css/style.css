@@ -3958,6 +3958,23 @@ html:has(body.cosmetic-open-active) {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.55; }
 }
+
+.board-frame--toll {
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.65), 0 0 28px rgba(245, 158, 11, 0.35);
+}
+.turn-banner--toll {
+  color: #fde68a;
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+  animation: toll-flash 0.6s ease-in-out 2;
+}
+.match-wrap--toll .board-frame {
+  filter: saturate(1.12);
+}
+@keyframes toll-flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
 .board-frame--cull {
   box-shadow: 0 0 36px rgba(180, 40, 40, 0.35);
 }
