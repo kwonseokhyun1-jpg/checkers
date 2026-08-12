@@ -535,8 +535,13 @@ export function runAiTurn(state, opponentName = "Opponent", aiColor = COLORS.BLA
       const extra = getAllMovesForColor(state.board, color, state).filter(
         (m) => m.from[0] === br && m.from[1] === bc && (m.type === "step" || m.type === "jump")
       );
-      if (extra.length) {
-        const ex = pickBestMove(state.board, color, state, extra);
+      const safeExtra = extra.filter((m) => {
+        const sim = cloneMatchState(state);
+        if (!applyMove(sim.board, m, sim)) return false;
+        return !opponentCanCapture(sim.board, color, sim);
+      });
+      if (safeExtra.length) {
+        const ex = pickBestMove(state.board, color, state, safeExtra);
         if (!ex) {
           state.meta.pendingDouble[aiColor] = false;
           return log;

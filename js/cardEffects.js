@@ -1682,10 +1682,81 @@ export function dominionWouldEnableBackwardMoves(state, color) {
   return backwardWithDom.some((m) => !keysWithout.has(moveKey(m)));
 }
 
+function cloneStateForPlan(state) {
+  const hook = state.meta?.achievementHook;
+  if (hook) state.meta.achievementHook = null;
+  try {
+    return structuredClone(state);
+  } catch {
+    return JSON.parse(JSON.stringify(state));
+  } finally {
+    if (hook) state.meta.achievementHook = hook;
+  }
+}
+
+function quickMarchOpponentColor(color) {
+  return color === COLORS.BLACK ? COLORS.RED : COLORS.BLACK;
+}
+
+function quickMarchOpponentCanCapture(board, color, state) {
+  const attacker = quickMarchOpponentColor(color);
+  return getAllMovesForColor(board, attacker, state).some((m) => m.captures?.length);
+}
+
+function getQuickMarchFollowUps(board, color, state, row, col) {
+  return getAllMovesForColor(board, color, state).filter(
+    (m) => m.from[0] === row && m.from[1] === col && (m.type === "step" || m.type === "jump")
+  );
+}
+
+function getChainJumpsFrom(board, color, state, fromR, fromC) {
+  return getAllMovesForColor(board, color, state).filter(
+    (m) => m.from[0] === fromR && m.from[1] === fromC && m.type === "jump" && m.captures?.length
+  );
+}
+
+/** Collect landing squares after a move and any mandatory capture chains. */
+function collectPostMoveLandings(state, color, move) {
+  const results = [];
+  function walk(sim, row, col) {
+    const chains = getChainJumpsFrom(sim.board, color, sim, row, col);
+    if (!chains.length) {
+      results.push({ state: sim, row, col });
+      return;
+    }
+    for (const chain of chains) {
+      const next = cloneStateForPlan(sim);
+      if (!applyMove(next.board, chain, next)) continue;
+      walk(next, chain.to[0], chain.to[1]);
+    }
+  }
+  const sim = cloneStateForPlan(state);
+  if (!applyMove(sim.board, move, sim)) return results;
+  walk(sim, move.to[0], move.to[1]);
+  return results;
+}
+
+/** True when Bonus Step can complete with a safe follow-up move this turn. */
+export function quickMarchWouldEnableSafeFollowUp(state, color) {
+  const moves = getAllMovesForColor(state.board, color, state);
+  for (const move of moves) {
+    for (const { state: landed, row, col } of collectPostMoveLandings(state, color, move)) {
+      const followUps = getQuickMarchFollowUps(landed.board, color, landed, row, col);
+      for (const followUp of followUps) {
+        const after = cloneStateForPlan(landed);
+        if (!applyMove(after.board, followUp, after)) continue;
+        if (!quickMarchOpponentCanCapture(after.board, color, after)) return true;
+      }
+    }
+  }
+  return false;
+}
+
 export function canAiPlay(state, color, card) {
   if (isInstant(card)) {
     if (!canCastInstant(state, color, card)) return false;
     if (card.effect === "dominion") return dominionWouldEnableBackwardMoves(state, color);
+    if (card.effect === "quick_march") return quickMarchWouldEnableSafeFollowUp(state, color);
     return true;
   }
   for (const _ of pickSequences(state, color, card, 8)) return true;
