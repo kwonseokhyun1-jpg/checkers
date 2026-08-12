@@ -1,5 +1,5 @@
 /**
- * Mulligan discards the hand to the discard pile, redraws from the deck,
+ * Mulligan shuffles the hand into the draw pile, redraws from the deck,
  * and grants a bonus spell this turn.
  * Run: node scripts/test-mulligan.mjs
  */
@@ -43,15 +43,15 @@ assert.ok(
   state.hands[COLORS.RED].every((c) => !beforeIds.includes(c.instanceId)),
   "hand should contain freshly drawn card instances"
 );
-assert.deepEqual(
-  state.discardPile[COLORS.RED].sort(),
-  ["backstep", "nudge", "ward"].sort(),
-  "discarded hand should go to discard pile"
+assert.equal(
+  state.discardPile[COLORS.RED].length,
+  0,
+  "mulligan should shuffle into the deck, not the discard pile"
 );
 assert.equal(
   state.drawPile[COLORS.RED].length,
-  pileBefore - 3,
-  "mulligan should draw from the deck pile"
+  pileBefore,
+  "mulligan returns hand cards to the deck before redrawing"
 );
 assert.ok(
   state.hands[COLORS.RED].every((c) => deckIds.includes(c.id)),
@@ -68,9 +68,12 @@ assert.equal(emptyHand.drawPile[COLORS.RED].length, 2, "empty hand draws nothing
 const shortDeck = makeState(["nudge", "backstep", "ward"], ["dash"]);
 const shortResult = applyEffect(shortDeck, COLORS.RED, mulligan.effect, []);
 assert.equal(shortResult.success, true);
-assert.equal(shortDeck.hands[COLORS.RED].length, 1, "draw only what the deck has left");
-assert.equal(shortDeck.drawPile[COLORS.RED].length, 0);
-assert.equal(shortDeck.hands[COLORS.RED][0].id, "dash");
+assert.equal(shortDeck.hands[COLORS.RED].length, 3, "draw up to hand size from shuffled deck");
+assert.equal(shortDeck.drawPile[COLORS.RED].length, 1);
+assert.ok(
+  shortDeck.hands[COLORS.RED].every((c) => ["nudge", "backstep", "ward", "dash"].includes(c.id)),
+  "short deck redraw must still come from deck cards"
+);
 
 assert.equal(getCardDef("purify").rarity, "uncommon");
 

@@ -13,7 +13,7 @@ import { sk, getSq, handLimit, placeMine, placeHiddenQuicksand, ensureVengeanceT
 import { drawRandomCard, createCardInstance, CARD_REGISTRY } from "./cards.js";
 import { drawToHand } from "./deckPile.js";
 import { getPlayableCards } from "./cardCatalog.js";
-import { deckCardIdsFromMatchState } from "./deckRules.js";
+import { deckCardIdsFromMatchState, shuffle } from "./deckRules.js";
 import { findCullTarget, cullVictimSnapshot } from "./cullAnimation.js";
 import { cleanseFriendlyDebuffs, pieceHasDebuffs, pieceHasIronWillDebuff } from "./pieceStatus.js";
 import { isSquareCollapsed, setCollapsedSquare, ensureConstitutionTurns, getDarknessZoneCellsAround, isInDarknessZone } from "./gameMeta.js";
@@ -740,14 +740,14 @@ const EFFECTS = {
   mulligan(state, color, picks) {
     const h = state.hands[color];
     const n = h.length;
-    state.discardPile[color] = state.discardPile[color] || [];
-    for (const card of h) {
-      if (card?.id) state.discardPile[color].push(card.id);
-    }
+    const handIds = h.map((c) => c?.id).filter(Boolean);
     h.length = 0;
+    state.drawPile[color] = state.drawPile[color] || [];
+    state.drawPile[color].push(...handIds);
+    state.drawPile[color] = shuffle(state.drawPile[color]);
     const drawn = drawToHand(state, color, n);
     state.meta.extraSpellCast[color] = true;
-    return ok(`Mulligan — drew ${drawn} card${drawn === 1 ? "" : "s"}; cast another spell.`);
+    return ok(`Mulligan — shuffled your hand into your deck and drew ${drawn} card${drawn === 1 ? "" : "s"}; cast another spell.`);
   },
   conjure(state, color, picks) {
     let pool = conjureOutsideDeckPool(state, color);
