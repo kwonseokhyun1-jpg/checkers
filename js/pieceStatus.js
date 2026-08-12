@@ -23,14 +23,14 @@ const BUFF_RULES = [
   { key: "bearAwakened", label: "Awoken Bear", bool: true },
   { key: "pawnZeal", label: "Pawn's Zeal", bool: true },
   { key: "succession", label: "Succession", bool: true },
+  { key: "isMainZombie", label: "Zombie king", bool: true },
+  { key: "isZombie", label: "Zombie", bool: true },
+  { key: "zombieSleepTurns", label: "Sleeping in gravestone", turns: true },
 ];
 
 const CURSE_RULES = [
   { key: "linkedFateId", label: "Linked Fate", bool: true },
   { key: "bountyBy", label: "Bounty (jump-capture to reward)", bool: true },
-  { key: "isMainZombie", label: "Zombie king", bool: true },
-  { key: "isZombie", label: "Zombie", bool: true },
-  { key: "zombieSleepTurns", label: "Sleeping in gravestone", turns: true },
   { key: "frozenTurns", label: "Frozen", turns: true },
   { key: "paralyzedTurns", label: "Paralyzed", turns: true },
   { key: "rooted", label: "Rooted", turns: true },
@@ -73,6 +73,8 @@ export function getPieceStatus(piece) {
   }
   for (const rule of BUFF_RULES) {
     if (isZombieBearStack(piece) && rule.key === "bearAwakened") continue;
+    if (rule.key === "isZombie" && piece.isMainZombie) continue;
+    if (isZombieBearStack(piece) && (rule.key === "isZombie" || rule.key === "isMainZombie")) continue;
     const line = lineForRule(piece, rule);
     if (line) buffs.push(line);
   }
@@ -80,8 +82,6 @@ export function getPieceStatus(piece) {
     buffs.push({ label: "Zombie Bear" });
   }
   for (const rule of CURSE_RULES) {
-    if (rule.key === "isZombie" && piece.isMainZombie) continue;
-    if (isZombieBearStack(piece) && (rule.key === "isZombie" || rule.key === "isMainZombie")) continue;
     const line = lineForRule(piece, rule);
     if (line) curses.push(line);
   }
