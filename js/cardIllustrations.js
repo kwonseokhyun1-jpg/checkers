@@ -1863,7 +1863,7 @@ export const EFFECT_ILLUSTRATIONS = {
   bomb: () => legendaryBleed("bm", "#f59e0b", "#78350f", bombMotif()),
   shockwave: () => epicBleed("sw", "#c4b5fd", "#3b1f6e", shockwaveMotif()),
   plague: () => epicBleed("pg", "#86efac", "#14532d", plagueMotif()),
-  magnet: () => epicBleed("mg", "#6ee7b7", "#14532d", magnetMotif()),
+  magnet: () => rareBleed("mg", "#6ee7b7", "#14532d", magnetMotif()),
 
   poison_3: () => uncommonBleed("po", "#86efac", "#14532d", poisonMotif()),
   root_2: () => uncommonBleed("ro", "#86efac", "#14532d", rootMotif()),
@@ -1893,7 +1893,7 @@ export const EFFECT_ILLUSTRATIONS = {
   collapse: () => commonBleed("co", "#78716c", "#292524", collapseMotif()),
   darkness: () => rareBleed("dk", "#6d28d9", "#1e1b4b", darknessMotif()),
   scatter: () => uncommonBleed("st", "#7dd3fc", "#1e3a5f", scatterMotif()),
-  call_forward: () => rareBleed("cfw", "#fca5a5", "#4c1d95", callForwardMotif()),
+  call_forward: () => epicBleed("cfw", "#fca5a5", "#4c1d95", callForwardMotif()),
   dash: () => rareBleed("ds", "#c4b5fd", "#4c1d95", dashMotif()),
   earthquake: () => epicBleed("eq", "#78716c", "#292524", earthquakeMotif()),
 
