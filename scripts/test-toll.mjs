@@ -17,7 +17,8 @@ import { applyCard } from "../js/cardEffectHandlers.js";
 import { initCardState } from "../js/cardEffects.js";
 import { CARD_REGISTRY } from "../js/cardRegistry.js";
 import { getCardCategory } from "../js/cardCategories.js";
-import { applyAiReplayEntry } from "../js/ai.js";
+import { applyAiReplayEntry, planAiTurnWork } from "../js/ai.js";
+import { getCardById } from "../js/cards.js";
 import { getCardDef } from "../js/cardCatalog.js";
 
 function baseState() {
@@ -108,6 +109,17 @@ assert.equal(getCardCategory(toll), "special");
   assert.equal(ok, true);
   assert.equal(state.hands[COLORS.RED].length, 2, "AI spell replay should pay Toll");
   console.log("OK: AI spell replay pays Toll");
+}
+
+{
+  const state = baseState();
+  applyCard(state, COLORS.RED, toll, []);
+  state.turn = COLORS.BLACK;
+  state.hands[COLORS.BLACK] = [getCardById("nudge"), getCardById("press")];
+  const { log } = planAiTurnWork(state, "Opponent", COLORS.BLACK);
+  assert.ok(!log.some((e) => e.type === "spell"), "AI should not cast spells while opponent Toll is armed");
+  assert.ok(log.some((e) => e.type === "message" && /toll/i.test(e.text)), "AI should log Toll skip message");
+  console.log("OK: AI skips spells while opponent Toll is armed");
 }
 
 console.log("All Toll tests passed.");
