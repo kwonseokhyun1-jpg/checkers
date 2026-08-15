@@ -104,6 +104,13 @@ export function resetToDefaultProfile() {
   return profile;
 }
 
+function adventureClearedCount(profile) {
+  const cleared = profile?.adventure?.cleared;
+  if (Array.isArray(cleared)) return cleared.length;
+  if (cleared && typeof cleared === "object") return Object.keys(cleared).length;
+  return 0;
+}
+
 function profileSignature(profile) {
   const decks = (profile?.decks || []).map((d) => ({
     id: d.id,
@@ -114,7 +121,8 @@ function profileSignature(profile) {
     collection: profile?.collection || {},
     gems: profile?.gems,
     stars: profile?.stars,
-    cleared: profile?.adventure?.cleared?.length || 0,
+    // adventure.cleared is an object map of levelId → truthy, not an array
+    cleared: adventureClearedCount(profile),
     pvpWins: profile?.pvpWins || 0,
     spellsPlayed: profile?.spellsPlayed || 0,
   });
