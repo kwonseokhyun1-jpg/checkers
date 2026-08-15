@@ -6,14 +6,17 @@ import {
   signOut,
   onAuthChange,
   isAuthAvailable,
-  fetchProfileRow,
   isUsernameAvailable,
   suggestAvailableUsername,
   validateUsernameFormat,
   USERNAME_PATTERN,
 } from "./auth.js";
 import { upsertProfileRow } from "./auth.js";
-import { pullCloudProfile } from "./cloudProfile.js";
+import {
+  pullCloudProfile,
+  buildProfileJsonForSignup,
+  claimPromotedSignupProfile,
+} from "./cloudProfile.js";
 
 const USERNAME_RE = USERNAME_PATTERN;
 
@@ -220,12 +223,7 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
         const user = data.session?.user ?? getCurrentUser();
 
         if (user) {
-          const existing = await fetchProfileRow(user.id);
-          const profileJson =
-            existing?.profile_json && typeof existing.profile_json === "object"
-              ? { ...existing.profile_json }
-              : {};
-          profileJson.loginEmail = identifier.toLowerCase();
+          const { profileJson, promoted } = await buildProfileJsonForSignup(user.id, identifier);
 
           try {
             await upsertProfileRow(user.id, {
@@ -247,6 +245,10 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
               return;
             }
             throw profileErr;
+          }
+
+          if (promoted) {
+            claimPromotedSignupProfile(user.id, profileJson);
           }
 
           try {

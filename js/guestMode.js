@@ -5,8 +5,8 @@ import { getCurrentUser } from "./auth.js";
 const GUEST_MODE_KEY = "arcane_checkers_guest_mode_v1";
 
 /** Shown on locked / guest-only nav tabs to encourage account creation. */
-export const GUEST_SIGN_IN_NUDGE_PVP = "Sign in to save progress / play PvP";
-export const GUEST_SIGN_IN_NUDGE_SAVE = "Sign in to save progress";
+export const GUEST_SIGN_IN_NUDGE_PVP = "Create an account to save progress / play PvP";
+export const GUEST_SIGN_IN_NUDGE_SAVE = "Create an account to save progress";
 
 /** Guest who chose local play and has not signed in this session. */
 export function isGuestPlayer() {

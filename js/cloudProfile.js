@@ -16,7 +16,7 @@ import {
 
 let cloudSaveTimer = null;
 
-function isEmptyRemoteProfile(json) {
+export function isEmptyRemoteProfile(json) {
   if (!json || typeof json !== "object") return true;
   const keys = Object.keys(json);
   if (keys.length === 0) return true;
@@ -98,4 +98,35 @@ export function scheduleCloudSave(profile) {
       console.warn("Cloud save failed", e);
     }
   }, 800);
+}
+
+/**
+ * Build profile_json for a brand-new account signup.
+ * Guest / unowned device progress is carried into the cloud save when the remote row is empty.
+ */
+export async function buildProfileJsonForSignup(userId, loginEmail) {
+  const email = String(loginEmail || "").trim().toLowerCase();
+  const row = await fetchProfileRow(userId);
+  const remote = row?.profile_json && typeof row.profile_json === "object" ? { ...row.profile_json } : {};
+  const local = readProfileFromStorage();
+  const ownerId = getStoredProfileOwnerId();
+
+  const remoteHasProgress = !isEmptyRemoteProfile(remote);
+  const canPromoteLocal =
+    !remoteHasProgress &&
+    !isDefaultProfile(local) &&
+    (ownerId === null || ownerId === userId);
+
+  const profileJson = canPromoteLocal ? { ...local } : remote;
+  if (email) profileJson.loginEmail = email;
+  if (canPromoteLocal) profileJson.savedAt = Date.now();
+  return { profileJson, promoted: canPromoteLocal };
+}
+
+/**
+ * After signup upsert, claim ownership of promoted guest progress locally (no second cloud write).
+ */
+export function claimPromotedSignupProfile(userId, profileJson) {
+  if (!userId || !profileJson || typeof profileJson !== "object") return;
+  saveProfile(profileJson, { bumpTimestamp: false, skipCloudSync: true, ownerUserId: userId });
 }

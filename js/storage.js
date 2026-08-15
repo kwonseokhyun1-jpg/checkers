@@ -104,6 +104,13 @@ export function resetToDefaultProfile() {
   return profile;
 }
 
+function adventureClearedCount(profile) {
+  const cleared = profile?.adventure?.cleared;
+  if (Array.isArray(cleared)) return cleared.length;
+  if (cleared && typeof cleared === "object") return Object.keys(cleared).length;
+  return 0;
+}
+
 function profileSignature(profile) {
   const decks = (profile?.decks || []).map((d) => ({
     id: d.id,
@@ -114,7 +121,9 @@ function profileSignature(profile) {
     collection: profile?.collection || {},
     gems: profile?.gems,
     stars: profile?.stars,
-    cleared: profile?.adventure?.cleared?.length || 0,
+    // cleared is stored as { "1": true, ... }, not an array — .length is always undefined
+    cleared: adventureClearedCount(profile),
+    highestUnlocked: profile?.adventure?.highestUnlocked || 1,
     pvpWins: profile?.pvpWins || 0,
     spellsPlayed: profile?.spellsPlayed || 0,
   });
