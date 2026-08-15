@@ -209,7 +209,7 @@ function ensurePvpUI() {
         arenaRoot: document.getElementById("play-arena-root"),
         leaderboardRoot: document.getElementById("play-leaderboard-root"),
         getProfile: () => profile,
-        openAuthModal: () => authUI?.open("signin", { forced: true }),
+        openAuthModal: () => authUI?.open("signup", { forced: true }),
         onNavigateTab: showTab,
         onNavigatePlayTab: showPlayTab,
         onNavigatePlayMenu: showPlayMenu,
@@ -229,7 +229,7 @@ function ensureSocialUI() {
         root: document.getElementById("view-social"),
         getProfile: () => profile,
         saveProfile,
-        openAuthModal: () => authUI?.open("signin", { forced: true }),
+        openAuthModal: () => authUI?.open("signup", { forced: true }),
       });
       return socialController;
     });
@@ -394,14 +394,14 @@ async function showPlayTab(tab) {
     const goToAdventure = await mobileConfirm(message, {
       title: "PvP locked",
       confirmLabel: "Go to Adventure",
-      cancelLabel: guest ? "Sign in" : "Not now",
+      cancelLabel: guest ? "Create account" : "Not now",
     });
     if (goToAdventure) {
       bypassPlayPvpGate = true;
       showPlayTab("adventure");
       bypassPlayPvpGate = false;
     } else if (guest) {
-      authUI?.open("signin", { forced: true });
+      authUI?.open("signup", { forced: true });
     }
     return;
   }
@@ -470,7 +470,7 @@ function syncNavUnlockState() {
       questsBtn.title = guest
         ? `${questsPvpUnlockMessage("Quests")} ${signInNudge}.`
         : questsPvpUnlockMessage("Quests");
-      syncTabSignInBadge(questsBtn, guest, "Sign in");
+      syncTabSignInBadge(questsBtn, guest, "Save");
     } else if (guest) {
       questsBtn.title = signInNudge;
       syncTabSignInBadge(questsBtn, false);
@@ -484,7 +484,7 @@ function syncNavUnlockState() {
   if (socialBtn) {
     if (guest) {
       socialBtn.title = GUEST_SIGN_IN_NUDGE_SAVE;
-      syncTabSignInBadge(socialBtn, true, "Sign in");
+      syncTabSignInBadge(socialBtn, true, "Save");
     } else {
       socialBtn.title = "";
       syncTabSignInBadge(socialBtn, false);
@@ -526,14 +526,14 @@ async function showTab(tab) {
     const goToAdventure = await mobileConfirm(message, {
       title: "Quests locked",
       confirmLabel: "Go to Adventure",
-      cancelLabel: guest ? "Sign in" : "Not now",
+      cancelLabel: guest ? "Create account" : "Not now",
     });
     if (goToAdventure) {
       bypassQuestsPvpGate = true;
       showTab("play");
       bypassQuestsPvpGate = false;
     } else if (guest) {
-      authUI?.open("signin", { forced: true });
+      authUI?.open("signup", { forced: true });
     }
     return;
   }
@@ -2933,7 +2933,13 @@ function init() {
     authBtn,
     modal: authModal,
     onNewAccount: () => {
-      profile = getStoredProfileOwnerId() ? resetToDefaultProfile() : loadProfile();
+      // Guest / unowned device progress must carry into the new account.
+      // Only wipe when this device already has another user's save.
+      if (getStoredProfileOwnerId()) {
+        profile = resetToDefaultProfile();
+      } else {
+        profile = loadProfile();
+      }
       prepareInteractiveTutorialForNewAccount(profile, saveProfile);
     },
     onSignedIn: () => {

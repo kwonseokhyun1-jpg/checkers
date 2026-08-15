@@ -9,13 +9,13 @@ import {
   resetToDefaultProfile,
   clearStoredProfile,
 } from "../js/storage.js";
-import { enterGuestMode, clearGuestMode } from "../js/guestMode.js";
 import {
   mergeMonotonicProfileStats,
   reconcileMonotonicProfileStats,
   resolveProfileConflict,
 } from "../js/profileStats.js";
 
+const GUEST_MODE_KEY = "arcane_checkers_guest_mode_v1";
 const store = new Map();
 
 globalThis.localStorage = {
@@ -24,6 +24,14 @@ globalThis.localStorage = {
   removeItem: (k) => store.delete(k),
   clear: () => store.clear(),
 };
+
+function enterGuestMode() {
+  localStorage.setItem(GUEST_MODE_KEY, "1");
+}
+
+function clearGuestMode() {
+  localStorage.removeItem(GUEST_MODE_KEY);
+}
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
@@ -166,12 +174,14 @@ function testGuestSignUpKeepsLocalProgress() {
   clearGuestMode();
   const local = readProfileFromStorage();
   local.gems = 50;
+  local.adventure = { cleared: { 1: true }, highestUnlocked: 2, stars: {}, selectedWorld: 1 };
   saveProfile(local);
   enterGuestMode();
 
   const remote = { loginEmail: "new@example.com" };
   const ownedLocal = resolveOwnedLocal("new-user", remote, true);
   assert(ownedLocal, "guest local should carry over when cloud save is empty");
+  assert(!isDefaultProfile(local), "adventure clears must count as non-default progress");
 }
 
 testFreshDefaultLosesToOlderRemote();
