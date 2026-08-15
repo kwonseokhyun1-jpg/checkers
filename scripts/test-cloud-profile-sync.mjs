@@ -1,20 +1,23 @@
 /**
  * Fresh local default profile must not overwrite cloud progress on sign-in.
+ * Guest signup must claim local progress onto an empty cloud shell.
  */
 import {
   readProfileFromStorage,
   saveProfile,
   isDefaultProfile,
   getStoredProfileOwnerId,
+  setStoredProfileOwnerId,
   resetToDefaultProfile,
-  clearStoredProfile,
+  repairProfile,
 } from "../js/storage.js";
-import { enterGuestMode, clearGuestMode } from "../js/guestMode.js";
 import {
   mergeMonotonicProfileStats,
   reconcileMonotonicProfileStats,
   resolveProfileConflict,
 } from "../js/profileStats.js";
+
+const GUEST_MODE_KEY = "arcane_checkers_guest_mode_v1";
 
 const store = new Map();
 
@@ -24,6 +27,14 @@ globalThis.localStorage = {
   removeItem: (k) => store.delete(k),
   clear: () => store.clear(),
 };
+
+function enterGuestMode() {
+  localStorage.setItem(GUEST_MODE_KEY, "1");
+}
+
+function clearGuestMode() {
+  localStorage.removeItem(GUEST_MODE_KEY);
+}
 
 function assert(cond, msg) {
   if (!cond) throw new Error(msg);
@@ -36,6 +47,7 @@ function mergeDefaultLocalWithRemote(local, remote) {
   return merged;
 }
 
+/** Mirrors cloudProfile.isEmptyRemoteProfile */
 function isEmptyRemoteProfile(json) {
   if (!json || typeof json !== "object") return true;
   const keys = Object.keys(json);
@@ -53,12 +65,32 @@ function isEmptyRemoteProfile(json) {
   return !(hasCollection || hasDecks || hasProgress || hasCurrency || hasStats);
 }
 
-/** Mirrors cloudProfile.localBelongsToUser for regression tests. */
+/** Mirrors cloudProfile.localBelongsToUser (post owner-stamp timing). */
 function resolveOwnedLocal(userId, remote, guestMode) {
   const ownerId = getStoredProfileOwnerId();
   if (ownerId !== userId && ownerId !== null) return false;
-  if (ownerId === null && guestMode && remote && !isEmptyRemoteProfile(remote)) return false;
+  if (guestMode && remote && !isEmptyRemoteProfile(remote)) return false;
   return true;
+}
+
+/** Mirrors cloudProfile.profileJsonForSignupUpsert */
+function profileJsonForSignupUpsert(existingRemote, loginEmail, { wasGuest = false } = {}) {
+  const email = String(loginEmail || "").trim().toLowerCase();
+  const remote =
+    existingRemote && typeof existingRemote === "object" ? { ...existingRemote } : {};
+
+  if (wasGuest) {
+    const local = readProfileFromStorage();
+    if (!isDefaultProfile(local) && isEmptyRemoteProfile(remote)) {
+      const claimed = { ...local, loginEmail: email };
+      repairProfile(claimed);
+      if (typeof claimed.savedAt !== "number") claimed.savedAt = Date.now();
+      return claimed;
+    }
+  }
+
+  remote.loginEmail = email;
+  return remote;
 }
 
 function testFreshDefaultLosesToOlderRemote() {
@@ -118,17 +150,12 @@ function testForeignLocalNotUploadedToEmptyRemote() {
   local.gems = 5000;
   saveProfile(local, { ownerUserId: "user-a" });
 
-  const ownerId = getStoredProfileOwnerId();
   const currentUserId = "user-b";
   const ownedLocal = resolveOwnedLocal(currentUserId, null, false);
   assert(!ownedLocal, "user-a local must not belong to user-b");
 
   const remote = { loginEmail: "b@example.com" };
-  const isEmpty =
-    !remote.collection &&
-    !(Array.isArray(remote.decks) && remote.decks.length > 0) &&
-    typeof remote.gems !== "number";
-  assert(isEmpty, "fixture remote should be empty");
+  assert(isEmptyRemoteProfile(remote), "fixture remote should be empty");
 
   if (!isDefaultProfile(local) && !ownedLocal) {
     resetToDefaultProfile();
@@ -146,6 +173,8 @@ function testGuestSignInPreservesCloudProgress() {
   local.adventure = { cleared: { 1: 1 } };
   saveProfile(local);
   enterGuestMode();
+  // Production: notify() stamps owner before pullCloudProfile runs.
+  setStoredProfileOwnerId("user-b");
 
   const remote = readProfileFromStorage();
   remote.gems = 4820;
@@ -166,12 +195,64 @@ function testGuestSignUpKeepsLocalProgress() {
   clearGuestMode();
   const local = readProfileFromStorage();
   local.gems = 50;
+  local.adventure = { cleared: { 1: true, 2: true }, stars: { 1: 3, 2: 2 }, highestUnlocked: 3 };
+  saveProfile(local);
+  enterGuestMode();
+  // Production: owner is stamped to the new user before pull.
+  setStoredProfileOwnerId("new-user");
+
+  const remote = { loginEmail: "new@example.com" };
+  assert(isEmptyRemoteProfile(remote), "new account cloud shell should be empty");
+  const ownedLocal = resolveOwnedLocal("new-user", remote, true);
+  assert(ownedLocal, "guest local should carry over when cloud save is empty");
+  assert(!isDefaultProfile(local), "guest adventure clears must count as progress");
+}
+
+function testGuestSignUpUpsertClaimsLocalProfile() {
+  store.clear();
+  clearGuestMode();
+  const local = readProfileFromStorage();
+  local.gems = 275;
+  local.stars = 33;
+  local.adventure = { cleared: { 1: true }, stars: { 1: 3 }, highestUnlocked: 2 };
   saveProfile(local);
   enterGuestMode();
 
-  const remote = { loginEmail: "new@example.com" };
-  const ownedLocal = resolveOwnedLocal("new-user", remote, true);
-  assert(ownedLocal, "guest local should carry over when cloud save is empty");
+  const claimed = profileJsonForSignupUpsert({ loginEmail: "x@y.com" }, "New@Example.com", {
+    wasGuest: true,
+  });
+  assert(claimed.gems === 275, "signup upsert must include guest gems");
+  assert(claimed.stars === 33, "signup upsert must include guest stars");
+  assert(claimed.adventure.cleared["1"], "signup upsert must include adventure clears");
+  assert(claimed.loginEmail === "new@example.com", "signup upsert must set loginEmail");
+}
+
+function testGuestSignUpDoesNotOverwriteExistingCloud() {
+  store.clear();
+  clearGuestMode();
+  const local = readProfileFromStorage();
+  local.gems = 10;
+  saveProfile(local);
+  enterGuestMode();
+
+  const existing = {
+    loginEmail: "old@example.com",
+    gems: 900,
+    stars: 12,
+    adventure: { cleared: { 1: true, 2: true } },
+  };
+  const payload = profileJsonForSignupUpsert(existing, "old@example.com", { wasGuest: true });
+  assert(payload.gems === 900, "must not replace existing cloud gems with guest session");
+  assert(payload.adventure.cleared["2"], "must keep existing adventure progress");
+}
+
+function testAdventureClearsMakeProfileNonDefault() {
+  store.clear();
+  const local = readProfileFromStorage();
+  // Same currency as default — only adventure clears differ (object map, not array).
+  local.adventure = { cleared: { 1: true }, stars: { 1: 0 }, highestUnlocked: 2 };
+  saveProfile(local, { skipCloudSync: true });
+  assert(!isDefaultProfile(local), "cleared floors must make profile non-default");
 }
 
 testFreshDefaultLosesToOlderRemote();
@@ -180,4 +261,7 @@ testSignOutClearsProfile();
 testForeignLocalNotUploadedToEmptyRemote();
 testGuestSignInPreservesCloudProgress();
 testGuestSignUpKeepsLocalProgress();
+testGuestSignUpUpsertClaimsLocalProfile();
+testGuestSignUpDoesNotOverwriteExistingCloud();
+testAdventureClearsMakeProfileNonDefault();
 console.log("test-cloud-profile-sync: ok");

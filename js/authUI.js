@@ -13,7 +13,8 @@ import {
   USERNAME_PATTERN,
 } from "./auth.js";
 import { upsertProfileRow } from "./auth.js";
-import { pullCloudProfile } from "./cloudProfile.js";
+import { pullCloudProfile, profileJsonForSignupUpsert } from "./cloudProfile.js";
+import { isGuestMode } from "./guestMode.js";
 
 const USERNAME_RE = USERNAME_PATTERN;
 
@@ -215,17 +216,20 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
           return;
         }
 
+        // Snapshot before signUp stamps profile owner / session; guest progress
+        // must be claimed onto the new empty cloud profile.
+        const wasGuest = isGuestMode();
         onNewAccount?.();
         const data = await signUp(identifier, password, chosenUsername, chosenUsername);
         const user = data.session?.user ?? getCurrentUser();
 
         if (user) {
           const existing = await fetchProfileRow(user.id);
-          const profileJson =
-            existing?.profile_json && typeof existing.profile_json === "object"
-              ? { ...existing.profile_json }
-              : {};
-          profileJson.loginEmail = identifier.toLowerCase();
+          const profileJson = profileJsonForSignupUpsert(
+            existing?.profile_json,
+            identifier,
+            { wasGuest }
+          );
 
           try {
             await upsertProfileRow(user.id, {
@@ -262,6 +266,8 @@ export function initAuthUI({ authBtn, modal, onSignedIn, onSignedOut, onNewAccou
           return;
         }
 
+        // Email confirmation required — keep guest mode + local progress until
+        // they sign in; pullCloudProfile will claim onto the empty cloud shell.
         setError("Account created. Check your email to confirm, then sign in.");
         mode = "signin";
         open("signin");

@@ -100,6 +100,7 @@ import { startFriendPresence, stopFriendPresence } from "./friendPresence.js";
 import {
   enterGuestMode,
   clearGuestMode,
+  isGuestMode,
   isGuestPlayer,
   GUEST_SIGN_IN_NUDGE_PVP,
   GUEST_SIGN_IN_NUDGE_SAVE,
@@ -2933,7 +2934,12 @@ function init() {
     authBtn,
     modal: authModal,
     onNewAccount: () => {
-      profile = getStoredProfileOwnerId() ? resetToDefaultProfile() : loadProfile();
+      // Guests keep local Adventure/collection progress when creating an account.
+      // Only wipe when local storage still belongs to a previous signed-in user.
+      profile =
+        isGuestMode() || !getStoredProfileOwnerId()
+          ? loadProfile()
+          : resetToDefaultProfile();
       prepareInteractiveTutorialForNewAccount(profile, saveProfile);
     },
     onSignedIn: () => {
