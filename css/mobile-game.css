@@ -693,8 +693,8 @@ nav.game-nav.tabs .game-nav__btn,
   body.match-active .board-wrap {
     width: min(
       100%,
-      var(--board-fit-width),
-      calc(var(--app-height) - var(--board-v-chrome))
+      calc(var(--board-fit-width) + var(--board-chrome-x)),
+      calc(var(--app-height) - var(--board-v-chrome) + var(--board-chrome-x))
     );
   }
 
