@@ -2702,17 +2702,30 @@ body.install-banner-visible.deck-editing .game-shell {
   body.match-active .board-wrap {
     flex: 0 0 auto;
     align-self: center;
-    --board-active-size: min(
-      100%,
+    /* Size the checkerboard square; wrap is slightly wider for the rank column */
+    --board-square: min(
+      calc(100cqw - var(--board-chrome-x)),
+      calc(100cqh - var(--board-chrome-y)),
       var(--board-fit-width),
-      calc(var(--app-height) - var(--board-v-chrome))
+      calc(var(--app-height) - var(--board-v-chrome) - var(--board-chrome-y))
     );
-    width: min(var(--board-active-size), 100%, 100cqmin);
+    width: min(calc(var(--board-square) + var(--board-chrome-x)), 100%, 100cqw);
     height: auto;
     min-width: 0;
     min-height: 0;
-    max-width: min(var(--board-active-size), 100%, 100cqmin);
+    max-width: min(calc(var(--board-square) + var(--board-chrome-x)), 100%, 100cqw);
     max-height: 100%;
+    aspect-ratio: auto;
+  }
+
+  body.match-active .board-wrap .board-frame {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  body.match-active .board-wrap .board {
+    width: 100%;
+    max-width: 100%;
     aspect-ratio: 1;
   }
 

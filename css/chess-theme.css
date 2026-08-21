@@ -14,7 +14,7 @@
   border: 1px solid #4a4845;
   box-shadow: var(--shadow);
   border-radius: 8px;
-  padding: 8px;
+  padding: var(--board-frame-pad);
 }
 
 .square.dark {
