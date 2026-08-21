@@ -3745,12 +3745,12 @@ html:has(body.cosmetic-open-active) {
 .board-frame {
   position: relative;
   display: grid;
-  grid-template-columns: 1.65rem minmax(0, 1fr);
+  grid-template-columns: var(--board-rank-gutter) minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   width: min(100%, var(--board-max-size));
   max-width: 100%;
-  gap: 2px 4px;
-  padding: 6px;
+  gap: var(--board-frame-gap-y) var(--board-frame-gap-x);
+  padding: var(--board-frame-pad);
   border-radius: 12px;
   background: linear-gradient(165deg, #2a1810 0%, #1a1008 50%, #120a06 100%);
   box-shadow:

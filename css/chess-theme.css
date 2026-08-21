@@ -14,7 +14,7 @@
   border: 1px solid #4a4845;
   box-shadow: var(--shadow);
   border-radius: 8px;
-  padding: 8px;
+  padding: var(--board-frame-pad);
 }
 
 .square.dark {
@@ -79,7 +79,7 @@
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-heading);
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 700;
   padding: 0;
   cursor: pointer;

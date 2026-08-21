@@ -59,6 +59,18 @@
     var(--board-max-size),
     calc(100dvw - var(--board-h-gutter) * 2 - 1rem)
   );
+  /* Rank column + frame padding — keep slim so the checkerboard can grow */
+  --board-rank-gutter: 1rem;
+  --board-frame-pad: 4px;
+  --board-frame-gap-x: 2px;
+  --board-frame-gap-y: 2px;
+  --board-file-label-size: 1.05rem;
+  --board-chrome-x: calc(
+    var(--board-rank-gutter) + var(--board-frame-pad) * 2 + var(--board-frame-gap-x)
+  );
+  --board-chrome-y: calc(
+    var(--board-file-label-size) * 2 + var(--board-frame-pad) * 2 + var(--board-frame-gap-y) * 2
+  );
   /* Cap vertical chrome on short viewports so the board keeps usable space. */
   --board-v-chrome-max: 300px;
   --board-v-chrome: min(var(--board-v-chrome-max), 56dvh);
